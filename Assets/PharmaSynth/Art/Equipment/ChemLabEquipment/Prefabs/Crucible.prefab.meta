@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: d3c594960bf34564cb6225552c1fbd51
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Prefabs/Crucible.prefab
+  uploadId: 761072

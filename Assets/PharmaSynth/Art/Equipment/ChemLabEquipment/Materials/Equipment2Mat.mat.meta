@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 20b08362a8b66cb41bf72c025f1fcabb
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Materials/Equipment2Mat.mat
+  uploadId: 761072

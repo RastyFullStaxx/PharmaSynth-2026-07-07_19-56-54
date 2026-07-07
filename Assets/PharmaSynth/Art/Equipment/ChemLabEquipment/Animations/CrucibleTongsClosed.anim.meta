@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4d2a56ea740b2c7449b15f282a6de024
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Animations/CrucibleTongsClosed.anim
+  uploadId: 761072

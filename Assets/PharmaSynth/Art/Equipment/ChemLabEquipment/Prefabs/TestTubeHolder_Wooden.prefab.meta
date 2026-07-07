@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f30e95215da3577479a451479ec9a49c
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Prefabs/TestTubeHolder_Wooden.prefab
+  uploadId: 761072

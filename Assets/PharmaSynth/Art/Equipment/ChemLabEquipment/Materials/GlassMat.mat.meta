@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 868c49b78b2986d42a241494309aa253
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Materials/GlassMat.mat
+  uploadId: 761072

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: c0c4ec7befd7c7447bdaa3ee8b82f1db
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Prefabs/TestTubeHolder_Metal.prefab
+  uploadId: 761072

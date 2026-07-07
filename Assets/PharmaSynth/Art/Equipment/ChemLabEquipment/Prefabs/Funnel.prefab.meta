@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 74d4f532e0482fc4a8f74ecece77681a
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Prefabs/Funnel.prefab
+  uploadId: 761072

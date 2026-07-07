@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 22afeacf35fbf0d45afb7770ece0e47c
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Prefabs/Vial.prefab
+  uploadId: 761072

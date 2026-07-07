@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d69a3c3e0aefaf141bfb8df9fef4d71e
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Animations/TestTubeHolder_Wooden_Normal.anim
+  uploadId: 761072

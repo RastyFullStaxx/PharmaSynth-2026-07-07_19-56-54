@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: d3e7147207ee95148a054fc193f8c9a0
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Prefabs/TestTubeRack_12Tubes.prefab
+  uploadId: 761072

@@ -1,0 +1,237 @@
+{
+  "summary": "Adversarial critique of the PharmaSynth master plan: completeness, technical feasibility, schedule realism",
+  "agentCount": 3,
+  "logs": [],
+  "result": {
+    "completeness": {
+      "findings": [
+        {
+          "severity": "major",
+          "issue": "The Reagent-Preparation cutscene AND phase are omitted. The cutscene deck's Cutscene 1 is literally titled \"After Completing Preparation of Reagents\" (modal \"Preparations Complete\" -> Pharmee commend -> objective panel), and the client revision checklist explicitly lists cutscenes \"incl. intro/reagent-prep/completion/wine-transition.\" Appendix C confirms \"Preparation of Reagents\" is a distinct graded procedure phase carrying its own weight (e.g., Acetanilide 0.1N HCl = 20%, Acetone 10% KOH = 20%). Plan §3.2/§3.8 model only intro -> gather -> perform -> end with a \"master Timeline template x3 variants\" (intro/success/fail). This drops (a) the reagent-preparation gameplay phase entirely and (b) an entire cutscene type. It also invalidates the §5/§8 content estimate: it is 4 cutscene moments/experiment (~44), not 33.",
+          "fix": "Add reagent-preparation as a first-class graded phase (mix/dilute steps, 20% where the manual specifies it) distinct from \"gather,\" and add a 4th cutscene variant (post-reagent-prep transition). Re-baseline the cutscene count and the Phase-9 schedule accordingly."
+        },
+        {
+          "severity": "major",
+          "issue": "The Chemical-Tests phase is watered down. Every manual experiment (Appendix C, Exp 2-8) has TWO graded procedure sections of near-equal weight: Synthesis (40-50%) and Chemical Tests (40-50%) — e.g., Tollen's/Schiff's/iodoform, combustion, ester formation, bromination, flammability, alcoholic AgNO3, litmus-pH-of-vapor, FeCl3 — each with specific reagents and expected color/precipitate/odor/time outcomes. Plan §3.3 describes mostly the synthesis half and only name-drops tests; plan §3.6 collapses all tests into a single \"Chemical tests/outcome 20%\" slice, contradicting the manual's 40-50% weighting and the digest's note that these percentages \"map 1:1 to in-game scoring.\" ~Half of each experiment's graded activity and interaction/asset load is unscoped, making the \"<=1.25 dev-days/experiment\" target (§5 week 5) unrealistic.",
+          "fix": "Model Chemical Tests as a first-class graded gameplay segment; adopt the manual's per-experiment Synthesis/Tests/Prep weights instead of one flat rubric; author the expected-observation outcomes per test; re-estimate authoring velocity and the Midterm/Final weeks."
+        },
+        {
+          "severity": "major",
+          "issue": "The Data Sheet / percentage-yield mechanic and the post-lab quiz are hand-waved. The manual requires each experiment to produce a Data Sheet (balanced reaction; reactant/product MW, density, amount; actual/theoretical/percentage yield; physical tests: appearance/color/specific gravity/boiling point) and answer 3 conceptual post-lab questions \"with valid references,\" which drive the Documentation rubric criterion. Manual Exp 1 (Stoichiometry) is entirely a yield-calculation lab and is silently dropped from the roster (its ILOs go with it). Plan §3.6 only says \"3 post-lab questions answered in-game on the tablet (5%)\" — it never scopes a quiz/data-sheet UI, question authoring for experiments with no manual questions (Methane, Aspirin, Caffeine, Wine), answer validation, or how open-ended essay answers requiring \"cited references\" are graded in VR (they realistically cannot be).",
+          "fix": "Decide and document scope for the yield/data-sheet UI and post-lab quiz; if descoped, remove/replace the Documentation rubric criterion and note the lost stoichiometry ILO; if in scope, add the UI, author the question bank, and define a VR-feasible answer/validation model (e.g., multiple choice) rather than \"cited references.\""
+        },
+        {
+          "severity": "major",
+          "issue": "ISO/IEC 25010 evaluation is entirely absent. The manuscript names ISO/IEC 25010 (Functional Suitability, Performance Efficiency, Usability, Reliability, Maintainability) as the product's quality standard and evaluation instrument, aligned with the contractual P10/P11 evaluation/turnover gates. Plan §7 (verification) and §5 week-8 (\"QA & turnover / final validation\") never reference ISO 25010 or plan the evaluation survey/acceptance mapping. This is a likely client acceptance deliverable that has no home in the plan.",
+          "fix": "Add an ISO 25010 evaluation mapping and a UAT instrument (respondent survey per characteristic) to the turnover phase; tie the review gates to the five characteristics so acceptance is measurable."
+        },
+        {
+          "severity": "minor",
+          "issue": "Wine Making is graded and formatted differently, but the plan applies the universal rubric. Manual Exp 9 is a group project + 15-20 min video documentation + wine-tasting event scored by a BESPOKE rubric (Workmanship 15% / Bottle Appearance 20% / Table Presentation & Costume 20% / Photo-Video Documentation 20% / Flavor-Smell-Taste 25%) with no PPE/procedure/cleanup criteria. Plan §3.6 applies its 5-criteria/BKT rubric to all 11 experiments and treats Wine as a normal experiment plus a time-skip cutscene, so the capstone's grading and finale mode do not match the source.",
+          "fix": "Define a distinct Wine scoring model and finale/tasting mode (or explicitly translate the tasting rubric into single-player criteria) rather than reusing the universal rubric."
+        },
+        {
+          "severity": "minor",
+          "issue": "Two named UX-checklist items are unspecified. (1) \"Task accomplishment messages\" (per-step completion confirmation) from the client revision list are replaced in the plan by silent auto-check ticking (§3.5/§3.7) with no explicit \"task accomplished\" toast/feedback beat. (2) The storyboard's repeated navigation model — \"Follow the markers or on-screen prompts to navigate\" between gather points — is not designed; §3.9 only lists generic teleport/smooth locomotion, with no waypoint/marker guidance system.",
+          "fix": "Add an explicit per-step completion message/affordance and a diegetic waypoint-marker guidance system for gather-point navigation."
+        },
+        {
+          "severity": "minor",
+          "issue": "Fume-hood safety mechanic is missing and one reagent conflict is unreconciled. The manual mandates fume-hood use for toxic reagents (Exp 5 Acetanilide: aniline + acetyl chloride \"in the fume hood\"; storyboard shows a fume-hood asset), but the §3.7 error/safety matrix omits fume-hood usage. Separately, plan §3.3 (M2) lists Acetanilide as \"aniline + acetic anhydride,\" while manual Exp 5 specifies \"aniline + glacial acetic acid + acetyl chloride\" — a manual-vs-storyboard reagent conflict the \"chemistry reconciled\" table did not flag.",
+          "fix": "Add a fume-hood interaction/penalty to the safety matrix; explicitly reconcile the Acetanilide acylating agent (acetic anhydride vs acetyl chloride) with the client in the content-QA pass."
+        },
+        {
+          "severity": "minor",
+          "issue": "Analytics/instructor reporting is dropped without acknowledgment, and the manuscript's guidance model is contradicted unflagged. (1) The manuscript describes instructors monitoring engagement/performance via an analytics dashboard; the plan omits any instructor-facing reporting and asserts \"privacy-lean/no identifiable data\" without noting the descope. (2) The manuscript (User Design + Construction) states the FIRST module deliberately has NO bot (solo procedural learning) with the AI assistant added later; plan §3.4 and the storyboard instead have Pharmee heavily guiding the tutorial. The plan sided with the storyboard without reconciling the manuscript requirement.",
+          "fix": "Explicitly descope or defer the analytics dashboard with client sign-off; confirm the intended first-module guidance model (bot vs no-bot) with the client and record the decision."
+        }
+      ],
+      "verdict": "The plan is architecturally strong and covers the client's UI/UX revision checklist and the user's added requirements (wrist-watch gesture, auto-check, success/fail cutscenes, mastery gate, mirror/PPE, readability, error matrix) well. Its completeness failure is against the source lab manual's per-experiment content model: it under-scopes or omits roughly 40-50% of each experiment's graded activity. Specifically, it misses (1) the Reagent-Preparation phase and its dedicated cutscene — a documented cutscene type the client explicitly listed, which alone breaks the \"x3 cutscenes / 33 total\" estimate; (2) the Chemical-Tests phase, which the manual weights at 40-50% but the plan collapses to a 20% \"outcome\" slice; and (3) the Data-Sheet/percentage-yield mechanic and post-lab quiz that drive the Documentation rubric (with Stoichiometry, Exp 1, silently dropped). It also omits the manuscript's ISO/IEC 25010 evaluation and instructor analytics dashboard, applies the universal rubric to Wine (which has a wholly different tasting-event rubric), and leaves the fume-hood safety mechanic, \"task accomplished\" messages, and marker-based navigation unspecified. Individually several are minor, but the first three compound: they make the \"<=1.25 dev-days/experiment\" velocity target and the Phase-9 cutscene budget unrealistic. Recommendation: re-scope per-experiment content (two graded phases + reagent prep + tests + optional data sheet), re-baseline the cutscene count to four moments/experiment, and add an ISO 25010 acceptance mapping before committing to the P8 schedule."
+    },
+    "tech": {
+      "findings": [
+        {
+          "severity": "major",
+          "issue": "Cinemachine is the wrong tool for VR cutscenes, yet the plan makes it the cutscene tech (4.1 'Timeline 1.8.12 + Cinemachine (add package)'; 3.8 'Unity Timeline + Cinemachine ... camera pan to objective area'). In OpenXR the XR camera pose is written every frame by the TrackedPoseDriver from the HMD; a CinemachineBrain driving that camera either fights head-tracking or is overwritten, and any 'camera pan' forced on the player's view is a nausea trigger. The plan contradicts itself by also promising 'no forced smooth camera motion.' Notably the inherited ModuleCutsceneController already uses a bare PlayableDirector (no Cinemachine) — so Cinemachine adds a dependency and a wrong mental model for zero benefit.",
+          "fix": "Drop Cinemachine entirely. Author cutscenes as Timeline animation/activation tracks that move NPCs, props and world-screen shots while the HMD stays in the player's control; use screen-space fades/vignette for transitions, never a virtual camera on the XR rig. Reserve any 'camera move' for diegetic world screens. Keep the existing PlayableDirector-based ModuleCutsceneController as the base."
+        },
+        {
+          "severity": "major",
+          "issue": "The performance budget (4.5) bakes in 'Fixed Foveated Rendering (Meta SDK)' and elsewhere floats 'Application SpaceWarp candidacy', but neither is available with the installed packages. manifest.json has com.unity.xr.openxr 1.17.1 only — no com.unity.xr.oculus and no com.unity.xr.meta-openxr. Vanilla OpenXR does not expose Quest FFR; it requires the Meta OpenXR feature package (or the Oculus XR plugin / Meta All-in-One). ASW is not a plain-OpenXR toggle — it needs the Meta SDK plus a URP motion-vector pass and is notoriously fragile. The plan's '72 Hz hold' depends on FFR that isn't wired, and casually stacking the Meta All-in-One SDK onto an OpenXR loader risks a dual-XR-loader conflict.",
+          "fix": "Decide the XR provider explicitly now: either add com.unity.xr.meta-openxr and enable its Foveated Rendering OpenXR feature, or switch to the Oculus XR plugin — do not assume plain OpenXR gives FFR. Treat FFR as a required, scheduled integration (not 'import when convenient'), re-derive the perf budget WITHOUT ASW (mark it a stretch experiment), and verify only one active XR loader."
+        },
+        {
+          "severity": "major",
+          "issue": "The task's premise that the repo already commits ~700 MB of Docs binaries with LFS 'set up' is false, and the real risk is worse. .gitignore excludes every handoff binary: Docs/handoff_assets/*.zip, the two big PDFs, and *.unitypackage globally — so Transition.unitypackage (108 MB), the entire foundation of this 'audit-and-continue' plan, is LOCAL-ONLY and not in git (the .gitignore itself warns 'do NOT rely on this repo to preserve them'). Only implementation_plan.pdf is LFS-tracked. Origin is GitHub (RastyFullStaxx/PharmaSynth-...), whose free LFS quota is ~1 GB storage / 1 GB monthly bandwidth — the Laboratory pack alone (100 MB, 2K–4K textures, 8 EXR lightmaps) plus ChemLabEquipment, once imported into Assets/ and committed via LFS, will blow that quota. The plan's week-1 'git LFS setup for big assets' checkbox ignores both the data-loss exposure and the quota ceiling.",
+          "fix": "Before any import: (1) make an explicit off-repo backup of Transition.unitypackage + the Assets Capstone zip (the plan currently only backs up the digest JSON, not the actual project). (2) Budget a GitHub LFS data-pack purchase or a self-hosted/S3 LFS store; confirm which art actually needs to live in git vs. an external asset store. (3) Verify .gitattributes LFS patterns cover fbx/png/tga/exr/psd before the first art commit."
+        },
+        {
+          "severity": "major",
+          "issue": "The reuse map (4.2) counts on importing 49 prefabs and the assembled scene 'as-is', but the surviving project was authored on an older/likely-different XR stack. Both manuscript digests state the previous team targeted 'Unity 3D + Oculus VR SDK', and the 38 inherited scripts contain zero XR-interaction glue (no grab/rig scripts) — meaning interaction lives on prefab components (Oculus OVRGrabbable or an old XRI 2.x ActionBasedController/XR Grab Interactable). Importing into Unity 6 + XRI 3.5.1 will break these: ActionBasedController was removed in XRI 3.x, the interactor/interactable API and serialized fields changed, and any OVR components won't exist at all. The plan's audit scopes only 'compile errors ... singleton abuse' for scripts and never mentions re-rigging the XR Origin or the 49 grab-enabled prefabs across a major XR-framework jump.",
+          "fix": "Add an explicit prefab/rig-migration workstream to week 1: identify the actual XR framework in the package, expect to rebuild the XR Origin rig and re-author every grab interactable against XRI 3.5.1 (Interaction Groups, new input readers). Re-scope 'keep 49 prefabs' as 'reuse meshes/materials, re-author interaction' and budget accordingly — this is likely days, not a checkbox."
+        },
+        {
+          "severity": "major",
+          "issue": "The asset plan (4.4) lists 'baked lightmaps' as a reusable Have while simultaneously scheduling a re-bake — the two can't both be true and the reuse claim is wrong. Laboratory.zip ships LightingData.asset + 8 lightmap EXR sets but NO .unity scene (confirmed in the inventory); lightmaps are bound to a specific scene's renderer lightmap indices/scale-offsets/UVs and are unusable without that scene. The only assembled scene is Transition's SampleScene.unity. After the mandatory Standard→URP material conversion, GI/lightmaps must be fully re-baked regardless. The roadmap folds 'URP-convert + re-bake' into a single week-1 line, underestimating iterative bake cost on a 100 MB, 2K–4K-texture environment.",
+          "fix": "Remove 'baked lightmaps' from the reusable-Have list; treat lighting as a from-scratch re-bake on the imported SampleScene. Budget explicit bake iterations (light probes for dynamic NPCs/props), and lock the lighting setup before content authoring so bakes aren't repeated per experiment."
+        },
+        {
+          "severity": "major",
+          "issue": "'Glass.shader → use bundled URP converter package' (4.4) misunderstands what the converter does. The ChemLabEquipment pack's bundled URP.unitypackage (380 KB) swaps standard MATERIALS to URP Lit — it does not port the hand-written custom Glass.shader, which was authored for an older URP. Under URP 17.5 a custom shader frequently fails to compile (changed ShaderLibrary include paths) and, critically for VR, a transparent shader that lacks the stereo-instancing macros renders in ONE eye only under Single-Pass Instanced — a classic Quest bug. Compounding this, 35+ transparent glassware + _WithLiquid variants create heavy overdraw, which is THE fill-rate killer on Quest 2, yet the perf budget (≤100 draw calls, 750k tris, MSAA 4×) never accounts for transparency/overdraw.",
+          "fix": "Plan a manual Glass.shader port to URP 17.5 with explicit stereo-instancing support and validate it renders in both eyes on Single-Pass Instanced. Add a transparency/overdraw budget (limit simultaneously visible glass, consider a cheaper glass approximation), and re-validate MSAA 4× against fill rate on-device before committing to it."
+        },
+        {
+          "severity": "minor",
+          "issue": "The wrist-flip watch (decision #7, WristMenuController in 4.2) is a headline user-requested feature but is mis-specified for the input model and is effectively untestable pre-hardware. The plan detects it via 'palm-up angle + gaze dot-product' — 'palm-up' assumes hand-tracking, but the XRI/controller path has no palm, only a controller pose, so the gesture must be controller supination. The XR Device Simulator cannot ergonomically reproduce a natural wrist-flip + gaze-convergence, so this feature can't be validated until the headset arrives — which the plan itself flags as the top external risk (possibly not until Aug 18), leaving a core UI unverified until the final stretch.",
+          "fix": "Re-spec the gesture as controller-supination (local-up vs world-up) with debounce; provide a button/thumbstick fallback to open the watch so the feature is usable and testable without the gesture. Move gesture ergonomics to the day-1 on-device pass and don't gate the watch UI's functionality on the gesture landing."
+        },
+        {
+          "severity": "minor",
+          "issue": "Importing Transition.unitypackage will collide with assets already in the project, which the 'import into a branch' step doesn't reconcile. The project already has Assets/InputSystem_Actions.inputactions (Unity-6 default) and a full Assets/Settings/ set (Mobile_RPAsset, Mobile_Renderer, PC_*, UniversalRenderPipelineGlobalSettings), while the package ships its own InputSystem_Actions.inputactions and a Settings/ folder of 8 URP assets authored for a different URP version. Same-path entries silently overwrite the current ones (or duplicate on GUID mismatch), potentially repointing GraphicsSettings/Quality to the package's older RP assets and clobbering the working input actions.",
+          "fix": "Before import, decide which InputSystem_Actions and which URP RenderPipeline assets are canonical. Import into a scratch branch, diff the Settings/ and input-action assets, and manually merge rather than accept blind overwrites; verify Graphics/Quality settings still point at the project's Mobile_RPAsset after import."
+        },
+        {
+          "severity": "minor",
+          "issue": "The reuse map overstates maturity. Only the 'Ethyl Synthesis' module is actually coded, and the inventory identifies it as esterification, not the roster's fermentation-based 'Ethyl Alcohol Synthesis' (P2) — so the one worked example may not even map to a roster slot, and the framework has never driven more than a single experiment. The roadmap banks all 11 experiments in weeks 4–6 at '≤1.25 dev-days/experiment', a velocity extrapolated from one partial module. Separately, BreakableGlassware is listed under 'Keep' but does not appear among the enumerated 38 scripts (it's only referenced in IntegrationGuide.md), so the break/cleanup error branch may be to-write, not reuse.",
+          "fix": "Prove authoring velocity by fully building one NEW roster experiment (not the esterification demo) before week 4 and re-baseline the 11-experiment estimate against that measured time. Confirm whether BreakableGlassware.cs actually exists in the package; if not, move it from 'Keep' to 'New' and budget the glassware-break/cleanup branch."
+        }
+      ],
+      "verdict": "The plan is a strong, well-organized audit-and-continue plan and it gets several hard things right (persistentDataPath + OnApplicationPause autosave is correct for Quest/Android; single-scene modular design matches the inherited project; XR Device Simulator as the interim harness is reasonable). But its technical-feasibility spine has real cracks that will change execution. Three claims are architecturally or factually wrong: Cinemachine cannot drive a VR cutscene camera (the inherited PlayableDirector approach is the right one — Cinemachine should be dropped, not added); FFR/Application SpaceWarp are not available with the installed OpenXR-only package set, so the 72 Hz budget rests on capabilities that aren't wired and require a deliberate Meta-OpenXR/Oculus-plugin decision; and the git/LFS assumption is inverted — the handoff binaries (including the 108 MB Transition.unitypackage that is the entire foundation) are gitignored, LOCAL-ONLY, and unbacked, while imported art will exceed GitHub's free LFS quota. The heaviest schedule risk the plan under-scopes is the XR-interaction migration: the previous project's docs say Oculus VR SDK / older Unity, the 49 prefabs carry their interaction on components that won't survive the jump to XRI 3.5.1, and the audit only inspects script compilation. Add the contradictory 'reuse baked lightmaps' claim (must re-bake; Laboratory.zip has no scene), the custom Glass.shader stereo/overdraw risk the material converter won't solve, the untestable-pre-hardware wrist gesture, and asset-collision reconciliation on import, and the honest read is: the plan is directionally sound but its 'reuse is nearly free' and 'perf budget is a given' framings are optimistic. It is executable if week 1 is re-scoped around XR-rig re-authoring, an explicit source-asset backup + LFS strategy, a proven-on-a-real-experiment authoring velocity, and a corrected cutscene/FFR technical approach.</verdict>\n</invoke>\n"
+    },
+    "schedule": {
+      "findings": [
+        {
+          "severity": "blocker",
+          "issue": "Aggregate scope is ~3-4x the realistic 8-week capacity of the actual team. The deliverable set (11 bespoke experiments, 33 Timeline cutscenes + wine specials, 2 NPCs incl. one unsourced, full UI suite, BKT + save, ALL audio from scratch, URP conversion + re-bake of a 100MB/4K lab pack, QA + turnover docs) is a 4-6 month small-team scope. Every single week in the roadmap is loaded to ~150-250%: W1 = audit + import + URP-convert two packs + iterative light re-bake + XR rig + LFS; W2 = the entire core-systems stack (TaskGraph + auto-check + HUD + tablet + watch + timer + BKT + rubric + save + progression + grade screen + readability) in one week; W7 = all cutscenes + all audio + all UI-final. There is no buffer anywhere. The plan reads as a task inventory mapped onto 8 slots, not a capacity-validated schedule.",
+          "fix": "Replan bottom-up from measured dev-days against true capacity (see staffing finding). Adopt an explicit tiered scope: a contractually-safe MVP first, stretch content second. Present the capacity gap to the client at the Week-1 gate rather than discovering it in Week 5."
+        },
+        {
+          "severity": "blocker",
+          "issue": "Week 7 is the single largest schedule fiction: it bundles 33 Timeline cutscenes (11 x intro/success/fail) + wine time-skip montage + wine tasting finale + ALL dialogue authoring + ALL audio produced from scratch (SFX, robot-beep NPC 'voice', ambient loop, menu music, mixer wiring) + final hub/menu/settings + final icons/labels into 7 days. Even with one master Timeline template, each of 33 variants still needs per-experiment shot framing (Cinemachine), camera pans to a different objective area, dialogue timing, subtitle panels, and (for fail variants) what-went-wrong recap logic wired to the error system. At a conservative ~0.5 day/cutscene that is ~16 dev-days for cutscenes alone, before audio (another ~3-5 days) and UI-final. This is ~4 weeks of work in 1.",
+          "fix": "Collapse cutscenes to 3 truly reusable, data-driven templates (one intro, one generic success, one generic fail) swapped per experiment via DialogueData/shot SOs, with the wine time-skip as the only bespoke exception; this removes the per-experiment authoring tax. Move audio to Weeks 3-4 (hooks already exist in inherited code) and spread hub/menu/settings/icons across Weeks 2-6 so Week 7 becomes integration + polish only."
+        },
+        {
+          "severity": "blocker",
+          "issue": "The designated cut candidates cannot absorb the overrun. Only caffeine (F3) and failure-variant cutscenes are marked cuttable because they are 'the only items absent from the client's contractual revision list' — meaning the other 10 experiments and all success cutscenes are contractually locked and un-descopable without renegotiation. Cutting caffeine (~2-3 days) + 11 fail cutscenes cannot recover a multi-week gap. Meanwhile the manuscript's own Functional Suitability / RAD requirements name only THREE core experiments (ethyl alcohol, aspirin, benzoic acid); the 11-experiment roster is a storyboard-faithful choice, not a contractual floor. The real descope lever — shipping the 3 manuscript-core experiments polished, with the rest as stretch — is never identified.",
+          "fix": "Negotiate a tiered contract at the Week-1 gate: Tier 1 = tutorial + 3 manuscript-core experiments (ethanol/aspirin/benzoic acid) fully polished + full systems; Tier 2 = remaining Prelim/Midterm; Tier 3 = Finals/wine. Lock Tier 1 as the deliverable and treat Tiers 2-3 as schedule-dependent. Get client sign-off on this tiering now, not as an emergency cut in August."
+        },
+        {
+          "severity": "major",
+          "issue": "The Week-5 velocity claim (4 experiments in 7 days at <=1.25 dev-days/experiment) is unfounded. It presumes the template is 'truly done' AND that every per-experiment chemistry-visual system already exists — but TemperatureSim, GasCollection, CrystallizationController, and FiltrationRig are all listed as NEW scripts and are not clearly built before Week 5 (only temperature sim appears, in W4). These systems ARE the unique per-experiment cost. Add unique apparatus per experiment (fermentation/wine vessels don't exist and must be modeled; separatory funnel/petri/tea props; distillation vapor/condenser visuals; 56C and 70-80C cutoffs), plus re-authoring garbled reagent-label textures per experiment, and realistic bespoke cost is 2-3 dev-days each, not 1.25. Critically, the template's true maturity is unknown until end of W4 (tutorial + P1/P2 prove it), yet W5 immediately demands mass authoring with zero iteration buffer between the two.",
+          "fix": "Build the four chemistry-visual systems in Weeks 3-4 as first-class deliverables before any mass authoring. Re-estimate experiments at 2-3 dev-days for unique-apparatus ones, ~1.25 only for template-identical functional-group tests. Insert an explicit 'template hardening' buffer between W4 (proof) and mass authoring, and sequence experiments easy-to-hard so a template defect is caught cheaply."
+        },
+        {
+          "severity": "major",
+          "issue": "Six client-review gates carry zero turnaround budget. For an academic client (TIP-QC), sign-off on scoring weights (W2), UI direction (W2), and especially the dialogue/copy batch (W7) can each take days-to-weeks. Worse, the plan batches ALL NPC/cutscene copy approval into Week 7 — the same week the cutscenes are built — creating a circular dependency: cutscenes cannot be finalized until copy is approved, but copy isn't submitted until the cutscene week. Any client latency at W2 or W7 has no slack to absorb and pushes straight into the final QA/turnover window.",
+          "fix": "Front-load all dialogue/copy as reviewable data in Weeks 2-4 and secure client sign-off by end of W4, decoupling copy approval from cutscene assembly. Add an explicit turnaround buffer (0.5-1 week cumulative) between each gate and the work that depends on its outcome; make scoring-weight sign-off (already flagged ambiguous) a hard W2 exit criterion."
+        },
+        {
+          "severity": "major",
+          "issue": "Staffing is misrepresented as '2 developers.' Per the brief, Rasty is PM (and only nominally a dev) while David is the sole dedicated developer, with Claude as the build assistant — realistically ~1.0-1.3 human FTE, not 2.0. Every velocity number in the roadmap (1.25 dev-days/experiment, one-week core-systems stack, one-week cutscene sprint) is implicitly sized against 2 full-time developers. Halving the assumed labor roughly doubles every week's overrun already identified above.",
+          "fix": "Rebuild the schedule on an honest ~1.0-1.3 FTE capacity model with Claude-assisted productivity stated as an explicit (and unproven) multiplier, not baked in silently. Reserve PM time for client management and gate turnaround. Validate the assumed Claude multiplier against actual Week 1-2 throughput before committing to the Week 5-7 content volume."
+        },
+        {
+          "severity": "major",
+          "issue": "Audio is 100% from scratch (digest confirms ZERO .wav/.mp3/.ogg anywhere, despite scripts referencing AudioSource for NPC narration and glass shatter) yet is parked in Week 7, the most overloaded week. Audio is a multi-day effort: license-vetting CC0/purchased packs, authoring Pharmee's entire robot-beep 'voice' (the NPC has no VO, so beeps ARE its character), ambient lab loop, menu music, UI/pour/bubble/shatter/alarm SFX, plus building AudioService mixer groups and wiring every gameplay-event trigger. Deferring it to W7 also means every experiment authored in W4-6 is validated silently, hiding audio-timing bugs until there is no time to fix them.",
+          "fix": "Move placeholder/temp audio into Weeks 3-4 using the existing AudioSource hooks; author the Pharmee robot-beep set early since it gates NPC feel and cutscene timing. Treat final audio pass as a W7 polish item on top of already-wired triggers, not a from-scratch W7 build."
+        },
+        {
+          "severity": "major",
+          "issue": "NPC production is underscoped and sits on the critical path for cutscenes. The digest confirms Pharmee (RobotNPC) exists as a model only — no rig, no animations, no face-state assets — yet the design requires enter/idle-float/talk/gesture animations plus happy/warning screen-face material states. Dr. Jimenez is not owned at all: 'source a rigged scientist model' is an external dependency (Asset Store purchase needing client budget, or a Mixamo rig that then needs a lab coat modeled/fitted — Mixamo does not provide garments), with no fallback defined. Both NPCs gate the Week-7 cutscenes; if either slips, both the W3 NPC gate and W7 cutscenes slip.",
+          "fix": "Schedule Pharmee's animation + face-state set explicitly in Week 3 and treat it as a hard dependency for cutscenes. Define Dr. Jimenez fallbacks now (e.g., a single static posed model, or an off-screen 'examiner' presence with clipboard, or reuse of an existing rigged asset) so a sourcing failure does not cascade. Confirm asset-store budget/licensing with the client at the Week-1 gate."
+        },
+        {
+          "severity": "major",
+          "issue": "Week 1 doubles as both an overloaded work week and the gate for the plan's foundational bet. It packs audit + package import + URP conversion of two packs + a light RE-BAKE of a 100MB / 2K-4K-texture Laboratory scene (multi-hour, iterative — probe placement and lightmap UVs rarely bake correctly first try; the Laboratory.zip ships NO .unity scene, only baked data, so the scene must be reassembled) + XR rig + Device Simulator walkthrough + Git LFS. Simultaneously it must validate the whole 'reuse the previous project' premise on which the optimized schedule rests — but only 1 of 11 modules (Ethyl) is actually built, and XRI 3.5 compatibility of the 38 inherited scripts is unverified. If the audit finds the interaction layer (grab/pour/socket/reaction) needs re-plumbing for the current XRI interactable API, the risk section's '3-day rewrite' underestimates it, and there is no slack.",
+          "fix": "Split Week 1 across ~1.5 weeks or defer the full light re-bake behind a fast placeholder-lighting pass so simulator work isn't blocked on bakes. Add an explicit Week-1 go/no-go criterion: if the inherited interaction/reaction layer does not run under Unity 6 + XRI 3.5, immediately trigger the tiered-descope path (3 core experiments) rather than absorbing the rework silently."
+        },
+        {
+          "severity": "minor",
+          "issue": "Several required deliverables implied by the design and rubric are not on the schedule at all: the post-lab quiz (Documentation rubric = 5%, '3 post-lab questions answered in-game on the tablet' x 11 experiments = 33 questions authored + a quiz UI); 11 per-experiment ILO card sets; batch re-authoring of clean reagent-label textures across all experiments (storyboard labels are garbled AI text); and the PPE mirror/avatar reflection, which the plan itself flags as an unsolved art problem (rigged coat vs material swap) but never schedules a decision or build for.",
+          "fix": "Add these as explicit line items or explicitly defer them with client agreement. In particular, the quiz UI + 33 questions and the label-texture batch are non-trivial and currently invisible in the roadmap; the PPE-mirror approach should be decided in Week 3, not left open."
+        },
+        {
+          "severity": "minor",
+          "issue": "Headset dependency leaves no fix runway. All comfort/perf validation — a contractual review point — is batched into Week 8 with no device before then, and the escalation trigger ('flag to client if undelivered by Aug 18') falls in Week 7, too late to react. Given the Laboratory pack is 100MB of 2K-4K textures against a Quest-2 budget of ~100 draw calls / 750k tris / ASTC 2K ceiling, on-device profiling is likely to surface real perf problems (texture memory, draw calls, overdraw) requiring downsizing/atlasing/LOD — days of work with zero remaining schedule if first discovered in Week 8.",
+          "fix": "Do perf hardening proactively on-simulator and via static budgets in Weeks 4-6 (ASTC compression, atlasing, static batching, draw-call audits) instead of waiting for hardware. Move the headset escalation date to Week 5 so an undelivered device forces a plan adjustment while there is still runway."
+        }
+      ],
+      "verdict": "The plan is technically literate, well-structured, and correctly exploits the discovery that the previous team's project survives — but as a SCHEDULE it does not close, and no amount of the identified cut candidates makes it close. The true team is ~1.0-1.3 human FTE (Rasty is PM, David the sole dev, Claude the assistant), not the '2 developers' the velocity math assumes, and the deliverable set (11 bespoke experiments with unique apparatus and unbuilt chemistry-visual systems, 33 cutscenes + wine specials, two NPCs including one unsourced, a full UI suite, BKT + save, ALL audio from scratch, URP conversion + re-bake of a 100MB/4K lab, plus QA and turnover) is a 4-6 month small-team scope compressed into eight 7-day crunch weeks. Every week is loaded 150-250%; the two most fictional are Week 7 (all cutscenes + all audio + all UI-final ≈ four weeks of work) and the Week 5-6 sprint, whose 1.25-dev-day/experiment velocity is unsupported because the per-experiment visual systems (TemperatureSim/GasCollection/Crystallization/Filtration) are not built beforehand and the template's maturity is unproven until the moment mass authoring begins. There is zero buffer for client-review turnaround across six gates (with a circular copy-approval/cutscene dependency in Week 7), zero device-fix runway, and the designated cuts (caffeine + fail cutscenes) recover a fraction of a multi-week gap while everything else is treated as contractually locked. The unused lever is the manuscript's own 3-experiment core scope. Recommended reordering: replan on honest capacity; negotiate a tiered MVP (tutorial + ethanol/aspirin/benzoic acid) at the Week-1 gate with a hard go/no-go on the inherited interaction layer; collapse 33 bespoke cutscenes to three reusable data-driven templates; front-load audio and dialogue-copy approval into Weeks 3-4; build the chemistry-visual systems before authoring experiments; and insert explicit gate-turnaround and device buffers so QA/turnover in Week 8 is genuine rather than a cliff."
+    }
+  },
+  "workflowProgress": [
+    {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Critique"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "critic:completeness",
+      "phaseIndex": 1,
+      "phaseTitle": "Critique",
+      "agentId": "ac9e2f4213793a5e6",
+      "agentType": "Explore",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783434893960,
+      "queuedAt": 1783434893931,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "The plan is architecturally strong and covers the client's …",
+      "promptPreview": "You are an adversarial reviewer of an implementation plan for PharmaSynth, a Meta Quest VR chemistry-lab education game (Unity 6000.5.2f1, URP 17.5, OpenXR + XRI 3.5.1, hard deadline Aug 31 2026, 2 developers, project starts from the previous team's recovered Unity package). READ-ONLY task: do not modify any file.\n1) Read the plan: C:/Users/MSI/.claude/plans/you-are-the-best-cozy-possum.md\n2) Read…",
+      "lastProgressAt": 1783435286103,
+      "tokens": 132634,
+      "toolCalls": 16,
+      "durationMs": 392143,
+      "resultPreview": "{\"findings\":[{\"severity\":\"major\",\"issue\":\"The Reagent-Preparation cutscene AND phase are omitted. The cutscene deck's Cutscene 1 is literally titled \\\"After Completing Preparation of Reagents\\\" (modal \\\"Preparations Complete\\\" -> Pharmee commend -> objective panel), and the client revision checklist explicitly lists cutscenes \\\"incl. intro/reagent-prep/completion/wine-transition.\\\" Appendix C conf…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "critic:tech",
+      "phaseIndex": 1,
+      "phaseTitle": "Critique",
+      "agentId": "a7aed983cccab5226",
+      "agentType": "Explore",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783434893961,
+      "queuedAt": 1783434893931,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "The plan is a strong, well-organized audit-and-continue pla…",
+      "promptPreview": "You are an adversarial reviewer of an implementation plan for PharmaSynth, a Meta Quest VR chemistry-lab education game (Unity 6000.5.2f1, URP 17.5, OpenXR + XRI 3.5.1, hard deadline Aug 31 2026, 2 developers, project starts from the previous team's recovered Unity package). READ-ONLY task: do not modify any file.\n1) Read the plan: C:/Users/MSI/.claude/plans/you-are-the-best-cozy-possum.md\n2) Read…",
+      "lastProgressAt": 1783435235352,
+      "tokens": 80222,
+      "toolCalls": 11,
+      "durationMs": 341390,
+      "resultPreview": "{\"findings\":[{\"severity\":\"major\",\"issue\":\"Cinemachine is the wrong tool for VR cutscenes, yet the plan makes it the cutscene tech (4.1 'Timeline 1.8.12 + Cinemachine (add package)'; 3.8 'Unity Timeline + Cinemachine ... camera pan to objective area'). In OpenXR the XR camera pose is written every frame by the TrackedPoseDriver from the HMD; a CinemachineBrain driving that camera either fights head…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "critic:schedule",
+      "phaseIndex": 1,
+      "phaseTitle": "Critique",
+      "agentId": "a625293e18dea759a",
+      "agentType": "Explore",
+      "model": "claude-opus-4-8",
+      "state": "done",
+      "startedAt": 1783434893963,
+      "queuedAt": 1783434893932,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "The plan is technically literate, well-structured, and corr…",
+      "promptPreview": "You are an adversarial reviewer of an implementation plan for PharmaSynth, a Meta Quest VR chemistry-lab education game (Unity 6000.5.2f1, URP 17.5, OpenXR + XRI 3.5.1, hard deadline Aug 31 2026, 2 developers, project starts from the previous team's recovered Unity package). READ-ONLY task: do not modify any file.\n1) Read the plan: C:/Users/MSI/.claude/plans/you-are-the-best-cozy-possum.md\n2) Read…",
+      "lastProgressAt": 1783435180961,
+      "tokens": 75419,
+      "toolCalls": 8,
+      "durationMs": 286998,
+      "resultPreview": "{\"findings\":[{\"severity\":\"blocker\",\"issue\":\"Aggregate scope is ~3-4x the realistic 8-week capacity of the actual team. The deliverable set (11 bespoke experiments, 33 Timeline cutscenes + wine specials, 2 NPCs incl. one unsourced, full UI suite, BKT + save, ALL audio from scratch, URP conversion + re-bake of a 100MB/4K lab pack, QA + turnover docs) is a 4-6 month small-team scope. Every single wee…"
+    }
+  ],
+  "totalTokens": 288275,
+  "totalToolCalls": 35
+}

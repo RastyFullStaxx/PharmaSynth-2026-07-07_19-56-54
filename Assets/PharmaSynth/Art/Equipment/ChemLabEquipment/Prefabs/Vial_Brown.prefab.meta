@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 57046e69df9aefe4c9ec597fd9daf8cd
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Prefabs/Vial_Brown.prefab
+  uploadId: 761072

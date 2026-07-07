@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: cf757189f76a6d24cba1322dd40243b7
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Prefabs/IronRing.prefab
+  uploadId: 761072

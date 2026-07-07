@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4e8f0d4d68d28bf4cabf3fca1930015d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Animations/TestTubeHolder_Metal_GraspTestTube.anim
+  uploadId: 761072

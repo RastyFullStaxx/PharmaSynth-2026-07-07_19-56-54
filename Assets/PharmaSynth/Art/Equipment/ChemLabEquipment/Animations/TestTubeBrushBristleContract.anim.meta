@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6cdc0a5b5cbbf384099487bba78f0fc6
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Animations/TestTubeBrushBristleContract.anim
+  uploadId: 761072

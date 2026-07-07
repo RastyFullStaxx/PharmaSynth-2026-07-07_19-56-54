@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 698d52766ebb64845b63fcdde1f0a47d
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Prefabs/RetortStand.prefab
+  uploadId: 761072

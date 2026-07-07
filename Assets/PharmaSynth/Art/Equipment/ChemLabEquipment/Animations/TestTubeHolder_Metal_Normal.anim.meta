@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d5dc1b55267102640a128abf3acd407d
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Animations/TestTubeHolder_Metal_Normal.anim
+  uploadId: 761072

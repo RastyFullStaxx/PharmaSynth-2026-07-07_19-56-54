@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 465994603984f0446839feec11efdb8e
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Prefabs/BunsenBurner.prefab
+  uploadId: 761072

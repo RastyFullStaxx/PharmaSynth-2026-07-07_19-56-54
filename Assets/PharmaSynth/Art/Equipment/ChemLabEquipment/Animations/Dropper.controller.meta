@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0655555735324f24eb4d4d1af8d75545
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Animations/Dropper.controller
+  uploadId: 761072

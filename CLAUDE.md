@@ -3,58 +3,49 @@
 Guidance for Claude Code working in this repository. Read this first each session.
 
 ## Project summary
-- **PharmaSynth** — a VR game for **Meta Quest**, built in **Unity 6000.5.2f1** (URP).
-- This is a **client handoff**: the original developer team discontinued the project. We are effectively rebuilding **from scratch**.
-- The client says they have most assets; **some assets may be missing** and can be created if needed.
-- The **Unity project itself is currently near-empty** — only the default `SampleScene`, XR scaffolding, and input actions. No game scripts, prefabs, or art are imported yet. All source material lives in `Docs/` (see below).
-- Genre / core gameplay loop is **not yet confirmed by the user** — do NOT assume it. It must be derived from the Docs during the planning phase and confirmed with the user.
+- **PharmaSynth** — a VR chemistry-lab education game for **Meta Quest 3** (confirmed), built in **Unity 6000.5.2f1** (URP).
+- Client handoff from a discontinued capstone team. **NOT a from-scratch rebuild**: the previous team's full Unity project (38 scripts, 49 prefabs, assembled lab scene, IntegrationGuide.md) survives inside `Docs/handoff_assets/Transition.unitypackage` — this is an **audit-and-continue** build.
+- **Game concept (confirmed):** first-person guided lab sim, "PharmaSynth: Gear Up, Synth It Up!". 11 experiments (Tutorial: Methane; Prelim: Chemical Compounding, Ethyl Alcohol; Midterm: Benzoic Acid, Acetanilide, Acetone, Chloroform; Final: Benzamide, Aspirin, Caffeine, Wine Making). Per-experiment loop: intro cutscene → reagent prep → synthesis → chemical tests → data sheet/quiz → success/fail cutscene → grade screen. Bayesian Knowledge Tracing mastery, **90% gate** to advance. NPCs: Pharmee (robot guide, subtitles + beeps) + Dr. Jimenez (human examiner, no hints).
+- **Hard deadline: August 31, 2026** (contract). Tier build order: Tier 1 = Tutorial + Prelim + Benzoic Acid + Aspirin; Tier 2 = rest of Midterm + Benzamide + Wine; Tier 3 = Caffeine.
 
-## Current status (as of last session)
-- ✅ Unity MCP server connected and working (see setup notes below).
-- ✅ VR packages installed (OpenXR, XR Interaction Toolkit, XR Management). XR + XRI folders exist under `Assets/`.
-- ⛔ **Nothing from `Docs/` has been processed yet.** Planning phase has not started. Wait for the user to say "we're in the planning stage" / "go".
+## THE PLAN (approved 2026-07-07)
+`C:\Users\MSI\.claude\plans\you-are-the-best-cozy-possum.md` — the critique-hardened master plan: full design spec, architecture, asset gap list, week-by-week roadmap, error-handling matrix, Quest 3 perf budget, verification strategy. Follow it; update it when decisions change.
+Key user requirements not in the old docs: wrist-flip watch checklist (right hand default, button fallback); auto-checking task conditions; end cutscene ALWAYS (success or fail variant); NPC robot dialogues; improved animations; **spacious lab layout** (wide clearances around tables/gather points, unobstructed experimentation).
+
+## Current status (as of 2026-07-07 session)
+- ✅ All Docs processed via 13-agent digest → `Docs/digests/doc-digest-13agents.json` (+ plan critique in `plan-critique-3agents.json`; extracted storyboard/cutscene page renders in `Docs/digests/images/`, gitignored).
+- ✅ Plan approved. Execution started on branch **`feature/asset-intake`**.
+- ✅ Handoff archives backed up (MD5-verified) to `C:\Users\MSI\PharmaSynth-handoff-backup\` — required before any zip deletion.
+- ✅ Assets extracted & organized into `Assets/PharmaSynth/Art/{Environment,Equipment,Characters,UI}` (+ empty `Scripts/Prefabs/ScriptableObjects/Scenes/Timeline/Audio/Materials`); raw DCC sources (labcoat OBJ/.zprj, test-tube .blend) in `Docs/raw-art-sources/` (gitignored). Staging leftovers at `C:\Users\MSI\pharma-staging\` (delete when done).
+- ✅ `com.unity.cloud.gltfast` added (for the .glb models: RobotNPC, distillation flask, shelves, thermometer).
+- ⏳ NEXT: verify clean import (console + FindProjectAssets), then import `Transition.unitypackage` on a scratch branch (manual merge: keep project's Unity-6 `InputSystem_Actions` + `Settings/` canonical), audit the 38 scripts → `Docs/audit-report.md`, URP-convert Laboratory + ChemLab materials (ChemLab ships a URP converter package; custom Glass.shader needs manual URP-17 port with stereo-instancing), rebuild XR rig on XRI 3.5.
+- ⏳ Zips are deleted ONLY after verified import + backup (user request); `Transition.unitypackage` deleted after the W1 audit.
 
 ## Environment
-- OS: Windows 11. Shell: PowerShell primary; Bash (Git Bash / POSIX) also available.
-- Unity: `6000.5.2f1`, Universal Render Pipeline (URP 17.5.0), new Input System (1.19.0).
-- Git: branch `main`. Initial check-in only.
-- VR SDK direction chosen by user: **OpenXR + XR Interaction Toolkit + Meta XR SDK**.
-  - Installed via `Packages/manifest.json`: `com.unity.xr.management`, `com.unity.xr.openxr`, `com.unity.xr.interaction.toolkit` (Unity auto-resolved to compatible versions).
-  - **Meta XR All-in-One SDK is NOT yet imported** — it comes from the Unity Asset Store (account-gated), imported via Package Manager → My Assets. Still a TODO.
+- OS: Windows 11. Shell: PowerShell primary; Git Bash also available.
+- Unity `6000.5.2f1`, URP 17.5, Input System 1.19, XRI 3.5.1, OpenXR 1.17.1, Timeline. **No Cinemachine (deliberate — never animate the XR camera; cutscenes = PlayableDirector staging + fades).**
+- XR: add `com.unity.xr.meta-openxr` for Quest FFR (plain OpenXR lacks it); Meta XR All-in-One SDK (Asset Store, account-gated) optional later. Verify exactly ONE active XR loader.
+- Git: `main` + `feature/asset-intake`. Handoff binaries + digest images are gitignored (backup is off-repo). Commit only when asked.
+- **Gotcha:** the machine's TEMP points into `C:\Program Files\poppler-24.08.0\Library\bin` — poppler is broken, so the Read tool CANNOT read PDFs. Use `"C:/Program Files/Git/mingw64/bin/pdftotext.exe"` for text and python (pypdf + pillow installed) for page/image extraction. Manuscript Google Doc exports cleanly via `curl -sL "<doc-url>/export?format=txt"`.
 
 ## Unity MCP — connection setup & gotchas (IMPORTANT)
 Uses Unity's **official** Assistant MCP Server (`com.unity.ai.assistant`), not a community bridge.
-- Requires a **Unity AI subscription seat** — Unity Personal users must have an active seat. Without it, the MCP panel shows **"Up to 0 direct connections allowed"** and every tool call returns **"Connection revoked"**.
-- **The fix that worked:** subscribe → **assign the seat to the user in the Unity dashboard** (subscription page → tick user → "Assign seats") → **fully quit and reopen the Unity Editor** so it re-fetches the entitlement. Subscription alone is not enough; the seat must be assigned AND Unity restarted.
-- Approval lives in **Project Settings → AI → Unity MCP Server** (client `claude-code` must be Accepted; enable the tools you need — all 52 can be ticked safely).
-- If tools ever return "Connection revoked" again: check seat is still assigned, then cold-restart Unity (and if needed Claude Code).
-- **Credits:** using the MCP tools (scene edits, scripts, console) does **NOT** consume Unity AI credits. Only Unity's **generative** features (AI Assistant chat, `Unity_AssetGeneration_*` model/texture generation) consume credits. Always flag before spending credits on generation.
-- Claude's own reasoning/actions bill to the **Claude Code plan**, separate from Unity entirely.
+- Requires a **Unity AI subscription seat** — without it every call returns "Connection revoked". Fix: assign seat in Unity dashboard → fully restart Unity.
+- Approval: **Project Settings → AI → Unity MCP Server** (client `claude-code` Accepted; all 52 tools safe to enable).
+- **Credits:** MCP tools (scene edits, scripts, console) consume NO Unity AI credits; only `Unity_AssetGeneration_*` / AI Assistant chat do. Always flag before spending credits.
+- **Gotcha:** during long imports/package resolves the editor stops answering ("Unity not detected / no fresh discovery files"). Wait for Editor.log to go quiet (~30s inactivity) and retry.
 
-## Testing without hardware
-The Meta Quest headset has NOT been delivered yet. Test in-editor using the **XR Device Simulator** (XRI sample — simulates HMD + controllers via mouse/keyboard). ~90% of gameplay is testable this way; comfort/performance/hand-tracking need the real device later.
+## Testing
+Quest 3 headset NOT delivered yet. Test in-editor via **XR Device Simulator**; escalate to client if no device by W5 (Aug 4-10). Wrist-gesture ergonomics + comfort + 90 Hz validation are day-1 on-device items. Verify via MCP captures (`Camera_Capture`, `SceneView_CaptureMultiAngleSceneView`) + `Unity_ReadConsole` zero-error gate.
 
-## Docs handoff — source of truth (in `Docs/`, NOT yet processed)
-**`Docs/Documentations/`**
-- `gdocs_link_for_the_manuscript` → Google Doc manuscript: https://docs.google.com/document/d/1TUveyyvGDPXEBGNcftsLuKm9VnIdl3pbX5o_7IHxk5k/edit — read via WebFetch (**must be shared "anyone with link → Viewer"**, else user exports to PDF).
-- `implementation_plan.pdf` (253 KB) → previous team's build plan. Read via Read (PDF).
-
-**`Docs/handoff_assets/`**
-- `PharmaSynth-Storyboard.pdf` (~267 MB, image-heavy) → read in page ranges (max 20 pages/request; several passes).
-- `cutscenes-sample.pdf` (~21 MB) → cutscene reference.
-- `Assets Capstone-...zip` (~254 MB) → art/asset pack. Unzip + inventory via Bash before importing.
-- `Transition.unitypackage` (~106 MB) → importable Unity assets (import via Assets → Import Package / RunCommand).
-- `Transition.zip` (~106 MB) → likely same contents as the .unitypackage; verify vs. it.
-
-## Planned workflow for the planning phase (do when user says "go")
-1. Read `implementation_plan.pdf` and the Google Doc manuscript → establish game concept, mechanics, scope.
-2. Skim `PharmaSynth-Storyboard.pdf` + `cutscenes-sample.pdf` → understand narrative, scenes (e.g. the lab), cutscenes.
-3. Unzip + inventory `Assets Capstone` zip and inspect `Transition.unitypackage` → list what art/assets exist.
-4. Produce: (a) confirmed game design summary, (b) asset inventory vs. what's needed → gap list of missing assets, (c) a phased implementation plan. Confirm all with the user before building.
-5. Only then start building: OpenXR/Quest project settings, XR Origin rig + XR Device Simulator, lab scene blockout, core interaction/gameplay scripts.
+## Docs handoff (all processed — see digests)
+- `Docs/Documentations/gdocs_link_for_the_manuscript` → manuscript (capstone doc; Appendix C = the WCC lab manual with per-experiment procedures, weights, rubric).
+- `Docs/Documentations/implementation_plan.pdf` → OUR signed contract (P1–P11 phases, Aug 31 deadline, deliverables).
+- `Docs/handoff_assets/` → storyboard + cutscenes PDFs (reference only; we exceed their quality; their labels are garbled and some pages have copy-paste chemistry errors — never copy chemistry from storyboard, use manual/Appendix C).
+- Chemistry conflicts already reconciled in the plan (§3.3); flagged for client: acetanilide acylating agent, scoring weights.
 
 ## Working conventions
-- Prefer building/verifying through the Unity MCP (create GameObjects, wire components, then `Camera_Capture` / `SceneView_CaptureMultiAngleSceneView` to visually confirm).
-- Write C# scripts to `Assets/Scripts/...` (create the folder). Keep code style consistent once a pattern is established.
-- Do not run destructive git ops or commit/push unless asked.
-- Confirm game-design assumptions with the user rather than inventing gameplay.
+- Build/verify through Unity MCP; capture screenshots to confirm visual changes.
+- C# to `Assets/PharmaSynth/Scripts/...`; experiments are DATA (ScriptableObjects), not scenes; match inherited code style where reused.
+- No destructive git ops; commit/push only when asked.
+- Confirm game-design changes with the user; the plan file records all decisions.

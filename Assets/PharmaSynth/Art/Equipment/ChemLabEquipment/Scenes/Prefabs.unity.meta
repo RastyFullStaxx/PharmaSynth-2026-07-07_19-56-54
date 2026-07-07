@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ab1a5ebb737a26141bc1ebe24f34866e
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Scenes/Prefabs.unity
+  uploadId: 761072

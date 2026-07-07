@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 154307198fbdff641a74767a4226207a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Materials/VialLabelMat.mat
+  uploadId: 761072

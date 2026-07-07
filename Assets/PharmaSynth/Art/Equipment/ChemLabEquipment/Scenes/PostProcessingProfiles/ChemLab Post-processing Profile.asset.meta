@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 26affbd3ced5ee84bb9fb3f06ba4c72e
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Scenes/PostProcessingProfiles/ChemLab Post-processing
+    Profile.asset
+  uploadId: 761072

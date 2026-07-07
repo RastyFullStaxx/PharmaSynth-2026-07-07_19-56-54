@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e1ab852ca66c9104690ef10cfd81f62a
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Animations/ForcepsNormal.anim
+  uploadId: 761072

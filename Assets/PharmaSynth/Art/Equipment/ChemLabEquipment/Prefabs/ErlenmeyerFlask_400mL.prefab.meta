@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 059edc5de6cb6af45af5310f625c325b
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Prefabs/ErlenmeyerFlask_400mL.prefab
+  uploadId: 761072

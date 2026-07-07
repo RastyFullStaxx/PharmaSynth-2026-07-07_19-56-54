@@ -132,3 +132,11 @@ Docs/handoff_assets/PharmaSynth-Storyboard.pdf
 Docs/handoff_assets/cutscenes-sample.pdf
 # NOTE: *.unitypackage is already ignored globally above, which also covers
 # Docs/handoff_assets/Transition.unitypackage.
+
+# Extracted storyboard/cutscene page renders (~225 MB) — reference only, local.
+# The digest JSONs next to them ARE tracked (small, valuable).
+Docs/digests/images/
+
+# Raw DCC art sources (.blend/.zprj/.obj masters) staged for the art pipeline —
+# large binaries, kept local + in the off-repo backup.
+Docs/raw-art-sources/

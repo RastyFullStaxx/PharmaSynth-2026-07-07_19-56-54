@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5d7fdc68bc284914fbfdcad3a5abff1b
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Prefabs/Dropper.prefab
+  uploadId: 761072

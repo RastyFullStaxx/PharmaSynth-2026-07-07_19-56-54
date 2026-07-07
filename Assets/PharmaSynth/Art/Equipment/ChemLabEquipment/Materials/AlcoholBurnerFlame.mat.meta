@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9f9f66e3778b9d7458c12db6f9473260
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Materials/AlcoholBurnerFlame.mat
+  uploadId: 761072

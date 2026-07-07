@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1b14bb703a181454c8b6c3eae3d05db2
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Materials/PlasticMat.mat
+  uploadId: 761072

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8ec203c6860c9474b9c6e9494418c024
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Animations/Forceps.controller
+  uploadId: 761072

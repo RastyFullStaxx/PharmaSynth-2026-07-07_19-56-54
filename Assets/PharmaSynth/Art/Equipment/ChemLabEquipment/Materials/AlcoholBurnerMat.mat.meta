@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5f0d927d90df98648a7a1b31ebe55fd2
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Materials/AlcoholBurnerMat.mat
+  uploadId: 761072

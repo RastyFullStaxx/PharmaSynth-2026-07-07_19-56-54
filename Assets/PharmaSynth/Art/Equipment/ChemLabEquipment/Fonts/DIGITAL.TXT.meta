@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 35e3354a1fda7aa4192d5047b6ab7716
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163610
+  packageName: Chemistry Laboratory Equipment
+  packageVersion: 3.0.1
+  assetPath: Assets/ChemLabEquipment/Fonts/DIGITAL.TXT
+  uploadId: 761072
