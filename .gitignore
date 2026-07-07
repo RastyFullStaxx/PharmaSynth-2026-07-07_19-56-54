@@ -105,3 +105,30 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# ---------------------------------------------------------------------------
+# Project-specific (PharmaSynth)
+# ---------------------------------------------------------------------------
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+
+# Claude Code local settings (if it ever lands in the repo)
+.claude/settings.local.json
+
+# --- Client handoff binaries in Docs/ ---
+# These large source files exceed GitHub's 100 MB per-file limit and would
+# reject a push. Kept LOCAL ONLY — keep a backup outside git (or use Git LFS /
+# cloud storage); do NOT rely on this repo to preserve them.
+# Small tracked reference files (implementation_plan.pdf, the gdocs link) are
+# intentionally NOT ignored.
+Docs/handoff_assets/*.zip
+Docs/handoff_assets/*.7z
+Docs/handoff_assets/*.rar
+Docs/handoff_assets/PharmaSynth-Storyboard.pdf
+Docs/handoff_assets/cutscenes-sample.pdf
+# NOTE: *.unitypackage is already ignored globally above, which also covers
+# Docs/handoff_assets/Transition.unitypackage.
