@@ -37,6 +37,7 @@ public static class PharmaSelfTests
         W4Suite();
         InteractionSuite();
         ProgressionFlowSuite();
+        LibrarySuite();
         ContentSuite();
 
         string summary = $"PharmaSynth Self-Tests: {_total - _fail}/{_total} passed";
@@ -294,6 +295,35 @@ public static class PharmaSelfTests
         foreach (var e in ExperimentCatalog.Entries) svc.RecordResult(e.moduleId, new ExperimentResult { passed = true }, false);
         A("flow: all passed → 100% + no next", flow.AllComplete() && Near(flow.OverallCompletion01(), 1f) && flow.NextExperiment() == null);
         A("flow: final period unlocked + complete", flow.IsPeriodUnlocked(ExperimentPeriod.Final) && flow.IsPeriodComplete(ExperimentPeriod.Final));
+    }
+
+    static void LibrarySuite()
+    {
+        var lib = AssetDatabase.LoadAssetAtPath<ExperimentLibrary>("Assets/PharmaSynth/ScriptableObjects/ExperimentLibrary.asset");
+        A("library: loads", lib != null);
+        if (lib == null) return;
+        A("library: 11 modules", lib.Count == 11);
+
+        bool allResolve = true;
+        foreach (var e in ExperimentCatalog.Entries) if (!lib.Has(e.moduleId)) allResolve = false;
+        A("library: covers the whole catalog", allResolve);
+
+        GameFlow.Select("midterm-acetone");
+        A("gameflow: selection persists", GameFlow.SelectedModuleId == "midterm-acetone");
+        GameFlow.Select("");
+        A("gameflow: empty selection ignored", GameFlow.SelectedModuleId == "midterm-acetone");
+
+        var rgo = new GameObject("runner"); var lgo = new GameObject("launcher");
+        try
+        {
+            var runner = rgo.AddComponent<ExperimentRunner>();
+            var launcher = lgo.AddComponent<ExperimentLauncher>();
+            launcher.SetLibrary(lib); launcher.SetRunner(runner);
+            var loaded = launcher.Launch("final-aspirin");
+            A("launcher: loads the requested module", loaded != null && runner.Module != null && runner.Module.moduleId == "final-aspirin");
+            A("launcher: unknown id returns null", launcher.Launch("does-not-exist") == null);
+        }
+        finally { UnityEngine.Object.DestroyImmediate(rgo); UnityEngine.Object.DestroyImmediate(lgo); }
     }
 
     static void ContentSuite()
