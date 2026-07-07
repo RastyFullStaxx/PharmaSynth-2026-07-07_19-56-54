@@ -1,0 +1,77 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+// Data model for the experiment TaskGraph. Kept in the global namespace to match
+// the inherited scripts. These are pure serializable types with no scene dependency
+// so the TaskGraph/scoring logic can be unit-tested without a running scene.
+
+/// The four graded phases every experiment moves through (plan §3.2).
+public enum TaskPhase
+{
+    ReagentPrep,
+    Synthesis,
+    ChemicalTests,
+    DataSheet
+}
+
+/// Reusable lab competencies tracked by the Bayesian mastery model (plan §3.6).
+public enum LabSkill
+{
+    Measuring,
+    Heating,
+    Filtration,
+    Transfer,
+    Safety,
+    TestInterpretation
+}
+
+/// Rubric criteria that the grade is composed from (WCC lab manual rubric, plan §3.6).
+public enum RubricCategory
+{
+    Procedure,
+    ChemicalTests,
+    MaterialsAndPPE,
+    TimeManagement,
+    Sanitation,
+    Documentation
+}
+
+/// Result of attempting to complete a task — drives the error matrix
+/// (BlockedByPrerequisite is the canonical "wrong step order" signal).
+public enum TaskCompletionResult
+{
+    Completed,
+    AlreadyComplete,
+    BlockedByPrerequisite,
+    UnknownTask
+}
+
+/// One node in a module's TaskGraph. A task becomes available once every
+/// prerequisite task is complete; it can then be completed by a world-state
+/// condition (auto-check) or an explicit trigger/event.
+[Serializable]
+public class ExperimentTask
+{
+    public string taskId = "task-id";
+    public string label = "Task";
+    public TaskPhase phase = TaskPhase.Synthesis;
+
+    [Tooltip("Task ids that must be complete before this task becomes available.")]
+    public List<string> prerequisites = new List<string>();
+
+    [Min(0f), Tooltip("Relative contribution to the module's overall progress %.")]
+    public float progressWeight = 1f;
+
+    [Tooltip("Which competency a correct/incorrect observation here updates in the BKT model.")]
+    public LabSkill skill = LabSkill.Measuring;
+
+    [Tooltip("Which rubric criterion this task's outcome scores under.")]
+    public RubricCategory rubricCategory = RubricCategory.Procedure;
+
+    [Tooltip("Required tasks gate phase/module completion; optional tasks only add score.")]
+    public bool required = true;
+
+    [TextArea(1, 3), Tooltip("Shown by Pharmee / tablet when the player is stuck on this step.")]
+    public string hint = "";
+}
