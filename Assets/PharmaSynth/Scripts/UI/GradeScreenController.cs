@@ -22,6 +22,27 @@ public class GradeScreenController : MonoBehaviour
     public UnityEvent onRetry;
     public UnityEvent onContinue;
 
+    [Header("Auto-show")]
+    [SerializeField] private ExperimentRunner runner;
+
+    private void OnEnable()
+    {
+        if (root != null) root.SetActive(false);
+        if (runner != null) runner.ExperimentFinished += Show;
+    }
+
+    private void OnDisable()
+    {
+        if (runner != null) runner.ExperimentFinished -= Show;
+    }
+
+    public void SetRunner(ExperimentRunner r)
+    {
+        if (runner != null) runner.ExperimentFinished -= Show;
+        runner = r;
+        if (runner != null && isActiveAndEnabled) runner.ExperimentFinished += Show;
+    }
+
     /// Subscribe this to ExperimentRunner.ExperimentFinished.
     public void Show(ExperimentResult r)
     {
