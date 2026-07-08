@@ -16,7 +16,7 @@ MonoBehaviour:
   state: 1
   liquidColor: {r: 0.679, g: 0.679, b: 0.66499996, a: 1}
   liquidTopColor: {r: 0.679, g: 0.679, b: 0.66499996, a: 1}
-  sceneColourAmount: 0.35
+  sceneColourAmount: 0.1
   viscosity: 0.5
   boilingPointC: 211
   precipitateColor: {r: 1, g: 1, b: 1, a: 1}

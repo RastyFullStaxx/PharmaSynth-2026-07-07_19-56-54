@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ChemicalData
   chemicalName: Aniline
   state: 0
-  liquidColor: {r: 0.48999998, g: 0.385, b: 0.266, a: 1}
+  liquidColor: {r: 0.6, g: 0.4714286, b: 0.32571432, a: 1.2244899}
   liquidTopColor: {r: 0.48999998, g: 0.385, b: 0.266, a: 1}
-  sceneColourAmount: 0.35
+  sceneColourAmount: 0.1
   viscosity: 0.5
   boilingPointC: 184
   precipitateColor: {r: 1, g: 1, b: 1, a: 1}

@@ -37,7 +37,7 @@ Counts: cutscene SOs **44/44** ✅ · quiz questions **33/33** ✅ (data; presen
 ### Art & models
 - [ ] **Fume hood model** — a glass **stand-in + working `FumeHoodZone` volume is now placed** on the back counter (`FumeHood_StandIn`); a real hood model (sash, extractor) is still an art-pass item. Required for Acetanilide/Benzamide/Caffeine/Chloroform safety rules.
 - [ ] **Procedure demo videos** — **0 VideoClip assets exist in the project** (user expectation: TV-screen demos of what to perform, per storyboard). To create: short per-experiment demo clips + a `VideoPlayer` TV screen in the lab. NOTED for asset production.
-- [ ] **Dr. Jimenez** rigged scientist (source Asset Store; fallback = posed static examiner at observation desk). Budget = client decision.
+- [~] **Dr. Jimenez** — **primitive stand-in placed** (`DrJimenez`, front-right, facing the islands, proximity-labelled "Examiner"). Still to source/rig the real scientist model (Asset Store; budget = client decision). `ExaminerNPC` behaviour component still to build.
 - [ ] Pharmee **animation set** (enter / idle-float / talk / gesture / celebrate / warn) + **face-state materials**.
 - [ ] **Clean reagent-label textures** for all 16 chemicals + apparatus labels (never copy storyboard labels — garbled AI text).
 - [ ] Wrist-watch **3D model** (currently a primitive canvas).
@@ -46,7 +46,10 @@ Counts: cutscene SOs **44/44** ✅ · quiz questions **33/33** ✅ (data; presen
 - [ ] Tea/caffeine props (tea leaves, kettle) — check pack first.
 - [ ] Separatory funnel (Caffeine/Chloroform) — check pack first; author if absent.
 - [ ] WASTE bin + cleanup props (sanitation mechanic).
-- [ ] Mirror/avatar reflection for the PPE ante-room (or the agreed illusion: coat prop + glove swap).
+- [~] **PPE stand-ins placed** — lab-coat / gloves / goggles primitive placeholders at the locker room (`PPE_Standins`, proximity-labelled). Real coat/glove art + don-on-body + mirror/avatar reflection still to build.
+- [x] **Lab toolset placed** — 21 real ChemLab prefabs (mortar, pestle, spatula, scoopula, dropper, forceps, funnel, glass rod, watch glass, evaporating dish, crucible+tongs, test-tube rack, wash bottle, tripod, wire gauze, clay triangle, retort stand, iron ring, alcohol burner, beaker) on the perimeter counters under `LabTools`, each with a **proximity name label** (`ProximityLabel` — shows within ~1.5 m). Reagents + Methane props + balance also proximity-labelled.
+- [x] **Two open shelf units stocked:** the `3x4` west-wall grid = **reagent shelf** (16 reagent bottles, uniform ~0.26 m, solid colour, visible & labelled); the `5x1` back-left corner = **equipment shelf** (13 apparatus across 5 tiers under `EquipmentShelf`, labelled). Both were empty; now full.
+- [x] **Walk-bob** (`WalkBob` on the rig's Camera Offset) — subtle, speed-scaled head bob when locomoting (comfort-capped; amplitude exposed for a comfort toggle).
 - [ ] VFX set: smoke, steam, fire, glass shatter, confetti (URP particles, ≤3k live).
 - [ ] Grade-screen art + polished world-space canvas skins (HUD/tablet/watch/grade are primitive panels).
 - [ ] Period-hub room dressing (3 doors).
@@ -93,6 +96,7 @@ These components pass self-tests but appear **zero times** in SampleScene — th
 - [ ] **XRI sockets** (`XRSocketInteractor`) at stations/racks so props snap into place — 0 in scene.
 - [ ] **Drop respawn** (kill-Z + idle return-to-home) — released props currently hover (XRI restores their kinematic state on release).
 - [ ] **Teleport anchors** at each workstation (0 `TeleportationAnchor` in scene; only the floor `TeleportationArea`).
+- [x] **Body collision verified** — walls/doors/tables have colliders; rig `CharacterController` (r=0.25) + `DynamicMoveProvider` (useGravity, no fly) + `GravityProvider`. **Thumbstick locomotion collides. The "walk through walls" is the XR Device Simulator moving the HMD device in tracking space (WASD/mouse), which bypasses the body by design — use the left thumbstick to test collision, or a real headset.** (Optional future: a head-collision "blackout" fade to discourage clipping.)
 - [ ] Refine crude convex hulls on tall apparatus (tripod, retort stand, burner).
 - [ ] **Proper VR glass shader** (current = flat URP Lit transparent; needs stereo-instancing validation + Quest overdraw budget; cheaper fallback ready).
 - [ ] Liquid fill-line child-offset compensation (fill height is approximate on `_WithLiquid` vessels).

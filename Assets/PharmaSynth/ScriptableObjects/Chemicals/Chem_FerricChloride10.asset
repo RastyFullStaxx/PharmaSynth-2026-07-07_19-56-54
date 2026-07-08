@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ChemicalData
   chemicalName: Ferric Chloride 10%
   state: 0
-  liquidColor: {r: 0.525, g: 0.336, b: 0.098, a: 1}
+  liquidColor: {r: 0.6, g: 0.384, b: 0.112, a: 1.1428572}
   liquidTopColor: {r: 0.525, g: 0.336, b: 0.098, a: 1}
-  sceneColourAmount: 0.35
+  sceneColourAmount: 0.1
   viscosity: 0.5
   boilingPointC: 100
   precipitateColor: {r: 1, g: 1, b: 1, a: 1}

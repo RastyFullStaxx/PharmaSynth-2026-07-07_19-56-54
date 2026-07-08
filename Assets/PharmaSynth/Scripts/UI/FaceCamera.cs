@@ -15,7 +15,19 @@ public class FaceCamera : MonoBehaviour
              "Leave off for UI text/panels, whose +Z should point away to read correctly.")]
     public bool faceTowardCamera = false;
 
+    [Tooltip("Characters: yaw the AUTHORED pose around world-up instead of rebuilding rotation, " +
+             "so the model keeps its upright orientation (never lies on its back). Use for Pharmee.")]
+    public bool preserveInitialTilt = false;
+
     private Transform _cam;
+    private Quaternion _initial;
+    private bool _haveInitial;
+
+    private void Awake()
+    {
+        _initial = transform.rotation;
+        _haveInitial = true;
+    }
 
     private void LateUpdate()
     {
@@ -24,6 +36,20 @@ public class FaceCamera : MonoBehaviour
             var c = Camera.main;
             if (c == null) return;      // no camera yet (e.g. edit mode)
             _cam = c.transform;
+        }
+
+        if (preserveInitialTilt)
+        {
+            if (!_haveInitial) { _initial = transform.rotation; _haveInitial = true; }
+            // Spin the authored pose around world-up only → stays upright, just turns.
+            Vector3 f0 = _initial * Vector3.forward; f0.y = 0f;
+            Vector3 want = faceTowardCamera ? (_cam.position - transform.position)
+                                            : (transform.position - _cam.position);
+            want.y = 0f;
+            if (f0.sqrMagnitude < 1e-4f || want.sqrMagnitude < 1e-4f) return;
+            float delta = Vector3.SignedAngle(f0, want, Vector3.up) + yawOffset;
+            transform.rotation = Quaternion.AngleAxis(delta, Vector3.up) * _initial;
+            return;
         }
 
         // UI text/panels read when +Z points AWAY from the viewer; a character faces
