@@ -80,8 +80,16 @@ public class LiquidPhysics : MonoBehaviour
 
     void SendMeshBounds()
     {
-        if (mesh == null) return;
-        Bounds bounds = mesh.bounds;
+        // Prefer the liquid renderer's own mesh bounds (the _WithLiquid prefabs keep the
+        // liquid volume on a child mesh; the root mesh is the glass shell).
+        Mesh boundsMesh = mesh;
+        if (mainRenderer != null)
+        {
+            var mrFilter = mainRenderer.GetComponent<MeshFilter>();
+            if (mrFilter != null && mrFilter.sharedMesh != null) boundsMesh = mrFilter.sharedMesh;
+        }
+        if (boundsMesh == null) return;
+        Bounds bounds = boundsMesh.bounds;
 
         if (mainRenderer != null)
         {

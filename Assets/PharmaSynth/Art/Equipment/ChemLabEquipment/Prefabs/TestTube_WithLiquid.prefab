@@ -71,7 +71,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 7635b2807fa80af459b394c1fb92590c, type: 2}
+  - {fileID: 2100000, guid: 868c49b78b2986d42a241494309aa253, type: 2}
   - {fileID: 2100000, guid: ff04f2be4ce6d934a8624dfa3c34aa4b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
@@ -108,7 +108,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f3e4c034be72264288b5ba2d7d3041a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LiquidPhysics
-  mainRenderer: {fileID: 3620650690900709325}
+  mainRenderer: {fileID: 3620650690900709327}
   precipitateRenderer: {fileID: 0}
   maxVolume: 1000
   currentLiquidVolume: 500
@@ -366,7 +366,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 7edfb9e8c392a3f48b6333c47a50da70, type: 2}
+  - {fileID: 2100000, guid: 7635b2807fa80af459b394c1fb92590c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
