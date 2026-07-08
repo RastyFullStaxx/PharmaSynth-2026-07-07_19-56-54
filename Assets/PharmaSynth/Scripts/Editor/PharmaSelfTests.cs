@@ -36,6 +36,7 @@ public static class PharmaSelfTests
         UISuite();
         W4Suite();
         InteractionSuite();
+        RealVerbSuite();
         ProgressionFlowSuite();
         LibrarySuite();
         ContentSuite();
@@ -256,6 +257,56 @@ public static class PharmaSelfTests
             UnityEngine.Object.DestroyImmediate(sgo);
             UnityEngine.Object.DestroyImmediate(igo);
             UnityEngine.Object.DestroyImmediate(wgo);
+        }
+    }
+
+    static void RealVerbSuite()
+    {
+        // Methane real verbs: burner presence heats (TemperatureSim), heat gates gas
+        // collection (GasCollection), and both tasks complete via graph auto-check.
+        var module = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>(
+            "Assets/PharmaSynth/ScriptableObjects/Experiments/Tutorial_Methane.asset");
+        A("realverb: methane module loads", module != null);
+        if (module == null) return;
+
+        var rgo = new GameObject("rv_runner");
+        var xgo = new GameObject("rv_rig");
+        var cgo = new GameObject("rv_collect");
+        try
+        {
+            var runner = rgo.AddComponent<ExperimentRunner>();
+            runner.SetModule(module);
+            var temp = xgo.AddComponent<TemperatureSim>();
+            var gas = xgo.AddComponent<GasCollection>();
+            var burnerZone = xgo.AddComponent<ZoneItemSensor>(); burnerZone.SetItemId("burner");
+            var collectZone = cgo.AddComponent<ZoneItemSensor>(); collectZone.SetItemId("collection-tube");
+            var rig = xgo.AddComponent<MethaneApparatusRig>();
+
+            runner.StartExperiment();
+            rig.Bind(runner, temp, gas, burnerZone, collectZone);
+            rig.HandleExperimentStarted(module);   // edit mode: subscribe happened post-start
+
+            runner.CompleteTask("prepare-mixture");
+            runner.CompleteTask("setup-apparatus");
+            runner.Graph.Tick();
+            A("realverb: heat-mixture blocked while cold", !runner.Graph.IsComplete("heat-mixture"));
+
+            temp.SetHeating(true, 220f);
+            for (int i = 0; i < 120; i++) temp.Tick(0.5f);
+            runner.Graph.Tick();
+            A("realverb: sustained heating completes heat-mixture", runner.Graph.IsComplete("heat-mixture"));
+            A("realverb: collect-gas still pending", !runner.Graph.IsComplete("collect-gas"));
+
+            gas.AddGas(100000f);   // clamps to capacity
+            runner.Graph.Tick();
+            A("realverb: gas fill completes collect-gas", runner.Graph.IsComplete("collect-gas"));
+            A("realverb: progress 4/5 after real verbs", Near(runner.Graph.Progress01, 0.8f));
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(rgo);
+            UnityEngine.Object.DestroyImmediate(xgo);
+            UnityEngine.Object.DestroyImmediate(cgo);
         }
     }
 

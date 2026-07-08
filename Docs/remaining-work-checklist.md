@@ -12,7 +12,7 @@ Engine + data are done for all 11; everything below is scene/content wiring. "Si
 
 | # | Experiment | v2 data | Props+stations | Reaction rules | Vessel bindings | Sim rigs | Cutscenes ×4 | Quiz ×3 |
 |---|-----------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| T0 | **Methane (Tutorial)** | [x] | [x] carry-to-zone | [ ] | n/a (dry) | [ ] burner+gas | [x] 4 SOs | [ ] |
+| T0 | **Methane (Tutorial)** | [x] | [x] carry-to-zone | [ ] | n/a (dry) | [x] burner heats + gas fills (real verbs) | [x] 4 SOs | [ ] |
 | P1 | **Chemical Compounding** | [x] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | P2 | **Ethyl Alcohol** | [x] | [ ] | [ ] | [ ] | [ ] ferment+distil | [ ] | [ ] |
 | M1 | **Benzoic Acid** | [x] | [ ] | [ ] | [ ] | [ ] cryst+filt | [ ] | [ ] |
@@ -26,14 +26,16 @@ Engine + data are done for all 11; everything below is scene/content wiring. "Si
 
 Counts: cutscene SOs **4/44** · reaction-rule assets **0** · quiz questions **0/33** · hands-on wiring **1/11** (Methane, carry-to-zone level only — real verbs below).
 
-- [ ] **Upgrade Methane zones from "carry prop into zone" to real verbs** — burner ignite → `TemperatureSim`, gas fill → `GasCollection`, splint test interaction.
+- [x] **Methane heat/collect real verbs** — burner in zone heats (`TemperatureSim`), hot apparatus + tube in zone fills (`GasCollection`); tasks complete via auto-check (`MethaneApparatusRig` + `ZoneItemSensor`, regression-covered).
+- [ ] Remaining Methane verb polish: mortar grind interaction (prepare-mixture), splint-flame test visual, flame/bubble VFX.
 - [ ] **Wine bespoke rubric** (workmanship/appearance/presentation/documentation/flavour) — currently standard 6-category.
 - [ ] Per-experiment ILO cards ×11 (intro cutscene content).
 
 ## 2. Assets that do not exist yet (create / source / buy)
 
 ### Art & models
-- [ ] **Fume hood model + working volume** — no fume hood exists in the lab environment; `FumeHoodZone` code is tested but has nothing to live on. Required for Acetanilide/Benzamide/Caffeine/Chloroform safety rules.
+- [ ] **Fume hood model** — a glass **stand-in + working `FumeHoodZone` volume is now placed** on the back counter (`FumeHood_StandIn`); a real hood model (sash, extractor) is still an art-pass item. Required for Acetanilide/Benzamide/Caffeine/Chloroform safety rules.
+- [ ] **Procedure demo videos** — **0 VideoClip assets exist in the project** (user expectation: TV-screen demos of what to perform, per storyboard). To create: short per-experiment demo clips + a `VideoPlayer` TV screen in the lab. NOTED for asset production.
 - [ ] **Dr. Jimenez** rigged scientist (source Asset Store; fallback = posed static examiner at observation desk). Budget = client decision.
 - [ ] Pharmee **animation set** (enter / idle-float / talk / gesture / celebrate / warn) + **face-state materials**.
 - [ ] **Clean reagent-label textures** for all 16 chemicals + apparatus labels (never copy storyboard labels — garbled AI text).
@@ -65,10 +67,10 @@ Counts: cutscene SOs **4/44** · reaction-rule assets **0** · quiz questions **
 
 These components pass self-tests but appear **zero times** in SampleScene — the mechanic can't fire in play until placed:
 
-- [ ] **`FumeHoodZone`** — place on the (to-be-created) fume hood; wire into `LiquidTaskBinding` checks.
-- [ ] **`HazardZone`** — place on hot surfaces / spill areas / acid zones per experiment.
+- [x] **`FumeHoodZone`** — placed (stand-in hood, back counter). Still to wire into `LiquidTaskBinding` checks per experiment.
+- [ ] **`HazardZone`** — place on hot surfaces / spill areas / acid zones **per experiment** (deliberately deferred: a generic zone at a station would punish correct actions).
 - [ ] **`LiquidTaskBinding`** — attach per experiment vessel with expected reagent→task map (the pour path).
-- [ ] **`WeighingScaleController`** (inherited) — place a scale on the island; wire place-on-scale steps.
+- [x] **Balance placed** on the right island (kinematic, grabbable). `WeighingScaleController` wiring per experiment still open.
 - [ ] **`BreakableGlassware`** (inherited) — enable on glass props: drop → shatter → cleanup task + DroppedGlassware mistake.
 - [ ] `CrystallizationController` / `FiltrationController` / `TemperatureSim` / `GasCollection` rigs as scene stations (ice bath, Büchner setup, burner, trough).
 - [ ] `PPEController` full flow (see §6 — current scene has only the poke-sign).
@@ -83,6 +85,8 @@ These components pass self-tests but appear **zero times** in SampleScene — th
 - [x] Real Methane props + billboarded labels (`FaceCamera` on all world text/panels).
 - [x] Rig CharacterController radius 0.1 → 0.25 (thumbstick locomotion collides; simulator WASD moves the HMD and legitimately doesn't).
 - [x] Station zone pads grounded on the island; PPE sign clear of meshes; HUD bar Filled-type; Pharmee bubble raised.
+- [x] **Waypoint beacon**: floor circular glow + bobbing/spinning down-arrow (`WaypointBeacon`) replaces the yellow blob.
+- [x] **Pharmee alive + interactable**: `FloatBob` hover animation; poke the robot (`PharmeePoke` + collider + XRSimpleInteractable) to repeat the current step hint.
 
 ### Still to do
 - [ ] **XRI sockets** (`XRSocketInteractor`) at stations/racks so props snap into place — 0 in scene.
