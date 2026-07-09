@@ -144,3 +144,6 @@ These components pass self-tests but appear **zero times** in SampleScene — th
 ---
 
 **Reading the board:** the engine (100%) and experiment data (100%) are done; the remaining work is ~an art/audio/content-wiring production pass (§§1–6) plus the on-device tail (§7). Tier-1 bolded items are the contract-critical path. Suggested order stays as gaps.md §6: Methane real-verbs + Ethyl Alcohol wiring → menu XR + quiz/data-sheet UI → per-experiment wiring in tier order → audio + art passes → device QA.
+
+## Physics-attributes pass (user request, 2026-07-09)
+- [ ] **Resting-pose + gravity audit for ALL equipment and reagents**: every grabbable/placed item must have correct physics attributes (Rigidbody gravity, sensible mass, non-degenerate colliders) AND a physically plausible resting pose — e.g. a glass rod must lie on its side, never balance upright; nothing floats above its surface. Sweep every `Eq_*`/`Prop_*`/`Reagent_*` + builder-spawned props: drop-test each item (simulate a few physics steps), fix collider shapes where items jitter or hover, author per-item default orientations (lying vs standing) in RealSizes or a companion table so the builder + shelf placement use them. Also covers: sockets/respawn so dropped props return, kinematic-on-shelf vs dynamic-on-grab policy.

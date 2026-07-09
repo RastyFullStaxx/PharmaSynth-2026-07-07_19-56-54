@@ -145,15 +145,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5187334452825983003, guid: 4d2dbaec82a28a141a531f6265720cab, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.2
+      value: -3.32
       objectReference: {fileID: 0}
     - target: {fileID: 5187334452825983003, guid: 4d2dbaec82a28a141a531f6265720cab, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.9154238
+      value: 0.91542387
       objectReference: {fileID: 0}
     - target: {fileID: 5187334452825983003, guid: 4d2dbaec82a28a141a531f6265720cab, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -7.05
+      value: -7.32
       objectReference: {fileID: 0}
     - target: {fileID: 5187334452825983003, guid: 4d2dbaec82a28a141a531f6265720cab, type: 3}
       propertyPath: m_LocalRotation.w
@@ -218,7 +218,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Alcohol Burner
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1001 &4157953
@@ -320,7 +320,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Crucible
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1001 &11578952
@@ -341,15 +341,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalScale.x
-      value: 2.0633135
+      value: 1.4284467
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalScale.y
-      value: 2.0633135
+      value: 1.4284467
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalScale.z
-      value: 2.0633135
+      value: 1.4284467
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -357,7 +357,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.51168
+      value: 1.4316869
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1016,15 +1016,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5359063746187516331, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.666413
+      value: 1.1536707
       objectReference: {fileID: 0}
     - target: {fileID: 5359063746187516331, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.666413
+      value: 1.1536707
       objectReference: {fileID: 0}
     - target: {fileID: 5359063746187516331, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.666413
+      value: 1.1536707
       objectReference: {fileID: 0}
     - target: {fileID: 5359063746187516331, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1230,15 +1230,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1446311782124657116, guid: 06dad6cf60784934b96716a67d1f0b4f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.8950418
+      value: -3.82
       objectReference: {fileID: 0}
     - target: {fileID: 1446311782124657116, guid: 06dad6cf60784934b96716a67d1f0b4f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.91542375
+      value: 0.9154238
       objectReference: {fileID: 0}
     - target: {fileID: 1446311782124657116, guid: 06dad6cf60784934b96716a67d1f0b4f, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -7.05
+      value: -7.32
       objectReference: {fileID: 0}
     - target: {fileID: 1446311782124657116, guid: 06dad6cf60784934b96716a67d1f0b4f, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1307,7 +1307,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Mortar
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &85515511 stripped
@@ -2306,7 +2306,7 @@ MeshRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 20000
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!114 &132410084
@@ -2478,7 +2478,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Amber Vial
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &148391549
@@ -2753,7 +2753,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Test-Tube Rack
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &162562983
@@ -3906,7 +3906,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5291864883049325, guid: 7327e3aa2fc7e5f49b780c9cb7d98305, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -4.5000005
+      value: -4.5
       objectReference: {fileID: 0}
     - target: {fileID: 5291864883049325, guid: 7327e3aa2fc7e5f49b780c9cb7d98305, type: 3}
       propertyPath: m_LocalPosition.y
@@ -3914,7 +3914,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5291864883049325, guid: 7327e3aa2fc7e5f49b780c9cb7d98305, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -5.886539
+      value: -7.15
       objectReference: {fileID: 0}
     - target: {fileID: 5291864883049325, guid: 7327e3aa2fc7e5f49b780c9cb7d98305, type: 3}
       propertyPath: m_LocalRotation.w
@@ -3979,9 +3979,62 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Spatula
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
+--- !u!1 &208684824
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 208684825}
+  - component: {fileID: 208684826}
+  m_Layer: 0
+  m_Name: Seal_WestFlank
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 2147483647
+  m_IsActive: 1
+--- !u!4 &208684825
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 208684824}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -5.28, y: 1.6, z: 1.45}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1675004555}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &208684826
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 208684824}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.25, y: 3.2, z: 3.1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &209374689 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6190309144599261903, guid: 70b989489405b6f4da587631e978a478, type: 3}
@@ -4668,7 +4721,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2671582530855487210, guid: eee733fd854f16f42b4d2b86e5d6a977, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -4.6125717
+      value: -4.61
       objectReference: {fileID: 0}
     - target: {fileID: 2671582530855487210, guid: eee733fd854f16f42b4d2b86e5d6a977, type: 3}
       propertyPath: m_LocalPosition.y
@@ -4676,7 +4729,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2671582530855487210, guid: eee733fd854f16f42b4d2b86e5d6a977, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -6.505575
+      value: -7.15
       objectReference: {fileID: 0}
     - target: {fileID: 2671582530855487210, guid: eee733fd854f16f42b4d2b86e5d6a977, type: 3}
       propertyPath: m_LocalRotation.w
@@ -4745,7 +4798,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Test-Tube Brush
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &258239515
@@ -4878,7 +4931,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 4000
   m_TargetDisplay: 0
 --- !u!224 &268477447
 RectTransform:
@@ -4937,15 +4990,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalScale.x
-      value: 2.0633135
+      value: 1.4284467
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalScale.y
-      value: 2.0633135
+      value: 1.4284467
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalScale.z
-      value: 2.0633135
+      value: 1.4284467
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -4953,7 +5006,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.9026009
+      value: 1.8226078
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalPosition.z
@@ -5203,7 +5256,7 @@ MeshRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 20000
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &286764764
@@ -5598,7 +5651,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 4500
   m_TargetDisplay: 0
 --- !u!224 &307658827
 RectTransform:
@@ -5727,15 +5780,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2602365144058868751, guid: 9d13dfc587ba56145bfd8a0443c247ae, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.95
+      value: 0.46
       objectReference: {fileID: 0}
     - target: {fileID: 2602365144058868751, guid: 9d13dfc587ba56145bfd8a0443c247ae, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.1696793
+      value: 1.169679
       objectReference: {fileID: 0}
     - target: {fileID: 2602365144058868751, guid: 9d13dfc587ba56145bfd8a0443c247ae, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -4.2
+      value: -7.32
       objectReference: {fileID: 0}
     - target: {fileID: 2602365144058868751, guid: 9d13dfc587ba56145bfd8a0443c247ae, type: 3}
       propertyPath: m_LocalRotation.w
@@ -5817,7 +5870,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Wooden splint (lit)
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &336295958 stripped
@@ -6225,7 +6278,7 @@ MeshRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 20000
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!114 &357551495
@@ -6539,15 +6592,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5359063746187516331, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.6664104
+      value: 1.1536698
       objectReference: {fileID: 0}
     - target: {fileID: 5359063746187516331, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.6664104
+      value: 1.1536698
       objectReference: {fileID: 0}
     - target: {fileID: 5359063746187516331, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.6664104
+      value: 1.1536698
       objectReference: {fileID: 0}
     - target: {fileID: 5359063746187516331, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       propertyPath: m_LocalPosition.x
@@ -6615,7 +6668,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Glacial Acetic Acid
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &388901547 stripped
@@ -6908,7 +6961,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Erlenmeyer 400 mL
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &410087039
@@ -7083,15 +7136,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalScale.x
-      value: 2.0633135
+      value: 1.4284467
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalScale.y
-      value: 2.0633135
+      value: 1.4284467
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalScale.z
-      value: 2.0633135
+      value: 1.4284467
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -7099,7 +7152,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.5116701
+      value: 1.4316769
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalPosition.z
@@ -7574,7 +7627,7 @@ MeshRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 20000
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!114 &489591043
@@ -8013,7 +8066,7 @@ MeshRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 20000
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!114 &503894705
@@ -8685,7 +8738,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Potassium Permanganate
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &580626884
@@ -9123,7 +9176,7 @@ MeshRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 20000
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!114 &620834326
@@ -9337,7 +9390,7 @@ MeshRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 20000
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!64 &629733954
@@ -9428,6 +9481,7 @@ MonoBehaviour:
   barRoot: {fileID: 1289138202}
   speakerText: {fileID: 2008654580}
   lineText: {fileID: 1840184333}
+  fadeSeconds: 0.5
 --- !u!114 &637616414
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9461,7 +9515,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0ab171f99c803445a3e1a3919efb26c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HudRigController
+  mode: 0
   cameraOverride: {fileID: 0}
+  lockedDistance: 1.1
   follow:
     distance: 1.45
     heightOffset: -0.08
@@ -9526,7 +9582,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 30000
   m_TargetDisplay: 0
 --- !u!224 &637616419
 RectTransform:
@@ -9552,7 +9608,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 1.5}
-  m_SizeDelta: {x: 1200, y: 800}
+  m_SizeDelta: {x: 1800, y: 1000}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &637616420
 MonoBehaviour:
@@ -10235,7 +10291,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Soda Lime
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &696505936
@@ -10320,7 +10376,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 29000
   m_TargetDisplay: 0
 --- !u!224 &696505940
 RectTransform:
@@ -10330,7 +10386,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 696505936}
   m_LocalRotation: {x: -0.4584669, y: -0.53833836, z: 0.53833836, w: 0.4584669}
-  m_LocalPosition: {x: 0, y: 0, z: -0.03177077}
+  m_LocalPosition: {x: 0, y: 0, z: -0.050914694}
   m_LocalScale: {x: 0.000044804907, y: 0.000044804892, z: 0.000044804892}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -10609,15 +10665,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5359063746187516331, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.666413
+      value: 1.1536707
       objectReference: {fileID: 0}
     - target: {fileID: 5359063746187516331, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.666413
+      value: 1.1536707
       objectReference: {fileID: 0}
     - target: {fileID: 5359063746187516331, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.666413
+      value: 1.1536707
       objectReference: {fileID: 0}
     - target: {fileID: 5359063746187516331, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       propertyPath: m_LocalPosition.x
@@ -11035,19 +11091,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalScale.x
-      value: 3.306918
+      value: 2.289406
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalScale.y
-      value: 3.306918
+      value: 2.289406
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalScale.z
-      value: 3.306918
+      value: 2.289406
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -5.02
+      value: -5.021838
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalPosition.y
@@ -11132,7 +11188,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2235382057588935900, guid: 73f0df561a9344546bc68f1f5fdf6f8d, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -4.325
+      value: -4.33
       objectReference: {fileID: 0}
     - target: {fileID: 2235382057588935900, guid: 73f0df561a9344546bc68f1f5fdf6f8d, type: 3}
       propertyPath: m_LocalPosition.y
@@ -11140,7 +11196,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2235382057588935900, guid: 73f0df561a9344546bc68f1f5fdf6f8d, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -6.045
+      value: -7.15
       objectReference: {fileID: 0}
     - target: {fileID: 2235382057588935900, guid: 73f0df561a9344546bc68f1f5fdf6f8d, type: 3}
       propertyPath: m_LocalRotation.w
@@ -11201,7 +11257,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Scoopula
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &747063089
@@ -11240,9 +11296,9 @@ RectTransform:
   - {fileID: 2141918224}
   m_Father: {fileID: 637616419}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -400, y: 330}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 195, y: -78}
   m_SizeDelta: {x: 330, y: 96}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &747063091
@@ -11587,7 +11643,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Salicylic Acid
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &762067540 stripped
@@ -11992,7 +12048,7 @@ MeshRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 20000
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!114 &788499814
@@ -12429,7 +12485,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Wire Gauze
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &813429457
@@ -12552,15 +12608,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6812681166788741682, guid: 0573e10f775b2a94c845db921994d3c9, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.5500205
+      value: -2.66
       objectReference: {fileID: 0}
     - target: {fileID: 6812681166788741682, guid: 0573e10f775b2a94c845db921994d3c9, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.91542375
+      value: 0.91542387
       objectReference: {fileID: 0}
     - target: {fileID: 6812681166788741682, guid: 0573e10f775b2a94c845db921994d3c9, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -7.0529084
+      value: -7.32
       objectReference: {fileID: 0}
     - target: {fileID: 6812681166788741682, guid: 0573e10f775b2a94c845db921994d3c9, type: 3}
       propertyPath: m_LocalRotation.w
@@ -12621,7 +12677,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Tripod
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &815012162
@@ -13678,15 +13734,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4720703275319993297, guid: 896845c9595437e4fa9a1ed4379092b9, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.95
+      value: 0.14
       objectReference: {fileID: 0}
     - target: {fileID: 4720703275319993297, guid: 896845c9595437e4fa9a1ed4379092b9, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.9154239
+      value: 0.91542375
       objectReference: {fileID: 0}
     - target: {fileID: 4720703275319993297, guid: 896845c9595437e4fa9a1ed4379092b9, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -3.8
+      value: -7.32
       objectReference: {fileID: 0}
     - target: {fileID: 4720703275319993297, guid: 896845c9595437e4fa9a1ed4379092b9, type: 3}
       propertyPath: m_LocalRotation.w
@@ -13772,7 +13828,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Gas collection tube
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &866533179
@@ -13970,7 +14026,7 @@ MeshRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 20000
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &868065120 stripped
@@ -14026,15 +14082,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5359063746187516331, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.666413
+      value: 1.1536707
       objectReference: {fileID: 0}
     - target: {fileID: 5359063746187516331, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.666413
+      value: 1.1536707
       objectReference: {fileID: 0}
     - target: {fileID: 5359063746187516331, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.666413
+      value: 1.1536707
       objectReference: {fileID: 0}
     - target: {fileID: 5359063746187516331, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       propertyPath: m_LocalPosition.x
@@ -14203,6 +14259,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1717954561962503725, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1464837116}
+    - targetCorrespondingSourceObject: {fileID: 1717954561962503725, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1464837117}
   m_SourcePrefab: {fileID: 100100000, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
 --- !u!4 &900974259 stripped
 Transform:
@@ -15175,7 +15234,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Crucible Tongs
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &959673591 stripped
@@ -15824,7 +15883,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Beaker 500 mL
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &1012439429
@@ -16496,7 +16555,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 4000
   m_TargetDisplay: 0
 --- !u!224 &1053408590
 RectTransform:
@@ -17127,7 +17186,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Ethanol
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1001 &1132733847
@@ -17156,15 +17215,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.2660903
+      value: 0.87652487
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.2660903
+      value: 0.87652487
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.2660903
+      value: 0.87652487
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalPosition.x
@@ -17232,7 +17291,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Acetone
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1001 &1137746317
@@ -17257,19 +17316,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalScale.x
-      value: 3.306918
+      value: 2.289407
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalScale.y
-      value: 3.306918
+      value: 2.289407
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalScale.z
-      value: 3.306918
+      value: 2.289407
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -5.02
+      value: -5.021838
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalPosition.y
@@ -17337,7 +17396,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Aniline
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &1139251946
@@ -17917,9 +17976,9 @@ RectTransform:
   - {fileID: 1399526266}
   m_Father: {fileID: 637616419}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 330}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: 0, y: -78}
   m_SizeDelta: {x: 300, y: 96}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1170434284
@@ -18465,7 +18524,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Glass Rod
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &1207396398
@@ -18937,7 +18996,7 @@ MeshRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 20000
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &1219542873
@@ -19106,19 +19165,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalScale.x
-      value: 3.306918
+      value: 2.289406
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalScale.y
-      value: 3.306918
+      value: 2.289406
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalScale.z
-      value: 3.306918
+      value: 2.289406
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -5.02
+      value: -5.021838
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalPosition.y
@@ -19186,7 +19245,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Sodium Acetate
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!64 &1235734470
@@ -19746,7 +19805,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Test Tube
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &1258208007
@@ -19994,15 +20053,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1259378086605543710, guid: 465994603984f0446839feec11efdb8e, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.95
+      value: -0.18
       objectReference: {fileID: 0}
     - target: {fileID: 1259378086605543710, guid: 465994603984f0446839feec11efdb8e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.91542405
+      value: 0.91542375
       objectReference: {fileID: 0}
     - target: {fileID: 1259378086605543710, guid: 465994603984f0446839feec11efdb8e, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -3.35
+      value: -7.32
       objectReference: {fileID: 0}
     - target: {fileID: 1259378086605543710, guid: 465994603984f0446839feec11efdb8e, type: 3}
       propertyPath: m_LocalRotation.w
@@ -20088,7 +20147,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Bunsen burner
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &1280214877
@@ -20175,10 +20234,10 @@ RectTransform:
   - {fileID: 1536950592}
   m_Father: {fileID: 637616419}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -330}
-  m_SizeDelta: {x: 1040, y: 150}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 0, y: 115}
+  m_SizeDelta: {x: 1120, y: 176}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1289138204
 MonoBehaviour:
@@ -20666,15 +20725,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 175768407928545552, guid: a2280f0dd44a9b647bdc2671fac6e03a, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.5
+      value: -1.68
       objectReference: {fileID: 0}
     - target: {fileID: 175768407928545552, guid: a2280f0dd44a9b647bdc2671fac6e03a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.9620902
+      value: 0.9154238
       objectReference: {fileID: 0}
     - target: {fileID: 175768407928545552, guid: a2280f0dd44a9b647bdc2671fac6e03a, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -7.05
+      value: -7.32
       objectReference: {fileID: 0}
     - target: {fileID: 175768407928545552, guid: a2280f0dd44a9b647bdc2671fac6e03a, type: 3}
       propertyPath: m_LocalRotation.w
@@ -20743,7 +20802,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Weighing Balance
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &1364255003
@@ -20901,7 +20960,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Sulfuric Acid
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &1376773230 stripped
@@ -21262,7 +21321,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 5000
   m_TargetDisplay: 0
 --- !u!224 &1414181875
 RectTransform:
@@ -21781,6 +21840,22 @@ MonoBehaviour:
   rollDegrees: 0.6
   moveThreshold: 0.05
   settle: 6
+--- !u!114 &1464837117
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1464837109}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 487305baf1b3d034e8dcdd4bbbe88fa4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HeadCollisionPushback
+  head: {fileID: 900974259}
+  rig: {fileID: 1464837115}
+  headRadius: 0.14
+  teleportThreshold: 1
 --- !u!1 &1465967247
 GameObject:
   m_ObjectHideFlags: 0
@@ -21951,9 +22026,9 @@ RectTransform:
   - {fileID: 1253907551}
   m_Father: {fileID: 637616419}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 400, y: 330}
+  m_AnchorMin: {x: 1, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -215, y: -78}
   m_SizeDelta: {x: 380, y: 96}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1470220721
@@ -23884,7 +23959,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 465, y: 52}
+  m_AnchoredPosition: {x: 480, y: 46}
   m_SizeDelta: {x: 90, y: 38}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1536950593
@@ -24428,7 +24503,7 @@ MonoBehaviour:
     wrongStep: "Let's not skip ahead \u2014 complete the current step first."
     overheat: "Careful \u2014 it's overheating! Ease off the heat."
     safety: Safety first! Mind the hazard and keep your PPE on.
-  lineSeconds: 3.5
+  lineSeconds: 5.5
   deferIntroToDirector: 1
 --- !u!114 &1579804413
 MonoBehaviour:
@@ -24772,15 +24847,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.2660903
+      value: 0.87652415
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.2660903
+      value: 0.87652415
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.2660903
+      value: 0.87652415
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalPosition.x
@@ -24788,7 +24863,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.83499986
+      value: 0.83499974
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalPosition.z
@@ -24848,7 +24923,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Ferric Chloride 10%
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1001 &1584590506
@@ -25117,15 +25192,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2376319320834281705, guid: f1fbe234e394c8f4e830305adcffdaf1, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.95
+      value: -0.82
       objectReference: {fileID: 0}
     - target: {fileID: 2376319320834281705, guid: f1fbe234e394c8f4e830305adcffdaf1, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.91542405
+      value: 0.91542375
       objectReference: {fileID: 0}
     - target: {fileID: 2376319320834281705, guid: f1fbe234e394c8f4e830305adcffdaf1, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -2.55
+      value: -7.32
       objectReference: {fileID: 0}
     - target: {fileID: 2376319320834281705, guid: f1fbe234e394c8f4e830305adcffdaf1, type: 3}
       propertyPath: m_LocalRotation.w
@@ -25211,7 +25286,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Sodium acetate + soda lime
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1001 &1594215350
@@ -25240,15 +25315,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.266091
+      value: 0.8765246
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.266091
+      value: 0.8765246
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.266091
+      value: 0.8765246
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalPosition.x
@@ -25316,7 +25391,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Benzaldehyde
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &1603182503
@@ -25666,6 +25741,59 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1615387258}
   m_CullTransparentMesh: 1
+--- !u!1 &1627195764
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1627195765}
+  - component: {fileID: 1627195766}
+  m_Layer: 0
+  m_Name: Seal_NorthGap
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 2147483647
+  m_IsActive: 1
+--- !u!4 &1627195765
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1627195764}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -4.75, y: 1.6, z: 2.55}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1675004555}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &1627195766
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1627195764}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.85, y: 3.2, z: 0.3}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &1627630639
 GameObject:
   m_ObjectHideFlags: 0
@@ -26128,6 +26256,39 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 7890676020013055147, guid: 368ef5a47b9e4c647b994cf733b7a543, type: 3}
+--- !u!1 &1675004554
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1675004555}
+  m_Layer: 0
+  m_Name: ExteriorSeals
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1675004555
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1675004554}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 208684825}
+  - {fileID: 1627195765}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1675881934 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8284411644563977530, guid: 70b989489405b6f4da587631e978a478, type: 3}
@@ -26501,7 +26662,7 @@ MonoBehaviour:
       back outside.
     supplyWarn: "Oh no \u2014 there isn't enough reagent left to finish the experiment.
       We'll have to restart the period."
-  lineSeconds: 4
+  lineSeconds: 5.5
 --- !u!114 &1688781733
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26642,15 +26803,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8402288489039905822, guid: 698d52766ebb64845b63fcdde1f0a47d, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 4.25
+      value: -1.22
       objectReference: {fileID: 0}
     - target: {fileID: 8402288489039905822, guid: 698d52766ebb64845b63fcdde1f0a47d, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.9154238
+      value: 0.91542375
       objectReference: {fileID: 0}
     - target: {fileID: 8402288489039905822, guid: 698d52766ebb64845b63fcdde1f0a47d, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -7.05
+      value: -7.32
       objectReference: {fileID: 0}
     - target: {fileID: 8402288489039905822, guid: 698d52766ebb64845b63fcdde1f0a47d, type: 3}
       propertyPath: m_LocalRotation.w
@@ -26715,7 +26876,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Retort Stand
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &1712043954 stripped
@@ -26844,7 +27005,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Evaporating Dish
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &1732448915
@@ -27435,7 +27596,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Dropper
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!21 &1765762380
@@ -28144,19 +28305,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalScale.x
-      value: 3.306918
+      value: 2.289407
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalScale.y
-      value: 3.306918
+      value: 2.289407
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalScale.z
-      value: 3.306918
+      value: 2.289407
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -5.02
+      value: -5.021838
       objectReference: {fileID: 0}
     - target: {fileID: 2866325348300134925, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       propertyPath: m_LocalPosition.y
@@ -28224,7 +28385,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Hydrochloric Acid 6N
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!64 &1827880138
@@ -28377,7 +28538,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -455, y: 0}
+  m_AnchoredPosition: {x: -495, y: 0}
   m_SizeDelta: {x: 118, y: 118}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1835892376
@@ -28400,9 +28561,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -3018578355584870658, guid: 8804006d65e68c34782b77eeded85b72, type: 2}
+  m_Sprite: {fileID: 21300000, guid: bccca3b3276525f42879a5964ddbe808, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -28606,8 +28767,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 20, y: -10}
-  m_SizeDelta: {x: 790, y: 96}
+  m_AnchoredPosition: {x: 30, y: -14}
+  m_SizeDelta: {x: 820, y: 104}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1858275064 stripped
 GameObject:
@@ -28842,7 +29003,7 @@ MeshRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 20000
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!114 &1861319132
@@ -29051,7 +29212,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Watch Glass
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1001 &1870263299
@@ -29076,7 +29237,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6713333358817136548, guid: 63f2ac897cc75b041a2a380b94e0827b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.12
+      value: -3.58
       objectReference: {fileID: 0}
     - target: {fileID: 6713333358817136548, guid: 63f2ac897cc75b041a2a380b94e0827b, type: 3}
       propertyPath: m_LocalPosition.y
@@ -29084,7 +29245,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6713333358817136548, guid: 63f2ac897cc75b041a2a380b94e0827b, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -7.05
+      value: -7.32
       objectReference: {fileID: 0}
     - target: {fileID: 6713333358817136548, guid: 63f2ac897cc75b041a2a380b94e0827b, type: 3}
       propertyPath: m_LocalRotation.w
@@ -29153,7 +29314,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Pestle
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &1873345307
@@ -29604,7 +29765,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Forceps
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &1911754267
@@ -29836,7 +29997,7 @@ MeshRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 20000
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &1915117068 stripped
@@ -29892,15 +30053,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.2660903
+      value: 0.87652487
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.2660903
+      value: 0.87652487
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.2660903
+      value: 0.87652487
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalPosition.x
@@ -29908,7 +30069,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.6426562
+      value: 1.6426563
       objectReference: {fileID: 0}
     - target: {fileID: 7767991836912392996, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       propertyPath: m_LocalPosition.z
@@ -29968,7 +30129,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Acetic Anhydride
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &1919698544 stripped
@@ -30016,7 +30177,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Benzoyl Chloride
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &1939021844
@@ -30214,7 +30375,7 @@ MeshRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 20000
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1001 &1939048236
@@ -30316,7 +30477,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Vial
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1001 &1941177395
@@ -30333,15 +30494,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3270718037383645894, guid: 443a36348494db740b96f35df605d5fc, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.95
+      value: -0.5
       objectReference: {fileID: 0}
     - target: {fileID: 3270718037383645894, guid: 443a36348494db740b96f35df605d5fc, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.041424
+      value: 1.0414236
       objectReference: {fileID: 0}
     - target: {fileID: 3270718037383645894, guid: 443a36348494db740b96f35df605d5fc, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -2.95
+      value: -7.32
       objectReference: {fileID: 0}
     - target: {fileID: 3270718037383645894, guid: 443a36348494db740b96f35df605d5fc, type: 3}
       propertyPath: m_LocalRotation.w
@@ -30423,7 +30584,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Hard-glass tube
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &1962834257
@@ -30741,15 +30902,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3528343686820228762, guid: cf757189f76a6d24cba1322dd40243b7, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.9
+      value: -3.02
       objectReference: {fileID: 0}
     - target: {fileID: 3528343686820228762, guid: cf757189f76a6d24cba1322dd40243b7, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.91960704
+      value: 0.91960716
       objectReference: {fileID: 0}
     - target: {fileID: 3528343686820228762, guid: cf757189f76a6d24cba1322dd40243b7, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -7.7955737
+      value: -7.32
       objectReference: {fileID: 0}
     - target: {fileID: 3528343686820228762, guid: cf757189f76a6d24cba1322dd40243b7, type: 3}
       propertyPath: m_LocalRotation.w
@@ -30818,7 +30979,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Iron Ring
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1001 &1972348369
@@ -30920,7 +31081,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Clay Triangle
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &1972653857
@@ -31319,7 +31480,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Beaker 100 mL
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &1987834689
@@ -31492,7 +31653,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Wash Bottle
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &2003294856
@@ -31720,7 +31881,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -260, y: 48}
+  m_AnchoredPosition: {x: -285, y: 54}
   m_SizeDelta: {x: 240, y: 34}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2008654579
@@ -31910,9 +32071,9 @@ RectTransform:
   - {fileID: 1307332451}
   m_Father: {fileID: 637616419}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 245}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: 0, y: -195}
   m_SizeDelta: {x: 560, y: 54}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &2013977411 stripped
@@ -32212,7 +32373,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Graduated Cyl 50 mL
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &2035697295 stripped
@@ -32264,15 +32425,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1259378086605543710, guid: 465994603984f0446839feec11efdb8e, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.8084502
+      value: -2.18
       objectReference: {fileID: 0}
     - target: {fileID: 1259378086605543710, guid: 465994603984f0446839feec11efdb8e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.9407965
+      value: 0.9154238
       objectReference: {fileID: 0}
     - target: {fileID: 1259378086605543710, guid: 465994603984f0446839feec11efdb8e, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -7.05
+      value: -7.32
       objectReference: {fileID: 0}
     - target: {fileID: 1259378086605543710, guid: 465994603984f0446839feec11efdb8e, type: 3}
       propertyPath: m_LocalRotation.w
@@ -32341,7 +32502,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Bunsen Burner
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &2075476171
@@ -32451,15 +32612,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalScale.x
-      value: 2.0633135
+      value: 1.4284467
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalScale.y
-      value: 2.0633135
+      value: 1.4284467
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalScale.z
-      value: 2.0633135
+      value: 1.4284467
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -32467,7 +32628,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2.2936332
+      value: 2.2136397
       objectReference: {fileID: 0}
     - target: {fileID: 3620650690898939181, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       propertyPath: m_LocalPosition.z
@@ -32535,7 +32696,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Ammonia Solution
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &2121291177 stripped
@@ -32583,7 +32744,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Bleaching Powder
-  showDistance: 1.5
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &2137001746
@@ -32808,7 +32969,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Funnel
-  showDistance: 1.6
+  showDistance: 2
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!1 &2147411997
@@ -32894,3 +33055,4 @@ SceneRoots:
   - {fileID: 1414181875}
   - {fileID: 346833366}
   - {fileID: 830943758}
+  - {fileID: 1675004555}

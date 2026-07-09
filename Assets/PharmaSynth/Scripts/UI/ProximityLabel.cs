@@ -71,19 +71,30 @@ public class ProximityLabel : MonoBehaviour
         if (_tag.activeSelf != show) _tag.SetActive(show);
         if (show)
         {
-            // Float the tag toward the player and above the item so shelf planks / the
-            // vessel body never occlude it, then billboard it.
+            // Float the tag toward the player and above the item, then billboard it.
             var rends = GetComponentsInChildren<Renderer>();
             float top = transform.position.y + heightOffset;
+            float mid = transform.position.y;
             if (rends.Length > 0)
             {
                 Bounds b = rends[0].bounds;
                 for (int i = 1; i < rends.Length; i++) if (rends[i] != _tag.GetComponent<Renderer>()) b.Encapsulate(rends[i].bounds);
                 top = b.max.y + heightOffset;
+                mid = b.center.y;
+            }
+            // Shelf-caged items: a plank right above would swallow the tag — hang it
+            // at mid-height instead and pull it well out of the shelf face.
+            float fwdDist = 0.08f;
+            float tagY = top;
+            if (Physics.Raycast(new Vector3(transform.position.x, top - heightOffset + 0.01f, transform.position.z),
+                                Vector3.up, 0.35f, ~0, QueryTriggerInteraction.Ignore))
+            {
+                tagY = mid;
+                fwdDist = 0.3f;
             }
             Vector3 toCam = (_cam.position - transform.position); toCam.y = 0f;
             Vector3 fwd = toCam.sqrMagnitude > 1e-4f ? toCam.normalized : Vector3.forward;
-            _tag.transform.position = new Vector3(transform.position.x, top, transform.position.z) + fwd * 0.08f;
+            _tag.transform.position = new Vector3(transform.position.x, tagY, transform.position.z) + fwd * fwdDist;
             _tag.transform.rotation = Quaternion.LookRotation(_tag.transform.position - _cam.position, Vector3.up);
         }
     }
