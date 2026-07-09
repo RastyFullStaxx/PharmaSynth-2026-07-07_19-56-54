@@ -20,6 +20,7 @@ public class PharmeeGatekeeper : MonoBehaviour
         [TextArea] public string thresholdWarn = "The period will start as soon as you walk in. Step through when you're ready!";
         [TextArea] public string congrats = "Congratulations! You handled that experiment brilliantly. Let's head back outside.";
         [TextArea] public string supplyWarn = "Oh no — there isn't enough reagent left to finish the experiment. We'll have to restart the period.";
+        [TextArea] public string welcome = "Welcome to the lab! I'm Pharmee. Come talk to me at the door whenever you're ready to begin.";
     }
 
     [Header("Wiring")]
@@ -69,6 +70,13 @@ public class PharmeeGatekeeper : MonoBehaviour
     }
 
     private void OnDisable() => Unsubscribe();
+
+    /// Greet the player the moment they teleport into the lab (from the cube spawn
+    /// room), just after the screen fade-in settles.
+    private void Start()
+    {
+        if (Application.isPlaying) After(0.6f, SpeakWelcome);
+    }
 
     private void Subscribe()
     {
@@ -257,6 +265,35 @@ public class PharmeeGatekeeper : MonoBehaviour
 
     /// GradeScreen Continue (pass-gated) — begin the debrief + return home.
     public void OnContinueAfterPass() => Model.Fire(GateEvent.ContinueAfterPass);
+
+    /// Pharmee's spawn/entrance greeting (scene load + after a HUD reset).
+    public void SpeakWelcome()
+    {
+        Say(lines.welcome);
+        AudioService.TryPlay("pharmee-greet");
+    }
+
+    /// HUD Reset (user 2026-07-10): everything in the lab returns to its original
+    /// spawn — props/bottles re-seated, the wearables taken off — the player is
+    /// teleported back to the entrance where Pharmee waits, the gate re-closes, and
+    /// Pharmee greets. Wrapped in the black fade like every other transition.
+    public void ResetToEntrance()
+    {
+        void Do()
+        {
+            string id = runner != null && runner.Module != null ? runner.Module.moduleId : GameFlow.SelectedModuleId;
+            ExperimentStationRegistry.Clear();
+            launcher?.Launch(id, LaunchMode.StageOnly);   // props/bottles back to original spawns
+            if (ppe != null) ppe.RemovePPE();             // wearables off
+            TeleportToFrontDoor();                         // rig back to the entrance by Pharmee
+            Model.ResetToBlocked();                        // door re-closes; player must re-approach
+            SpeakWelcome();
+        }
+        if (ScreenFader.Instance != null && Application.isPlaying)
+            ScreenFader.Instance.FadeAround(Do);
+        else
+            Do();
+    }
 
     /// GradeScreen Retry — rebuild the whole stage (props re-seated, bottles
     /// refilled) and start a fresh attempt in place.

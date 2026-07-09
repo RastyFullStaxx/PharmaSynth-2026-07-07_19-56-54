@@ -47,6 +47,18 @@ public class GatekeeperModel
         return true;
     }
 
+    /// Force the gate back to the Blocked entrance state, from ANY state (used by
+    /// the HUD Reset: the whole lab returns to spawn and the player must re-approach
+    /// Pharmee). Clears the chosen episode and fires a Transition so the driver
+    /// re-applies the closed door / hidden panels — even when already Blocked.
+    public void ResetToBlocked()
+    {
+        GateState from = State;
+        State = GateState.Blocked;
+        SelectedModuleId = null;
+        Transition?.Invoke(from, GateState.Blocked);
+    }
+
     /// The pure transition table. Illegal (state,event) pairs return the same state.
     public static GateState Next(GateState s, GateEvent e)
     {

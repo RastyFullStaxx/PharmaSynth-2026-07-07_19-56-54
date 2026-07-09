@@ -85,25 +85,22 @@ public class LabMenuController : MonoBehaviour
 
     private void DoRestart()
     {
+        // Reset (user 2026-07-10) = full return to the entrance: props/bottles back
+        // to spawn, wearables off, teleport to Pharmee at the door, gate re-closed,
+        // Pharmee greets — all handled by the gatekeeper (fade included).
+        if (gatekeeper != null) { gatekeeper.ResetToEntrance(); return; }
+
+        // Fallback (no gatekeeper wired — e.g. a bare test scene): rebuild in place.
         string id = runner != null && runner.Module != null ? runner.Module.moduleId : GameFlow.SelectedModuleId;
-        if (runner != null && runner.IsRunning && gatekeeper != null)
-        {
-            gatekeeper.OnRetryRequested();                     // fresh graded attempt
-        }
+        ExperimentStationRegistry.Clear();
+        if (ScreenFader.Instance != null && Application.isPlaying)
+            ScreenFader.Instance.FadeAround(() => launcher?.Launch(id, LaunchMode.StageOnly));
         else
-        {
-            // Armed (pre-walk-in) or Lab Tour: rebuild the stage in the same mode.
-            var mode = runner != null && runner.IsArmed ? LaunchMode.PrepareArmed : LaunchMode.StageOnly;
-            ExperimentStationRegistry.Clear();
-            if (ScreenFader.Instance != null && Application.isPlaying)
-                ScreenFader.Instance.FadeAround(() => launcher?.Launch(id, mode));
-            else
-                launcher?.Launch(id, mode);
-        }
+            launcher?.Launch(id, LaunchMode.StageOnly);
     }
 
     /// Pure label helper (testable).
     public static string RestartConfirmText(bool running) => running
-        ? "Restart this period? Your current attempt will be reset."
-        : "Reset the lab? All items return to their places.";
+        ? "Reset the lab? Your current attempt ends and everything returns to the start."
+        : "Reset the lab? All items return to their places and you'll head back to the entrance.";
 }

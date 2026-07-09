@@ -35,6 +35,6 @@ public class SoundBank : ScriptableObject
         "pour", "bubble", "glass-clink", "glass-shatter", "burner-ignite", "alarm",
         "ui-click", "ui-confirm", "ui-error", "task-complete", "grade-pass", "grade-fail",
         "pharmee-greet", "pharmee-instruct", "pharmee-warn", "pharmee-celebrate",
-        "ambient-lab", "music-menu",
+        "ambient-lab", "music-menu", "music-lab",
     };
 }
