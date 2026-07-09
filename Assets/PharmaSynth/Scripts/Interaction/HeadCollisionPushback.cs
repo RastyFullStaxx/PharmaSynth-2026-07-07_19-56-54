@@ -46,7 +46,12 @@ public class HeadCollisionPushback : MonoBehaviour
         }
 
         Vector3 dir = delta / dist;
-        int n = Physics.SphereCastNonAlloc(_lastValid, headRadius, dir, Hits, dist, ~0, QueryTriggerInteraction.Ignore);
+        // Sweep a head-to-knee CAPSULE, not just the head sphere — a head-only
+        // sweep let the player glide THROUGH waist-high tables and chairs
+        // (their tops sit below head height, user report 2026-07-10).
+        Vector3 knee = new Vector3(_lastValid.x, rigT.position.y + 0.35f, _lastValid.z);
+        if (knee.y > _lastValid.y - headRadius) knee = _lastValid;   // crouched below knee: degenerate to sphere
+        int n = Physics.CapsuleCastNonAlloc(_lastValid, knee, headRadius, dir, Hits, dist, ~0, QueryTriggerInteraction.Ignore);
         float nearest = float.MaxValue;
         for (int i = 0; i < n; i++)
         {

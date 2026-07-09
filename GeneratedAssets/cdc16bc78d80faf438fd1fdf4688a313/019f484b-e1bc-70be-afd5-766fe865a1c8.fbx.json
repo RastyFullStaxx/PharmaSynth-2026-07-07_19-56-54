@@ -1,0 +1,12 @@
+{
+    "asset": "cdc16bc78d80faf438fd1fdf4688a313",
+    "fileName": "019f484b-e1bc-70be-afd5-766fe865a1c8.fbx",
+    "prompt": "Standing and talking, explaining calmly with moderate hand gestures, professional lecturer",
+    "negativePrompt": "",
+    "model": "uthana-text-to-motion",
+    "modelName": "Uthana Text to Motion",
+    "customSeed": 14659780,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "isTrimmed": false
+}

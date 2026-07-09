@@ -73,6 +73,9 @@ public class WristWatchController : MonoBehaviour
         }
 
         bool show = _gestureVisible || _manualVisible;
+        // No experiment content, no panels — otherwise the simulator's resting
+        // palm-up controllers summon an empty board in the corridor/lab tour.
+        if (runner == null || runner.Graph == null) show = false;
         if (panel != null && panel.activeSelf != show) panel.SetActive(show);
         if (show && summaryText != null) summaryText.text = BuildSummary(runner);
 

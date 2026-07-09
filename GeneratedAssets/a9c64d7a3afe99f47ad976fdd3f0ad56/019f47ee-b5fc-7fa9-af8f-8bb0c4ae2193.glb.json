@@ -1,0 +1,23 @@
+{
+    "asset": "a9c64d7a3afe99f47ad976fdd3f0ad56",
+    "fileName": "019f47ee-b5fc-7fa9-af8f-8bb0c4ae2193.glb",
+    "prompt": "Single blue nitrile glove, thin rubber, game-ready prop, clean topology, single object",
+    "negativePrompt": "",
+    "model": "model3d-tripo-p1",
+    "modelName": "Tripo P1",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "promptImageReferenceGuid": "bb4c6d7948c39f640a7b8b39a99c5827",
+    "modelReferenceGuid": "",
+    "multiviewFrontGuid": "",
+    "multiviewBackGuid": "",
+    "multiviewLeftGuid": "",
+    "multiviewRightGuid": "",
+    "multiviewTopGuid": "",
+    "multiviewBottomGuid": "",
+    "multiviewLeftFrontGuid": "",
+    "multiviewRightFrontGuid": "",
+    "faceLimit": -1
+}

@@ -113,9 +113,9 @@ public static class LabelForge
     }
 
     /// Curved label band hugging the bottle (user 2026-07-10: flat quads read
-    /// as pasted nameplates). Thin tubes get NO label — the proximity tag
-    /// already names them and a plate overpowers the glass.
-    const float MinLabelRadius = 0.016f;
+    /// as pasted nameplates). Thin tubes get a small PORTRAIT band (the modern
+    /// base is portrait anyway) — user wants every reagent named on the glass.
+    const float MinLabelRadius = 0.005f;
 
     static void MountQuad(Transform bottle, Material mat)
     {
@@ -140,7 +140,9 @@ public static class LabelForge
         // Body radius (not the cap/neck): sample at the label's height where
         // possible — approximated as 92% of the widest extent, +2 mm clearance.
         float bandRadius = radius * 0.92f + 0.002f;
-        float bandHeight = Mathf.Min(b.size.y * 0.42f, bandRadius * 2.4f);
+        // Wide vessels: squat band; thin tubes: small portrait band (min 3.5 cm
+        // so the name stays legible up close).
+        float bandHeight = Mathf.Min(b.size.y * 0.42f, Mathf.Max(bandRadius * 2.4f, 0.035f));
         band.transform.localScale = Vector3.one;
         var ls = band.transform.lossyScale;
         band.transform.localScale = new Vector3(bandRadius / Mathf.Max(ls.x, 1e-4f),

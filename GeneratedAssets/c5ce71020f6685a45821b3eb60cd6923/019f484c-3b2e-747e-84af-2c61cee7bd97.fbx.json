@@ -1,0 +1,12 @@
+{
+    "asset": "c5ce71020f6685a45821b3eb60cd6923",
+    "fileName": "019f484c-3b2e-747e-84af-2c61cee7bd97.fbx",
+    "prompt": "Walking forward at a relaxed casual pace, natural arm swing",
+    "negativePrompt": "",
+    "model": "uthana-text-to-motion",
+    "modelName": "Uthana Text to Motion",
+    "customSeed": 1559172715,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "isTrimmed": false
+}

@@ -1,0 +1,23 @@
+{
+    "asset": "2dd12b194f477d74b8971da82d17aba7",
+    "fileName": "019f47e0-ae7d-78fe-9502-8243a4fee5b5.glb",
+    "prompt": "Laboratory safety goggles, transparent lens, game-ready prop, clean topology, single object, no floating parts",
+    "negativePrompt": "",
+    "model": "model3d-tripo-p1",
+    "modelName": "Tripo P1",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "promptImageReferenceGuid": "880824ddb5a7ff54a83b0370973efc27",
+    "modelReferenceGuid": "",
+    "multiviewFrontGuid": "",
+    "multiviewBackGuid": "",
+    "multiviewLeftGuid": "",
+    "multiviewRightGuid": "",
+    "multiviewTopGuid": "",
+    "multiviewBottomGuid": "",
+    "multiviewLeftFrontGuid": "",
+    "multiviewRightFrontGuid": "",
+    "faceLimit": -1
+}

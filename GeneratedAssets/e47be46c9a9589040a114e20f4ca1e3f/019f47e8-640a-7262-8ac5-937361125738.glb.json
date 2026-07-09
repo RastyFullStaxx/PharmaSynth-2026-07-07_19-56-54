@@ -1,0 +1,23 @@
+{
+    "asset": "e47be46c9a9589040a114e20f4ca1e3f",
+    "fileName": "019f47e8-640a-7262-8ac5-937361125738.glb",
+    "prompt": "Futuristic smartwatch with band, small wearable device, game-ready prop, clean topology, hard-surface, single object",
+    "negativePrompt": "",
+    "model": "model3d-tripo-p1",
+    "modelName": "Tripo P1",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "promptImageReferenceGuid": "3683c0679f1dea241a8f15e40bc90c95",
+    "modelReferenceGuid": "",
+    "multiviewFrontGuid": "",
+    "multiviewBackGuid": "",
+    "multiviewLeftGuid": "",
+    "multiviewRightGuid": "",
+    "multiviewTopGuid": "",
+    "multiviewBottomGuid": "",
+    "multiviewLeftFrontGuid": "",
+    "multiviewRightFrontGuid": "",
+    "faceLimit": -1
+}

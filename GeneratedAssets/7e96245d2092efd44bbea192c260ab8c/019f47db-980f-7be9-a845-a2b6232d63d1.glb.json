@@ -1,0 +1,23 @@
+{
+    "asset": "7e96245d2092efd44bbea192c260ab8c",
+    "fileName": "019f47db-980f-7be9-a845-a2b6232d63d1.glb",
+    "prompt": "Full-body human character, standing A-pose, game-ready, clean topology, single character, no floating parts",
+    "negativePrompt": "",
+    "model": "model3d-tripo-p1",
+    "modelName": "Tripo P1",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "promptImageReferenceGuid": "e3b2ba8d0b11e4d458836f18046e7b03",
+    "modelReferenceGuid": "",
+    "multiviewFrontGuid": "",
+    "multiviewBackGuid": "",
+    "multiviewLeftGuid": "",
+    "multiviewRightGuid": "",
+    "multiviewTopGuid": "",
+    "multiviewBottomGuid": "",
+    "multiviewLeftFrontGuid": "",
+    "multiviewRightFrontGuid": "",
+    "faceLimit": -1
+}

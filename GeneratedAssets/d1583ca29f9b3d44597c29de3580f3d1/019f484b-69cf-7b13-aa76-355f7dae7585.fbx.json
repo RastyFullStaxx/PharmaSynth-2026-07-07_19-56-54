@@ -1,0 +1,12 @@
+{
+    "asset": "d1583ca29f9b3d44597c29de3580f3d1",
+    "fileName": "019f484b-69cf-7b13-aa76-355f7dae7585.fbx",
+    "prompt": "Standing idle, relaxed, subtle weight shifts and breathing, arms resting at sides, occasional small head movement",
+    "negativePrompt": "",
+    "model": "uthana-text-to-motion",
+    "modelName": "Uthana Text to Motion",
+    "customSeed": 420702021,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "isTrimmed": false
+}
