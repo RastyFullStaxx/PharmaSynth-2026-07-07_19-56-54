@@ -92,7 +92,7 @@ MonoBehaviour:
   - key: footstep
     clip: {fileID: 8300000, guid: 35700bb2c41da964e9d4a65355965e0f, type: 3}
     category: 0
-    volume: 0.35
+    volume: 0.55
   - key: grab
     clip: {fileID: 8300000, guid: 86957f351f445f1478311b0237a95785, type: 3}
     category: 0

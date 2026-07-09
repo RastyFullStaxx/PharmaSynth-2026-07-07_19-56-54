@@ -15,9 +15,12 @@ public static class StrideMath
 }
 
 /// Plays a footstep per stride of horizontal locomotion (§4 action SFX).
-/// Attach to the XR Origin; teleports/fades are ignored via a snap guard.
+/// Tracks the HEAD, not the rig root — the XR Device Simulator's WASD (and
+/// real-world walking) move the HMD without moving the origin, so tracking the
+/// origin missed them entirely. Teleports/fades are ignored via a snap guard.
 public class FootstepPlayer : MonoBehaviour
 {
+    [SerializeField] private Transform head;                // default: Camera.main
     [SerializeField] private float strideMeters = 0.75f;
     [SerializeField] private float snapGuardMeters = 2f;   // > this in one frame = teleport, not walking
     [SerializeField] private string key = "footstep";
@@ -28,9 +31,17 @@ public class FootstepPlayer : MonoBehaviour
 
     void OnEnable() { _has = false; }
 
+    Transform Tracked()
+    {
+        if (head != null) return head;
+        var cam = Camera.main;
+        if (cam != null) head = cam.transform;
+        return head != null ? head : transform;
+    }
+
     void Update()
     {
-        Vector3 p = transform.position; p.y = 0f;
+        Vector3 p = Tracked().position; p.y = 0f;
         if (!_has) { _last = p; _has = true; return; }
         float d = (p - _last).magnitude;
         _last = p;
