@@ -1,0 +1,15 @@
+{
+    "asset": "386651a031c1114458b027fce7cfc493",
+    "fileName": "019f474b-3bfc-7681-a7fc-f12836a2783c.wav",
+    "prompt": "Heavy interior door swinging open slowly with a soft creak and latch click, institutional building door, close recording, no background noise",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 3.0,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

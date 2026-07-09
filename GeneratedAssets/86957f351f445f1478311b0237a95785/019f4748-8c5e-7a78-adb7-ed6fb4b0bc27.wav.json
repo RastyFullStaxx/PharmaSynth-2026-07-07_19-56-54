@@ -1,0 +1,15 @@
+{
+    "asset": "86957f351f445f1478311b0237a95785",
+    "fileName": "019f4748-8c5e-7a78-adb7-ed6fb4b0bc27.wav",
+    "prompt": "Hand picking up a small glass laboratory bottle from a wooden shelf, soft grab with faint glass tap, close recording, no background noise",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 1.0,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

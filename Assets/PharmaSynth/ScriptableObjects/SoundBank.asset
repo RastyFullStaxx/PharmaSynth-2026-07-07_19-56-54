@@ -93,3 +93,47 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: 35700bb2c41da964e9d4a65355965e0f, type: 3}
     category: 0
     volume: 0.35
+  - key: grab
+    clip: {fileID: 8300000, guid: 86957f351f445f1478311b0237a95785, type: 3}
+    category: 0
+    volume: 0.4
+  - key: drop-metal
+    clip: {fileID: 8300000, guid: 5155f0f27bebaef4997ca5d6d74013ef, type: 3}
+    category: 0
+    volume: 0.5
+  - key: drop-wood
+    clip: {fileID: 8300000, guid: b3be8a8bc9aeb784c8853bc0f47b557e, type: 3}
+    category: 0
+    volume: 0.5
+  - key: reaction-fizz
+    clip: {fileID: 8300000, guid: f6c74e31934ae71429c0353f1aef578d, type: 3}
+    category: 0
+    volume: 0.5
+  - key: mixture-complete
+    clip: {fileID: 8300000, guid: fea1719b2ad35b54eb402f6d65b130d7, type: 3}
+    category: 0
+    volume: 0.55
+  - key: crystallise
+    clip: {fileID: 8300000, guid: 881a9b0ed813c2c419c549c4e2e2c361, type: 3}
+    category: 0
+    volume: 0.45
+  - key: filter-drip
+    clip: {fileID: 8300000, guid: 5cb9f1f843339c74d90c0fed22e40ebf, type: 3}
+    category: 0
+    volume: 0.45
+  - key: gas-hiss
+    clip: {fileID: 8300000, guid: 1f945de5e307df349814654dc36dff23, type: 3}
+    category: 0
+    volume: 0.4
+  - key: ppe-rustle
+    clip: {fileID: 8300000, guid: 4ded4d91aead08f418b20375973f28c6, type: 3}
+    category: 0
+    volume: 0.5
+  - key: door-swing
+    clip: {fileID: 8300000, guid: 386651a031c1114458b027fce7cfc493, type: 3}
+    category: 0
+    volume: 0.5
+  - key: socket-snap
+    clip: {fileID: 8300000, guid: a59af26b35ecf6b4dac2d1db68b4fb12, type: 3}
+    category: 0
+    volume: 0.5

@@ -1,0 +1,15 @@
+{
+    "asset": "1f945de5e307df349814654dc36dff23",
+    "fileName": "019f474a-a6d5-729c-8451-c550d77f4963.wav",
+    "prompt": "Soft gas hiss flowing through a thin rubber tube into a collection vessel, steady quiet stream with faint bubbling, seamless loop, no background noise",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 6.0,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

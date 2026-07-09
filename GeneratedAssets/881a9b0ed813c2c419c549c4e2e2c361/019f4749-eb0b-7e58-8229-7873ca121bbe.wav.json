@@ -1,0 +1,15 @@
+{
+    "asset": "881a9b0ed813c2c419c549c4e2e2c361",
+    "fileName": "019f4749-eb0b-7e58-8229-7873ca121bbe.wav",
+    "prompt": "Delicate crystalline shimmer, tiny glassy sparkle tinkles slowly rising, magical crystallization forming, soft and gentle, no background noise",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 5.0,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

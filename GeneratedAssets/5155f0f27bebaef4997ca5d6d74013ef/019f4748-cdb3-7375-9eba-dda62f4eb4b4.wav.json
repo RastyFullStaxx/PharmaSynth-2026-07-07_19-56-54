@@ -1,0 +1,15 @@
+{
+    "asset": "5155f0f27bebaef4997ca5d6d74013ef",
+    "fileName": "019f4748-cdb3-7375-9eba-dda62f4eb4b4.wav",
+    "prompt": "Small metal laboratory tool dropped onto a hard counter, short metallic clatter and settle, close recording, no background noise",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 2.0,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

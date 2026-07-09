@@ -1,0 +1,15 @@
+{
+    "asset": "a59af26b35ecf6b4dac2d1db68b4fb12",
+    "fileName": "019f474b-7574-7a5b-b3f2-21287f190861.wav",
+    "prompt": "Small object snapping into a fitted holder with a satisfying soft click and clack, mechanical socket engage, short, close recording, no background noise",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 1.0,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

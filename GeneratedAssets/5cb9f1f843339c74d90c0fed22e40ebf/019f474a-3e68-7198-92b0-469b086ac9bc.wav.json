@@ -1,0 +1,15 @@
+{
+    "asset": "5cb9f1f843339c74d90c0fed22e40ebf",
+    "fileName": "019f474a-3e68-7198-92b0-469b086ac9bc.wav",
+    "prompt": "Liquid slowly dripping through a paper filter into a glass flask below, rhythmic soft drips, close recording, seamless loop, no background noise",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 6.0,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

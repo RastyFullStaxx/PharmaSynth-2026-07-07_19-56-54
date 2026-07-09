@@ -1,0 +1,15 @@
+{
+    "asset": "fea1719b2ad35b54eb402f6d65b130d7",
+    "fileName": "019f4749-b572-74f1-ae75-9ea4f90f594a.wav",
+    "prompt": "Bright pleasant success chime, two ascending soft bell notes, clean and short, science education game feedback sound",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 2.0,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

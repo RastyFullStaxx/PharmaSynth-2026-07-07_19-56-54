@@ -1,0 +1,15 @@
+{
+    "asset": "4ded4d91aead08f418b20375973f28c6",
+    "fileName": "019f474a-f08d-7a6a-a7cb-766e6687efec.wav",
+    "prompt": "Fabric lab coat being put on, cloth rustle and a shoulder shrug settle, one second, close recording, no background noise",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 2.0,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

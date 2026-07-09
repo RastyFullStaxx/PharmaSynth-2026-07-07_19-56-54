@@ -1,0 +1,23 @@
+{
+    "asset": "c27b19cd9050b6a438902afbd2d8f1d7",
+    "fileName": "019f4743-f02c-7004-9034-f73b883b856b.glb",
+    "prompt": "Laboratory fume hood, matching the reference image exactly. Clean hard-surface geometry, straight edges, flat panels, accurate proportions. White powder-coated steel cabinet, transparent glass sash window, stainless steel interior chamber, under-bench cupboards. Game-ready asset, clean topology, no floating parts, no people, single object on neutral background.",
+    "negativePrompt": "",
+    "model": "model3d-tripo-p1",
+    "modelName": "Tripo P1",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "promptImageReferenceGuid": "73e41be6b1db82a4da1ba1af2d471423",
+    "modelReferenceGuid": "",
+    "multiviewFrontGuid": "",
+    "multiviewBackGuid": "",
+    "multiviewLeftGuid": "",
+    "multiviewRightGuid": "",
+    "multiviewTopGuid": "",
+    "multiviewBottomGuid": "",
+    "multiviewLeftFrontGuid": "",
+    "multiviewRightFrontGuid": "",
+    "faceLimit": -1
+}

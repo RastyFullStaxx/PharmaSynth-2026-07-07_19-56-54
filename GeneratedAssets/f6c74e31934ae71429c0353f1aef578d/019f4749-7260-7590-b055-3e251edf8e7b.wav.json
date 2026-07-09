@@ -1,0 +1,15 @@
+{
+    "asset": "f6c74e31934ae71429c0353f1aef578d",
+    "fileName": "019f4749-7260-7590-b055-3e251edf8e7b.wav",
+    "prompt": "Chemical reaction fizzing in a glass test tube, brisk effervescence with tiny bubbles crackling, close recording, no background noise",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 4.0,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

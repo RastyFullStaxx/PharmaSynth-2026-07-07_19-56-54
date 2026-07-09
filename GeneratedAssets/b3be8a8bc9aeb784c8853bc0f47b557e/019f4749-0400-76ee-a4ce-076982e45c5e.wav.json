@@ -1,0 +1,15 @@
+{
+    "asset": "b3be8a8bc9aeb784c8853bc0f47b557e",
+    "fileName": "019f4749-0400-76ee-a4ce-076982e45c5e.wav",
+    "prompt": "Small wooden object dropped onto a laboratory counter, short dull wooden knock and settle, close recording, no background noise",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 2.0,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}
