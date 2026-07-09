@@ -1,0 +1,107 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d79212f7a99e579438d8e87e49ba408d, type: 3}
+  m_Name: Layout_WineMaking
+  m_EditorClassIdentifier: Assembly-CSharp::ExperimentLayout
+  moduleId: final-winemaking
+  stations:
+  - taskId: seal-airlock
+    label: 2. Seal airlock
+    requiredItemId: seal-airlock
+    pos: {x: -1.1, y: 0.91, z: -3.4}
+    sim: 0
+    simTargetC: 85
+  - taskId: ferment-timeskip
+    label: 4. Ferment (time-skip)
+    requiredItemId: ferment-timeskip
+    pos: {x: -1.1, y: 0.91, z: -4}
+    sim: 0
+    simTargetC: 85
+  - taskId: rack
+    label: 5. Rack the wine
+    requiredItemId: rack
+    pos: {x: -1.1, y: 0.91, z: -4.6}
+    sim: 0
+    simTargetC: 85
+  - taskId: test-clarity
+    label: 6. Clarity check
+    requiredItemId: test-clarity
+    pos: {x: -1.9, y: 0.91, z: -3.4}
+    sim: 0
+    simTargetC: 85
+  - taskId: test-tasting
+    label: 7. Tasting
+    requiredItemId: test-tasting
+    pos: {x: -1.9, y: 0.91, z: -4}
+    sim: 0
+    simTargetC: 85
+  props:
+  - prefabName: Vial_Brown
+    itemId: prepare-must
+    displayName: Brown Sugar
+    pos: {x: -2.15, y: 0.91, z: -1.95}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Brown Sugar
+  - prefabName: Vial_Brown
+    itemId: confirm-co2
+    displayName: Limewater
+    pos: {x: -1.85, y: 0.91, z: -1.95}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Limewater
+  - prefabName: TestTube
+    itemId: seal-airlock
+    displayName: Airlock Tube
+    pos: {x: -2.05, y: 0.91, z: -1.55}
+    targetHeight: 0.14
+    pourable: 0
+    fillChemical: 
+  - prefabName: GlassRod
+    itemId: ferment-timeskip
+    displayName: Stirring Rod
+    pos: {x: -1.75, y: 0.91, z: -1.55}
+    targetHeight: 0.18
+    pourable: 0
+    fillChemical: 
+  - prefabName: Funnel
+    itemId: rack
+    displayName: Racking Funnel
+    pos: {x: -1.45, y: 0.91, z: -1.55}
+    targetHeight: 0.2
+    pourable: 0
+    fillChemical: 
+  - prefabName: WatchGlass
+    itemId: test-clarity
+    displayName: Watch Glass
+    pos: {x: -1.15, y: 0.91, z: -1.55}
+    targetHeight: 0.12
+    pourable: 0
+    fillChemical: 
+  - prefabName: Beaker_100mL
+    itemId: test-tasting
+    displayName: Tasting Glass
+    pos: {x: -0.85, y: 0.91, z: -1.55}
+    targetHeight: 0.12
+    pourable: 0
+    fillChemical: 
+  vessels:
+  - prefabName: Beaker_500mL
+    displayName: Fermentation Jar
+    pos: {x: -1.4, y: 0.91, z: -2.6}
+    targetHeight: 0.24
+    startChemical: Grape Juice
+    bindings:
+    - reagentChemical: Brown Sugar
+      taskId: prepare-must
+    - reagentChemical: Limewater
+      taskId: confirm-co2

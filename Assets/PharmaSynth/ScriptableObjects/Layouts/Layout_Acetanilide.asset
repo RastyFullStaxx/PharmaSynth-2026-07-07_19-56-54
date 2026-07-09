@@ -1,0 +1,121 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d79212f7a99e579438d8e87e49ba408d, type: 3}
+  m_Name: Layout_Acetanilide
+  m_EditorClassIdentifier: Assembly-CSharp::ExperimentLayout
+  moduleId: midterm-acetanilide
+  stations:
+  - taskId: heat-bath
+    label: 5. Heat water bath
+    requiredItemId: heat-bath
+    pos: {x: -1.1, y: 0.91, z: -3.4}
+    sim: 1
+    simTargetC: 85
+  - taskId: ice-crystallise
+    label: 6. Ice crystallise
+    requiredItemId: ice-crystallise
+    pos: {x: -1.1, y: 0.91, z: -4}
+    sim: 2
+    simTargetC: 85
+  - taskId: filter-wash
+    label: 7. Filter & wash
+    requiredItemId: filter-wash
+    pos: {x: -1.1, y: 0.91, z: -4.6}
+    sim: 3
+    simTargetC: 85
+  - taskId: test-hydrolysis
+    label: 8. Hydrolysis test
+    requiredItemId: test-hydrolysis
+    pos: {x: -1.9, y: 0.91, z: -3.4}
+    sim: 0
+    simTargetC: 85
+  props:
+  - prefabName: Vial_Brown
+    itemId: prep-hcl
+    displayName: HCl 6N
+    pos: {x: -2.15, y: 0.91, z: -1.95}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Hydrochloric Acid 6N
+  - prefabName: Vial_Brown
+    itemId: measure-aniline
+    displayName: Aniline
+    pos: {x: -1.85, y: 0.91, z: -1.95}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Aniline
+  - prefabName: Vial_Brown
+    itemId: add-acetic
+    displayName: Glacial Acetic Acid
+    pos: {x: -1.55, y: 0.91, z: -1.95}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Glacial Acetic Acid
+  - prefabName: Vial_Brown
+    itemId: add-acylating
+    displayName: Acetic Anhydride
+    pos: {x: -1.25, y: 0.91, z: -1.95}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Acetic Anhydride
+  - prefabName: Vial_Brown
+    itemId: test-bromination
+    displayName: Bromine Water
+    pos: {x: -0.95, y: 0.91, z: -1.95}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Bromine Water
+  - prefabName: BunsenBurner
+    itemId: heat-bath
+    displayName: Bunsen Burner
+    pos: {x: -2.05, y: 0.91, z: -1.55}
+    targetHeight: 0.22
+    pourable: 0
+    fillChemical: 
+  - prefabName: WatchGlass
+    itemId: ice-crystallise
+    displayName: Watch Glass
+    pos: {x: -1.75, y: 0.91, z: -1.55}
+    targetHeight: 0.12
+    pourable: 0
+    fillChemical: 
+  - prefabName: Funnel
+    itemId: filter-wash
+    displayName: Funnel
+    pos: {x: -1.45, y: 0.91, z: -1.55}
+    targetHeight: 0.2
+    pourable: 0
+    fillChemical: 
+  - prefabName: TestTube
+    itemId: test-hydrolysis
+    displayName: Test Tube
+    pos: {x: -1.15, y: 0.91, z: -1.55}
+    targetHeight: 0.14
+    pourable: 0
+    fillChemical: 
+  vessels:
+  - prefabName: ErlenmeyerFlask_400mL
+    displayName: Reaction Flask
+    pos: {x: -1.4, y: 0.91, z: -2.6}
+    targetHeight: 0.22
+    startChemical: 
+    bindings:
+    - reagentChemical: Hydrochloric Acid 6N
+      taskId: prep-hcl
+    - reagentChemical: Aniline
+      taskId: measure-aniline
+    - reagentChemical: Glacial Acetic Acid
+      taskId: add-acetic
+    - reagentChemical: Acetic Anhydride
+      taskId: add-acylating
+    - reagentChemical: Bromine Water
+      taskId: test-bromination

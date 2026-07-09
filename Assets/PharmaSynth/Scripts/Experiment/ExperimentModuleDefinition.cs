@@ -21,6 +21,10 @@ public class ExperimentModuleDefinition : ScriptableObject
     [Header("TaskGraph (phases A–D, prerequisites, weights)")]
     public List<ExperimentTask> graphTasks = new List<ExperimentTask>();
 
+    [Header("Assessment")]
+    [Tooltip("Assessment mode (plan §3.4): Pharmee gives no procedural hints and Dr. Jimenez observes. Off by default — the tutorial + early experiments stay guided.")]
+    public bool assessmentMode = false;
+
     [Header("Mastery (Bayesian Knowledge Tracing)")]
     [Range(0f, 1f), Tooltip("Grade+mastery gate to unlock the next experiment (manuscript = 0.90).")]
     public float masteryThreshold = 0.90f;

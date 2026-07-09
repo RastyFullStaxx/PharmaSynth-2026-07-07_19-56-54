@@ -1,0 +1,90 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d79212f7a99e579438d8e87e49ba408d, type: 3}
+  m_Name: Layout_Aspirin
+  m_EditorClassIdentifier: Assembly-CSharp::ExperimentLayout
+  moduleId: final-aspirin
+  stations:
+  - taskId: warm-waterbath
+    label: 3. Warm water bath
+    requiredItemId: warm-waterbath
+    pos: {x: -1.1, y: 0.91, z: -3.4}
+    sim: 1
+    simTargetC: 85
+  - taskId: crystallise-ice
+    label: 4. Ice crystallise
+    requiredItemId: crystallise-ice
+    pos: {x: -1.1, y: 0.91, z: -4}
+    sim: 2
+    simTargetC: 85
+  - taskId: buchner-filter
+    label: 5. Buchner filter
+    requiredItemId: buchner-filter
+    pos: {x: -1.1, y: 0.91, z: -4.6}
+    sim: 3
+    simTargetC: 85
+  props:
+  - prefabName: Vial_Brown
+    itemId: weigh-salicylic
+    displayName: Salicylic Acid
+    pos: {x: -2.15, y: 0.91, z: -1.95}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Salicylic Acid
+  - prefabName: Vial_Brown
+    itemId: add-anhydride
+    displayName: Acetic Anhydride
+    pos: {x: -1.85, y: 0.91, z: -1.95}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Acetic Anhydride
+  - prefabName: Vial_Brown
+    itemId: test-fecl3
+    displayName: Ferric Chloride
+    pos: {x: -1.55, y: 0.91, z: -1.95}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Ferric Chloride 10%
+  - prefabName: BunsenBurner
+    itemId: warm-waterbath
+    displayName: Bunsen Burner
+    pos: {x: -2.05, y: 0.91, z: -1.55}
+    targetHeight: 0.22
+    pourable: 0
+    fillChemical: 
+  - prefabName: WatchGlass
+    itemId: crystallise-ice
+    displayName: Watch Glass
+    pos: {x: -1.75, y: 0.91, z: -1.55}
+    targetHeight: 0.12
+    pourable: 0
+    fillChemical: 
+  - prefabName: Funnel
+    itemId: buchner-filter
+    displayName: Buchner Funnel
+    pos: {x: -1.45, y: 0.91, z: -1.55}
+    targetHeight: 0.2
+    pourable: 0
+    fillChemical: 
+  vessels:
+  - prefabName: ErlenmeyerFlask_400mL
+    displayName: Synthesis Flask
+    pos: {x: -1.4, y: 0.91, z: -2.6}
+    targetHeight: 0.22
+    startChemical: 
+    bindings:
+    - reagentChemical: Salicylic Acid
+      taskId: weigh-salicylic
+    - reagentChemical: Acetic Anhydride
+      taskId: add-anhydride
+    - reagentChemical: Ferric Chloride 10%
+      taskId: test-fecl3

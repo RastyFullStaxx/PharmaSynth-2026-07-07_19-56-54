@@ -15,10 +15,19 @@ public class CutsceneDirector : MonoBehaviour
     [SerializeField] private MonoBehaviour faceBehaviour; // optional IPharmeeFace
 
     [Header("Cutscenes")]
+    [Tooltip("Optional: moduleId→cutscene-set lookup. When set, the director swaps its four cutscenes to match each experiment as it starts. Falls back to the fields below when a module has no entry.")]
+    [SerializeField] private CutsceneLibrary library;
     [SerializeField] private CutsceneData intro;
     [SerializeField] private CutsceneData reagentPrep;
     [SerializeField] private CutsceneData success;
     [SerializeField] private CutsceneData failure;
+
+    // Test/inspection accessors.
+    public CutsceneData Intro => intro;
+    public CutsceneData ReagentPrep => reagentPrep;
+    public CutsceneData Success => success;
+    public CutsceneData Failure => failure;
+    public void SetLibrary(CutsceneLibrary lib) => library = lib;
 
     public UnityEvent onCutsceneStarted;
     public UnityEvent onCutsceneFinished;
@@ -57,7 +66,25 @@ public class CutsceneDirector : MonoBehaviour
         _subscribed = false;
     }
 
-    private void OnStarted(ExperimentModuleDefinition m) => Play(intro);
+    private void OnStarted(ExperimentModuleDefinition m)
+    {
+        if (m != null) LoadForModule(m.moduleId);
+        Play(intro);
+    }
+
+    /// Swap the four cutscenes to the module's set from the library (if present).
+    /// Returns true when a complete set was found. Kept public for edit-mode tests.
+    public bool LoadForModule(string moduleId)
+    {
+        if (library == null) return false;
+        var set = library.GetSet(moduleId);
+        if (set == null) return false;
+        if (set.intro != null) intro = set.intro;
+        if (set.reagentPrep != null) reagentPrep = set.reagentPrep;
+        if (set.success != null) success = set.success;
+        if (set.failure != null) failure = set.failure;
+        return set.IsComplete;
+    }
     private void OnPhaseCompleted(TaskPhase p) { if (p == TaskPhase.ReagentPrep) Play(reagentPrep); }
     private void OnFinished(ExperimentResult r) => Play(SelectOutro(r));
 

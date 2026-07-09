@@ -1,0 +1,133 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d79212f7a99e579438d8e87e49ba408d, type: 3}
+  m_Name: Layout_Acetone
+  m_EditorClassIdentifier: Assembly-CSharp::ExperimentLayout
+  moduleId: midterm-acetone
+  stations:
+  - taskId: prep-koh
+    label: 1. Prepare lime/KOH
+    requiredItemId: prep-koh
+    pos: {x: -1.1, y: 0.91, z: -3.4}
+    sim: 0
+    simTargetC: 85
+  - taskId: weigh-acetates
+    label: 2. Weigh acetate
+    requiredItemId: weigh-acetates
+    pos: {x: -1.1, y: 0.91, z: -4}
+    sim: 0
+    simTargetC: 85
+  - taskId: setup-distill
+    label: 3. Set up distillation
+    requiredItemId: setup-distill
+    pos: {x: -1.1, y: 0.91, z: -4.6}
+    sim: 0
+    simTargetC: 85
+  - taskId: heat-glow
+    label: 4. Heat to red glow
+    requiredItemId: heat-glow
+    pos: {x: -1.1, y: 0.91, z: -5.2}
+    sim: 1
+    simTargetC: 150
+  - taskId: collect-56
+    label: 5. Collect at 56 C
+    requiredItemId: collect-56
+    pos: {x: -1.9, y: 0.91, z: -3.4}
+    sim: 4
+    simTargetC: 85
+  - taskId: test-schiff
+    label: 7. Schiff test
+    requiredItemId: test-schiff
+    pos: {x: -1.9, y: 0.91, z: -4}
+    sim: 0
+    simTargetC: 85
+  - taskId: test-bisulfite
+    label: 9. Bisulfite test
+    requiredItemId: test-bisulfite
+    pos: {x: -1.9, y: 0.91, z: -4.6}
+    sim: 0
+    simTargetC: 85
+  props:
+  - prefabName: Vial_Brown
+    itemId: test-tollens
+    displayName: Tollens Reagent
+    pos: {x: -2.15, y: 0.91, z: -1.95}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Silver Nitrate
+  - prefabName: Vial_Brown
+    itemId: test-iodoform
+    displayName: Sodium Hypochlorite
+    pos: {x: -1.85, y: 0.91, z: -1.95}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Sodium Hypochlorite
+  - prefabName: Spatula
+    itemId: prep-koh
+    displayName: KOH Spatula
+    pos: {x: -2.05, y: 0.91, z: -1.55}
+    targetHeight: 0.16
+    pourable: 0
+    fillChemical: 
+  - prefabName: Scoopula
+    itemId: weigh-acetates
+    displayName: Acetate Scoop
+    pos: {x: -1.75, y: 0.91, z: -1.55}
+    targetHeight: 0.16
+    pourable: 0
+    fillChemical: 
+  - prefabName: RetortStand
+    itemId: setup-distill
+    displayName: Retort Stand
+    pos: {x: -1.45, y: 0.91, z: -1.55}
+    targetHeight: 0.35
+    pourable: 0
+    fillChemical: 
+  - prefabName: BunsenBurner
+    itemId: heat-glow
+    displayName: Bunsen Burner
+    pos: {x: -1.15, y: 0.91, z: -1.55}
+    targetHeight: 0.22
+    pourable: 0
+    fillChemical: 
+  - prefabName: Beaker_100mL
+    itemId: collect-56
+    displayName: Collection Beaker
+    pos: {x: -0.85, y: 0.91, z: -1.55}
+    targetHeight: 0.14
+    pourable: 0
+    fillChemical: 
+  - prefabName: TestTube
+    itemId: test-schiff
+    displayName: Schiff Test Tube
+    pos: {x: -0.55, y: 0.91, z: -1.55}
+    targetHeight: 0.14
+    pourable: 0
+    fillChemical: 
+  - prefabName: EvaporatingDish
+    itemId: test-bisulfite
+    displayName: Bisulfite Dish
+    pos: {x: -0.25, y: 0.91, z: -1.55}
+    targetHeight: 0.1
+    pourable: 0
+    fillChemical: 
+  vessels:
+  - prefabName: ErlenmeyerFlask_400mL
+    displayName: Distillation Flask
+    pos: {x: -1.4, y: 0.91, z: -2.6}
+    targetHeight: 0.22
+    startChemical: 
+    bindings:
+    - reagentChemical: Silver Nitrate
+      taskId: test-tollens
+    - reagentChemical: Sodium Hypochlorite
+      taskId: test-iodoform

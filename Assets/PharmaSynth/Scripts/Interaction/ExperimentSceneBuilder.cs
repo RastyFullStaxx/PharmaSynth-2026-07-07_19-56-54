@@ -87,8 +87,29 @@ public class ExperimentSceneBuilder : MonoBehaviour
         pad.transform.localScale = new Vector3(0.3f, 0.012f, 0.3f);
         var box = pad.GetComponent<BoxCollider>();
         box.isTrigger = true; box.size = new Vector3(1.2f, 40f, 1.2f); box.center = new Vector3(0f, 20f, 0f);
+
+        bool simDriven = s.sim != StationSim.None;
         var st = pad.AddComponent<ExperimentTaskStation>();
-        st.Configure(runner, s.taskId, s.requiredItemId, true, false);
+        // Sim stations complete via the sustained verb's auto-check, not on zone-touch.
+        st.Configure(runner, s.taskId, s.requiredItemId, !simDriven, false);
+
+        if (simDriven)
+        {
+            var sensor = pad.AddComponent<ZoneItemSensor>();
+            sensor.SetItemId(s.requiredItemId);
+            TemperatureSim temp = null; CrystallizationController cryst = null;
+            FiltrationController filt = null; GasCollection gas = null;
+            switch (s.sim)
+            {
+                case StationSim.Heat:       temp  = pad.AddComponent<TemperatureSim>(); break;
+                case StationSim.Crystallise: cryst = pad.AddComponent<CrystallizationController>(); break;
+                case StationSim.Filter:     filt  = pad.AddComponent<FiltrationController>(); break;
+                case StationSim.Collect:    gas   = pad.AddComponent<GasCollection>(); break;
+            }
+            var rig = pad.AddComponent<ZoneSimStation>();
+            rig.Bind(runner, s.taskId, s.sim, sensor, temp, cryst, filt, gas, s.simTargetC);
+        }
+
         MakeLabel(s.label, new Vector3(s.pos.x, s.pos.y + 0.32f, s.pos.z), 0.13f);
     }
 

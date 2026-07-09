@@ -13,25 +13,28 @@ Engine + data are done for all 11; everything below is scene/content wiring. "Si
 | # | Experiment | v2 data | Props+stations | Reaction rules | Vessel bindings | Sim rigs | Cutscenes ×4 | Quiz ×3 |
 |---|-----------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
 | T0 | **Methane (Tutorial)** | [x] | [x] carry-to-zone | [ ] | n/a (dry) | [x] burner heats + gas fills | [x] | [x] |
-| P1 | **Chemical Compounding** | [x] | [ ] | [ ] | [ ] | [ ] | [x] | [x] |
-| P2 | **Ethyl Alcohol** | [x] | [ ] | [ ] | [ ] | [ ] ferment+distil | [x] | [x] |
-| M1 | **Benzoic Acid** | [x] | [ ] | [ ] | [ ] | [ ] cryst+filt | [x] | [x] |
-| M2 | Acetanilide | [x] | [ ] | [ ] | [ ] | [ ] | [x] | [x] |
-| M3 | Acetone | [x] | [ ] | [ ] | [ ] | [ ] distil 56° | [x] | [x] |
-| M4 | Chloroform | [x] | [ ] | [ ] | [ ] | [ ] reflux+distil | [x] | [x] |
-| F1 | Benzamide | [x] | [ ] | [ ] | [ ] | [ ] ice bath | [x] | [x] |
-| F2 | **Aspirin** | [x] | [ ] | [ ] | [ ] | [ ] **overheat branch** | [x] | [x] |
-| F3 | Caffeine (Tier 3) | [x] | [ ] | [ ] | [ ] | [ ] extraction | [x] | [x] |
-| F4 | Wine Making | [x] | [ ] | [ ] | [ ] | [ ] time-skip | [x] +montage | [x] |
+| P1 | **Chemical Compounding** | [x] | [x] auto-built | [ ] | [x] pour | [ ] | [x] | [x] |
+| P2 | **Ethyl Alcohol** | [x] | [x] auto-built | [~] | [x] pour | [ ] ferment+distil | [x] | [x] |
+| M1 | **Benzoic Acid** | [x] | [x] auto-built | [~] | [x] pour | [ ] cryst+filt | [x] | [x] |
+| M2 | Acetanilide | [x] | [x] auto-built | [~] | [x] pour | [ ] | [x] | [x] |
+| M3 | Acetone | [x] | [x] auto-built | [ ] | [x] pour | [ ] distil 56° | [x] | [x] |
+| M4 | Chloroform | [x] | [x] auto-built | [~] | [x] pour | [ ] reflux+distil | [x] | [x] |
+| F1 | Benzamide | [x] | [x] auto-built | [~] | [x] pour | [ ] ice bath | [x] | [x] |
+| F2 | **Aspirin** | [x] | [x] auto-built | [~] | [x] pour | [ ] **overheat branch** | [x] | [x] |
+| F3 | Caffeine (Tier 3) | [x] | [x] auto-built | [ ] | [x] pour | [ ] extraction | [x] | [x] |
+| F4 | Wine Making | [x] | [x] auto-built | [ ] | [x] pour | [ ] time-skip | [x] +montage | [x] |
 
-Counts: cutscene SOs **44/44** ✅ · quiz questions **33/33** ✅ (data; UI TODO) · **reaction-rule assets 10** (`MasterReactionRegistry` — covers Ethyl ferment/iodoform/ester/limewater, Benzoic oxidation, Aspirin synth + FeCl₃, Acetanilide, Benzamide, Chloroform) · **pour path built + verified** (`LiquidPourer` tilt-pour → `LiquidPhysics.AddLiquid` → reaction + `LiquidTaskBinding` task-complete; PourReactionSuite green) · hands-on scene wiring **2/11** — Methane (hand-built) + **Ethyl Alcohol (auto-built)** via the new module-driven `ExperimentSceneBuilder`.
+Legend: `[~]` = partially covered by `MasterReactionRegistry` (some tests produce products/observations; newer tests still need rules). Counts: cutscene SOs **44/44** ✅ · quiz questions **33/33** ✅ + **quiz/data-sheet UI ✅** · **reaction-rule assets 10** (`MasterReactionRegistry`) · **pour path built + verified** · hands-on scene wiring **11/11** ✅ — Methane (hand-built) + all 10 others **auto-built** via `ExperimentSceneBuilder`.
 
-**Module-driven scene builder ✅ (2026-07-08):** `ExperimentSceneBuilder` + `ExperimentLayout` SO + `SceneAssetLibrary` (42 prefabs + 31 chemicals). On module load it clears the `DynamicStage`, toggles the hand-built `MethaneStage` for Methane, else spawns that module's stations/props/vessels from its layout (grounded, labelled, pour-wired). `Layout_EthylAlcohol` authored (fermentation beaker with 4 pour-bindings + 2 zone stations + 6 props). Regression-covered (SceneBuilderSuite, 183/183). **Remaining: author the other 9 `ExperimentLayout` assets** (one per experiment) — pure data now, no code.
+**Sim-rig auto-check hookups ✅ (2026-07-09):** `Interaction/ZoneSimStation` generalises the Methane rig — layout stations tagged `StationSim` (Heat/Crystallise/Filter/Collect) run a real sustained verb (prop-in-zone drives `TemperatureSim`/`CrystallizationController`/`FiltrationController`/`GasCollection`; task auto-completes via `TaskGraph.RegisterCondition`). **17/42 stations sim-driven** across the 10 layouts (heat/distil/reflux, ice/cryst, filter/buchner/decant, collect); setup/prep/weigh/tests stay instant zone-touch. Retry-safe; verified by `SimRigSuite`. So the "Sim rigs" column above is now largely wired (the remaining `[ ]` are tests/setup steps that are correctly touch-completion, plus reaction/observation polish pending client chemistry).
+
+**Module-driven scene builder ✅ (2026-07-08) + ALL 11 LAYOUTS ✅ (2026-07-09):** `ExperimentSceneBuilder` + `ExperimentLayout` SO + `SceneAssetLibrary` (**42 prefabs + 37 chemicals** after +6 new reagents: Bromine Water, Silver Nitrate, Sodium Carbonate, Dichloromethane, Sodium Sulfate, Grape Juice). All **10 `ExperimentLayout` assets** authored (`Layouts/Layout_*.asset`) + wired into `ExperimentSceneBuilder.layouts`; each maps add-reagent tasks to pour→task bindings on a vessel and physical-action tasks to zone stations. Regression-covered — `SceneBuilderSuite` now builds all 10 + validates name resolution; **Suite 200/200**. **Remaining per experiment:** reaction-rule products for newer tests, sim-rig hookups (heat/distil/cryst/filter to auto-check), cutscene wiring.
 
 - [x] **Methane heat/collect real verbs** — burner in zone heats (`TemperatureSim`), hot apparatus + tube in zone fills (`GasCollection`); tasks complete via auto-check (`MethaneApparatusRig` + `ZoneItemSensor`, regression-covered).
 - [ ] Remaining Methane verb polish: mortar grind interaction (prepare-mixture), splint-flame test visual, flame/bubble VFX.
 - [ ] **Wine bespoke rubric** (workmanship/appearance/presentation/documentation/flavour) — currently standard 6-category.
-- [x] **Cutscene data — all 44** (`<Experiment>_Intro/ReagentPrep/Success/Failure` for all 11) authored with per-experiment chemistry + safety dialogue. Still TODO: wire each experiment's 4 SOs into its scene `CutsceneDirector`; staging/fades; wine time-skip montage.
+- [x] **Cutscene data — all 44** (`<Experiment>_Intro/ReagentPrep/Success/Failure` for all 11) authored with per-experiment chemistry + safety dialogue.
+- [x] **Cutscene wiring — all 11 ✅ (2026-07-09):** `NPC/CutsceneLibrary` (`CutsceneLibrary.asset`, moduleId→4 SOs) + `CutsceneDirector.LoadForModule` swap on `ExperimentStarted`, wired onto `RobotNPC`. Regression-covered (`CutsceneLibrarySuite`). **Still TODO: staging/fades + wine time-skip montage (art-pass visual staging).**
 - [ ] Per-experiment ILO cards ×11 (visual intro-cutscene card art).
 
 ## 2. Assets that do not exist yet (create / source / buy)
@@ -65,7 +68,8 @@ Counts: cutscene SOs **44/44** ✅ · quiz questions **33/33** ✅ (data; UI TOD
 - [ ] `AudioService` + mixer groups (master/SFX/voice/ambient) and wiring to the existing AudioSource hooks (`NPCNarrationController`, `BreakableGlassware`) — only 2 AudioSources exist in the scene today (defaults).
 
 ### Data
-- [x] **Quiz bank: 33 MCQs** (3 per experiment) authored as 11 `QuizBank` assets (`ScriptableObjects/Quizzes/`) + new `QuizBank`/`QuizQuestion` type with `Score()`. Regression-covered. **Still TODO: the tablet quiz UI to present them + feed `QuizBank.Score` into the grader's quiz fraction.**
+- [x] **Quiz bank: 33 MCQs** (3 per experiment) authored as 11 `QuizBank` assets (`ScriptableObjects/Quizzes/`) + `QuizBank`/`QuizQuestion` type with `Score()`. Regression-covered.
+- [x] **Post-lab quiz / data-sheet tablet UI ✅ (2026-07-09)** — `UI/PostLabController` + `Experiment/QuizBankLibrary` (`QuizBankLibrary.asset`, 11 banks) + `PostLabTablet` world-space canvas. Opens on ChemicalTests-phase-complete; MCQ option buttons + explanation + Submit; Submit completes the terminal `record-*` task then `runner.Finish(quizFraction)` (quiz → Documentation rubric criterion). Verified by `PostLabSuite`. **Follow-up: numeric yield-entry pad (yield not yet graded).**
 - [x] **Reaction rules** — 10 `ReactionRule` assets + `MasterReactionRegistry` (`ScriptableObjects/Reactions/`), plus ~16 product/reagent `ChemicalData` (Benzoic Acid, Aspirin, Acetanilide, Benzamide, Chloroform, Iodoform, MnO₂, ester, CaCO₃, acetyl chloride, NaOCl, sugar, yeast, limewater, CO₂). Bidirectional lookup + pour→react→task chain regression-covered (PourReactionSuite). **Still TODO: assign the registry to each experiment's vessels in-scene + author remaining test reactions (ethanol functional-group tests, acetone Tollen's/Schiff, caffeine/wine).**
 - [ ] Data-sheet definitions (expected yield ranges per experiment).
 
@@ -111,7 +115,8 @@ These components pass self-tests but appear **zero times** in SampleScene — th
 - [ ] **Menu scene XR-ization**: XR Origin + `TrackedDeviceGraphicRaycaster` + ray interactors (menu is desktop-click only today).
 - [ ] Settings panel content: audio sliders, text size, subtitle speed, vignette intensity, snap-turn angle, seated/standing, handedness (`SettingsService` to build).
 - [ ] **Period hub** (3 mastery-gated doors; `ProgressionFlow.IsPeriodUnlocked` ready) + experiment-select UI (`ExperimentCatalog`/`ExperimentLibrary` ready).
-- [ ] **Post-lab quiz UI** (3 MCQs on tablet) + **data-sheet yield-entry UI** (number pad) — DataSheet-phase tasks currently complete like generic tasks.
+- [x] **Period hub + experiment-select UI** ✅ (2026-07-09) — `UI/HubSelectController` (pure `BuildModel`/`CanSelect` over `ProgressionFlow`, roster grouped by period with Locked/Available/Passed + period-door gating) + desktop-clickable `ExperimentSelect` panel in `MainMenu.unity` (11 rows + live progress, launches gated experiments). Regression-covered (`HubSelectSuite`). **VR follow-up: menu XR Origin + `TrackedDeviceGraphicRaycaster` for controller-ray clicks (desktop mouse works now).**
+- [x] **Post-lab quiz UI** (3 MCQs on tablet) ✅ — see §1. [x] **data-sheet yield-entry** ✅ (VR-friendly −5/+5 stepper, clamped 0–100, on the same tablet; `PostLabController.AdjustYield`/`SetYield`, regression-covered). Yield is recorded on the data sheet; **not yet folded into the grade** (design decision for client — currently only the quiz MCQs drive the Documentation criterion).
 - [ ] Results/History screen + exportable scores file (the agreed analytics descope).
 - [ ] PPE ante-room flow: locker interaction → coat/goggles/gloves visibly donned → door gate (current = one poke sign).
 

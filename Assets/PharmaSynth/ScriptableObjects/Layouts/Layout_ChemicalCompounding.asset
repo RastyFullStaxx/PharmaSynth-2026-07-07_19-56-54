@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d79212f7a99e579438d8e87e49ba408d, type: 3}
+  m_Name: Layout_ChemicalCompounding
+  m_EditorClassIdentifier: Assembly-CSharp::ExperimentLayout
+  moduleId: prelim-chemical-compounding
+  stations:
+  - taskId: test-combustion
+    label: 2. Combustion test
+    requiredItemId: test-combustion
+    pos: {x: -1.1, y: 0.91, z: -3.4}
+    sim: 0
+    simTargetC: 85
+  - taskId: test-sodium
+    label: 3. Sodium metal test
+    requiredItemId: test-sodium
+    pos: {x: -1.1, y: 0.91, z: -4}
+    sim: 0
+    simTargetC: 85
+  props:
+  - prefabName: Vial_Brown
+    itemId: gather-ethanol
+    displayName: Ethanol
+    pos: {x: -2.15, y: 0.91, z: -1.95}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Ethanol
+  - prefabName: Vial_Brown
+    itemId: test-bromine
+    displayName: Bromine Water
+    pos: {x: -1.85, y: 0.91, z: -1.95}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Bromine Water
+  - prefabName: Vial_Brown
+    itemId: test-kmno4
+    displayName: KMnO4 Solution
+    pos: {x: -1.55, y: 0.91, z: -1.95}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Potassium Permanganate
+  - prefabName: GlassRod
+    itemId: test-combustion
+    displayName: Lit Splint
+    pos: {x: -2.05, y: 0.91, z: -1.55}
+    targetHeight: 0.18
+    pourable: 0
+    fillChemical: 
+  - prefabName: Spatula
+    itemId: test-sodium
+    displayName: Sodium Scoop
+    pos: {x: -1.75, y: 0.91, z: -1.55}
+    targetHeight: 0.16
+    pourable: 0
+    fillChemical: 
+  vessels:
+  - prefabName: Beaker_100mL
+    displayName: Test Beaker
+    pos: {x: -1.4, y: 0.91, z: -2.6}
+    targetHeight: 0.16
+    startChemical: 
+    bindings:
+    - reagentChemical: Ethanol
+      taskId: gather-ethanol
+    - reagentChemical: Bromine Water
+      taskId: test-bromine
+    - reagentChemical: Potassium Permanganate
+      taskId: test-kmno4

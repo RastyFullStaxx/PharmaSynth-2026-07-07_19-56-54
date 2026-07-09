@@ -39,6 +39,10 @@ public class PharmeeBrain : MonoBehaviour
 
     private IPharmeeFace _face;
     private bool _subscribed;
+    private bool _assessment;   // assessment mode → no procedural hints (safety warnings stay)
+
+    /// True while the current experiment is in assessment mode (Pharmee stays quiet).
+    public bool AssessmentMode => _assessment;
 
     public PharmeeState State { get; private set; } = PharmeeState.Idle;
     public string LastLine { get; private set; } = "";
@@ -83,6 +87,9 @@ public class PharmeeBrain : MonoBehaviour
 
     private void OnStarted(ExperimentModuleDefinition m)
     {
+        // Assessment mode (Dr. Jimenez observing): Pharmee gives no procedural hints.
+        _assessment = m != null && m.assessmentMode;
+        if (_assessment) return;
         // With a cutscene director present, it plays the intro then calls
         // InstructCurrent() on finish — the brain stays quiet here to avoid overlap.
         if (deferIntroToDirector) return;
@@ -106,6 +113,7 @@ public class PharmeeBrain : MonoBehaviour
     /// Instruct the current available step (nearest to done). No-op when finished.
     public void InstructCurrent()
     {
+        if (_assessment) return;                       // no procedural hints in assessment mode
         if (runner == null || runner.Graph == null) return;
         foreach (var t in runner.Graph.AvailableTasks())
         {

@@ -39,7 +39,15 @@ public static class PharmaSelfTests
         RealVerbSuite();
         PourReactionSuite();
         SceneBuilderSuite();
+        SimRigSuite();
+        PostLabSuite();
+        CutsceneLibrarySuite();
         ProgressionFlowSuite();
+        HubSelectSuite();
+        AudioSuite();
+        ExaminerSuite();
+        SettingsSuite();
+        ResultsExportSuite();
         LibrarySuite();
         ContentSuite();
         RosterDataSuite();
@@ -393,6 +401,351 @@ public static class PharmaSelfTests
             A("builder: Methane builds 0 dynamic (uses its hand-built stage)", m == 0);
         }
         finally { UnityEngine.Object.DestroyImmediate(rgo); UnityEngine.Object.DestroyImmediate(bgo); }
+
+        // All 11 experiments must build a physical setup from their ExperimentLayout —
+        // Methane uses its hand-built stage (0 dynamic roots), the other 10 spawn from data.
+        var allLayouts = new List<ExperimentLayout>();
+        foreach (var g in AssetDatabase.FindAssets("t:ExperimentLayout", new[] { "Assets/PharmaSynth/ScriptableObjects/Layouts" }))
+            allLayouts.Add(AssetDatabase.LoadAssetAtPath<ExperimentLayout>(AssetDatabase.GUIDToAssetPath(g)));
+        A("builder: 10 experiment layouts authored", allLayouts.Count >= 10);
+
+        int resolveMisses = 0;
+        foreach (var l in allLayouts)
+        {
+            if (l == null) continue;
+            foreach (var p in l.props)
+            {
+                if (lib.GetPrefab(p.prefabName) == null) resolveMisses++;
+                if (p.pourable && !string.IsNullOrEmpty(p.fillChemical) && lib.GetChemical(p.fillChemical) == null) resolveMisses++;
+            }
+            foreach (var v in l.vessels)
+            {
+                if (lib.GetPrefab(v.prefabName) == null) resolveMisses++;
+                if (!string.IsNullOrEmpty(v.startChemical) && lib.GetChemical(v.startChemical) == null) resolveMisses++;
+                foreach (var bnd in v.bindings)
+                    if (lib.GetChemical(bnd.reagentChemical) == null) resolveMisses++;
+            }
+            // Every station must be completable by a prop that exists in the same layout.
+            var ids = new HashSet<string>();
+            foreach (var p in l.props) ids.Add(p.itemId);
+            foreach (var s in l.stations)
+                if (!string.IsNullOrEmpty(s.requiredItemId) && !ids.Contains(s.requiredItemId)) resolveMisses++;
+        }
+        A("builder: every layout resolves all prefab/chemical/station names", resolveMisses == 0);
+
+        var allBgo = new GameObject("sb_all");
+        try
+        {
+            var b2 = allBgo.AddComponent<ExperimentSceneBuilder>();
+            b2.SetRefs(null, lib, reg, allLayouts);
+            int builtAll = 0;
+            foreach (var l in allLayouts)
+            {
+                if (l == null || l.moduleId == "tutorial-methane") continue;
+                if (b2.Build(l.moduleId) > 0) builtAll++;
+            }
+            A("builder: all 10 data-driven experiments spawn > 0 roots", builtAll >= 10);
+        }
+        finally { UnityEngine.Object.DestroyImmediate(allBgo); }
+    }
+
+    static void ResultsExportSuite()
+    {
+        var svc = new ProgressionService();
+        var rows0 = ResultsExport.BuildRows(svc);
+        A("results: one row per experiment", rows0.Count == ExperimentCatalog.Count && rows0.Count == 11);
+        A("results: all unattempted at start", rows0.TrueForAll(r => !r.attempted && !r.passed));
+        A("results: zero passed at start", ResultsExport.PassedCount(svc) == 0);
+
+        svc.RecordResult("tutorial-methane",
+            new ExperimentResult { passed = true, overallMastery = 0.95f, grade = new GradeBreakdown { Total = 96f } }, false);
+        var rows = ResultsExport.BuildRows(svc);
+        var t = rows.Find(r => r.moduleId == "tutorial-methane");
+        A("results: recorded attempt shows", t.attempted && t.passed && Near(t.bestGrade, 96f) && t.attempts == 1);
+        A("results: passed count = 1", ResultsExport.PassedCount(svc) == 1);
+
+        var csv = ResultsExport.BuildCsv(svc);
+        A("results: csv has header", csv.StartsWith("Experiment,Period,"));
+        A("results: csv lists the tutorial row", csv.Contains("Tutorial: Methane Synthesis"));
+        A("results: csv total line", csv.Contains("TOTAL,,,1/11"));
+        int lines = csv.TrimEnd('\n').Split('\n').Length;
+        A("results: csv = header + 11 rows + total", lines == 13);
+
+        // Results/History screen text.
+        var empty = new ProgressionService();
+        var txt0 = ResultsHistoryController.BuildDisplayText(empty);
+        A("results: screen shows 0/11 before any pass", txt0.Contains("0 / 11 passed"));
+        var txt1 = ResultsHistoryController.BuildDisplayText(svc);
+        A("results: screen marks a pass + 1/11", txt1.Contains("PASS") && txt1.Contains("1 / 11 passed"));
+    }
+
+    static void SettingsSuite()
+    {
+        var s = new ComfortSettings();
+        A("settings: sane defaults", Near(s.textScale, 1f) && Near(s.snapTurnAngle, 45f) && s.handedness == Handedness.Right);
+        s.SetTextScale(0.1f); A("settings: text scale clamps low", Near(s.textScale, 0.8f));
+        s.SetTextScale(9f);   A("settings: text scale clamps high", Near(s.textScale, 1.6f));
+        s.SetSubtitleSpeed(0.1f); A("settings: subtitle speed clamps low", Near(s.subtitleSpeed, 0.5f));
+        s.SetSubtitleSpeed(9f);   A("settings: subtitle speed clamps high", Near(s.subtitleSpeed, 2f));
+        s.SetVignette(-1f); A("settings: vignette clamps to 0", Near(s.vignetteIntensity, 0f));
+        s.SetVignette(9f);  A("settings: vignette clamps to 1", Near(s.vignetteIntensity, 1f));
+        s.SetSnapTurnAngle(3f);   A("settings: snap-turn clamps low", Near(s.snapTurnAngle, 15f));
+        s.SetSnapTurnAngle(400f); A("settings: snap-turn clamps high", Near(s.snapTurnAngle, 90f));
+        var clone = s.Clone(); clone.SetTextScale(1.2f);
+        A("settings: clone is independent", Near(s.textScale, 1.6f) && Near(clone.textScale, 1.2f));
+    }
+
+    static void ExaminerSuite()
+    {
+        ExperimentModuleDefinition Mod(bool assess)
+        {
+            var m = ScriptableObject.CreateInstance<ExperimentModuleDefinition>();
+            m.moduleId = assess ? "assess-mod" : "guided-mod";
+            m.assessmentMode = assess;
+            m.graphTasks = new List<ExperimentTask> { T("a", TaskPhase.Synthesis, 1, LabSkill.Transfer, RubricCategory.Procedure) };
+            return m;
+        }
+
+        A("examiner: ShouldObserve reads the flag",
+            ExaminerNPC.ShouldObserve(Mod(true)) && !ExaminerNPC.ShouldObserve(Mod(false)));
+
+        // Guided module → Pharmee speaks, examiner dormant.
+        var rgo = new GameObject("ex_r"); var bgo = new GameObject("ex_b"); var ego = new GameObject("ex_e");
+        try
+        {
+            var runner = rgo.AddComponent<ExperimentRunner>();
+            var brain = bgo.AddComponent<PharmeeBrain>();
+            var exam = ego.AddComponent<ExaminerNPC>();
+            brain.SetRunner(runner); exam.SetRunner(runner);
+            runner.SetModule(Mod(false)); runner.StartExperiment();
+            A("examiner: guided → Pharmee gives a hint", !string.IsNullOrEmpty(brain.LastLine));
+            A("examiner: guided → examiner dormant", !exam.IsObserving && !brain.AssessmentMode);
+        }
+        finally { UnityEngine.Object.DestroyImmediate(rgo); UnityEngine.Object.DestroyImmediate(bgo); UnityEngine.Object.DestroyImmediate(ego); }
+
+        // Assessment module → Pharmee silent, examiner observing.
+        var rgo2 = new GameObject("ex_r2"); var bgo2 = new GameObject("ex_b2"); var ego2 = new GameObject("ex_e2");
+        try
+        {
+            var runner = rgo2.AddComponent<ExperimentRunner>();
+            var brain = bgo2.AddComponent<PharmeeBrain>();
+            var exam = ego2.AddComponent<ExaminerNPC>();
+            brain.SetRunner(runner); exam.SetRunner(runner);
+            runner.SetModule(Mod(true)); runner.StartExperiment();
+            brain.InstructCurrent();   // even an explicit hint request stays silent
+            A("examiner: assessment → Pharmee silent", string.IsNullOrEmpty(brain.LastLine) && brain.AssessmentMode);
+            A("examiner: assessment → examiner observing", exam.IsObserving);
+        }
+        finally { UnityEngine.Object.DestroyImmediate(rgo2); UnityEngine.Object.DestroyImmediate(bgo2); UnityEngine.Object.DestroyImmediate(ego2); }
+    }
+
+    static void AudioSuite()
+    {
+        // Perceptual volume curve.
+        A("audio: full volume = 0 dB", Near(VolumeUtil.LinearToDb(1f), 0f, 0.05f));
+        A("audio: silence = -80 dB", Near(VolumeUtil.LinearToDb(0f), -80f, 0.01f));
+        A("audio: half volume ~ -6 dB", Near(VolumeUtil.LinearToDb(0.5f), -6.02f, 0.1f));
+
+        // SoundBank lookup.
+        var bank = ScriptableObject.CreateInstance<SoundBank>();
+        bank.entries.Add(new SoundBank.Entry { key = "pour", clip = null, category = AudioCategory.Sfx });
+        A("audio: bank finds a key", bank.Get("pour") != null);
+        A("audio: bank misses unknown key", bank.Get("nope") == null);
+        A("audio: expected-key checklist non-empty", SoundBank.ExpectedKeys.Length >= 10);
+
+        // Service volume + null-safe playback (works with zero clips).
+        var go = new GameObject("audio_svc");
+        try
+        {
+            var svc = go.AddComponent<AudioService>();
+            svc.Bind(bank, go.AddComponent<AudioSource>(), go.AddComponent<AudioSource>(),
+                     go.AddComponent<AudioSource>(), go.AddComponent<AudioSource>());
+            svc.SetVolume(AudioCategory.Sfx, 0.3f);
+            A("audio: volume set/get", Near(svc.VolumeOf(AudioCategory.Sfx), 0.3f));
+            svc.SetVolume(AudioCategory.Music, 2f);
+            A("audio: volume clamps to 1", Near(svc.VolumeOf(AudioCategory.Music), 1f));
+            svc.Play("pour");        // entry exists, clip null → silent no-op, no throw
+            svc.Play("missing");     // no entry → no throw
+            A("audio: playback is null-safe with no clips", true);
+        }
+        finally { UnityEngine.Object.DestroyImmediate(go); UnityEngine.Object.DestroyImmediate(bank); }
+    }
+
+    static void HubSelectSuite()
+    {
+        // Fresh in-memory progress (no disk touch): only the tutorial should be open.
+        var service = new ProgressionService();
+        var flow = new ProgressionFlow(service);
+
+        var model = HubSelectController.BuildModel(flow);
+        A("hub: model has all 11 experiments", model.Count == ExperimentCatalog.Count && model.Count == 11);
+
+        HubSelectController.Row Find(string id) { foreach (var r in model) if (r.moduleId == id) return r; return null; }
+        A("hub: tutorial available at start",
+            HubSelectController.StateOf(Find("tutorial-methane")) == HubSelectController.RowState.Available);
+        A("hub: prelim locked at start",
+            HubSelectController.StateOf(Find("prelim-chemical-compounding")) == HubSelectController.RowState.Locked);
+        A("hub: midterm period closed at start", !flow.IsPeriodUnlocked(ExperimentPeriod.Midterm));
+        A("hub: CanSelect tutorial", HubSelectController.CanSelect(flow, "tutorial-methane"));
+        A("hub: cannot select a locked experiment", !HubSelectController.CanSelect(flow, "final-aspirin"));
+
+        // Pass the tutorial (in-memory only) → the first prelim unlocks.
+        service.RecordResult("tutorial-methane", new ExperimentResult { passed = true }, false);
+        var flow2 = new ProgressionFlow(service);
+        var model2 = HubSelectController.BuildModel(flow2);
+        HubSelectController.Row Find2(string id) { foreach (var r in model2) if (r.moduleId == id) return r; return null; }
+        A("hub: tutorial now passed", HubSelectController.StateOf(Find2("tutorial-methane")) == HubSelectController.RowState.Passed);
+        A("hub: next prelim now available", HubSelectController.StateOf(Find2("prelim-chemical-compounding")) == HubSelectController.RowState.Available);
+        A("hub: can select the newly unlocked prelim", HubSelectController.CanSelect(flow2, "prelim-chemical-compounding"));
+        A("hub: second prelim still locked", !HubSelectController.CanSelect(flow2, "prelim-ethyl-alcohol"));
+        A("hub: midterm still closed until prelim complete", !flow2.IsPeriodUnlocked(ExperimentPeriod.Midterm));
+    }
+
+    static void SimRigSuite()
+    {
+        var lib = AssetDatabase.LoadAssetAtPath<SceneAssetLibrary>("Assets/PharmaSynth/ScriptableObjects/SceneAssetLibrary.asset");
+        var reg = AssetDatabase.LoadAssetAtPath<ReactionRegistry>("Assets/PharmaSynth/ScriptableObjects/Reactions/MasterReactionRegistry.asset");
+        var module = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>("Assets/PharmaSynth/ScriptableObjects/Experiments/Final_Aspirin.asset");
+        A("simrig: library + aspirin module load", lib != null && module != null);
+        if (lib == null || module == null) return;
+        var layouts = new List<ExperimentLayout>();
+        foreach (var g in AssetDatabase.FindAssets("t:ExperimentLayout", new[] { "Assets/PharmaSynth/ScriptableObjects/Layouts" }))
+            layouts.Add(AssetDatabase.LoadAssetAtPath<ExperimentLayout>(AssetDatabase.GUIDToAssetPath(g)));
+
+        var rgo = new GameObject("sr_runner"); var bgo = new GameObject("sr_builder");
+        try
+        {
+            var runner = rgo.AddComponent<ExperimentRunner>();
+            runner.SetModule(module); runner.StartExperiment();
+            var builder = bgo.AddComponent<ExperimentSceneBuilder>();
+            builder.SetRefs(runner, lib, reg, layouts);
+            builder.Build("final-aspirin");
+
+            ZoneSimStation heatRig = null;
+            foreach (var z in bgo.GetComponentsInChildren<ZoneSimStation>(true))
+                if (z.gameObject.name == "Station_warm-waterbath") { heatRig = z; break; }
+            A("simrig: heat station built with a ZoneSimStation", heatRig != null);
+            if (heatRig == null) return;
+            var temp = heatRig.GetComponent<TemperatureSim>();
+            var sensor = heatRig.GetComponent<ZoneItemSensor>();
+            A("simrig: heat station carries TemperatureSim + sensor", temp != null && sensor != null);
+
+            // Reach the step, then confirm it does NOT complete without the sustained heat verb.
+            runner.CompleteTask("weigh-salicylic");
+            runner.CompleteTask("add-anhydride");
+            runner.Graph.Tick();
+            A("simrig: warm-waterbath pending before heating", !runner.Graph.IsComplete("warm-waterbath"));
+
+            // Perform the verb: prop in zone → heat to target → auto-check completes it.
+            sensor.ForceOccupied(true);
+            heatRig.Drive(1f, true);           // flame on
+            for (int i = 0; i < 4; i++) temp.Tick(1f);
+            A("simrig: temperature reached target", temp.AtLeast(85f));
+            runner.Graph.Tick();
+            A("simrig: heat verb auto-completes warm-waterbath", runner.Graph.IsComplete("warm-waterbath"));
+        }
+        finally { UnityEngine.Object.DestroyImmediate(rgo); UnityEngine.Object.DestroyImmediate(bgo); }
+    }
+
+    static void CutsceneLibrarySuite()
+    {
+        var lib = AssetDatabase.LoadAssetAtPath<CutsceneLibrary>("Assets/PharmaSynth/ScriptableObjects/CutsceneLibrary.asset");
+        A("cutscene: library loads", lib != null);
+        if (lib == null) return;
+        A("cutscene: 11 module sets", lib.entries.Count >= 11);
+
+        int bad = 0;
+        foreach (var e in lib.entries)
+        {
+            if (e == null || !e.IsComplete) { bad++; continue; }
+            if (e.intro.kind != CutsceneData.Kind.Intro) bad++;
+            if (e.reagentPrep.kind != CutsceneData.Kind.ReagentPrep) bad++;
+            if (e.success.kind != CutsceneData.Kind.Success) bad++;
+            if (e.failure.kind != CutsceneData.Kind.Failure) bad++;
+        }
+        A("cutscene: every set complete + correct kinds", bad == 0);
+
+        // Director swaps its four cutscenes to match the running module.
+        var go = new GameObject("cs_dir");
+        try
+        {
+            var dir = go.AddComponent<CutsceneDirector>();
+            dir.SetLibrary(lib);
+            var asp = lib.GetSet("final-aspirin");
+            A("cutscene: aspirin set exists", asp != null);
+            A("cutscene: LoadForModule(aspirin) returns complete", dir.LoadForModule("final-aspirin"));
+            A("cutscene: director intro swapped to aspirin", dir.Intro == asp.intro && dir.Success == asp.success);
+            dir.LoadForModule("tutorial-methane");
+            var meth = lib.GetSet("tutorial-methane");
+            A("cutscene: director intro swapped to methane", dir.Intro == meth.intro);
+            A("cutscene: outro selects failure on fail", dir.SelectOutro(new ExperimentResult { passed = false }) == meth.failure);
+            A("cutscene: outro selects success on pass", dir.SelectOutro(new ExperimentResult { passed = true }) == meth.success);
+            A("cutscene: unknown module → no swap", !dir.LoadForModule("does-not-exist"));
+        }
+        finally { UnityEngine.Object.DestroyImmediate(go); }
+    }
+
+    static void PostLabSuite()
+    {
+        var lib = AssetDatabase.LoadAssetAtPath<QuizBankLibrary>("Assets/PharmaSynth/ScriptableObjects/QuizBankLibrary.asset");
+        var module = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>("Assets/PharmaSynth/ScriptableObjects/Experiments/Prelim_EthylAlcohol.asset");
+        A("postlab: library + module load", lib != null && module != null);
+        if (lib == null || module == null) return;
+        var bank = lib.GetBank("prelim-ethyl-alcohol");
+        A("postlab: bank found + 3 questions", bank != null && bank.Count == 3);
+        A("postlab: all 11 banks registered", lib.banks.Count >= 11);
+        if (bank == null) return;
+
+        var rgo = new GameObject("pl_runner"); var cgo = new GameObject("pl_ctrl");
+        try
+        {
+            var runner = rgo.AddComponent<ExperimentRunner>();
+            runner.SetModule(module); runner.StartExperiment();
+            // Complete every non-DataSheet task in authored order (prereqs satisfied).
+            foreach (var t in runner.Graph.Tasks)
+                if (t.phase != TaskPhase.DataSheet) runner.CompleteTask(t.taskId);
+
+            var ctrl = cgo.AddComponent<PostLabController>();
+            ctrl.SetRefs(runner, lib);
+            A("postlab: finds record-yield data-sheet task", PostLabController.FindDataSheetTaskId(runner.Graph) == "record-yield");
+            A("postlab: record task pending before submit", !runner.Graph.IsComplete("record-yield"));
+
+            ctrl.OpenFor(bank);
+            A("postlab: opens", ctrl.IsOpen);
+            A("postlab: not answered at open", !ctrl.AllAnswered);
+            ctrl.AdjustYield(85); A("postlab: yield stepper adjusts", Near(ctrl.Yield, 85f));
+            ctrl.AdjustYield(50); A("postlab: yield clamps at 100", Near(ctrl.Yield, 100f));
+            ctrl.SetYield(-10);   A("postlab: yield clamps at 0", Near(ctrl.Yield, 0f));
+            ctrl.SetYield(72);
+            for (int i = 0; i < bank.Count; i++) ctrl.Answer(i, bank.questions[i].correctIndex);
+            A("postlab: all answered", ctrl.AllAnswered);
+            A("postlab: perfect quiz fraction = 1", Near(ctrl.ScoreFraction(), 1f));
+
+            var res = ctrl.SubmitAndFinish();
+            A("postlab: submit completes record-yield", runner.Graph.IsComplete("record-yield"));
+            A("postlab: full progress after submit", Near(runner.Graph.Progress01, 1f));
+            A("postlab: quiz closed after submit", !ctrl.IsOpen);
+            float expectedDoc = (module.rubricWeights.documentation / module.rubricWeights.Total()) * 100f;
+            A("postlab: documentation contribution maxed on perfect quiz", Near(res.grade.Documentation, expectedDoc, 0.5f) && expectedDoc > 0f);
+        }
+        finally { UnityEngine.Object.DestroyImmediate(rgo); UnityEngine.Object.DestroyImmediate(cgo); }
+
+        var rgo2 = new GameObject("pl_runner2"); var cgo2 = new GameObject("pl_ctrl2");
+        try
+        {
+            var runner2 = rgo2.AddComponent<ExperimentRunner>();
+            runner2.SetModule(module); runner2.StartExperiment();
+            var ctrl2 = cgo2.AddComponent<PostLabController>();
+            ctrl2.SetRefs(runner2, lib);
+            ctrl2.OpenFor(bank);
+            for (int i = 0; i < bank.Count; i++)
+            {
+                var q = bank.questions[i];
+                ctrl2.Answer(i, (q.correctIndex + 1) % q.options.Count);
+            }
+            A("postlab: all-wrong quiz fraction = 0", Near(ctrl2.ScoreFraction(), 0f));
+        }
+        finally { UnityEngine.Object.DestroyImmediate(rgo2); UnityEngine.Object.DestroyImmediate(cgo2); }
     }
 
     static void RealVerbSuite()

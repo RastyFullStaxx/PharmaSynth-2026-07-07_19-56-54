@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 099c0e1ee3777eb44b2453bce7ba8938, type: 3}
+  m_Name: CutsceneLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::CutsceneLibrary
+  entries:
+  - moduleId: final-aspirin
+    intro: {fileID: 11400000, guid: cabf708be3a9c1b4dabbf2a575674871, type: 2}
+    reagentPrep: {fileID: 11400000, guid: 52923196ff500df408e1769c2494b78f, type: 2}
+    success: {fileID: 11400000, guid: 893696c2166385c4ea3fd268c427810e, type: 2}
+    failure: {fileID: 11400000, guid: baed6e79b4908aa4bac95bd719fbc904, type: 2}
+  - moduleId: final-benzamide
+    intro: {fileID: 11400000, guid: 8a05e28d95fdca648937d6f2e0851bf7, type: 2}
+    reagentPrep: {fileID: 11400000, guid: 1aebb7ac925fcf34b916353d2e00b00f, type: 2}
+    success: {fileID: 11400000, guid: 01a9d8472f23c7740941db87042a7601, type: 2}
+    failure: {fileID: 11400000, guid: 5258774cee9bb6e4f949838881612031, type: 2}
+  - moduleId: final-caffeine
+    intro: {fileID: 11400000, guid: b3a70337b4d3f1343a6ad43c88144625, type: 2}
+    reagentPrep: {fileID: 11400000, guid: c40af965459d8eb42bf75a43b8e6131f, type: 2}
+    success: {fileID: 11400000, guid: 9206e02ee1b018844b572c4c69cf9d50, type: 2}
+    failure: {fileID: 11400000, guid: 677229c00a61830458153e36e8ae95c5, type: 2}
+  - moduleId: final-winemaking
+    intro: {fileID: 11400000, guid: 7fbe89fef34233648bceaf4baf1ac10c, type: 2}
+    reagentPrep: {fileID: 11400000, guid: 14087a26a80c648449f76d0a76886640, type: 2}
+    success: {fileID: 11400000, guid: 8773931cf7fef4541848c5cb6afc8e0d, type: 2}
+    failure: {fileID: 11400000, guid: cf38b5787e973e649ac832a8f03d1f78, type: 2}
+  - moduleId: midterm-acetanilide
+    intro: {fileID: 11400000, guid: 0d87cae76c773b749b79bec880c69b34, type: 2}
+    reagentPrep: {fileID: 11400000, guid: b280aa4f115ed4d4d8033d85c5f2a509, type: 2}
+    success: {fileID: 11400000, guid: 3cf481bd0d9bcea41b31c57d9eb813f1, type: 2}
+    failure: {fileID: 11400000, guid: 478a0327528119942b0545734ef153a4, type: 2}
+  - moduleId: midterm-acetone
+    intro: {fileID: 11400000, guid: b89dc987db75ec44faff65f8bb361393, type: 2}
+    reagentPrep: {fileID: 11400000, guid: 6ee51a7710ec3da4cb9773de252e7f1f, type: 2}
+    success: {fileID: 11400000, guid: 40047212a0b85c1499ebd296a2e04b01, type: 2}
+    failure: {fileID: 11400000, guid: 69dc35ec48394e44e90b11680e047a77, type: 2}
+  - moduleId: midterm-benzoic-acid
+    intro: {fileID: 11400000, guid: 3d90b276ba6995146a0bfd1d0a73b454, type: 2}
+    reagentPrep: {fileID: 11400000, guid: 293e55f21362ac6438e9580a601f139b, type: 2}
+    success: {fileID: 11400000, guid: 0f09e99ac142793489f468f890e2f30d, type: 2}
+    failure: {fileID: 11400000, guid: b5300fb41b015ea4b8e94a6830287dcb, type: 2}
+  - moduleId: midterm-chloroform
+    intro: {fileID: 11400000, guid: badead4496d966f4a8d8b525be770cbc, type: 2}
+    reagentPrep: {fileID: 11400000, guid: 8b331f372470d384690df2dbdde98182, type: 2}
+    success: {fileID: 11400000, guid: f19c77f08b85dba4aa20f3e3de812030, type: 2}
+    failure: {fileID: 11400000, guid: 3a069305829f64844b62a3deaab3b20c, type: 2}
+  - moduleId: prelim-chemical-compounding
+    intro: {fileID: 11400000, guid: ffb18e6b9bce43740a017a673cfc9a78, type: 2}
+    reagentPrep: {fileID: 11400000, guid: 0eff2a9035d219d4db5acc05decfe80a, type: 2}
+    success: {fileID: 11400000, guid: 6496e393bdbce2a45997c6b9d6b82b4f, type: 2}
+    failure: {fileID: 11400000, guid: 05ecac0e244bcb7449c27c82f96457a2, type: 2}
+  - moduleId: prelim-ethyl-alcohol
+    intro: {fileID: 11400000, guid: c2cde74dee555e64f875893ea7d5fa6e, type: 2}
+    reagentPrep: {fileID: 11400000, guid: e4e5fb7472126114f9b2c363dca69d06, type: 2}
+    success: {fileID: 11400000, guid: cf08f8c1296d19f4c96c603795959484, type: 2}
+    failure: {fileID: 11400000, guid: 45f723101459e4e419a552040fc065aa, type: 2}
+  - moduleId: tutorial-methane
+    intro: {fileID: 11400000, guid: aa1a9940ff5dbae4dbbec0b83359d72b, type: 2}
+    reagentPrep: {fileID: 11400000, guid: 58907211587e58f4d8f9ef8c01a4142d, type: 2}
+    success: {fileID: 11400000, guid: 800d984459c91c14d91572ff464dd8d0, type: 2}
+    failure: {fileID: 11400000, guid: 61c4395d2a6630c49978b22fde688b94, type: 2}

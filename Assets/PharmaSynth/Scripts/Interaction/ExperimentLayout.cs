@@ -6,6 +6,11 @@ using UnityEngine;
 /// props and reagent vessels go. The ExperimentSceneBuilder spawns this on module load,
 /// so all 11 experiments share one lab scene instead of 11 hand-built scenes.
 /// Positions are WORLD-space (the lab is a fixed room).
+/// How a station completes. None = the prop simply entering the zone completes the
+/// step. The others run a real, sustained verb via a chemistry sim (the task then
+/// auto-completes through the TaskGraph condition once the sim reaches its target).
+public enum StationSim { None, Heat, Crystallise, Filter, Collect }
+
 [CreateAssetMenu(fileName = "ExperimentLayout", menuName = "PharmaSynth/Experiment Layout")]
 public class ExperimentLayout : ScriptableObject
 {
@@ -16,6 +21,10 @@ public class ExperimentLayout : ScriptableObject
         public string label;
         public string requiredItemId;     // grabbable prop that completes it (empty = any)
         public Vector3 pos;               // pad centre, world space (y = surface)
+        [Tooltip("Real-verb sim driven while the prop occupies the zone. None = instant zone-touch completion.")]
+        public StationSim sim = StationSim.None;
+        [Tooltip("Target °C for Heat stations (distillation cut-off / water-bath).")]
+        public float simTargetC = 80f;
     }
 
     [Serializable]

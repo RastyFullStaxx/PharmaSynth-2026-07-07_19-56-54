@@ -18,10 +18,14 @@ MonoBehaviour:
     label: 3. Distil (70-80 C)
     requiredItemId: distill-flask
     pos: {x: -1.15, y: 0.91, z: -3.4}
+    sim: 1
+    simTargetC: 78
   - taskId: test-combustion
     label: 4. Combustion test
     requiredItemId: splint
     pos: {x: -1.15, y: 0.91, z: -4}
+    sim: 0
+    simTargetC: 85
   props:
   - prefabName: Vial_Brown
     itemId: sugar
