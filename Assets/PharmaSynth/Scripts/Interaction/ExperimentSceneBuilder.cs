@@ -3,6 +3,8 @@ using UnityEngine;
 using TMPro;
 using XRGrab = UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable;
 using XRSocket = UnityEngine.XR.Interaction.Toolkit.Interactors.XRSocketInteractor;
+using TeleAnchor = UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.TeleportationAnchor;
+using TeleArea = UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.TeleportationArea;
 
 /// Spawns an experiment's physical setup (stations, grabbable props, reagent vessels)
 /// from its ExperimentLayout when a module loads — so all 11 experiments live in one
@@ -109,6 +111,47 @@ public class ExperimentSceneBuilder : MonoBehaviour
             }
             var rig = pad.AddComponent<ZoneSimStation>();
             rig.Bind(runner, s.taskId, s.sim, sensor, temp, cryst, filt, gas, s.simTargetC);
+            var loop = pad.AddComponent<SimLoopAudio>();
+            loop.Bind(SimLoopAudio.KeyFor(s.sim));
+            rig.SetLoopAudio(loop);
+
+            // Hot-surface hazard (§1): touching a HEAT station once it is
+            // actually hot records a handling mistake. Player-only (props
+            // placed on the pad never trigger it) and armed above 50 °C.
+            if (s.sim == StationSim.Heat && temp != null)
+            {
+                var hot = new GameObject("HotSurface_" + s.taskId);
+                hot.transform.SetParent(stage, false);
+                hot.transform.position = new Vector3(s.pos.x, s.pos.y + 0.06f, s.pos.z);
+                var hotCol = hot.AddComponent<SphereCollider>();
+                hotCol.isTrigger = true; hotCol.radius = 0.16f;
+                var hz = hot.AddComponent<HazardZone>();
+                hz.Configure(runner, LabErrorType.HazardousAction, "Hot surface — don't touch heated apparatus!");
+                var tempRef = temp;
+                hz.SetArmedCheck(() => tempRef != null && tempRef.AtLeast(50f));
+                var cam = Camera.main;
+                if (cam != null) hz.SetPlayerRoot(cam.transform.root);
+            }
+        }
+
+        // Teleport anchor: a floor pad in front of the station so thumbstick
+        // teleporters land at each workstation (§2 — only the room-wide floor
+        // area existed). Mirrors the existing area's layers/provider.
+        var anchorGo = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        anchorGo.name = "TeleAnchor_" + s.taskId;
+        anchorGo.transform.SetParent(stage, false);
+        Vector3 toward = new Vector3(0.2f, 0f, -2.5f) - new Vector3(s.pos.x, 0f, s.pos.z);
+        toward.y = 0f;
+        toward = toward.sqrMagnitude > 0.01f ? toward.normalized : Vector3.right;
+        anchorGo.transform.position = new Vector3(s.pos.x, 0.01f, s.pos.z) + toward * 0.75f;
+        anchorGo.transform.localScale = new Vector3(0.5f, 0.008f, 0.5f);
+        var anchor = anchorGo.AddComponent<TeleAnchor>();
+        anchor.teleportAnchorTransform = anchorGo.transform;
+        var floorArea = FindAnyObjectByType<TeleArea>();
+        if (floorArea != null)
+        {
+            anchor.interactionLayers = floorArea.interactionLayers;
+            anchor.teleportationProvider = floorArea.teleportationProvider;
         }
 
         // Snap socket: releasing the required prop near the pad clicks it into

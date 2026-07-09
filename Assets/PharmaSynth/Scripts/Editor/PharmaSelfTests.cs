@@ -918,6 +918,22 @@ public static class PharmaSelfTests
         A("sfx: long move = many steps", StrideMath.Steps(ref acc, 3f, 0.75f) >= 4);
         A("sfx: no distance no steps", StrideMath.Steps(ref acc, 0f, 0.75f) == 0);
 
+        // Sim-loop audio: verb → SoundBank key mapping, and safe without clips.
+        A("sfx: heat loops bubble", SimLoopAudio.KeyFor(StationSim.Heat) == "bubble");
+        A("sfx: filter loops drip", SimLoopAudio.KeyFor(StationSim.Filter) == "filter-drip");
+        A("sfx: collect loops hiss", SimLoopAudio.KeyFor(StationSim.Collect) == "gas-hiss");
+        A("sfx: crystallise loops shimmer", SimLoopAudio.KeyFor(StationSim.Crystallise) == "crystallise");
+        var loopGo = new GameObject("loop");
+        try
+        {
+            var loop = loopGo.AddComponent<SimLoopAudio>();
+            loop.Bind("bubble");
+            loop.SetRunning(true);       // no AudioService in edit mode → silent no-op
+            loop.SetRunning(false);
+            A("sfx: loop no-op without service", !loop.IsPlaying);
+        }
+        finally { UnityEngine.Object.DestroyImmediate(loopGo); }
+
         // Break → replacement flow: shattered item re-appears at its home spot.
         var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
         try
@@ -1304,6 +1320,32 @@ public static class PharmaSelfTests
             foreach (var so in sockets)
                 if (so.GetComponent<StationSocketFilter>() == null || string.IsNullOrEmpty(so.GetComponent<StationSocketFilter>().requiredItemId)) filtersOk = false;
             A("builder: sockets carry item filters", filtersOk);
+            // §1 hot-surface hazard: the Heat station gets a player-only zone.
+            var hazards = bgo.GetComponentsInChildren<HazardZone>();
+            A("builder: heat station gets a hot-surface hazard", hazards.Length == 1);
+            var pr = new GameObject("root").transform;
+            var hand = new GameObject("hand").transform;
+            var stray = new GameObject("prop").transform;
+            try
+            {
+                hand.SetParent(pr);
+                A("hazard: rig child is player", HazardZone.IsPlayer(hand, pr));
+                A("hazard: stray object is not", !HazardZone.IsPlayer(stray, pr));
+                A("hazard: no root, no match", !HazardZone.IsPlayer(hand, null));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(pr.gameObject);
+                UnityEngine.Object.DestroyImmediate(stray.gameObject);
+            }
+
+            // §2 teleport anchors: one floor pad per station, seated at floor level.
+            var anchors = bgo.GetComponentsInChildren<UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.TeleportationAnchor>();
+            A("builder: one teleport anchor per station", anchors.Length == 2);
+            bool onFloor = anchors.Length == 2;
+            foreach (var an in anchors) if (an.transform.position.y > 0.1f) onFloor = false;
+            A("builder: anchors sit on the floor", onFloor);
+
             var li = new GameObject("li").AddComponent<LabItem>();
             try
             {

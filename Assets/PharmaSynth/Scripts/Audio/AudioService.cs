@@ -48,6 +48,9 @@ public class AudioService : MonoBehaviour
     /// e.g. in edit-mode tests).
     public static void TryPlay(string key) { if (Instance != null) Instance.Play(key); }
 
+    /// Bank access for systems that manage their own AudioSource (looping sims).
+    public SoundBank.Entry EntryOf(string key) => bank != null ? bank.Get(key) : null;
+
     // ---- volume ----------------------------------------------------------
 
     public float VolumeOf(AudioCategory c) => _vol[(int)c];

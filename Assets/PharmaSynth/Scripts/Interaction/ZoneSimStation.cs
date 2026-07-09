@@ -28,6 +28,10 @@ public class ZoneSimStation : MonoBehaviour
     [Range(0.1f, 1f)] public float doneFraction = 0.95f;
 
     private bool _subscribed;
+    private SimLoopAudio _loop;
+
+    /// Optional looping apparatus audio, driven by occupancy (set by the builder).
+    public void SetLoopAudio(SimLoopAudio loop) => _loop = loop;
 
     /// Configure at build time. Registers the auto-check condition immediately (if a
     /// graph exists) and re-registers on every ExperimentStarted (Retry-safe).
@@ -77,13 +81,18 @@ public class ZoneSimStation : MonoBehaviour
 
     private void Update()
     {
-        if (_runner == null || !_runner.IsRunning) return;
+        if (_runner == null || !_runner.IsRunning)
+        {
+            if (_loop != null) _loop.SetRunning(false);
+            return;
+        }
         Drive(Time.deltaTime, _sensor != null && _sensor.IsOccupied);
     }
 
     /// Advance the bound sim for one step given zone occupancy (public for tests).
     public void Drive(float dt, bool occupied)
     {
+        if (_loop != null) _loop.SetRunning(occupied);
         switch (_kind)
         {
             case StationSim.Heat:
