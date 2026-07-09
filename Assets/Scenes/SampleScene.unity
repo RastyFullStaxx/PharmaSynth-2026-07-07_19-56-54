@@ -6336,6 +6336,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8429981633443581382, guid: 6c8af5c8012f01440af6cb2bc3eb987c, type: 3}
   m_PrefabInstance: {fileID: 353212479}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &353212481 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8429981633443581383, guid: 6c8af5c8012f01440af6cb2bc3eb987c, type: 3}
+  m_PrefabInstance: {fileID: 353212479}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1c500f2a52a5eb4a952658e1bf51e88, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &357551491
 GameObject:
   m_ObjectHideFlags: 0
@@ -15495,6 +15506,7 @@ GameObject:
   - component: {fileID: 950603428}
   - component: {fileID: 950603427}
   - component: {fileID: 950603433}
+  - component: {fileID: 950603434}
   m_Layer: 0
   m_Name: Services
   m_TagString: Untagged
@@ -15935,6 +15947,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eec30a094878ba44f8832a1a12734303, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SettingsService
+--- !u!114 &950603434
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 950603426}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c243dda36897bb4780f8371f97379f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ComfortApplier
+  hudRoot: {fileID: 637616419}
+  snapTurn: {fileID: 900974261}
+  vignette: {fileID: 353212481}
+  brain: {fileID: 1579804412}
+  gatekeeper: {fileID: 1688781732}
 --- !u!1001 &959175105
 PrefabInstance:
   m_ObjectHideFlags: 0

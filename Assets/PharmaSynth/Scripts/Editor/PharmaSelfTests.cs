@@ -60,6 +60,8 @@ public static class PharmaSelfTests
         RealSizeSuite();
         PhysicsProfileSuite();
         TestVesselSuite();
+        MishandlingSuite();
+        ComfortSuite();
         PharmeeAliveSuite();
         LibrarySuite();
         ContentSuite();
@@ -870,6 +872,93 @@ public static class PharmaSelfTests
         A("testvessel: all layout chemicals resolve", allResolve);
     }
 
+    /// Spill & breakage mishandling penalties (§2, user request 2026-07-09).
+    static void MishandlingSuite()
+    {
+        // Fragility table: glass breaks, tools don't, and every entry is a real prefab.
+        A("mishandle: glass is breakable", Mishandling.IsBreakable("Beaker_100mL")
+            && Mishandling.IsBreakable("TestTube") && Mishandling.IsBreakable("GlassRod"));
+        A("mishandle: tools are not", !Mishandling.IsBreakable("CrucibleTongs")
+            && !Mishandling.IsBreakable("Spatula") && !Mishandling.IsBreakable("WashBottle")
+            && !Mishandling.IsBreakable("TestTubeRack"));
+        bool allReal = true;
+        foreach (var n in Mishandling.BreakableNames)
+            if (!RealSizes.TryGet(n, out _)) { allReal = false; _log.Add("breakable not in RealSizes: " + n); }
+        A("mishandle: breakables are real prefabs", allReal);
+
+        // Impact policy: bench-height drop breaks, gentle set-down never does.
+        A("mishandle: hard impact breaks", Mishandling.ShouldBreak(3.2f));
+        A("mishandle: threshold impact breaks", Mishandling.ShouldBreak(2.8f));
+        A("mishandle: gentle set-down safe", !Mishandling.ShouldBreak(0.8f));
+
+        // Spill policy: un-held + tipped + has liquid, and only then.
+        A("mishandle: knocked-over bottle spills", Mishandling.IsSpilling(75f, false, 80f));
+        A("mishandle: held pour is not a spill", !Mishandling.IsSpilling(75f, true, 80f));
+        A("mishandle: empty bottle can't spill", !Mishandling.IsSpilling(75f, false, 0f));
+        A("mishandle: upright bottle safe", !Mishandling.IsSpilling(20f, false, 80f));
+
+        // Grading: both mishandling types hit the Sanitation rubric.
+        A("mishandle: spill maps to Sanitation", MistakeLog.CategoryFor(LabErrorType.SpilledReagent) == RubricCategory.Sanitation);
+        var log = new MistakeLog();
+        log.Record(LabErrorType.DroppedGlassware, "");
+        log.Record(LabErrorType.SpilledReagent, "");
+        A("mishandle: grader counts both", log.CountOfAny(LabErrorType.DroppedGlassware, LabErrorType.SpilledReagent) == 2);
+
+        // Break → replacement flow: shattered item re-appears at its home spot.
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        try
+        {
+            var rb = go.AddComponent<Rigidbody>(); rb.isKinematic = false;
+            var respawn = go.AddComponent<DropRespawn>();
+            respawn.Bind(rb, null);
+            respawn.SetHome(new Vector3(2f, 1f, 2f), Quaternion.identity);
+            var breakable = go.AddComponent<BreakableGlassware>();
+            breakable.Bind(null, respawn, rb, "Test Beaker");
+            go.transform.position = new Vector3(5f, 0f, 5f);
+            breakable.Break();                                  // no runner → must not throw
+            A("mishandle: break sends replacement home", (go.transform.position - new Vector3(2f, 1f, 2f)).magnitude < 1e-4f);
+            A("mishandle: replacement re-frozen", rb.isKinematic);
+        }
+        finally { UnityEngine.Object.DestroyImmediate(go); }
+    }
+
+    /// Settings apply-listeners (§5): comfort values reach the live systems.
+    static void ComfortSuite()
+    {
+        // Pure curves.
+        A("comfort: text scale scales HUD", ComfortMath.HudScale(Vector3.one * 0.001f, 1.2f) == Vector3.one * 0.0012f);
+        A("comfort: text scale clamped", ComfortMath.HudScale(Vector3.one, 5f) == Vector3.one * 1.6f);
+        A("comfort: vignette off = open aperture", Near(ComfortMath.ApertureFor(0f), 1f));
+        A("comfort: vignette full = tight aperture", Near(ComfortMath.ApertureFor(1f), 0.35f));
+        A("comfort: fast subtitles dwell shorter", Near(ComfortMath.LineSecondsFor(4f, 2f), 2f));
+        A("comfort: slow subtitles dwell longer", Near(ComfortMath.LineSecondsFor(4f, 0.5f), 8f));
+        A("comfort: pace speed clamped", Near(ComfortMath.LineSecondsFor(4f, 10f), 2f));
+
+        // Live applier: values land on targets, and re-applying never compounds.
+        var go = new GameObject("comfort");
+        var hud = new GameObject("hud").transform;
+        try
+        {
+            hud.localScale = Vector3.one * 0.0011f;
+            var turn = go.AddComponent<UnityEngine.XR.Interaction.Toolkit.Locomotion.Turning.SnapTurnProvider>();
+            var applier = go.AddComponent<ComfortApplier>();
+            applier.Bind(hud, turn, null, null, null);
+            var s = new ComfortSettings();
+            s.SetTextScale(1.2f); s.SetSnapTurnAngle(60f);
+            applier.Apply(s);
+            A("comfort: hud scaled", Near(hud.localScale.x, 0.0011f * 1.2f, 1e-5f));
+            A("comfort: snap angle applied", Near(turn.turnAmount, 60f));
+            s.SetTextScale(0.9f);
+            applier.Apply(s);
+            A("comfort: re-apply uses baseline (no compounding)", Near(hud.localScale.x, 0.0011f * 0.9f, 1e-5f));
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(go);
+            UnityEngine.Object.DestroyImmediate(hud.gameObject);
+        }
+    }
+
     static void PharmeeAliveSuite()
     {
         // Jitter: deterministic, bounded, non-constant
@@ -1193,6 +1282,24 @@ public static class PharmaSelfTests
             int n = builder.Build("prelim-ethyl-alcohol");
             A("builder: spawns 10 roots (2 stations + 6 props + 2 vessels)", n == 10);
             A("builder: 2 task stations built", bgo.GetComponentsInChildren<ExperimentTaskStation>().Length == 2);
+
+            // §2 sockets: each station gets a snap socket filtered to its item.
+            var sockets = bgo.GetComponentsInChildren<UnityEngine.XR.Interaction.Toolkit.Interactors.XRSocketInteractor>();
+            A("builder: one socket per station", sockets.Length == 2);
+            bool filtersOk = sockets.Length == 2;
+            foreach (var so in sockets)
+                if (so.GetComponent<StationSocketFilter>() == null || string.IsNullOrEmpty(so.GetComponent<StationSocketFilter>().requiredItemId)) filtersOk = false;
+            A("builder: sockets carry item filters", filtersOk);
+            var li = new GameObject("li").AddComponent<LabItem>();
+            try
+            {
+                li.itemId = "warm-waterbath";
+                A("socket: right item accepted", StationSocketFilter.Matches("warm-waterbath", li));
+                A("socket: wrong item rejected", !StationSocketFilter.Matches("crystallise-ice", li));
+                A("socket: open socket takes anything", StationSocketFilter.Matches("", null));
+                A("socket: filtered socket rejects null", !StationSocketFilter.Matches("warm-waterbath", null));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(li.gameObject); }
             A("builder: props carry LabItem ids", bgo.GetComponentsInChildren<LabItem>().Length == 6);
 
             var bind = bgo.GetComponentInChildren<LiquidTaskBinding>();

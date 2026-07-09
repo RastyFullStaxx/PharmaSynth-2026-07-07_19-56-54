@@ -40,6 +40,15 @@ public class PharmeeBrain : MonoBehaviour
     private IPharmeeFace _face;
     private bool _subscribed;
     private bool _assessment;   // assessment mode → no procedural hints (safety warnings stay)
+    private float _baseLineSeconds = -1f;
+
+    /// Comfort seam: subtitle pacing multiplier (2 = lines dwell half as long,
+    /// 0.5 = twice as long). Baseline is the authored lineSeconds.
+    public void SetSubtitlePace(float speed)
+    {
+        if (_baseLineSeconds < 0f) _baseLineSeconds = lineSeconds;
+        lineSeconds = ComfortMath.LineSecondsFor(_baseLineSeconds, speed);
+    }
 
     /// True while the current experiment is in assessment mode (Pharmee stays quiet).
     public bool AssessmentMode => _assessment;

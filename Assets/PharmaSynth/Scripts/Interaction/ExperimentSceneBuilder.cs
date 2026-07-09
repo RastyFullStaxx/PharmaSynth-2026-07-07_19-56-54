@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using XRGrab = UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable;
+using XRSocket = UnityEngine.XR.Interaction.Toolkit.Interactors.XRSocketInteractor;
 
 /// Spawns an experiment's physical setup (stations, grabbable props, reagent vessels)
 /// from its ExperimentLayout when a module loads — so all 11 experiments live in one
@@ -110,6 +111,20 @@ public class ExperimentSceneBuilder : MonoBehaviour
             rig.Bind(runner, s.taskId, s.sim, sensor, temp, cryst, filt, gas, s.simTargetC);
         }
 
+        // Snap socket: releasing the required prop near the pad clicks it into
+        // place (parented to the stage — the pad's non-uniform scale would
+        // distort a child). Wrong items are rejected by the filter.
+        var sockGo = new GameObject("Socket_" + s.taskId);
+        sockGo.transform.SetParent(stage, false);
+        sockGo.transform.position = new Vector3(s.pos.x, s.pos.y + 0.02f, s.pos.z);
+        var sockCol = sockGo.AddComponent<SphereCollider>();
+        sockCol.isTrigger = true; sockCol.radius = 0.10f;
+        var filter = sockGo.AddComponent<StationSocketFilter>();
+        filter.requiredItemId = s.requiredItemId;
+        var sock = sockGo.AddComponent<XRSocket>();
+        sock.selectFilters.Add(filter);
+        sock.attachTransform = sockGo.transform;
+
         MakeLabel(s.label, new Vector3(s.pos.x, s.pos.y + 0.32f, s.pos.z), 0.13f);
     }
 
@@ -124,10 +139,15 @@ public class ExperimentSceneBuilder : MonoBehaviour
         Seat(inst.transform, p.pos);
         var item = inst.GetComponent<LabItem>() ?? inst.AddComponent<LabItem>();
         item.itemId = p.itemId; item.displayName = p.displayName;
-        PhysicsProfiles.EnsurePhysics(inst, p.prefabName);
+        var rb = PhysicsProfiles.EnsurePhysics(inst, p.prefabName);
         inst.AddComponent<GrabPhysicsPolicy>();
         var respawn = inst.AddComponent<DropRespawn>();
         respawn.SetHome(inst.transform.position, inst.transform.rotation);
+        if (Mishandling.IsBreakable(p.prefabName))
+        {
+            var breakable = inst.AddComponent<BreakableGlassware>();
+            breakable.Bind(runner, respawn, rb, p.displayName);
+        }
         if (p.pourable)
         {
             var lp = inst.GetComponent<LiquidPhysics>() ?? inst.AddComponent<LiquidPhysics>();
@@ -146,6 +166,8 @@ public class ExperimentSceneBuilder : MonoBehaviour
                 spout.localPosition = new Vector3(0f, 0.12f, 0f);
                 pourer.spout = spout;
             }
+            var spill = inst.AddComponent<SpillMistake>();
+            spill.Bind(runner, lp, inst.GetComponent<XRGrab>(), p.displayName);
         }
         var pl = inst.AddComponent<ProximityLabel>(); pl.SetLabel(p.displayName, 1.6f);
     }

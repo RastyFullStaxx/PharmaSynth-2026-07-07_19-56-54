@@ -52,6 +52,14 @@ public class PharmeeGatekeeper : MonoBehaviour
         (ExperimentPeriod[])Enum.GetValues(typeof(ExperimentPeriod));
 
     private bool _subscribed;
+    private float _baseLineSeconds = -1f;
+
+    /// Comfort seam: subtitle pacing multiplier (see PharmeeBrain.SetSubtitlePace).
+    public void SetSubtitlePace(float speed)
+    {
+        if (_baseLineSeconds < 0f) _baseLineSeconds = lineSeconds;
+        lineSeconds = ComfortMath.LineSecondsFor(_baseLineSeconds, speed);
+    }
 
     private void OnEnable()
     {

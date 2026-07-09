@@ -57,7 +57,7 @@ public class ExperimentGrader
 
         int procMistakes = log != null ? log.CountOfAny(LabErrorType.WrongReagent, LabErrorType.WrongStep, LabErrorType.Overheat) : 0;
         int safetyMistakes = log != null ? log.CountOfAny(LabErrorType.FireSafety, LabErrorType.MissingPPE, LabErrorType.FumeHoodViolation, LabErrorType.ChemicalContact, LabErrorType.HazardousAction) : 0;
-        int sanitationMistakes = log != null ? log.CountOf(LabErrorType.DroppedGlassware) : 0;
+        int sanitationMistakes = log != null ? log.CountOfAny(LabErrorType.DroppedGlassware, LabErrorType.SpilledReagent) : 0;
 
         var subScores = new Dictionary<RubricCategory, float>
         {

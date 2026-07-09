@@ -14,7 +14,8 @@ public enum LabErrorType
     MissingPPE,
     FumeHoodViolation,
     ChemicalContact,
-    HazardousAction
+    HazardousAction,
+    SpilledReagent      // un-held bottle tipped past ~60° while holding liquid
 }
 
 /// Records mistakes during an experiment attempt and exposes counts.
@@ -76,6 +77,7 @@ public class MistakeLog
             case LabErrorType.Overheat:
                 return RubricCategory.Procedure;
             case LabErrorType.DroppedGlassware:
+            case LabErrorType.SpilledReagent:   // both create a bench mess to clean
                 return RubricCategory.Sanitation;
             default:
                 return RubricCategory.MaterialsAndPPE; // fire, PPE, fume hood, contact, hazardous

@@ -1,55 +1,50 @@
 using UnityEngine;
 
+/// Glassware that shatters when dropped hard (§2 mishandling penalties).
+/// Only a FREE (dynamic) item can break — kinematic shelf items and held
+/// items never do. On break: shatter SFX, a DroppedGlassware mistake against
+/// the Sanitation rubric, and the item goes home via DropRespawn as a fresh
+/// replacement so the experiment stays completable.
 [RequireComponent(typeof(Collider))]
 public class BreakableGlassware : MonoBehaviour
 {
-    [Header("Break Conditions")]
-    [SerializeField] private float breakImpactThreshold = 2.8f;
-    [SerializeField] private bool breakOnFloorCollision = true;
-    [SerializeField] private string floorTag = "Floor";
+    [SerializeField] private float breakImpactSpeed = Mishandling.DefaultBreakSpeed;
+    [SerializeField, Min(0f)] private float rearmSeconds = 1.5f;
 
-    [Header("Break Effects")]
-    [SerializeField] private GameObject brokenGlassPrefab;
-    [SerializeField] private ParticleSystem shatterParticles;
-    [SerializeField] private AudioSource shatterAudio;
-    [SerializeField] private bool disableOriginalOnBreak = true;
+    private ExperimentRunner _runner;
+    private DropRespawn _respawn;
+    private Rigidbody _rb;
+    private string _label = "Glassware";
+    private float _cooldownUntil;
 
-    private bool isBroken;
-
-    private void OnCollisionEnter(Collision collision)
+    void Awake()
     {
-        if (isBroken)
-            return;
+        if (_rb == null)
+            Bind(FindAnyObjectByType<ExperimentRunner>(), GetComponent<DropRespawn>(), GetComponent<Rigidbody>(), name);
+    }
 
-        bool floorCheckPassed = !breakOnFloorCollision || collision.collider.CompareTag(floorTag);
-        if (!floorCheckPassed)
-            return;
+    /// Edit-mode / builder seam (Awake doesn't fire on edit-mode AddComponent).
+    public void Bind(ExperimentRunner runner, DropRespawn respawn, Rigidbody rb, string label)
+    {
+        _runner = runner; _respawn = respawn; _rb = rb;
+        if (!string.IsNullOrEmpty(label)) _label = label;
+    }
 
-        if (collision.relativeVelocity.magnitude < breakImpactThreshold)
-            return;
-
+    void OnCollisionEnter(Collision collision)
+    {
+        if (_rb == null || _rb.isKinematic) return;          // on the shelf / in a hand
+        if (Time.time < _cooldownUntil) return;
+        if (!Mishandling.ShouldBreak(collision.relativeVelocity.magnitude, breakImpactSpeed)) return;
         Break();
     }
 
+    /// Public so tests and hazard systems can force it.
     public void Break()
     {
-        if (isBroken)
-            return;
-
-        isBroken = true;
-
-        if (brokenGlassPrefab != null)
-            Instantiate(brokenGlassPrefab, transform.position, transform.rotation);
-
-        if (shatterParticles != null)
-            shatterParticles.Play();
-
-        if (shatterAudio != null)
-            shatterAudio.Play();
-
-        ExperimentFlowManager.Instance?.MarkGlasswareDropped(gameObject.name);
-
-        if (disableOriginalOnBreak)
-            gameObject.SetActive(false);
+        _cooldownUntil = Time.time + rearmSeconds;
+        if (_runner != null)
+            _runner.RecordMistake(LabErrorType.DroppedGlassware, _label + " shattered — handle glassware gently");
+        if (AudioService.Instance != null) AudioService.Instance.Play("glass-shatter");
+        if (_respawn != null) _respawn.GoHome();             // replacement back on the shelf
     }
 }

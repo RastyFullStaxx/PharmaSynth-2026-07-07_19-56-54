@@ -1,0 +1,40 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+/// Pure rules for mishandling penalties (§2: spill & breakage, user request
+/// 2026-07-09): which apparatus is fragile, when an impact shatters it, and
+/// when an un-held bottle counts as spilling. Kept plain-C# so the self-tests
+/// pin the policy.
+public static class Mishandling
+{
+    /// Glass / porcelain items that shatter when dropped. Metal, wood and
+    /// plastic tools (tongs, spatula, racks, wash bottles…) never break.
+    private static readonly HashSet<string> Breakables = new HashSet<string>
+    {
+        "Beaker_100mL", "Beaker_100mL_WithLiquid",
+        "Beaker_500mL", "Beaker_500mL_WithLiquid",
+        "ErlenmeyerFlask_400mL", "ErlenmeyerFlask_400mL_WithLiquid",
+        "GraduatedCylinder_50mL", "GraduatedCylinder_50mL_WithLiquid",
+        "TestTube", "TestTube_WithLiquid",
+        "Vial", "Vial_Brown", "Vial_Brown_WithLabel", "Vial_WithLabel",
+        "WatchGlass", "GlassRod", "Funnel", "Dropper",
+        "EvaporatingDish", "Crucible",          // porcelain
+    };
+
+    public static bool IsBreakable(string prefabName) => Breakables.Contains(prefabName ?? "");
+    public static IEnumerable<string> BreakableNames => Breakables;
+
+    /// An impact at or above this speed shatters glass. 2.8 m/s ≈ a free fall
+    /// of ~0.4 m onto a hard surface — bench-height drops break, gentle
+    /// set-downs never do.
+    public const float DefaultBreakSpeed = 2.8f;
+
+    public static bool ShouldBreak(float impactSpeed, float breakSpeed = DefaultBreakSpeed)
+        => impactSpeed >= breakSpeed;
+
+    /// A reagent bottle is SPILLING when nobody holds it, it still has liquid,
+    /// and it lies tipped past the threshold (LiquidPourer drains it; this
+    /// decides whether that drain is a graded mishandling event).
+    public static bool IsSpilling(float tiltDegrees, bool held, float liquidMl, float tiltThreshold = 60f)
+        => !held && liquidMl > 0.5f && tiltDegrees > tiltThreshold;
+}
