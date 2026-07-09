@@ -5,7 +5,6 @@ using UnityEngine;
 /// items never do. On break: shatter SFX, a DroppedGlassware mistake against
 /// the Sanitation rubric, and the item goes home via DropRespawn as a fresh
 /// replacement so the experiment stays completable.
-[RequireComponent(typeof(Collider))]
 public class BreakableGlassware : MonoBehaviour
 {
     [SerializeField] private float breakImpactSpeed = Mishandling.DefaultBreakSpeed;

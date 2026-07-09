@@ -904,6 +904,20 @@ public static class PharmaSelfTests
         log.Record(LabErrorType.SpilledReagent, "");
         A("mishandle: grader counts both", log.CountOfAny(LabErrorType.DroppedGlassware, LabErrorType.SpilledReagent) == 2);
 
+        // Action-SFX policy: material-aware drop clatter + reaction cues + stride.
+        A("sfx: glass clinks", Mishandling.DropSoundKey("Beaker_100mL") == "glass-clink");
+        A("sfx: metal clatters", Mishandling.DropSoundKey("CrucibleTongs") == "drop-metal");
+        A("sfx: wood knocks", Mishandling.DropSoundKey("TestTubeRack") == "drop-wood");
+        A("sfx: fizz for gas outcomes", Mishandling.SfxForOutcome(ReactionOutcome.Fizzing) == "reaction-fizz"
+            && Mishandling.SfxForOutcome(ReactionOutcome.GasEvolved) == "reaction-fizz");
+        A("sfx: chime for visible outcomes", Mishandling.SfxForOutcome(ReactionOutcome.Precipitate) == "mixture-complete"
+            && Mishandling.SfxForOutcome(ReactionOutcome.ColorChange) == "mixture-complete");
+        A("sfx: silence for negative tests", Mishandling.SfxForOutcome(ReactionOutcome.None) == "");
+        float acc = 0f;
+        A("sfx: stride accumulates", StrideMath.Steps(ref acc, 0.5f, 0.75f) == 0 && StrideMath.Steps(ref acc, 0.5f, 0.75f) == 1);
+        A("sfx: long move = many steps", StrideMath.Steps(ref acc, 3f, 0.75f) >= 4);
+        A("sfx: no distance no steps", StrideMath.Steps(ref acc, 0f, 0.75f) == 0);
+
         // Break → replacement flow: shattered item re-appears at its home spot.
         var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
         try

@@ -32,6 +32,36 @@ public static class Mishandling
     public static bool ShouldBreak(float impactSpeed, float breakSpeed = DefaultBreakSpeed)
         => impactSpeed >= breakSpeed;
 
+    /// Metal apparatus — everything else non-glass lands as a dull wooden knock.
+    private static readonly HashSet<string> MetalItems = new HashSet<string>
+    {
+        "CrucibleTongs", "Forceps", "Scoopula", "Spatula", "IronRing",
+        "Tripod", "RetortStand", "WireGauze", "BunsenBurner", "TestTubeHolder_Metal", "Balance",
+    };
+
+    /// SoundBank key for a drop/impact clatter, by material.
+    public static string DropSoundKey(string prefabName)
+    {
+        if (IsBreakable(prefabName)) return "glass-clink";
+        if (MetalItems.Contains(prefabName ?? "")) return "drop-metal";
+        return "drop-wood";
+    }
+
+    /// SoundBank key for a fired reaction's observable outcome.
+    public static string SfxForOutcome(ReactionOutcome outcome)
+    {
+        switch (outcome)
+        {
+            case ReactionOutcome.Fizzing:
+            case ReactionOutcome.GasEvolved:
+                return "reaction-fizz";
+            case ReactionOutcome.None:
+                return "";                       // negative test: nothing to hear
+            default:
+                return "mixture-complete";       // colour change / precipitate / odour cue
+        }
+    }
+
     /// A reagent bottle is SPILLING when nobody holds it, it still has liquid,
     /// and it lies tipped past the threshold (LiquidPourer drains it; this
     /// decides whether that drain is a graded mishandling event).

@@ -209,6 +209,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5527831679276077729, guid: 4d2dbaec82a28a141a531f6265720cab, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1932820}
+    - targetCorrespondingSourceObject: {fileID: 5527831679276077729, guid: 4d2dbaec82a28a141a531f6265720cab, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1932827}
+    - targetCorrespondingSourceObject: {fileID: 5527831679276077729, guid: 4d2dbaec82a28a141a531f6265720cab, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1932826}
   m_SourcePrefab: {fileID: 100100000, guid: 4d2dbaec82a28a141a531f6265720cab, type: 3}
 --- !u!4 &1932812 stripped
 Transform:
@@ -248,6 +254,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1932826
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1932813}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: drop-wood
+  minSpeed: 0.7
+  maxSpeed: Infinity
+  cooldownSeconds: 0.3
+--- !u!114 &1932827
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1932813}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -3.32, y: 0.91542387, z: -7.32}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1001 &4157953
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -338,6 +378,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2276436975829235681, guid: d3c594960bf34564cb6225552c1fbd51, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4157962}
+    - targetCorrespondingSourceObject: {fileID: 2276436975829235681, guid: d3c594960bf34564cb6225552c1fbd51, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4157970}
+    - targetCorrespondingSourceObject: {fileID: 2276436975829235681, guid: d3c594960bf34564cb6225552c1fbd51, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4157969}
+    - targetCorrespondingSourceObject: {fileID: 2276436975829235681, guid: d3c594960bf34564cb6225552c1fbd51, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4157968}
   m_SourcePrefab: {fileID: 100100000, guid: d3c594960bf34564cb6225552c1fbd51, type: 3}
 --- !u!4 &4157954 stripped
 Transform:
@@ -377,6 +426,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &4157968
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4157955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &4157969
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4157955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &4157970
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4157955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.383333, y: 1.5870425, z: -7.02}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1001 &11578952
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -475,6 +572,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3620650690898710797, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 580563156}
+    - targetCorrespondingSourceObject: {fileID: 3620650690898710797, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 580563165}
+    - targetCorrespondingSourceObject: {fileID: 3620650690898710797, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 580563164}
+    - targetCorrespondingSourceObject: {fileID: 3620650690898710797, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 580563163}
   m_SourcePrefab: {fileID: 100100000, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
 --- !u!4 &11578953 stripped
 Transform:
@@ -1165,6 +1271,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5359063746187216267, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 692210483}
+    - targetCorrespondingSourceObject: {fileID: 5359063746187216267, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 692210492}
+    - targetCorrespondingSourceObject: {fileID: 5359063746187216267, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 692210491}
+    - targetCorrespondingSourceObject: {fileID: 5359063746187216267, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 692210490}
   m_SourcePrefab: {fileID: 100100000, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
 --- !u!4 &56461269 stripped
 Transform:
@@ -1443,6 +1558,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1446311782125078012, guid: 06dad6cf60784934b96716a67d1f0b4f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 83833546}
+    - targetCorrespondingSourceObject: {fileID: 1446311782125078012, guid: 06dad6cf60784934b96716a67d1f0b4f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 83833553}
+    - targetCorrespondingSourceObject: {fileID: 1446311782125078012, guid: 06dad6cf60784934b96716a67d1f0b4f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 83833552}
   m_SourcePrefab: {fileID: 100100000, guid: 06dad6cf60784934b96716a67d1f0b4f, type: 3}
 --- !u!4 &83833538 stripped
 Transform:
@@ -1482,6 +1603,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &83833552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 83833539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: drop-wood
+  minSpeed: 0.7
+  maxSpeed: Infinity
+  cooldownSeconds: 0.3
+--- !u!114 &83833553
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 83833539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -3.82, y: 0.9154238, z: -7.32}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &85515511 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6561513797701893627, guid: 70b989489405b6f4da587631e978a478, type: 3}
@@ -2641,6 +2796,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8811316454620903115, guid: 57046e69df9aefe4c9ec597fd9daf8cd, type: 3}
       insertIndex: -1
       addedObject: {fileID: 147280728}
+    - targetCorrespondingSourceObject: {fileID: 8811316454620903115, guid: 57046e69df9aefe4c9ec597fd9daf8cd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 147280736}
+    - targetCorrespondingSourceObject: {fileID: 8811316454620903115, guid: 57046e69df9aefe4c9ec597fd9daf8cd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 147280735}
+    - targetCorrespondingSourceObject: {fileID: 8811316454620903115, guid: 57046e69df9aefe4c9ec597fd9daf8cd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 147280734}
   m_SourcePrefab: {fileID: 100100000, guid: 57046e69df9aefe4c9ec597fd9daf8cd, type: 3}
 --- !u!4 &147280720 stripped
 Transform:
@@ -2680,6 +2844,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &147280734
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 147280721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &147280735
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 147280721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &147280736
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 147280721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.15, y: 1.105402, z: -7.02}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &148391549
 GameObject:
   m_ObjectHideFlags: 0
@@ -2943,6 +3155,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1153644010876566313, guid: f2226e7e217b1d34c8d5202b66064540, type: 3}
       insertIndex: -1
       addedObject: {fileID: 159662424}
+    - targetCorrespondingSourceObject: {fileID: 1153644010876566313, guid: f2226e7e217b1d34c8d5202b66064540, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 159662431}
+    - targetCorrespondingSourceObject: {fileID: 1153644010876566313, guid: f2226e7e217b1d34c8d5202b66064540, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 159662430}
   m_SourcePrefab: {fileID: 100100000, guid: f2226e7e217b1d34c8d5202b66064540, type: 3}
 --- !u!4 &159662416 stripped
 Transform:
@@ -2982,6 +3200,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &159662430
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 159662417}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: drop-wood
+  minSpeed: 0.7
+  maxSpeed: Infinity
+  cooldownSeconds: 0.3
+--- !u!114 &159662431
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 159662417}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.5, y: 0.13202465, z: -7.02}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &162562983
 GameObject:
   m_ObjectHideFlags: 0
@@ -4252,6 +4504,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5291864882818893, guid: 7327e3aa2fc7e5f49b780c9cb7d98305, type: 3}
       insertIndex: -1
       addedObject: {fileID: 203858285}
+    - targetCorrespondingSourceObject: {fileID: 5291864882818893, guid: 7327e3aa2fc7e5f49b780c9cb7d98305, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 203858293}
+    - targetCorrespondingSourceObject: {fileID: 5291864882818893, guid: 7327e3aa2fc7e5f49b780c9cb7d98305, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 203858292}
   m_SourcePrefab: {fileID: 100100000, guid: 7327e3aa2fc7e5f49b780c9cb7d98305, type: 3}
 --- !u!4 &203858277 stripped
 Transform:
@@ -4312,6 +4570,40 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.013914047, y: 0.006, z: 0.16179557}
   m_Center: {x: 0, y: 0.0023451233, z: 0.08089723}
+--- !u!114 &203858292
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 203858278}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: drop-metal
+  minSpeed: 0.7
+  maxSpeed: Infinity
+  cooldownSeconds: 0.3
+--- !u!114 &203858293
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 203858278}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.5, y: 2.0702267, z: -7.15}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &208684824
 GameObject:
   m_ObjectHideFlags: 0
@@ -5120,6 +5412,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5740249104875109180, guid: eee733fd854f16f42b4d2b86e5d6a977, type: 3}
       insertIndex: -1
       addedObject: {fileID: 243577011}
+    - targetCorrespondingSourceObject: {fileID: 5740249104875109180, guid: eee733fd854f16f42b4d2b86e5d6a977, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 243577017}
+    - targetCorrespondingSourceObject: {fileID: 5740249104875109180, guid: eee733fd854f16f42b4d2b86e5d6a977, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 243577016}
   m_SourcePrefab: {fileID: 100100000, guid: eee733fd854f16f42b4d2b86e5d6a977, type: 3}
 --- !u!4 &243577004 stripped
 Transform:
@@ -5159,6 +5457,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &243577016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 243577005}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: drop-wood
+  minSpeed: 0.7
+  maxSpeed: Infinity
+  cooldownSeconds: 0.3
+--- !u!114 &243577017
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 243577005}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.61, y: 1.1171488, z: -7.15}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &258239515
 GameObject:
   m_ObjectHideFlags: 0
@@ -5428,6 +5760,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3620650690898710797, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1365720443}
+    - targetCorrespondingSourceObject: {fileID: 3620650690898710797, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1365720452}
+    - targetCorrespondingSourceObject: {fileID: 3620650690898710797, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1365720451}
+    - targetCorrespondingSourceObject: {fileID: 3620650690898710797, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1365720450}
   m_SourcePrefab: {fileID: 100100000, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
 --- !u!4 &270500095 stripped
 Transform:
@@ -6165,6 +6506,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2602365144058767407, guid: 9d13dfc587ba56145bfd8a0443c247ae, type: 3}
       insertIndex: -1
       addedObject: {fileID: 329768154}
+    - targetCorrespondingSourceObject: {fileID: 2602365144058767407, guid: 9d13dfc587ba56145bfd8a0443c247ae, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 329768162}
+    - targetCorrespondingSourceObject: {fileID: 2602365144058767407, guid: 9d13dfc587ba56145bfd8a0443c247ae, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 329768161}
+    - targetCorrespondingSourceObject: {fileID: 2602365144058767407, guid: 9d13dfc587ba56145bfd8a0443c247ae, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 329768160}
   m_SourcePrefab: {fileID: 100100000, guid: 9d13dfc587ba56145bfd8a0443c247ae, type: 3}
 --- !u!4 &329768140 stripped
 Transform:
@@ -6218,6 +6568,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &329768160
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 329768141}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &329768161
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 329768141}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &329768162
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 329768141}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: 0.46, y: 1.169679, z: -7.32}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &336295958 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3017150298652565747, guid: 70b989489405b6f4da587631e978a478, type: 3}
@@ -7028,6 +7426,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5359063746187216267, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 370792796}
+    - targetCorrespondingSourceObject: {fileID: 5359063746187216267, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 370792805}
+    - targetCorrespondingSourceObject: {fileID: 5359063746187216267, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 370792804}
+    - targetCorrespondingSourceObject: {fileID: 5359063746187216267, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 370792803}
   m_SourcePrefab: {fileID: 100100000, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
 --- !u!4 &370792782 stripped
 Transform:
@@ -7062,6 +7469,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &370792803
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301271214}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &370792804
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301271214}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &370792805
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301271214}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -5.02, y: 2.0337048, z: -1.8999999}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &388901547 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7605501948640976652, guid: 70b989489405b6f4da587631e978a478, type: 3}
@@ -7343,6 +7798,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3757654604925479251, guid: 059edc5de6cb6af45af5310f625c325b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 393891589}
+    - targetCorrespondingSourceObject: {fileID: 3757654604925479251, guid: 059edc5de6cb6af45af5310f625c325b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 393891597}
+    - targetCorrespondingSourceObject: {fileID: 3757654604925479251, guid: 059edc5de6cb6af45af5310f625c325b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 393891596}
+    - targetCorrespondingSourceObject: {fileID: 3757654604925479251, guid: 059edc5de6cb6af45af5310f625c325b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 393891595}
   m_SourcePrefab: {fileID: 100100000, guid: 059edc5de6cb6af45af5310f625c325b, type: 3}
 --- !u!4 &393891581 stripped
 Transform:
@@ -7382,6 +7846,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &393891595
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 393891582}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &393891596
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 393891582}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &393891597
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 393891582}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.383333, y: 0.6238235, z: -7.02}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -7634,6 +8146,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3620650690898710797, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2131053560}
+    - targetCorrespondingSourceObject: {fileID: 3620650690898710797, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2131053569}
+    - targetCorrespondingSourceObject: {fileID: 3620650690898710797, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2131053568}
+    - targetCorrespondingSourceObject: {fileID: 3620650690898710797, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2131053567}
   m_SourcePrefab: {fileID: 100100000, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
 --- !u!4 &463053479 stripped
 Transform:
@@ -9191,6 +9712,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &580563163
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 580563142}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &580563164
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 580563142}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &580563165
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 580563142}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -5.02, y: 1.4316869, z: -2.0099998}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &580626884
 GameObject:
   m_ObjectHideFlags: 0
@@ -10756,6 +11325,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &692210490
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 692210469}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &692210491
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 692210469}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &692210492
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 692210469}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -5.02, y: 0.8607178, z: -1.6099999}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &696505936
 GameObject:
   m_ObjectHideFlags: 0
@@ -11207,6 +11824,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5359063746187216267, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 754528729}
+    - targetCorrespondingSourceObject: {fileID: 5359063746187216267, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 754528738}
+    - targetCorrespondingSourceObject: {fileID: 5359063746187216267, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 754528737}
+    - targetCorrespondingSourceObject: {fileID: 5359063746187216267, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 754528736}
   m_SourcePrefab: {fileID: 100100000, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
 --- !u!4 &719244098 stripped
 Transform:
@@ -11652,6 +12278,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2866325348300555821, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1926698543}
+    - targetCorrespondingSourceObject: {fileID: 2866325348300555821, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1926698552}
+    - targetCorrespondingSourceObject: {fileID: 2866325348300555821, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1926698551}
+    - targetCorrespondingSourceObject: {fileID: 2866325348300555821, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1926698550}
   m_SourcePrefab: {fileID: 100100000, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
 --- !u!4 &737140342 stripped
 Transform:
@@ -11748,6 +12383,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2235382057588576508, guid: 73f0df561a9344546bc68f1f5fdf6f8d, type: 3}
       insertIndex: -1
       addedObject: {fileID: 744456457}
+    - targetCorrespondingSourceObject: {fileID: 2235382057588576508, guid: 73f0df561a9344546bc68f1f5fdf6f8d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 744456464}
+    - targetCorrespondingSourceObject: {fileID: 2235382057588576508, guid: 73f0df561a9344546bc68f1f5fdf6f8d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 744456463}
   m_SourcePrefab: {fileID: 100100000, guid: 73f0df561a9344546bc68f1f5fdf6f8d, type: 3}
 --- !u!4 &744456449 stripped
 Transform:
@@ -11787,6 +12428,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &744456463
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 744456450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: drop-metal
+  minSpeed: 0.7
+  maxSpeed: Infinity
+  cooldownSeconds: 0.3
+--- !u!114 &744456464
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 744456450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.33, y: 2.070229, z: -7.15}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &747063089
 GameObject:
   m_ObjectHideFlags: 0
@@ -12185,6 +12860,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &754528736
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 754528715}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &754528737
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 754528715}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &754528738
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 754528715}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -5.02, y: 1.2516484, z: -1.0999999}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &757155458
 GameObject:
   m_ObjectHideFlags: 0
@@ -13108,6 +13831,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3682657625690491062, guid: 0b50e5ebce3456543b621249ebd7a390, type: 3}
       insertIndex: -1
       addedObject: {fileID: 809961531}
+    - targetCorrespondingSourceObject: {fileID: 3682657625690491062, guid: 0b50e5ebce3456543b621249ebd7a390, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 809961539}
+    - targetCorrespondingSourceObject: {fileID: 3682657625690491062, guid: 0b50e5ebce3456543b621249ebd7a390, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 809961538}
   m_SourcePrefab: {fileID: 100100000, guid: 0b50e5ebce3456543b621249ebd7a390, type: 3}
 --- !u!4 &809961523 stripped
 Transform:
@@ -13168,6 +13897,40 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.15, y: 0.006, z: 0.15}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &809961538
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 809961524}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: drop-metal
+  minSpeed: 0.7
+  maxSpeed: Infinity
+  cooldownSeconds: 0.3
+--- !u!114 &809961539
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 809961524}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.325, y: 0.13301311, z: -7.02}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &813429457
 GameObject:
   m_ObjectHideFlags: 0
@@ -13348,6 +14111,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6812681166788253202, guid: 0573e10f775b2a94c845db921994d3c9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 813817893}
+    - targetCorrespondingSourceObject: {fileID: 6812681166788253202, guid: 0573e10f775b2a94c845db921994d3c9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 813817900}
+    - targetCorrespondingSourceObject: {fileID: 6812681166788253202, guid: 0573e10f775b2a94c845db921994d3c9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 813817899}
   m_SourcePrefab: {fileID: 100100000, guid: 0573e10f775b2a94c845db921994d3c9, type: 3}
 --- !u!4 &813817885 stripped
 Transform:
@@ -13387,6 +14156,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &813817899
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 813817886}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: drop-metal
+  minSpeed: 0.7
+  maxSpeed: Infinity
+  cooldownSeconds: 0.3
+--- !u!114 &813817900
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 813817886}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -2.66, y: 0.91542387, z: -7.32}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &815012162
 GameObject:
   m_ObjectHideFlags: 0
@@ -13653,6 +14456,96 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &828703386
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 828703387}
+  - component: {fileID: 828703389}
+  - component: {fileID: 828703388}
+  m_Layer: 0
+  m_Name: TopFascia
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &828703387
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 828703386}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 2.12, z: 0.5699997}
+  m_LocalScale: {x: 1.68, y: 0.5, z: 0.04}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 942588445}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!23 &828703388
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 828703386}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 47410a43ed77cc34899680e72b487454, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 1
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &828703389
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 828703386}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1001 &830943758
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -14625,6 +15518,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4720703275320426481, guid: 896845c9595437e4fa9a1ed4379092b9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 854644904}
+    - targetCorrespondingSourceObject: {fileID: 4720703275320426481, guid: 896845c9595437e4fa9a1ed4379092b9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 854644912}
+    - targetCorrespondingSourceObject: {fileID: 4720703275320426481, guid: 896845c9595437e4fa9a1ed4379092b9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 854644911}
+    - targetCorrespondingSourceObject: {fileID: 4720703275320426481, guid: 896845c9595437e4fa9a1ed4379092b9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 854644910}
   m_SourcePrefab: {fileID: 100100000, guid: 896845c9595437e4fa9a1ed4379092b9, type: 3}
 --- !u!4 &854644890 stripped
 Transform:
@@ -14678,6 +15580,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &854644910
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 854644891}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &854644911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 854644891}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &854644912
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 854644891}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: 0.14, y: 0.91542375, z: -7.32}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &866533179
 GameObject:
   m_ObjectHideFlags: 0
@@ -15009,6 +15959,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5359063746187216267, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1128496338}
+    - targetCorrespondingSourceObject: {fileID: 5359063746187216267, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1128496347}
+    - targetCorrespondingSourceObject: {fileID: 5359063746187216267, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1128496346}
+    - targetCorrespondingSourceObject: {fileID: 5359063746187216267, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1128496345}
   m_SourcePrefab: {fileID: 100100000, guid: 1b75ec3fd10b80149b05a294c62c35d3, type: 3}
 --- !u!4 &892083335 stripped
 Transform:
@@ -15179,6 +16138,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1717954561962503725, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1464837117}
+    - targetCorrespondingSourceObject: {fileID: 1717954561962503725, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1464837123}
   m_SourcePrefab: {fileID: 100100000, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
 --- !u!4 &900974259 stripped
 Transform:
@@ -15596,6 +16558,7 @@ Transform:
   - {fileID: 1146271811}
   - {fileID: 179053397}
   - {fileID: 67173426}
+  - {fileID: 828703387}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &945638304 stripped
@@ -16166,6 +17129,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3062601812510400600, guid: 942349196b44f6043ae5c49f8bf4289f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 959175111}
+    - targetCorrespondingSourceObject: {fileID: 3062601812510400600, guid: 942349196b44f6043ae5c49f8bf4289f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 959175115}
+    - targetCorrespondingSourceObject: {fileID: 3062601812510400600, guid: 942349196b44f6043ae5c49f8bf4289f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 959175114}
   m_SourcePrefab: {fileID: 100100000, guid: 942349196b44f6043ae5c49f8bf4289f, type: 3}
 --- !u!4 &959175106 stripped
 Transform:
@@ -16205,6 +17174,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &959175114
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 959175107}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: drop-metal
+  minSpeed: 0.7
+  maxSpeed: Infinity
+  cooldownSeconds: 0.3
+--- !u!114 &959175115
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 959175107}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.1500263, y: 1.590113, z: -7.145654}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &959673591 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 470579350051575463, guid: 70b989489405b6f4da587631e978a478, type: 3}
@@ -16842,6 +17845,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3065270662261303481, guid: f2b04e69ac06f7943aa3a6dbd4f4b074, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1011918169}
+    - targetCorrespondingSourceObject: {fileID: 3065270662261303481, guid: f2b04e69ac06f7943aa3a6dbd4f4b074, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1011918177}
+    - targetCorrespondingSourceObject: {fileID: 3065270662261303481, guid: f2b04e69ac06f7943aa3a6dbd4f4b074, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1011918176}
+    - targetCorrespondingSourceObject: {fileID: 3065270662261303481, guid: f2b04e69ac06f7943aa3a6dbd4f4b074, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1011918175}
   m_SourcePrefab: {fileID: 100100000, guid: f2b04e69ac06f7943aa3a6dbd4f4b074, type: 3}
 --- !u!4 &1011918161 stripped
 Transform:
@@ -16881,6 +17893,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1011918175
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1011918162}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1011918176
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1011918162}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1011918177
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1011918162}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.6178575, y: 0.62386394, z: -7.02}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &1017353485
 GameObject:
   m_ObjectHideFlags: 0
@@ -18218,6 +19278,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1128496345
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1128496324}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1128496346
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1128496324}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1128496347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1128496324}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -5.02, y: 0.8606943, z: -1.3899999}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1001 &1132733847
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -18316,6 +19424,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7767991836912355076, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1132733862}
+    - targetCorrespondingSourceObject: {fileID: 7767991836912355076, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1132733871}
+    - targetCorrespondingSourceObject: {fileID: 7767991836912355076, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1132733870}
+    - targetCorrespondingSourceObject: {fileID: 7767991836912355076, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1132733869}
   m_SourcePrefab: {fileID: 100100000, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
 --- !u!4 &1132733848 stripped
 Transform:
@@ -18350,6 +19467,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1132733869
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 645302008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1132733870
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 645302008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1132733871
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 645302008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -5.02, y: 2.0336719, z: -1.4999999}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1001 &1137746317
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -18448,6 +19613,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2866325348300555821, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1137746332}
+    - targetCorrespondingSourceObject: {fileID: 2866325348300555821, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1137746341}
+    - targetCorrespondingSourceObject: {fileID: 2866325348300555821, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1137746340}
+    - targetCorrespondingSourceObject: {fileID: 2866325348300555821, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1137746339}
   m_SourcePrefab: {fileID: 100100000, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
 --- !u!4 &1137746318 stripped
 Transform:
@@ -18482,6 +19656,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1137746339
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 945638304}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1137746340
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 945638304}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1137746341
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 945638304}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -5.021838, y: 1.6426071, z: -1.0999999}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &1139251946
 GameObject:
   m_ObjectHideFlags: 0
@@ -19635,6 +20857,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2602365144058767407, guid: 9d13dfc587ba56145bfd8a0443c247ae, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1191961002}
+    - targetCorrespondingSourceObject: {fileID: 2602365144058767407, guid: 9d13dfc587ba56145bfd8a0443c247ae, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1191961010}
+    - targetCorrespondingSourceObject: {fileID: 2602365144058767407, guid: 9d13dfc587ba56145bfd8a0443c247ae, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1191961009}
+    - targetCorrespondingSourceObject: {fileID: 2602365144058767407, guid: 9d13dfc587ba56145bfd8a0443c247ae, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1191961008}
   m_SourcePrefab: {fileID: 100100000, guid: 9d13dfc587ba56145bfd8a0443c247ae, type: 3}
 --- !u!4 &1191960994 stripped
 Transform:
@@ -19674,6 +20905,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1191961008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1191960995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1191961009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1191960995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1191961010
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1191960995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.15, y: 2.320229, z: -7.02}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &1207396398
 GameObject:
   m_ObjectHideFlags: 0
@@ -20388,6 +21667,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2866325348300555821, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1233756889}
+    - targetCorrespondingSourceObject: {fileID: 2866325348300555821, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1233756898}
+    - targetCorrespondingSourceObject: {fileID: 2866325348300555821, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1233756897}
+    - targetCorrespondingSourceObject: {fileID: 2866325348300555821, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1233756896}
   m_SourcePrefab: {fileID: 100100000, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
 --- !u!4 &1233756875 stripped
 Transform:
@@ -20422,6 +21710,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1233756896
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 295033012}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1233756897
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 295033012}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1233756898
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 295033012}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -5.021838, y: 0.86074364, z: -2.0099998}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!64 &1235734470
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -20970,6 +22306,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3270718037383223014, guid: 443a36348494db740b96f35df605d5fc, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1255174951}
+    - targetCorrespondingSourceObject: {fileID: 3270718037383223014, guid: 443a36348494db740b96f35df605d5fc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1255174959}
+    - targetCorrespondingSourceObject: {fileID: 3270718037383223014, guid: 443a36348494db740b96f35df605d5fc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1255174958}
+    - targetCorrespondingSourceObject: {fileID: 3270718037383223014, guid: 443a36348494db740b96f35df605d5fc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1255174957}
   m_SourcePrefab: {fileID: 100100000, guid: 443a36348494db740b96f35df605d5fc, type: 3}
 --- !u!4 &1255174943 stripped
 Transform:
@@ -21009,6 +22354,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1255174957
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1255174944}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1255174958
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1255174944}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1255174959
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1255174944}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.85, y: 1.2353907, z: -7.02}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &1258208007
 GameObject:
   m_ObjectHideFlags: 0
@@ -21325,6 +22718,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1259378086605964606, guid: 465994603984f0446839feec11efdb8e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1275800025}
+    - targetCorrespondingSourceObject: {fileID: 1259378086605964606, guid: 465994603984f0446839feec11efdb8e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1275800032}
+    - targetCorrespondingSourceObject: {fileID: 1259378086605964606, guid: 465994603984f0446839feec11efdb8e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1275800031}
   m_SourcePrefab: {fileID: 100100000, guid: 465994603984f0446839feec11efdb8e, type: 3}
 --- !u!4 &1275800011 stripped
 Transform:
@@ -21378,6 +22777,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1275800031
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1275800012}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: drop-metal
+  minSpeed: 0.7
+  maxSpeed: Infinity
+  cooldownSeconds: 0.3
+--- !u!114 &1275800032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1275800012}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -0.18, y: 0.91542375, z: -7.32}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &1280214877
 GameObject:
   m_ObjectHideFlags: 0
@@ -22021,6 +23454,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 175768407928913200, guid: a2280f0dd44a9b647bdc2671fac6e03a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1355251472}
+    - targetCorrespondingSourceObject: {fileID: 175768407928913200, guid: a2280f0dd44a9b647bdc2671fac6e03a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1355251479}
+    - targetCorrespondingSourceObject: {fileID: 175768407928913200, guid: a2280f0dd44a9b647bdc2671fac6e03a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1355251478}
   m_SourcePrefab: {fileID: 100100000, guid: a2280f0dd44a9b647bdc2671fac6e03a, type: 3}
 --- !u!4 &1355251464 stripped
 Transform:
@@ -22060,6 +23499,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1355251478
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1355251465}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: drop-metal
+  minSpeed: 0.7
+  maxSpeed: Infinity
+  cooldownSeconds: 0.3
+--- !u!114 &1355251479
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1355251465}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -1.68, y: 0.9154238, z: -7.32}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &1364255003
 GameObject:
   m_ObjectHideFlags: 0
@@ -22230,6 +23703,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1365720450
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1365720429}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1365720451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1365720429}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1365720452
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1365720429}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -5.02, y: 1.8226078, z: -1.4999999}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &1376773230 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 9057270888466011904, guid: 70b989489405b6f4da587631e978a478, type: 3}
@@ -23123,6 +24644,21 @@ MonoBehaviour:
   rig: {fileID: 1464837115}
   headRadius: 0.14
   teleportThreshold: 1
+--- !u!114 &1464837123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1464837109}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b6af5da05be3364da2895eabce2f2d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FootstepPlayer
+  strideMeters: 0.75
+  snapGuardMeters: 2
+  key: footstep
 --- !u!1 &1465967247
 GameObject:
   m_ObjectHideFlags: 0
@@ -26251,6 +27787,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7767991836912355076, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1582045308}
+    - targetCorrespondingSourceObject: {fileID: 7767991836912355076, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1582045317}
+    - targetCorrespondingSourceObject: {fileID: 7767991836912355076, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1582045316}
+    - targetCorrespondingSourceObject: {fileID: 7767991836912355076, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1582045315}
   m_SourcePrefab: {fileID: 100100000, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
 --- !u!4 &1582045294 stripped
 Transform:
@@ -26285,6 +27830,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1582045315
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 358101793}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1582045316
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 358101793}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1582045317
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 358101793}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -5.02, y: 0.83499974, z: -0.9899999}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1001 &1584590506
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -26683,6 +28276,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2376319320834575561, guid: f1fbe234e394c8f4e830305adcffdaf1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1591271193}
+    - targetCorrespondingSourceObject: {fileID: 2376319320834575561, guid: f1fbe234e394c8f4e830305adcffdaf1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1591271201}
+    - targetCorrespondingSourceObject: {fileID: 2376319320834575561, guid: f1fbe234e394c8f4e830305adcffdaf1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1591271200}
+    - targetCorrespondingSourceObject: {fileID: 2376319320834575561, guid: f1fbe234e394c8f4e830305adcffdaf1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1591271199}
   m_SourcePrefab: {fileID: 100100000, guid: f1fbe234e394c8f4e830305adcffdaf1, type: 3}
 --- !u!4 &1591271179 stripped
 Transform:
@@ -26736,6 +28338,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1591271199
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1591271180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1591271200
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1591271180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1591271201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1591271180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -0.82, y: 0.91542375, z: -7.32}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1001 &1594215350
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -26834,6 +28484,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7767991836912355076, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1594215365}
+    - targetCorrespondingSourceObject: {fileID: 7767991836912355076, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1594215374}
+    - targetCorrespondingSourceObject: {fileID: 7767991836912355076, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1594215373}
+    - targetCorrespondingSourceObject: {fileID: 7767991836912355076, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1594215372}
   m_SourcePrefab: {fileID: 100100000, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
 --- !u!4 &1594215351 stripped
 Transform:
@@ -26868,6 +28527,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1594215372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1545037103}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1594215373
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1545037103}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1594215374
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1545037103}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -5.02, y: 0.86068976, z: -1.2099999}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &1603182503
 GameObject:
   m_ObjectHideFlags: 0
@@ -28347,6 +30054,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8402288489039943742, guid: 698d52766ebb64845b63fcdde1f0a47d, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1701046906}
+    - targetCorrespondingSourceObject: {fileID: 8402288489039943742, guid: 698d52766ebb64845b63fcdde1f0a47d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1701046913}
+    - targetCorrespondingSourceObject: {fileID: 8402288489039943742, guid: 698d52766ebb64845b63fcdde1f0a47d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1701046912}
   m_SourcePrefab: {fileID: 100100000, guid: 698d52766ebb64845b63fcdde1f0a47d, type: 3}
 --- !u!4 &1701046898 stripped
 Transform:
@@ -28386,6 +30099,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1701046912
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1701046899}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: drop-metal
+  minSpeed: 0.7
+  maxSpeed: Infinity
+  cooldownSeconds: 0.3
+--- !u!114 &1701046913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1701046899}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -1.22, y: 0.91542375, z: -7.32}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &1712043954 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 802802875517393862, guid: 70b989489405b6f4da587631e978a478, type: 3}
@@ -28503,6 +30250,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1688567593056066689, guid: 1f25a2114ae6e7b41ad2b09f4dfaa5a9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1718842175}
+    - targetCorrespondingSourceObject: {fileID: 1688567593056066689, guid: 1f25a2114ae6e7b41ad2b09f4dfaa5a9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1718842183}
+    - targetCorrespondingSourceObject: {fileID: 1688567593056066689, guid: 1f25a2114ae6e7b41ad2b09f4dfaa5a9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1718842182}
+    - targetCorrespondingSourceObject: {fileID: 1688567593056066689, guid: 1f25a2114ae6e7b41ad2b09f4dfaa5a9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1718842181}
   m_SourcePrefab: {fileID: 100100000, guid: 1f25a2114ae6e7b41ad2b09f4dfaa5a9, type: 3}
 --- !u!4 &1718842167 stripped
 Transform:
@@ -28542,6 +30298,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1718842181
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1718842168}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1718842182
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1718842168}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1718842183
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1718842168}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.6192408, y: 1.5870425, z: -7.02}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &1732448915
 GameObject:
   m_ObjectHideFlags: 0
@@ -29211,6 +31015,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2273910820379036667, guid: 5d7fdc68bc284914fbfdcad3a5abff1b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1764491886}
+    - targetCorrespondingSourceObject: {fileID: 2273910820379036667, guid: 5d7fdc68bc284914fbfdcad3a5abff1b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1764491894}
+    - targetCorrespondingSourceObject: {fileID: 2273910820379036667, guid: 5d7fdc68bc284914fbfdcad3a5abff1b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1764491893}
+    - targetCorrespondingSourceObject: {fileID: 2273910820379036667, guid: 5d7fdc68bc284914fbfdcad3a5abff1b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1764491892}
   m_SourcePrefab: {fileID: 100100000, guid: 5d7fdc68bc284914fbfdcad3a5abff1b, type: 3}
 --- !u!4 &1764491878 stripped
 Transform:
@@ -29250,6 +31063,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1764491892
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1764491879}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1764491893
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1764491879}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1764491894
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1764491879}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.85, y: 2.0702267, z: -7.02}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!21 &1765762380
 Material:
   serializedVersion: 8
@@ -30032,6 +31893,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2866325348300555821, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1824840557}
+    - targetCorrespondingSourceObject: {fileID: 2866325348300555821, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1824840566}
+    - targetCorrespondingSourceObject: {fileID: 2866325348300555821, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1824840565}
+    - targetCorrespondingSourceObject: {fileID: 2866325348300555821, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1824840564}
   m_SourcePrefab: {fileID: 100100000, guid: 3a27e022fff4fe84abbc7c017fd870fe, type: 3}
 --- !u!4 &1824840543 stripped
 Transform:
@@ -30066,6 +31936,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1824840564
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1815954834}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1824840565
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1815954834}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1824840566
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1815954834}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -5.021838, y: 1.2516648, z: -1.4999999}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!64 &1827880138
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -30881,6 +32799,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2582447071662842644, guid: 7a5b83c93f7138d4181ff4d57898ada8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1866820288}
+    - targetCorrespondingSourceObject: {fileID: 2582447071662842644, guid: 7a5b83c93f7138d4181ff4d57898ada8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1866820296}
+    - targetCorrespondingSourceObject: {fileID: 2582447071662842644, guid: 7a5b83c93f7138d4181ff4d57898ada8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1866820295}
+    - targetCorrespondingSourceObject: {fileID: 2582447071662842644, guid: 7a5b83c93f7138d4181ff4d57898ada8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1866820294}
   m_SourcePrefab: {fileID: 100100000, guid: 7a5b83c93f7138d4181ff4d57898ada8, type: 3}
 --- !u!4 &1866820280 stripped
 Transform:
@@ -30920,6 +32847,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1866820294
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1866820281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1866820295
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1866820281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1866820296
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1866820281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.85, y: 1.5870425, z: -7.02}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1001 &1870263299
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -31010,6 +32985,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6713333358817235844, guid: 63f2ac897cc75b041a2a380b94e0827b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1870263308}
+    - targetCorrespondingSourceObject: {fileID: 6713333358817235844, guid: 63f2ac897cc75b041a2a380b94e0827b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1870263315}
+    - targetCorrespondingSourceObject: {fileID: 6713333358817235844, guid: 63f2ac897cc75b041a2a380b94e0827b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1870263314}
   m_SourcePrefab: {fileID: 100100000, guid: 63f2ac897cc75b041a2a380b94e0827b, type: 3}
 --- !u!4 &1870263300 stripped
 Transform:
@@ -31049,6 +33030,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1870263314
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1870263301}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: drop-wood
+  minSpeed: 0.7
+  maxSpeed: Infinity
+  cooldownSeconds: 0.3
+--- !u!114 &1870263315
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1870263301}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -3.58, y: 0.9154225, z: -7.32}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &1873345307
 GameObject:
   m_ObjectHideFlags: 0
@@ -31488,6 +33503,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 554190900922759368, guid: afef68004be6c2b4fbd971b221f07238, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1907553060}
+    - targetCorrespondingSourceObject: {fileID: 554190900922759368, guid: afef68004be6c2b4fbd971b221f07238, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1907553067}
+    - targetCorrespondingSourceObject: {fileID: 554190900922759368, guid: afef68004be6c2b4fbd971b221f07238, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1907553066}
   m_SourcePrefab: {fileID: 100100000, guid: afef68004be6c2b4fbd971b221f07238, type: 3}
 --- !u!4 &1907553052 stripped
 Transform:
@@ -31527,6 +33548,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1907553066
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1907553053}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: drop-metal
+  minSpeed: 0.7
+  maxSpeed: Infinity
+  cooldownSeconds: 0.3
+--- !u!114 &1907553067
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1907553053}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.6749997, y: 2.1902964, z: -7.02}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &1911754267
 GameObject:
   m_ObjectHideFlags: 0
@@ -31884,6 +33939,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7767991836912355076, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1918216198}
+    - targetCorrespondingSourceObject: {fileID: 7767991836912355076, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1918216207}
+    - targetCorrespondingSourceObject: {fileID: 7767991836912355076, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1918216206}
+    - targetCorrespondingSourceObject: {fileID: 7767991836912355076, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1918216205}
   m_SourcePrefab: {fileID: 100100000, guid: 06521a6259a894d48b2f20690d1dccce, type: 3}
 --- !u!4 &1918216184 stripped
 Transform:
@@ -31918,6 +33982,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1918216205
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1529415931}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1918216206
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1529415931}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1918216207
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1529415931}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -5.02, y: 1.6426563, z: -1.8999999}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &1919698544 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1664297678838416544, guid: 70b989489405b6f4da587631e978a478, type: 3}
@@ -31978,6 +34090,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1926698550
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1926698529}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1926698551
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1926698529}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1926698552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1926698529}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -5.021838, y: 0.86073375, z: -1.7899998}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &1939021844
 GameObject:
   m_ObjectHideFlags: 0
@@ -32266,6 +34426,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3707269265304426337, guid: 22afeacf35fbf0d45afb7770ece0e47c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1939048245}
+    - targetCorrespondingSourceObject: {fileID: 3707269265304426337, guid: 22afeacf35fbf0d45afb7770ece0e47c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1939048253}
+    - targetCorrespondingSourceObject: {fileID: 3707269265304426337, guid: 22afeacf35fbf0d45afb7770ece0e47c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1939048252}
+    - targetCorrespondingSourceObject: {fileID: 3707269265304426337, guid: 22afeacf35fbf0d45afb7770ece0e47c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1939048251}
   m_SourcePrefab: {fileID: 100100000, guid: 22afeacf35fbf0d45afb7770ece0e47c, type: 3}
 --- !u!4 &1939048237 stripped
 Transform:
@@ -32305,6 +34474,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1939048251
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1939048238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1939048252
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1939048238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1939048253
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1939048238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.383333, y: 1.105402, z: -7.02}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1001 &1941177395
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -32386,6 +34603,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3270718037383223014, guid: 443a36348494db740b96f35df605d5fc, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1941177410}
+    - targetCorrespondingSourceObject: {fileID: 3270718037383223014, guid: 443a36348494db740b96f35df605d5fc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1941177418}
+    - targetCorrespondingSourceObject: {fileID: 3270718037383223014, guid: 443a36348494db740b96f35df605d5fc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1941177417}
+    - targetCorrespondingSourceObject: {fileID: 3270718037383223014, guid: 443a36348494db740b96f35df605d5fc, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1941177416}
   m_SourcePrefab: {fileID: 100100000, guid: 443a36348494db740b96f35df605d5fc, type: 3}
 --- !u!4 &1941177396 stripped
 Transform:
@@ -32439,6 +34665,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1941177416
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1941177397}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1941177417
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1941177397}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1941177418
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1941177397}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -0.5, y: 1.0414236, z: -7.32}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &1962834257
 GameObject:
   m_ObjectHideFlags: 0
@@ -32822,6 +35096,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3528343686820590266, guid: cf757189f76a6d24cba1322dd40243b7, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1972106809}
+    - targetCorrespondingSourceObject: {fileID: 3528343686820590266, guid: cf757189f76a6d24cba1322dd40243b7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1972106816}
+    - targetCorrespondingSourceObject: {fileID: 3528343686820590266, guid: cf757189f76a6d24cba1322dd40243b7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1972106815}
   m_SourcePrefab: {fileID: 100100000, guid: cf757189f76a6d24cba1322dd40243b7, type: 3}
 --- !u!4 &1972106801 stripped
 Transform:
@@ -32861,6 +35141,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1972106815
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1972106802}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: drop-metal
+  minSpeed: 0.7
+  maxSpeed: Infinity
+  cooldownSeconds: 0.3
+--- !u!114 &1972106816
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1972106802}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -3.02, y: 0.91960716, z: -7.32}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1001 &1972348369
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -32951,6 +35265,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1984455909807126924, guid: ad52ca398f1ec5041a74841a546ae88b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1972348378}
+    - targetCorrespondingSourceObject: {fileID: 1984455909807126924, guid: ad52ca398f1ec5041a74841a546ae88b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1972348385}
+    - targetCorrespondingSourceObject: {fileID: 1984455909807126924, guid: ad52ca398f1ec5041a74841a546ae88b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1972348384}
   m_SourcePrefab: {fileID: 100100000, guid: ad52ca398f1ec5041a74841a546ae88b, type: 3}
 --- !u!4 &1972348370 stripped
 Transform:
@@ -32990,6 +35310,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1972348384
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1972348371}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: drop-wood
+  minSpeed: 0.7
+  maxSpeed: Infinity
+  cooldownSeconds: 0.3
+--- !u!114 &1972348385
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1972348371}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.15, y: 0.1356998, z: -7.0677843}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &1972653857
 GameObject:
   m_ObjectHideFlags: 0
@@ -33377,6 +35731,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7705168072765257492, guid: eafede6b8b0acfc46942fbcd743ed447, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1976658256}
+    - targetCorrespondingSourceObject: {fileID: 7705168072765257492, guid: eafede6b8b0acfc46942fbcd743ed447, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1976658264}
+    - targetCorrespondingSourceObject: {fileID: 7705168072765257492, guid: eafede6b8b0acfc46942fbcd743ed447, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1976658263}
+    - targetCorrespondingSourceObject: {fileID: 7705168072765257492, guid: eafede6b8b0acfc46942fbcd743ed447, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1976658262}
   m_SourcePrefab: {fileID: 100100000, guid: eafede6b8b0acfc46942fbcd743ed447, type: 3}
 --- !u!4 &1976658248 stripped
 Transform:
@@ -33416,6 +35779,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &1976658262
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1976658249}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &1976658263
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1976658249}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &1976658264
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1976658249}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.850919, y: 0.6238237, z: -7.02}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &1987834689
 GameObject:
   m_ObjectHideFlags: 0
@@ -33577,6 +35988,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6622832333254013718, guid: e37701bef09a0e940b6679c5d3d7a8d7, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2002881138}
+    - targetCorrespondingSourceObject: {fileID: 6622832333254013718, guid: e37701bef09a0e940b6679c5d3d7a8d7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2002881145}
+    - targetCorrespondingSourceObject: {fileID: 6622832333254013718, guid: e37701bef09a0e940b6679c5d3d7a8d7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2002881144}
   m_SourcePrefab: {fileID: 100100000, guid: e37701bef09a0e940b6679c5d3d7a8d7, type: 3}
 --- !u!4 &2002881130 stripped
 Transform:
@@ -33616,6 +36033,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &2002881144
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2002881131}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: drop-wood
+  minSpeed: 0.7
+  maxSpeed: Infinity
+  cooldownSeconds: 0.3
+--- !u!114 &2002881145
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2002881131}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.6749997, y: 0.13202465, z: -7.022614}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &2003294856
 GameObject:
   m_ObjectHideFlags: 0
@@ -34324,6 +36775,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4720703275320426481, guid: 896845c9595437e4fa9a1ed4379092b9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2025786409}
+    - targetCorrespondingSourceObject: {fileID: 4720703275320426481, guid: 896845c9595437e4fa9a1ed4379092b9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2025786417}
+    - targetCorrespondingSourceObject: {fileID: 4720703275320426481, guid: 896845c9595437e4fa9a1ed4379092b9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2025786416}
+    - targetCorrespondingSourceObject: {fileID: 4720703275320426481, guid: 896845c9595437e4fa9a1ed4379092b9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2025786415}
   m_SourcePrefab: {fileID: 100100000, guid: 896845c9595437e4fa9a1ed4379092b9, type: 3}
 --- !u!4 &2025786401 stripped
 Transform:
@@ -34363,6 +36823,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &2025786415
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2025786402}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &2025786416
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2025786402}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &2025786417
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2025786402}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.15, y: 0.62382376, z: -7.02}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &2035697295 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2201120084841098838, guid: 70b989489405b6f4da587631e978a478, type: 3}
@@ -34480,6 +36988,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1259378086605964606, guid: 465994603984f0446839feec11efdb8e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2060925988}
+    - targetCorrespondingSourceObject: {fileID: 1259378086605964606, guid: 465994603984f0446839feec11efdb8e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2060925995}
+    - targetCorrespondingSourceObject: {fileID: 1259378086605964606, guid: 465994603984f0446839feec11efdb8e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2060925994}
   m_SourcePrefab: {fileID: 100100000, guid: 465994603984f0446839feec11efdb8e, type: 3}
 --- !u!4 &2060925980 stripped
 Transform:
@@ -34519,6 +37033,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &2060925994
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2060925981}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: drop-metal
+  minSpeed: 0.7
+  maxSpeed: Infinity
+  cooldownSeconds: 0.3
+--- !u!114 &2060925995
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2060925981}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -2.18, y: 0.9154238, z: -7.32}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &2075476171
 GameObject:
   m_ObjectHideFlags: 0
@@ -34706,6 +37254,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3620650690898710797, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2109068619}
+    - targetCorrespondingSourceObject: {fileID: 3620650690898710797, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2109068628}
+    - targetCorrespondingSourceObject: {fileID: 3620650690898710797, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2109068627}
+    - targetCorrespondingSourceObject: {fileID: 3620650690898710797, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2109068626}
   m_SourcePrefab: {fileID: 100100000, guid: 6a924f41e72bbc547b041eee699b021b, type: 3}
 --- !u!4 &2109068605 stripped
 Transform:
@@ -34740,6 +37297,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &2109068626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1567493490}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &2109068627
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1567493490}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &2109068628
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1567493490}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -5.02, y: 2.2136397, z: -1.0999999}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &2121291177 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6727850659719791535, guid: 70b989489405b6f4da587631e978a478, type: 3}
@@ -34800,6 +37405,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &2131053567
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2131053546}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &2131053568
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2131053546}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &2131053569
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2131053546}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -5.02, y: 1.4316769, z: -1.7899998}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &2137001746
 GameObject:
   m_ObjectHideFlags: 0
@@ -35017,6 +37670,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3775639516755786467, guid: 74d4f532e0482fc4a8f74ecece77681a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2143815810}
+    - targetCorrespondingSourceObject: {fileID: 3775639516755786467, guid: 74d4f532e0482fc4a8f74ecece77681a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2143815818}
+    - targetCorrespondingSourceObject: {fileID: 3775639516755786467, guid: 74d4f532e0482fc4a8f74ecece77681a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2143815817}
+    - targetCorrespondingSourceObject: {fileID: 3775639516755786467, guid: 74d4f532e0482fc4a8f74ecece77681a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2143815816}
   m_SourcePrefab: {fileID: 100100000, guid: 74d4f532e0482fc4a8f74ecece77681a, type: 3}
 --- !u!4 &2143815802 stripped
 Transform:
@@ -35056,6 +37718,54 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ab7a214c507b0544b6591a7e6c65dab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabPhysicsPolicy
+--- !u!114 &2143815816
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2143815803}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76a27389ca106d042a89050705226b58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ImpactSound
+  key: glass-clink
+  minSpeed: 0.7
+  maxSpeed: 2.8
+  cooldownSeconds: 0.3
+--- !u!114 &2143815817
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2143815803}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0f4a2463f92f04496162fa68796c1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BreakableGlassware
+  breakImpactSpeed: 2.8
+  rearmSeconds: 1.5
+--- !u!114 &2143815818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2143815803}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ea838522660541bade281f3d4ce2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DropRespawn
+  killZ: -1
+  minIdleSeconds: 25
+  minDistance: 0.4
+  _homePos: {x: -4.85, y: 0.33202454, z: -7.02}
+  _homeRot: {x: -0, y: -0, z: -0, w: 1}
+  _hasHome: 1
 --- !u!1 &2147411997
 GameObject:
   m_ObjectHideFlags: 0

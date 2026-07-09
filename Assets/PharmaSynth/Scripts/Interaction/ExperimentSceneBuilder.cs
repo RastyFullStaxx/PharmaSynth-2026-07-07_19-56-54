@@ -124,6 +124,7 @@ public class ExperimentSceneBuilder : MonoBehaviour
         var sock = sockGo.AddComponent<XRSocket>();
         sock.selectFilters.Add(filter);
         sock.attachTransform = sockGo.transform;
+        sockGo.AddComponent<SelectSfx>().Bind(sock, "socket-snap");
 
         MakeLabel(s.label, new Vector3(s.pos.x, s.pos.y + 0.32f, s.pos.z), 0.13f);
     }
@@ -147,6 +148,11 @@ public class ExperimentSceneBuilder : MonoBehaviour
         {
             var breakable = inst.AddComponent<BreakableGlassware>();
             breakable.Bind(runner, respawn, rb, p.displayName);
+            inst.AddComponent<ImpactSound>().Bind(rb, Mishandling.DropSoundKey(p.prefabName), Mishandling.DefaultBreakSpeed);
+        }
+        else
+        {
+            inst.AddComponent<ImpactSound>().Bind(rb, Mishandling.DropSoundKey(p.prefabName));
         }
         if (p.pourable)
         {

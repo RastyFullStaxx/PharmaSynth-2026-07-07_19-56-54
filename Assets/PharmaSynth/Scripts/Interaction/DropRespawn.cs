@@ -26,9 +26,11 @@ public class DropRespawn : MonoBehaviour
     [SerializeField] private float minIdleSeconds = 25f;
     [SerializeField] private float minDistance = 0.4f;
 
-    private Vector3 _homePos;
-    private Quaternion _homeRot;
-    private bool _hasHome;
+    // Serialized: the editor fix pass sets homes in edit mode and they must
+    // survive into play mode.
+    [SerializeField] private Vector3 _homePos;
+    [SerializeField] private Quaternion _homeRot;
+    [SerializeField] private bool _hasHome;
     private float _idle;
     private Rigidbody _rb;
     private XRGrab _grab;

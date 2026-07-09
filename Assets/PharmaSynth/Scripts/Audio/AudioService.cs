@@ -44,6 +44,10 @@ public class AudioService : MonoBehaviour
         LoadVolumes();
     }
 
+    /// Null-safe one-shot for gameplay hooks (no-op before the service exists,
+    /// e.g. in edit-mode tests).
+    public static void TryPlay(string key) { if (Instance != null) Instance.Play(key); }
+
     // ---- volume ----------------------------------------------------------
 
     public float VolumeOf(AudioCategory c) => _vol[(int)c];

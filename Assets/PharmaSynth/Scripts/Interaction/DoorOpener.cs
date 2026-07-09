@@ -38,6 +38,7 @@ public class DoorOpener : MonoBehaviour
     {
         Cache();
         if (!_cached) return;
+        if (Application.isPlaying && _isOpen != open) AudioService.TryPlay("door-swing");
         _isOpen = open;
         if (!Application.isPlaying)
             door.localRotation = open ? _open : _closed;

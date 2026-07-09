@@ -78,15 +78,36 @@ public static class PhysicsAudit
     {
         if (Application.isPlaying) { Debug.LogWarning("[PhysicsAudit] exit Play mode first."); return; }
         int fixedCount = 0;
+        var runner = Object.FindAnyObjectByType<ExperimentRunner>(FindObjectsInactive.Include);
         foreach (var go in SceneItems())
         {
             string prefabName = PrefabNameFor(go);
             if (!PhysicsProfiles.TryGet(prefabName, out _)) continue;
             Undo.RegisterFullObjectHierarchyUndo(go, "Physics Audit Fix");
-            PhysicsProfiles.EnsurePhysics(go, prefabName);
-            if (go.GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable>() != null
-                && go.GetComponent<GrabPhysicsPolicy>() == null)
+            var rb = PhysicsProfiles.EnsurePhysics(go, prefabName);
+            var grab = go.GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable>();
+            if (grab != null && go.GetComponent<GrabPhysicsPolicy>() == null)
                 go.AddComponent<GrabPhysicsPolicy>();
+
+            // Mishandling + drop-audio pass (shelf items are hand-built — the
+            // builder only covers spawned props).
+            if (go.GetComponent<DropRespawn>() == null)
+            {
+                var dr = go.AddComponent<DropRespawn>();
+                dr.Bind(rb, grab);
+                dr.SetHome(go.transform.position, go.transform.rotation);
+            }
+            bool breakable = Mishandling.IsBreakable(prefabName)
+                || (prefabName.StartsWith("Reagent_") || go.name.StartsWith("Reagent_"));   // shelf bottles are glass
+            if (breakable && go.GetComponent<BreakableGlassware>() == null)
+                go.AddComponent<BreakableGlassware>().Bind(runner, go.GetComponent<DropRespawn>(), rb, go.name);
+            var lp = go.GetComponent<LiquidPhysics>();
+            if (lp != null && go.GetComponent<LiquidPourer>() != null && go.GetComponent<SpillMistake>() == null)
+                go.AddComponent<SpillMistake>().Bind(runner, lp, grab, go.name);
+            if (go.GetComponent<ImpactSound>() == null)
+                go.AddComponent<ImpactSound>().Bind(rb,
+                    breakable ? "glass-clink" : Mishandling.DropSoundKey(prefabName),
+                    breakable ? Mishandling.DefaultBreakSpeed : float.PositiveInfinity);
             fixedCount++;
         }
         UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();

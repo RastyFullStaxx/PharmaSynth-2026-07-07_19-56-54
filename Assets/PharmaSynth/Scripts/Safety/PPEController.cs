@@ -46,6 +46,7 @@ public class PPEController : MonoBehaviour
         if (wornVisuals != null)
             foreach (var v in wornVisuals) if (v != null) v.SetActive(true);
 
+        AudioService.TryPlay("ppe-rustle");
         onPPEWorn?.Invoke();
         PPEWornChanged?.Invoke();
     }

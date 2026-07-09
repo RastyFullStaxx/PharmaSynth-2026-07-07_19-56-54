@@ -260,6 +260,8 @@ public class LiquidPhysics : MonoBehaviour
                     currentLiquidVolume += amountToAdd;
                 }
                 UpdateAllVisuals(); // Update Color only on reaction
+                string cue = Mishandling.SfxForOutcome(rule.outcome);
+                if (cue.Length > 0) AudioService.TryPlay(cue);
                 ReactionOccurred?.Invoke(rule);
             }
             else
