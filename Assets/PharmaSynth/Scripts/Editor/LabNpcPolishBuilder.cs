@@ -58,6 +58,23 @@ public static class LabNpcPolishBuilder
             { p.objectReferenceValue = face; soBr.ApplyModifiedProperties(); }
         }
 
+        // ---- 1b. Give way (user 2026-07-10) ---------------------------------
+        // Pharmee steps aside when the player walks into him.
+        var floatBob = robot.GetComponentInChildren<FloatBob>(true);
+        if (floatBob != null)
+        {
+            var giveWay = robot.GetComponentInChildren<PharmeeGiveWay>(true);
+            if (giveWay == null) giveWay = floatBob.gameObject.AddComponent<PharmeeGiveWay>();
+            Camera pcam = Camera.main;
+            if (pcam == null)
+                foreach (var c in Object.FindObjectsByType<Camera>(FindObjectsInactive.Include))
+                    if (c.CompareTag("MainCamera")) { pcam = c; break; }
+            giveWay.Bind(floatBob, floatBob.transform, pcam != null ? pcam.transform : null);
+            EditorUtility.SetDirty(giveWay);
+            Debug.Log("[NpcPolish] Pharmee give-way wired (bob on '" + floatBob.name + "', cam=" + (pcam != null) + ")");
+        }
+        else Debug.LogWarning("[NpcPolish] no FloatBob on RobotNPC — give-way skipped");
+
         // ---- 2. Jimenez roaming ---------------------------------------------
         var jim = GameObject.Find("DrJimenez");
         if (jim == null) jim = GameObject.Find("RiggedDrjimenez");

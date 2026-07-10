@@ -15,6 +15,7 @@ public class ProximityLabel : MonoBehaviour
     private Transform _cam;
     private GameObject _tag;
     private TextMeshPro _tmp;
+    private Renderer[] _itemRends;   // the item's own renderers, cached (no per-frame alloc)
 
     public void SetLabel(string text, float dist = 1.4f)
     {
@@ -27,10 +28,14 @@ public class ProximityLabel : MonoBehaviour
     private void Build()
     {
         if (_tag != null || string.IsNullOrEmpty(label)) return;
+        // Cache the item's own renderers BEFORE the tag's TMP renderer is added,
+        // so Update never re-queries the component tree (this ran every frame while
+        // the label was visible — a per-frame array allocation).
+        _itemRends = GetComponentsInChildren<Renderer>();
         _tag = new GameObject("ProxTag");
         _tag.transform.SetParent(transform, false);
         // Sit just above the object's top, in world scale (undo parent scaling).
-        var rends = GetComponentsInChildren<Renderer>();
+        var rends = _itemRends;
         float top = 0f;
         if (rends.Length > 0)
         {
@@ -72,13 +77,13 @@ public class ProximityLabel : MonoBehaviour
         if (show)
         {
             // Float the tag toward the player and above the item, then billboard it.
-            var rends = GetComponentsInChildren<Renderer>();
+            var rends = _itemRends;   // cached item renderers (excludes the tag's own)
             float top = transform.position.y + heightOffset;
             float mid = transform.position.y;
-            if (rends.Length > 0)
+            if (rends != null && rends.Length > 0)
             {
                 Bounds b = rends[0].bounds;
-                for (int i = 1; i < rends.Length; i++) if (rends[i] != _tag.GetComponent<Renderer>()) b.Encapsulate(rends[i].bounds);
+                for (int i = 1; i < rends.Length; i++) b.Encapsulate(rends[i].bounds);
                 top = b.max.y + heightOffset;
                 mid = b.center.y;
             }

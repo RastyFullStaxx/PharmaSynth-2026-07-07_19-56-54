@@ -59,8 +59,13 @@ public class MirrorPlane : MonoBehaviour
         Vector3 normal = -t.forward;                       // quad's visible face → into the room
         Vector3 toHead = _head.position - pos;
 
-        // Gate: far away, or standing behind the wall → skip the render.
-        if (toHead.magnitude > activeDistance || Vector3.Dot(toHead, normal) < 0.05f) return;
+        // Gate: far away, standing behind the wall, OR turned away from the mirror
+        // (it's out of view) → skip the whole reflection render. The view gate is
+        // generous so the reflection is already live before you turn to face it.
+        Vector3 toMirror = pos - _head.position;
+        float viewDot = toMirror.sqrMagnitude > 1e-4f
+            ? Vector3.Dot(headCam.transform.forward, toMirror.normalized) : 1f;
+        if (!ShouldRender(toHead.magnitude, activeDistance, Vector3.Dot(toHead, normal), viewDot)) return;
 
         // Reflect the eye across the mirror plane and match the head's projection
         // with an oblique near plane pinned to the glass.
@@ -79,6 +84,13 @@ public class MirrorPlane : MonoBehaviour
         mirrorCam.Render();
         GL.invertCulling = false;
     }
+
+    /// Pure render gate (self-tested): render only when the player is close enough,
+    /// in FRONT of the glass, AND looking roughly toward it. `facingDot` = dot(toHead,
+    /// normal) &gt; 0 when in front; `viewDot` = dot(viewForward, dirToMirror), ≥ -0.25
+    /// keeps it live until the player has clearly turned away (~105° off-axis).
+    public static bool ShouldRender(float distance, float activeDistance, float facingDot, float viewDot)
+        => distance <= activeDistance && facingDot >= 0.05f && viewDot >= -0.25f;
 
     /// Householder reflection matrix for the plane (n.xyz, d).
     static Matrix4x4 Reflection(Vector4 p)

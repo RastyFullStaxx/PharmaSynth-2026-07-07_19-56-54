@@ -53,6 +53,7 @@ public class PharmeeMover : MonoBehaviour
     private Vector3 _homeWorld;      // door-home to return to when idle
     private int _anchorIndex = -1;
     private bool _homeCached;
+    private readonly List<Vector3> _pts = new List<Vector3>();   // reused each frame (no per-frame GC)
 
     public void Bind(ExperimentRunner r, FloatBob b, Transform p, Transform[] a)
     { runner = r; bob = b; player = p; anchors = a ?? new Transform[0]; }
@@ -83,11 +84,11 @@ public class PharmeeMover : MonoBehaviour
         {
             var p = player != null ? player : (Camera.main != null ? Camera.main.transform : null);
             if (p == null) return;
-            var pts = new List<Vector3>(anchors.Length);
-            foreach (var a in anchors) if (a != null) pts.Add(a.position);
-            _anchorIndex = PharmeeMoveSolver.PickAnchor(p.position, pts, minPlayerDist, _anchorIndex, hysteresis);
-            if (_anchorIndex < 0 || _anchorIndex >= pts.Count) return;
-            targetWorld = pts[_anchorIndex];
+            _pts.Clear();
+            foreach (var a in anchors) if (a != null) _pts.Add(a.position);
+            _anchorIndex = PharmeeMoveSolver.PickAnchor(p.position, _pts, minPlayerDist, _anchorIndex, hysteresis);
+            if (_anchorIndex < 0 || _anchorIndex >= _pts.Count) return;
+            targetWorld = _pts[_anchorIndex];
         }
         else
         {

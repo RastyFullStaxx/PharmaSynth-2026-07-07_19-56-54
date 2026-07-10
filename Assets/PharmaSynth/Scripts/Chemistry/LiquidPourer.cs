@@ -28,6 +28,15 @@ public class LiquidPourer : MonoBehaviour
     private float lastSpillTime = 0f;
     private float smoothedFlow01;
 
+    // Continuous positional pour sound (realism 2026-07-10: pouring was silent).
+    private AudioSource pourAudio;
+    private float pourBaseVol = 0.5f;
+
+    /// Pure, testable pour-volume curve: silent when not pouring, otherwise the
+    /// clip's base × the Sfx category volume, floored so a trickle is still heard.
+    public static float PourVolume(bool pouring, float baseVol, float catVol, float flow01)
+        => pouring ? Mathf.Clamp01(baseVol) * Mathf.Clamp01(catVol) * Mathf.Clamp01(0.3f + Mathf.Clamp01(flow01) * 0.7f) : 0f;
+
     void Start()
     {
         sourceContainer = GetComponent<LiquidPhysics>();
@@ -46,12 +55,47 @@ public class LiquidPourer : MonoBehaviour
         if (tiltAngle > pourThreshold && sourceContainer.currentLiquidVolume > 0)
         {
             Pour(tiltAngle);
+            UpdatePourAudio(true, smoothedFlow01);
         }
         else
         {
             smoothedFlow01 = Mathf.Lerp(smoothedFlow01, 0f, Time.deltaTime * flowSmoothingSpeed);
             if (streamLine) streamLine.enabled = false;
+            UpdatePourAudio(false, 0f);
         }
+    }
+
+    /// Drive the looping 3D pour source: swell with flow while pouring, fade to
+    /// silence when the vessel is righted. Runtime-only; no-op without an AudioService.
+    void UpdatePourAudio(bool pouring, float flow01)
+    {
+        if (!Application.isPlaying) return;
+        if (pourAudio == null)
+        {
+            if (!pouring) return;                          // don't allocate a source until actually pouring
+            if (AudioService.Instance == null) return;
+            var e = AudioService.Instance.EntryOf("pour");
+            if (e == null || e.clip == null) return;
+            pourBaseVol = Mathf.Clamp01(e.volume);
+            var host = spout != null ? spout : transform;
+            var go = new GameObject("PourAudio");
+            go.transform.SetParent(host, false);
+            pourAudio = go.AddComponent<AudioSource>();
+            pourAudio.clip = e.clip;
+            pourAudio.loop = true;
+            pourAudio.playOnAwake = false;
+            pourAudio.spatialBlend = 1f;                 // 3D positional
+            pourAudio.rolloffMode = AudioRolloffMode.Linear;
+            pourAudio.minDistance = 0.5f;
+            pourAudio.maxDistance = 6f;
+            pourAudio.volume = 0f;
+        }
+
+        float catVol = AudioService.Instance != null ? AudioService.Instance.VolumeOf(AudioCategory.Sfx) : 1f;
+        float target = PourVolume(pouring, pourBaseVol, catVol, flow01);
+        pourAudio.volume = Mathf.Lerp(pourAudio.volume, target, Time.deltaTime * 10f);
+        if (pouring && !pourAudio.isPlaying) pourAudio.Play();
+        else if (!pouring && pourAudio.isPlaying && pourAudio.volume < 0.01f) pourAudio.Stop();
     }
 
     void Pour(float currentTilt)

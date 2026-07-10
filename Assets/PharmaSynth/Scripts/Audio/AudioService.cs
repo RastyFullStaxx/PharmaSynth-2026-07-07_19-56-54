@@ -33,9 +33,27 @@ public class AudioService : MonoBehaviour
     [SerializeField] private AudioSource voiceSource;    // Pharmee beeps
     [SerializeField] private AudioSource musicSource;    // looping
     [SerializeField] private UnityEngine.Audio.AudioMixer mixer;   // optional
+    [Tooltip("Per-shot pitch variation on SFX one-shots so repeated sounds (footsteps, " +
+             "clinks, pours) don't sound robotically identical — realism polish 2026-07-10.")]
+    [SerializeField, Range(0f, 0.3f)] private float sfxPitchJitter = 0.08f;
 
     private readonly float[] _vol = { 1f, 1f, 1f, 1f };
     private bool _loaded;
+
+    /// Pure, testable pitch jitter: base 1.0 ± amount, from a 0..1 random sample.
+    public static float JitteredPitch(float amount, float rand01)
+        => 1f + (Mathf.Clamp01(rand01) * 2f - 1f) * Mathf.Clamp(amount, 0f, 0.9f);
+
+    // UI clicks and musical stings must keep a CONSTANT pitch — only physical
+    // sounds (footsteps, glass, pours, drops…) get natural per-shot variation.
+    private static readonly System.Collections.Generic.HashSet<string> _noPitchVary =
+        new System.Collections.Generic.HashSet<string>
+        { "ui-click", "ui-confirm", "ui-error", "task-complete", "grade-pass", "grade-fail",
+          "mixture-complete", "alarm" };
+
+    /// True when a key represents a physical sound that should pitch-vary.
+    public static bool PitchVaries(string key)
+        => !string.IsNullOrEmpty(key) && !_noPitchVary.Contains(key);
 
     private void Awake()
     {
@@ -105,7 +123,13 @@ public class AudioService : MonoBehaviour
             src.volume = mixer == null ? v : Mathf.Clamp01(e.volume);
             src.Play();
         }
-        else src.PlayOneShot(e.clip, mixer == null ? v : Mathf.Clamp01(e.volume));
+        else
+        {
+            // Subtle per-shot pitch variation keeps repeated physical SFX from
+            // sounding canned; UI/musical stings stay at a constant pitch.
+            src.pitch = PitchVaries(key) ? JitteredPitch(sfxPitchJitter, Random.value) : 1f;
+            src.PlayOneShot(e.clip, mixer == null ? v : Mathf.Clamp01(e.volume));
+        }
     }
 
     /// Play a bank sound at a world position (spawns a temporary one-shot source).

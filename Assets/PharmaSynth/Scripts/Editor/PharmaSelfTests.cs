@@ -1595,6 +1595,29 @@ public static class PharmaSelfTests
             && PharmeeLines.Pick(PharmeeLines.Greetings, 5) == PharmeeLines.Pick(PharmeeLines.Greetings, 5 % PharmeeLines.Greetings.Length));
         A("lines: greetings pool has variety", PharmeeLines.Pick(PharmeeLines.Greetings, 0) != PharmeeLines.Pick(PharmeeLines.Greetings, 1));
         A("lines: Pick handles null + negative", PharmeeLines.Pick(null, 3) == "" && !string.IsNullOrEmpty(PharmeeLines.Pick(PharmeeLines.ExamRemarks, -2)));
+
+        // Give way (user 2026-07-10): Pharmee steps aside when the player bumps him.
+        // Far away → no step.
+        A("giveway: no step outside personal space",
+            PharmeeGiveWay.SideStep(new Vector3(3f, 1f, 0f), Vector3.zero, Vector3.forward, 0.95f, 0.65f) == Vector3.zero);
+        // Player facing +Z, Pharmee slightly to the +X side and close → pushed further +X (right), horizontal only.
+        {
+            var step = PharmeeGiveWay.SideStep(new Vector3(0.2f, 1f, 0.1f), Vector3.zero, Vector3.forward, 0.95f, 0.65f);
+            A("giveway: steps to the player's side, horizontally", step.x > 0f && Mathf.Abs(step.y) < 1e-5f && step.magnitude <= 0.65f + 1e-4f);
+        }
+        // Directly ahead + closer → a larger push than when near the edge of the bubble.
+        {
+            var near = PharmeeGiveWay.SideStep(new Vector3(0f, 1f, 0.1f), Vector3.zero, Vector3.forward, 0.95f, 0.65f).magnitude;
+            var edge = PharmeeGiveWay.SideStep(new Vector3(0f, 1f, 0.9f), Vector3.zero, Vector3.forward, 0.95f, 0.65f).magnitude;
+            A("giveway: closer = bigger step", near > edge && near > 0f);
+        }
+
+        // Mirror render gate (perf 2026-07-10): skip the reflection pass when far,
+        // behind the glass, or turned away.
+        A("mirror: renders when near, in front, looking at it", MirrorPlane.ShouldRender(2f, 6f, 0.8f, 0.9f));
+        A("mirror: skips when too far", !MirrorPlane.ShouldRender(9f, 6f, 0.8f, 0.9f));
+        A("mirror: skips when behind the glass", !MirrorPlane.ShouldRender(2f, 6f, -0.5f, 0.9f));
+        A("mirror: skips when turned away", !MirrorPlane.ShouldRender(2f, 6f, 0.8f, -0.6f));
     }
 
     static void AudioSuite()
@@ -1603,6 +1626,22 @@ public static class PharmaSelfTests
         A("audio: full volume = 0 dB", Near(VolumeUtil.LinearToDb(1f), 0f, 0.05f));
         A("audio: silence = -80 dB", Near(VolumeUtil.LinearToDb(0f), -80f, 0.01f));
         A("audio: half volume ~ -6 dB", Near(VolumeUtil.LinearToDb(0.5f), -6.02f, 0.1f));
+
+        // Per-shot pitch variation (realism 2026-07-10): centred at 1.0, bounded by
+        // the jitter amount, and only physical sounds vary (not UI/musical stings).
+        A("audio: pitch jitter centred + bounded",
+            Near(AudioService.JitteredPitch(0.08f, 0.5f), 1f, 0.0001f)
+            && AudioService.JitteredPitch(0.08f, 1f) <= 1.0801f
+            && AudioService.JitteredPitch(0.08f, 0f) >= 0.9199f);
+        A("audio: only physical sounds pitch-vary",
+            AudioService.PitchVaries("footstep") && AudioService.PitchVaries("glass-shatter")
+            && !AudioService.PitchVaries("ui-click") && !AudioService.PitchVaries("grade-pass"));
+
+        // Continuous pour sound (realism 2026-07-10): silent when righted, swells with flow.
+        A("audio: pour silent when not pouring", Near(LiquidPourer.PourVolume(false, 0.5f, 1f, 1f), 0f, 0.0001f));
+        A("audio: pour swells with flow",
+            LiquidPourer.PourVolume(true, 0.5f, 1f, 1f) > LiquidPourer.PourVolume(true, 0.5f, 1f, 0f)
+            && LiquidPourer.PourVolume(true, 0.5f, 1f, 0f) > 0f);
 
         // SoundBank lookup.
         var bank = ScriptableObject.CreateInstance<SoundBank>();

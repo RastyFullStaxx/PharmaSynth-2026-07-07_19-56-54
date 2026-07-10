@@ -16,15 +16,27 @@ public class FloatBob : MonoBehaviour
 
     public void SetApplyRotation(bool on) => applyRotation = on;
 
+    [Tooltip("How fast the give-way sidestep offset eases in/out (higher = snappier).")]
+    [SerializeField] private float giveWaySmooth = 6f;
+
     private Vector3 _homePos;
     private Quaternion _homeRot;
     private float _phase;
     private bool _homeSet;
+    private Vector3 _giveWay;         // smoothed sidestep offset (local space)
+    private Vector3 _giveWayTarget;   // driven by PharmeeGiveWay each frame
 
     /// Current hover home (local space). A PharmeeMover glides this around.
     public Vector3 Home => _homePos;
 
     public void SetHome(Vector3 localPos) { _homePos = localPos; _homeSet = true; }
+
+    /// A transient local-space step-aside offset added on top of home + bob, eased
+    /// in/out — set to zero to return. Driven by PharmeeGiveWay when the player nears.
+    public void SetGiveWayOffset(Vector3 localOffset) => _giveWayTarget = localOffset;
+
+    /// Current smoothed sidestep magnitude (for tests / debug).
+    public Vector3 GiveWay => _giveWay;
 
     private void Awake()
     {
@@ -37,9 +49,11 @@ public class FloatBob : MonoBehaviour
     private void Update()
     {
         float t = Time.time + _phase;
+        _giveWay = Vector3.Lerp(_giveWay, _giveWayTarget, Mathf.Clamp01(Time.deltaTime * giveWaySmooth));
         transform.localPosition = _homePos
             + Vector3.up * (Mathf.Sin(t * bobSpeed) * bobAmplitude)
-            + JitterOffset(t, jitterSpeed, jitterAmplitude);
+            + JitterOffset(t, jitterSpeed, jitterAmplitude)
+            + _giveWay;
         if (applyRotation)
             transform.localRotation = _homeRot * Quaternion.Euler(
                 Mathf.Sin(t * bobSpeed * 0.7f) * swayDegrees,
