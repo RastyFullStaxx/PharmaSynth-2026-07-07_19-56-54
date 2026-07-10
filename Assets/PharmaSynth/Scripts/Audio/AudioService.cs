@@ -140,6 +140,30 @@ public class AudioService : MonoBehaviour
         AudioSource.PlayClipAtPoint(e.clip, pos, _vol[(int)e.category] * Mathf.Clamp01(e.volume));
     }
 
+    /// Positional one-shot with tuned 3D rolloff + pitch variation — for spatial
+    /// physical events (a beaker breaking / a tool clattering across the room), so
+    /// they read as coming from that spot rather than flat 2D. Self-destroys.
+    public void PlayAt3D(string key, Vector3 pos)
+    {
+        var e = bank != null ? bank.Get(key) : null;
+        if (e == null || e.clip == null) return;
+        var go = new GameObject("SfxAt_" + key);
+        go.transform.position = pos;
+        var src = go.AddComponent<AudioSource>();
+        src.clip = e.clip;
+        src.volume = _vol[(int)e.category] * Mathf.Clamp01(e.volume);
+        src.pitch = PitchVaries(key) ? JitteredPitch(sfxPitchJitter, Random.value) : 1f;
+        src.spatialBlend = 1f;                       // 3D
+        src.rolloffMode = AudioRolloffMode.Linear;
+        src.minDistance = 0.5f;
+        src.maxDistance = 8f;
+        src.Play();
+        Destroy(go, e.clip.length / Mathf.Max(0.1f, src.pitch) + 0.1f);
+    }
+
+    /// Null-safe static positional one-shot (no-op before the service exists).
+    public static void TryPlayAt(string key, Vector3 pos) { if (Instance != null) Instance.PlayAt3D(key, pos); }
+
     public void StopAmbient() { if (ambientSource != null) ambientSource.Stop(); }
 
     // One-arg void wrappers for UI slider onValueChanged persistent listeners.

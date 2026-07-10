@@ -1596,6 +1596,11 @@ public static class PharmaSelfTests
         A("lines: greetings pool has variety", PharmeeLines.Pick(PharmeeLines.Greetings, 0) != PharmeeLines.Pick(PharmeeLines.Greetings, 1));
         A("lines: Pick handles null + negative", PharmeeLines.Pick(null, 3) == "" && !string.IsNullOrEmpty(PharmeeLines.Pick(PharmeeLines.ExamRemarks, -2)));
 
+        // Guided lab tour (storyboard 2026-07-10): narrated beats, closer invites a campaign.
+        A("tour: multiple beats + closer invites a campaign",
+            PharmeeLines.TourBeats.Length >= 6
+            && PharmeeLines.TourBeats[PharmeeLines.TourBeats.Length - 1].ToLower().Contains("campaign"));
+
         // Give way (user 2026-07-10): Pharmee steps aside when the player bumps him.
         // Far away → no step.
         A("giveway: no step outside personal space",
@@ -1618,6 +1623,24 @@ public static class PharmaSelfTests
         A("mirror: skips when too far", !MirrorPlane.ShouldRender(9f, 6f, 0.8f, 0.9f));
         A("mirror: skips when behind the glass", !MirrorPlane.ShouldRender(2f, 6f, -0.5f, 0.9f));
         A("mirror: skips when turned away", !MirrorPlane.ShouldRender(2f, 6f, 0.8f, -0.6f));
+
+        // Hover highlight (user 2026-07-10: prop readability) — pops on hover, restores.
+        A("hover: scale pops when lit, base when not",
+            HoverHighlight.HighlightScale(Vector3.one, true, 1.06f) == Vector3.one * 1.06f
+            && HoverHighlight.HighlightScale(Vector3.one, false, 1.06f) == Vector3.one);
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            try
+            {
+                var hh = go.AddComponent<HoverHighlight>();
+                hh.SetHighlight(true);
+                bool grew = go.transform.localScale.x > 1.0001f && hh.IsHighlighted;
+                hh.SetHighlight(false);
+                bool restored = Mathf.Abs(go.transform.localScale.x - 1f) < 1e-4f && !hh.IsHighlighted;
+                A("hover: SetHighlight grows then restores", grew && restored);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(go); }
+        }
     }
 
     static void AudioSuite()

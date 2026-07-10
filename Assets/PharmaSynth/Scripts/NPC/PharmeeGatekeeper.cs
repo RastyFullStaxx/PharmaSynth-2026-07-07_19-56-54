@@ -55,6 +55,7 @@ public class PharmeeGatekeeper : MonoBehaviour
 
     private bool _subscribed;
     private float _baseLineSeconds = -1f;
+    private int _tourIndex;
 
     /// Comfort seam: subtitle pacing multiplier (see PharmeeBrain.SetSubtitlePace).
     public void SetSubtitlePace(float speed)
@@ -177,6 +178,20 @@ public class PharmeeGatekeeper : MonoBehaviour
 
     // ---- state application --------------------------------------------------
 
+    /// Guided lab tour (storyboard): Pharmee narrates each area in sequence, one
+    /// beat auto-advancing to the next, instead of the old single free-roam line.
+    /// Stops the moment the player leaves the tour (poke → ModeChoice).
+    private void StartLabTour() { _tourIndex = 0; SpeakTourBeat(); }
+
+    private void SpeakTourBeat()
+    {
+        if (Model.State != GateState.LabTour) return;             // player ended the tour
+        if (_tourIndex >= PharmeeLines.TourBeats.Length) return;  // tour finished; free roam
+        Say(PharmeeLines.TourBeats[_tourIndex]);
+        _tourIndex++;
+        After(lineSeconds + 1.5f, SpeakTourBeat);                 // gentle auto-advance
+    }
+
     private void OnTransition(GateState from, GateState to)
     {
         ApplyDoor(to);
@@ -195,8 +210,8 @@ public class PharmeeGatekeeper : MonoBehaviour
 
             case GateState.LabTour:
                 panel?.Hide();
-                Say(lines.labTour);
                 launcher?.Launch(GameFlow.SelectedModuleId, LaunchMode.StageOnly);
+                StartLabTour();          // guided narrated tour (storyboard), poke to end
                 break;
 
             case GateState.CampaignExplain:

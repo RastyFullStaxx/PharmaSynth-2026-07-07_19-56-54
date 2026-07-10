@@ -96,6 +96,21 @@ public static class PharmeeLines
         "Keep your workspace orderly.",
     };
 
+    // ---- Guided lab tour (storyboard beats, refined to exceed) ---------------
+    // Played in order when the player picks "Lab Tour" — Pharmee walks them through
+    // each area instead of the old single free-roam line. The last beat is the closer.
+    public static readonly string[] TourBeats =
+    {
+        "Welcome to the lab! Let's take a quick tour so you feel right at home before any graded work.",
+        "On your left, you can grab the tablet anytime — it lays out the full step-by-step procedure for each experiment.",
+        "The bench in front of you is your main workspace: prepare reagents, run your reactions, and handle glassware here.",
+        "Over there is the equipment cabinet — open it and pick the apparatus your tablet calls for.",
+        "The reagent shelf holds your chemicals. Take only what each step needs — the bottles are limited!",
+        "Flick your wrist anytime for the live checklist, and watch the progress bar and timer up top to track how you're doing.",
+        "The Settings button up top lets you tune audio, text size and comfort options whenever you like.",
+        "Follow the glowing markers to each step. Poke me whenever you're ready to take on a graded campaign!",
+    };
+
     /// Deterministic pool picker (tests pin it): wraps any index, non-negative.
     public static string Pick(string[] pool, int n)
     {

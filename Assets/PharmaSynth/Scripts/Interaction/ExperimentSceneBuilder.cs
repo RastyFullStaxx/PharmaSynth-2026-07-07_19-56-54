@@ -170,9 +170,34 @@ public class ExperimentSceneBuilder : MonoBehaviour
         var sock = sockGo.AddComponent<XRSocket>();
         sock.selectFilters.Add(filter);
         sock.attachTransform = sockGo.transform;
+        // Ghost preview: bringing the correct item near shows where it snaps.
+        sock.showInteractableHoverMeshes = true;
+        sock.interactableHoverMeshMaterial = SocketGhostMaterial();
         sockGo.AddComponent<SelectSfx>().Bind(sock, "socket-snap");
 
         MakeLabel(s.label, new Vector3(s.pos.x, s.pos.y + 0.32f, s.pos.z), 0.13f);
+    }
+
+    private static Material _socketGhostMat;
+    /// Shared translucent-cyan material for socket hover-mesh previews (built once).
+    private static Material SocketGhostMaterial()
+    {
+        if (_socketGhostMat != null) return _socketGhostMat;
+        var sh = Shader.Find("Universal Render Pipeline/Unlit");
+        if (sh == null) sh = Shader.Find("Unlit/Color");
+        var m = new Material(sh) { name = "SocketGhost" };
+        var c = new Color(0.5f, 0.9f, 1f, 0.3f);
+        if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", c);
+        if (m.HasProperty("_Color")) m.SetColor("_Color", c);
+        m.SetOverrideTag("RenderType", "Transparent");
+        if (m.HasProperty("_Surface")) m.SetFloat("_Surface", 1f);
+        if (m.HasProperty("_SrcBlend")) m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        if (m.HasProperty("_DstBlend")) m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        if (m.HasProperty("_ZWrite")) m.SetInt("_ZWrite", 0);
+        m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+        m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+        _socketGhostMat = m;
+        return m;
     }
 
     private void BuildProp(Transform stage, ExperimentLayout.Prop p)
@@ -188,6 +213,7 @@ public class ExperimentSceneBuilder : MonoBehaviour
         item.itemId = p.itemId; item.displayName = p.displayName;
         var rb = PhysicsProfiles.EnsurePhysics(inst, p.prefabName);
         inst.AddComponent<GrabPhysicsPolicy>();
+        inst.AddComponent<HoverHighlight>().Bind(inst.GetComponent<XRGrab>());   // hover affordance
         var respawn = inst.AddComponent<DropRespawn>();
         respawn.SetHome(inst.transform.position, inst.transform.rotation);
         if (Mishandling.IsBreakable(p.prefabName))

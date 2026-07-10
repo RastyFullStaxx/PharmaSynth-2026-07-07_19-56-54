@@ -27,6 +27,8 @@ public class ImpactSound : MonoBehaviour
         float v = c.relativeVelocity.magnitude;
         if (v < minSpeed || v >= maxSpeed) return;
         _readyAt = Time.time + cooldownSeconds;
-        AudioService.TryPlay(key);
+        // Positional: the clatter comes from where the item actually landed.
+        var at = c.contactCount > 0 ? c.GetContact(0).point : transform.position;
+        AudioService.TryPlayAt(key, at);
     }
 }

@@ -140,3 +140,7 @@ Docs/digests/images/
 # Raw DCC art sources (.blend/.zprj/.obj masters) staged for the art pipeline —
 # large binaries, kept local + in the off-repo backup.
 Docs/raw-art-sources/
+
+# Extracted manuscript text (regenerate with pdftotext; PDF is the source of truth)
+Docs/Documentations/manuscript.txt
+Docs/handoff_assets/storyboard.txt
