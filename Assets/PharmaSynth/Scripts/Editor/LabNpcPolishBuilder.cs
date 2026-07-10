@@ -41,6 +41,7 @@ public static class LabNpcPolishBuilder
         var mood = robot.GetComponent<PharmeeMood>();
         if (mood == null) mood = robot.AddComponent<PharmeeMood>();
         mood.Bind(narration, face);
+        if (narration != null) { narration.SetVoiceBlip("pharmee-blip", 0.5f); EditorUtility.SetDirty(narration); }   // typewriter talking blip
 
         var gk = robot.GetComponentInChildren<PharmeeGatekeeper>(true);
         if (gk != null)
@@ -120,6 +121,7 @@ public static class LabNpcPolishBuilder
             var exam = jim.GetComponent<ExaminerNPC>();
             if (exam == null) exam = jim.AddComponent<ExaminerNPC>();
             var jimNarration = BuildJimenezBubble(jim);   // overhead subtitle so his lines are visible
+            if (jimNarration != null) { jimNarration.SetVoiceBlip("jimenez-blip", 0.5f); EditorUtility.SetDirty(jimNarration); }
             exam.Bind(runner, animator, jimNarration);
             EnsureTalkParam(animator);
             Debug.Log("[NpcPolish] Jimenez examiner voice wired (narration=" + (jimNarration != null) + ")");

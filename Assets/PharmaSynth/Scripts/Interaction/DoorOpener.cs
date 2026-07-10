@@ -38,7 +38,13 @@ public class DoorOpener : MonoBehaviour
     {
         Cache();
         if (!_cached) return;
-        if (Application.isPlaying && _isOpen != open) AudioService.TryPlay("door-swing");
+        if (Application.isPlaying && _isOpen != open)
+        {
+            AudioService.TryPlay("door-swing");
+            // Cold air spills out of the lab as the door swings open (atmosphere pass).
+            if (open && door != null)
+                EffectVfx.ColdAir(new Vector3(door.position.x, transform.position.y + 0.15f, door.position.z));
+        }
         _isOpen = open;
         if (!Application.isPlaying)
             door.localRotation = open ? _open : _closed;

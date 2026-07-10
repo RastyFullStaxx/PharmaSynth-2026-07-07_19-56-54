@@ -13,7 +13,7 @@ public static class EffectVfx
     private static Texture2D _dot;
     private static Material _mat;
 
-    public enum Kind { Shatter, Confetti, FlamePop }
+    public enum Kind { Shatter, Confetti, FlamePop, ColdAir }
 
     /// Glass-shatter burst: pale shards spray out and fall.
     public static void Shatter(Vector3 pos, Color tint) => Play(Kind.Shatter, pos, tint);
@@ -24,6 +24,13 @@ public static class EffectVfx
 
     /// Flame puff: burner ignite / splint flame test.
     public static void FlamePop(Vector3 pos) => Play(Kind.FlamePop, pos, new Color(1f, 0.55f, 0.15f, 0.9f));
+
+    /// Cold-air puff: a soft white vapour cloud that spreads out and sinks — fired
+    /// when the lab door opens (user 2026-07-10 atmosphere pass).
+    public static void ColdAir(Vector3 pos) => Play(Kind.ColdAir, pos, new Color(0.72f, 0.82f, 0.95f, 0.6f));
+
+    /// Shared soft-dot particle material (reused by AtmosphereVfx so vapour matches).
+    public static Material ParticleMaterial() => SharedMaterial();
 
     public static void Play(Kind kind, Vector3 pos, Color tint)
     {
@@ -70,6 +77,20 @@ public static class EffectVfx
                 col.color = Fade(Color.white, 1f);
                 break;
 
+            case Kind.ColdAir:
+                life = 2.2f; burst = 20;
+                main.startLifetime = new ParticleSystem.MinMaxCurve(1.4f, 2.2f);
+                main.startSpeed = new ParticleSystem.MinMaxCurve(0.35f, 0.8f);
+                main.startSize = new ParticleSystem.MinMaxCurve(0.25f, 0.55f);
+                main.startColor = tint;
+                main.gravityModifier = 0.08f;                        // cold air sinks slowly
+                shape.shapeType = ParticleSystemShapeType.Cone; shape.angle = 55f; shape.radius = 0.12f;
+                go.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);   // spill outward + down
+                col.color = Fade(tint, tint.a);
+                var csz = ps.sizeOverLifetime; csz.enabled = true;
+                csz.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 0.7f, 1f, 1.8f));   // expand as it drifts
+                break;
+
             default: // FlamePop
                 life = 0.6f; burst = 18;
                 main.startLifetime = new ParticleSystem.MinMaxCurve(0.25f, 0.55f);
@@ -87,7 +108,7 @@ public static class EffectVfx
         emission.SetBursts(new[] { em });
 
         var r = go.GetComponent<ParticleSystemRenderer>();
-        r.material = SharedMaterial();
+        r.material = kind == Kind.ColdAir ? SmokeMaterial() : SharedMaterial();
         r.sortingOrder = 12;
 
         ps.Play();
@@ -127,14 +148,40 @@ public static class EffectVfx
     private static Material SharedMaterial()
     {
         if (_mat != null) return _mat;
+        _mat = MakeParticleMat(SoftDot());
+        return _mat;
+    }
+
+    private static Material _smokeMat;
+    /// Alpha-blended material using the AI-generated soft-smoke texture — for the
+    /// realistic cold vapour (AtmosphereVfx + cold-air puff). Falls back to the soft
+    /// dot if the texture is missing.
+    public static Material SmokeMaterial()
+    {
+        if (_smokeMat != null) return _smokeMat;
+        var tex = Resources.Load<Texture2D>("smoke-soft");
+        _smokeMat = MakeParticleMat(tex != null ? (Texture)tex : SoftDot());
+        return _smokeMat;
+    }
+
+    /// Build an unlit transparent ALPHA-blended particle material. The explicit
+    /// blend/ZWrite state is what makes it soft — without it URP renders the quads
+    /// opaque (the earlier "blocky white squares" bug).
+    private static Material MakeParticleMat(Texture tex)
+    {
         var sh = Shader.Find("Universal Render Pipeline/Particles/Unlit");
         if (sh == null) sh = Shader.Find("Particles/Standard Unlit");
-        _mat = new Material(sh);
-        _mat.SetTexture("_BaseMap", SoftDot());
-        _mat.SetFloat("_Surface", 1f);
-        _mat.SetFloat("_Blend", 0f);
-        _mat.renderQueue = 3000;
-        return _mat;
+        var m = new Material(sh);
+        m.SetTexture("_BaseMap", tex);
+        if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", Color.white);
+        m.SetFloat("_Surface", 1f);          // transparent
+        m.SetFloat("_Blend", 0f);            // alpha
+        m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        m.SetInt("_ZWrite", 0);
+        m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+        m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+        return m;
     }
 
     private static Texture2D SoftDot()

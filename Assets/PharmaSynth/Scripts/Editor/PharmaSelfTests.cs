@@ -1612,6 +1612,17 @@ public static class PharmaSelfTests
             A("tour: nothing in range → -1", LabTourGuide.FirstUnvisitedInRange(new Vector3(50, 0, 50), pos, vis, rad) == -1);
         }
 
+        // Typewriter dialogue (user 2026-07-10): lines type out char-by-char with blips.
+        {
+            var go = new GameObject("tw");
+            try
+            {
+                var nc = go.AddComponent<NPCNarrationController>();
+                A("typewriter: enabled by default with a positive type speed", nc.Typewriter && nc.TypeCps() > 1f);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(go); }
+        }
+
         // Give way (user 2026-07-10): Pharmee steps aside when the player bumps him.
         // Far away → no step.
         A("giveway: no step outside personal space",
@@ -1676,6 +1687,16 @@ public static class PharmaSelfTests
         A("audio: pour swells with flow",
             LiquidPourer.PourVolume(true, 0.5f, 1f, 1f) > LiquidPourer.PourVolume(true, 0.5f, 1f, 0f)
             && LiquidPourer.PourVolume(true, 0.5f, 1f, 0f) > 0f);
+
+        // Dialogue ducking (user 2026-07-10): beds dip while an NPC speaks, restore after.
+        A("audio: duck dips beds while speaking, full otherwise",
+            Near(DialogueDucker.DuckTarget(1, 0.45f), 0.45f, 0.001f)
+            && Near(DialogueDucker.DuckTarget(2, 0.45f), 0.45f, 0.001f)
+            && Near(DialogueDucker.DuckTarget(0, 0.45f), 1f, 0.001f));
+
+        // Atmosphere VFX (user 2026-07-10): AC vapour + haze style tags.
+        A("atmosphere: style tags", AtmosphereVfx.StyleName(AtmosphereVfx.Style.AcVapor) == "ac-vapor"
+            && AtmosphereVfx.StyleName(AtmosphereVfx.Style.Haze) == "haze");
 
         // SoundBank lookup.
         var bank = ScriptableObject.CreateInstance<SoundBank>();

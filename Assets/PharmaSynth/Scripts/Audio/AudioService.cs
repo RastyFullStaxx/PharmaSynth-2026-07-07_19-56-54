@@ -60,6 +60,8 @@ public class AudioService : MonoBehaviour
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         LoadVolumes();
+        // Dialogue ducking rides on the service — no scene wiring needed.
+        if (GetComponent<DialogueDucker>() == null) gameObject.AddComponent<DialogueDucker>();
     }
 
     /// Null-safe one-shot for gameplay hooks (no-op before the service exists,
@@ -68,6 +70,10 @@ public class AudioService : MonoBehaviour
 
     /// Bank access for systems that manage their own AudioSource (looping sims).
     public SoundBank.Entry EntryOf(string key) => bank != null ? bank.Get(key) : null;
+
+    /// The looping beds — DialogueDucker dips these while an NPC is speaking.
+    public AudioSource AmbientSource => ambientSource;
+    public AudioSource MusicSource => musicSource;
 
     // ---- volume ----------------------------------------------------------
 

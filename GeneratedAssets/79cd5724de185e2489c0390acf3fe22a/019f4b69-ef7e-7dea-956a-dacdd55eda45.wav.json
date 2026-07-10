@@ -1,0 +1,15 @@
+{
+    "asset": "79cd5724de185e2489c0390acf3fe22a",
+    "fileName": "019f4b69-ef7e-7dea-956a-dacdd55eda45.wav",
+    "prompt": "A very short, soft, cute robot speech blip — a single gentle high-pitched electronic \"bip\", friendly and warm, about a tenth of a second, dry, no reverb, no music. Like a small robot talking.",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 0.30000001192092898,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

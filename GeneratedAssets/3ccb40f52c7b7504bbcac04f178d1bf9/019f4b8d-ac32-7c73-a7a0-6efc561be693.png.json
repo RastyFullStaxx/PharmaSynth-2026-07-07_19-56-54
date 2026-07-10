@@ -1,0 +1,31 @@
+{
+    "asset": "3ccb40f52c7b7504bbcac04f178d1bf9",
+    "fileName": "019f4b8d-ac32-7c73-a7a0-6efc561be693.png",
+    "prompt": "A single soft puff of pale white cold vapor / fog, wispy and volumetric with feathered translucent edges, softly lit, centered on a solid pure black background, nothing else in frame, high resolution, subtle and realistic like breath in cold air or mist from an air conditioner.",
+    "negativePrompt": "",
+    "model": "gpt-image-1",
+    "modelName": "GPT Image 1",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 640
+    },
+    "spriteSheet": false,
+    "duration": 0.0,
+    "dynamicParams": {
+        "serializedData": []
+    }
+}

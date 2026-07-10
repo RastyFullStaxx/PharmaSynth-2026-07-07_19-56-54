@@ -26,6 +26,13 @@ public class NPCNarrationController : MonoBehaviour
     [SerializeField] private List<NarrationLine> tutorialLines = new List<NarrationLine>();
     [SerializeField] private bool playOnStart = true;
 
+    [Header("Typewriter (user 2026-07-10: type lines out + talking blips)")]
+    [SerializeField] private bool typewriter = true;
+    [SerializeField] private float charsPerSecond = 32f;
+    [SerializeField] private int blipEveryChars = 2;            // a voice blip every N revealed non-space chars
+    [SerializeField] private string voiceBlipKey = "";          // this speaker's talking blip (SoundBank key)
+    [SerializeField, Range(0f, 1f)] private float blipVolume = 0.5f;
+
     [Header("Events")]
     public UnityEvent onNarrationFinished;
 
@@ -36,10 +43,26 @@ public class NPCNarrationController : MonoBehaviour
     /// True while a line is on screen (between BeginLine and EndLine).
     public bool IsSpeaking { get; private set; }
 
+    /// Typewriter state — the HUD dialogue bar mirrors these to stay in sync.
+    public bool Typewriter => typewriter;
+    public float TypeCps() => typewriter ? Mathf.Max(1f, charsPerSecond) : 100000f;
+
+    /// Characters currently revealed (the HUD bar reads this each frame so the two
+    /// displays — and a skip — stay perfectly in sync). int.MaxValue = show all.
+    public int VisibleCount { get; private set; } = int.MaxValue;
+
+    /// True while the line is still typing out (before it's fully revealed).
+    public bool IsRevealing { get; private set; }
+
     private Coroutine narrationRoutine;
+    private AudioSource _blip;
+    private bool _skipReveal;
 
     /// Edit-mode/test binding for the auto-hidden bubble panel.
     public void SetPanelRoot(GameObject g) => panelRoot = g;
+
+    /// Assign this speaker's talking blip (SoundBank key) — played per few chars as the line types.
+    public void SetVoiceBlip(string key, float volume = 0.5f) { voiceBlipKey = key; blipVolume = Mathf.Clamp01(volume); }
 
     private void Start()
     {
@@ -70,10 +93,11 @@ public class NPCNarrationController : MonoBehaviour
     /// Public so it is edit-mode testable and callable by cutscene staging.
     public void BeginLine(string subtitle, float seconds)
     {
-        if (subtitleText != null) subtitleText.text = subtitle;
+        if (subtitleText != null) { subtitleText.text = subtitle; subtitleText.maxVisibleCharacters = int.MaxValue; }
         if (panelRoot != null) panelRoot.SetActive(true);
         if (skipButton != null) skipButton.SetActive(true);
         IsSpeaking = true;
+        VisibleCount = int.MaxValue;      // instant path shows the whole line
         LineStarted?.Invoke(subtitle, seconds);
     }
 
@@ -83,6 +107,7 @@ public class NPCNarrationController : MonoBehaviour
         if (subtitleText != null) subtitleText.text = string.Empty;
         if (panelRoot != null) panelRoot.SetActive(false);
         if (skipButton != null) skipButton.SetActive(false);
+        IsRevealing = false; VisibleCount = int.MaxValue;
         if (!IsSpeaking) return; // idempotent — visuals reset above either way
         IsSpeaking = false;
         LineEnded?.Invoke();
@@ -97,14 +122,86 @@ public class NPCNarrationController : MonoBehaviour
             narratorAudioSource.Play();
             waitSeconds = clip.length;
         }
+        yield return RevealAndHold(subtitle, waitSeconds);
+    }
 
-        BeginLine(subtitle, waitSeconds);
-        yield return new WaitForSeconds(waitSeconds);
+    /// Type the line out character-by-character (with per-few-chars talking blips),
+    /// then hold the finished line for the remaining dwell time, then end it. The HUD
+    /// dialogue bar mirrors the reveal via LineStarted + the shared TypeCps().
+    private IEnumerator RevealAndHold(string subtitle, float waitSeconds)
+    {
+        if (subtitleText != null)
+        {
+            subtitleText.text = subtitle;
+            subtitleText.maxVisibleCharacters = typewriter ? 0 : int.MaxValue;
+            subtitleText.ForceMeshUpdate();
+        }
+        if (panelRoot != null) panelRoot.SetActive(true);
+        if (skipButton != null) skipButton.SetActive(true);
+        IsSpeaking = true;
+        VisibleCount = typewriter ? 0 : int.MaxValue;
+        LineStarted?.Invoke(subtitle, waitSeconds);
+
+        int total = subtitleText != null ? subtitleText.textInfo.characterCount
+                                          : (subtitle != null ? subtitle.Length : 0);
+        float revealTime = 0f;
+        if (typewriter && total > 0)
+        {
+            IsRevealing = true; _skipReveal = false;
+            float cps = TypeCps();
+            float perChar = 1f / cps;
+            int sinceBlip = 0, shown = 0;
+            while (shown < total && IsSpeaking && !_skipReveal)   // skip fills instantly
+            {
+                shown++;
+                if (subtitleText != null) subtitleText.maxVisibleCharacters = shown;
+                VisibleCount = shown;
+                if (!char.IsWhiteSpace(CharAt(shown - 1)) && ++sinceBlip >= Mathf.Max(1, blipEveryChars))
+                { sinceBlip = 0; PlayBlip(); }
+                yield return new WaitForSeconds(perChar);
+            }
+            if (subtitleText != null) subtitleText.maxVisibleCharacters = total;
+            VisibleCount = total;
+            IsRevealing = false; _skipReveal = false;
+            revealTime = total / cps;
+        }
+
+        yield return new WaitForSeconds(Mathf.Max(0.6f, waitSeconds - revealTime));
         EndLine();
     }
 
+    private char CharAt(int i)
+    {
+        if (subtitleText != null && subtitleText.textInfo != null
+            && i >= 0 && i < subtitleText.textInfo.characterCount)
+            return subtitleText.textInfo.characterInfo[i].character;
+        return 'x';
+    }
+
+    private void PlayBlip()
+    {
+        if (string.IsNullOrEmpty(voiceBlipKey) || AudioService.Instance == null) return;
+        var e = AudioService.Instance.EntryOf(voiceBlipKey);
+        if (e == null || e.clip == null) return;
+        if (_blip == null)
+        {
+            var go = new GameObject("BlipSource");
+            go.transform.SetParent(transform, false);
+            _blip = go.AddComponent<AudioSource>();
+            _blip.playOnAwake = false; _blip.spatialBlend = 0f;   // 2D — reads with the HUD line
+        }
+        _blip.pitch = AudioService.JitteredPitch(0.12f, UnityEngine.Random.value);
+        _blip.PlayOneShot(e.clip, Mathf.Clamp01(e.volume) * blipVolume);
+    }
+
+    /// Skip button / fast-forward: the FIRST press completes the current typewriter
+    /// reveal instantly (fills the line); a SECOND press (line already fully shown)
+    /// ends/advances it. So fast readers aren't forced to wait, but one tap never
+    /// skips text they haven't seen.
     public void SkipNarration()
     {
+        if (IsRevealing) { _skipReveal = true; return; }   // first tap → fill the line
+
         if (narrationRoutine != null)
             StopCoroutine(narrationRoutine);
 
@@ -132,11 +229,9 @@ public class NPCNarrationController : MonoBehaviour
                 waitSeconds = line.voiceClip.length;
             }
 
-            BeginLine(line.subtitle, waitSeconds);
-            yield return new WaitForSeconds(waitSeconds);
+            yield return RevealAndHold(line.subtitle, waitSeconds);
         }
 
-        EndLine();
         onNarrationFinished?.Invoke();
     }
 }

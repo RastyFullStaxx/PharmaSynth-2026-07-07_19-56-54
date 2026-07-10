@@ -66,11 +66,25 @@ public class HudDialogueBar : MonoBehaviour
     public void HandleLineStarted(string line, float seconds)
     {
         if (_fade != null) { StopCoroutine(_fade); _fade = null; }
-        if (lineText != null) lineText.text = line;
+        bool typing = narration != null && narration.Typewriter;
+        if (lineText != null)
+        {
+            lineText.text = line;
+            lineText.maxVisibleCharacters = typing ? 0 : int.MaxValue;
+        }
         if (speakerText != null && string.IsNullOrEmpty(speakerText.text)) speakerText.text = "Pharmee";
         var g = Group();
         if (g != null) g.alpha = 1f;
         if (barRoot != null) barRoot.SetActive(true);
+    }
+
+    // Mirror the bubble's reveal count each frame → the HUD line types in lockstep
+    // with it (and a skip fills both at once), with no second timer to drift.
+    private void Update()
+    {
+        if (narration == null || lineText == null) return;
+        if (narration.IsSpeaking && narration.Typewriter)
+            lineText.maxVisibleCharacters = narration.VisibleCount;
     }
 
     public void HandleLineEnded()

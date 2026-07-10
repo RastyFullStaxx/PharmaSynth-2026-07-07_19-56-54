@@ -1,0 +1,15 @@
+{
+    "asset": "8dbe9656aaa005b4cb5fe9aedabcf1a5",
+    "fileName": "019f4b6a-2d04-7a1c-ab35-dc3ff573139f.wav",
+    "prompt": "A very short, low, neutral speech blip — a single soft muted electronic \"bop\", calm and serious, about a tenth of a second, dry, no reverb, no music. Like a stern man's voice reduced to a single terse tone.",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 0.30000001192092898,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}
