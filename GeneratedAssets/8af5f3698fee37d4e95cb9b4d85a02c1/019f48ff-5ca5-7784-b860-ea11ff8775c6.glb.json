@@ -1,0 +1,23 @@
+{
+    "asset": "8af5f3698fee37d4e95cb9b4d85a02c1",
+    "fileName": "019f48ff-5ca5-7784-b860-ea11ff8775c6.glb",
+    "prompt": "Full-body character reference of a young adult, standing in a T-pose with both arms straight out horizontally to the sides, palms facing forward, feet shoulder-width apart. Wearing a plain light t-shirt, blue jeans, and white sneakers. Neutral relaxed face, looking straight at the camera. Front view, entire body from head to feet visible and centered. Even studio lighting, plain flat light-gray background, no shadows, no props. Clean, symmetrical, game-character reference sheet style.",
+    "negativePrompt": "",
+    "model": "model3d-tripo-p1",
+    "modelName": "Tripo P1",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "promptImageReferenceGuid": "9edd390f52f57064eaac90866be19cf1",
+    "modelReferenceGuid": "",
+    "multiviewFrontGuid": "",
+    "multiviewBackGuid": "",
+    "multiviewLeftGuid": "",
+    "multiviewRightGuid": "",
+    "multiviewTopGuid": "",
+    "multiviewBottomGuid": "",
+    "multiviewLeftFrontGuid": "",
+    "multiviewRightFrontGuid": "",
+    "faceLimit": -1
+}
