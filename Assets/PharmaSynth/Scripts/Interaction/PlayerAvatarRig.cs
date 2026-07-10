@@ -27,6 +27,8 @@ public class PlayerAvatarRig : MonoBehaviour
 
     private float _yaw;
     private bool _yawInit;
+    private Quaternion _headNaturalLocal;   // head bone's authored pose relative to the body
+    private bool _headNaturalInit;
 
     public void Bind(Transform h, Transform l, Transform r,
                      Transform headT, Transform lHandT, Transform rHandT, Transform lElbow, Transform rElbow)
@@ -55,7 +57,21 @@ public class PlayerAvatarRig : MonoBehaviour
         transform.rotation = Quaternion.Euler(0f, _yaw, 0f);
 
         // Feed the IK targets from the live HMD + controllers.
-        if (headTarget != null) headTarget.SetPositionAndRotation(h.position, h.rotation);
+        // The head bone's axis convention is NOT the HMD's (Tripo bones aim +Y along
+        // the bone) — driving it with the raw HMD rotation twisted the head 180°
+        // (user 2026-07-10: "in the mirror I am facing at the back"). Instead: keep
+        // the bone's authored pose and apply only the HMD's DELTA from body-forward.
+        var bodyRot = Quaternion.Euler(0f, _yaw, 0f);
+        if (headTarget != null)
+        {
+            if (!_headNaturalInit)
+            {
+                _headNaturalLocal = Quaternion.Inverse(bodyRot) * headTarget.rotation;
+                _headNaturalInit = true;
+            }
+            Quaternion hmdDelta = h.rotation * Quaternion.Inverse(bodyRot);
+            headTarget.SetPositionAndRotation(h.position, hmdDelta * bodyRot * _headNaturalLocal);
+        }
         if (leftController != null && leftHandTarget != null)
             leftHandTarget.SetPositionAndRotation(leftController.position, leftController.rotation);
         if (rightController != null && rightHandTarget != null)

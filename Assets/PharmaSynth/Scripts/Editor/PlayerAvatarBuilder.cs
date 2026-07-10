@@ -146,7 +146,10 @@ public static class PlayerAvatarBuilder
         var ik = go.AddComponent<TwoBoneIKConstraint>();
         var d = ik.data;
         d.root = root; d.mid = mid; d.tip = tip; d.target = target; d.hint = hint;
-        d.targetPositionWeight = 1f; d.targetRotationWeight = 1f; d.hintWeight = 1f;
+        // Position-only: the controller's rotation convention differs from the hand
+        // bone's — driving wrist rotation raw twisted the hands backwards (user
+        // 2026-07-10). Arms reach the controllers; wrists keep their natural pose.
+        d.targetPositionWeight = 1f; d.targetRotationWeight = 0f; d.hintWeight = 1f;
         ik.data = d;
     }
 

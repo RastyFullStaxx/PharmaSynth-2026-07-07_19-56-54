@@ -45,7 +45,7 @@ public static class SpawnVfxBuilder
     static void ConfigureSystem(ParticleSystem ps, Material mat)
     {
         var main = ps.main;
-        main.duration = 1.2f;
+        main.duration = 2.0f;                          // covers all three waves
         main.loop = false;
         main.playOnAwake = false;
         main.startLifetime = new ParticleSystem.MinMaxCurve(1.0f, 1.7f);
@@ -58,7 +58,13 @@ public static class SpawnVfxBuilder
 
         var em = ps.emission;
         em.rateOverTime = 0f;
-        em.SetBursts(new[] { new ParticleSystem.Burst(0f, (short)90) });
+        // THREE waves (user 2026-07-10: "three set waves so they are more noticeable")
+        em.SetBursts(new[]
+        {
+            new ParticleSystem.Burst(0f, (short)90),
+            new ParticleSystem.Burst(0.4f, (short)90),
+            new ParticleSystem.Burst(0.8f, (short)90),
+        });
 
         var sh = ps.shape;
         sh.enabled = true;
