@@ -51,6 +51,11 @@ public static class PlayerAvatarBuilder
         NormalizeHeight(inst, TargetHeight);
         SetLayerRecursive(inst, layer);
 
+        // Tripo pivots at the model's CENTER — lift the root so the feet sit on the
+        // rig's floor, and remember the lift for the runtime driver.
+        float footOffset = FootOffset(inst);
+        inst.transform.localPosition = new Vector3(0f, footOffset, 0f);
+
         // Bones (Tripo naming, tolerant of variants).
         var lUp = FindBone(inst.transform, "l_upperarm", "leftupperarm", "upperarm_l", "upperarm.l", "leftarm");
         var lFo = FindBone(inst.transform, "l_forearm", "leftforearm", "forearm_l", "forearm.l", "leftlowerarm");
@@ -113,6 +118,8 @@ public static class PlayerAvatarBuilder
         var lCtrl = FindDeep(xrOrigin.transform, "Left Controller");
         var rCtrl = FindDeep(xrOrigin.transform, "Right Controller");
         driver.Bind(cam, lCtrl, rCtrl, headT, lHandT, rHandT, lElbow, rElbow);
+        driver.SetFootOffset(footOffset);
+        Debug.Log("[PlayerAvatar] footOffset=" + footOffset.ToString("F3"));
 
         // Mirror-only: the main camera stops rendering the PlayerAvatar layer.
         if (cam != null)
@@ -186,6 +193,16 @@ public static class PlayerAvatarBuilder
             if (string.IsNullOrEmpty(p.stringValue)) { p.stringValue = name; tm.ApplyModifiedProperties(); return i; }
         }
         return -1;
+    }
+
+    /// Distance from the root pivot down to the lowest renderer point (the feet).
+    static float FootOffset(GameObject go)
+    {
+        var rs = go.GetComponentsInChildren<Renderer>();
+        if (rs.Length == 0) return 0f;
+        Bounds b = rs[0].bounds;
+        foreach (var r in rs) b.Encapsulate(r.bounds);
+        return go.transform.position.y - b.min.y;
     }
 
     static void NormalizeHeight(GameObject go, float target)

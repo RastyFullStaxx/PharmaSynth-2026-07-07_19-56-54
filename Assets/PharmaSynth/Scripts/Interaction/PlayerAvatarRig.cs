@@ -36,6 +36,10 @@ public class PlayerAvatarRig : MonoBehaviour
         leftElbowHint = lElbow; rightElbowHint = rElbow;
     }
 
+    /// Root-above-feet distance — Tripo models pivot at their CENTER, so the builder
+    /// measures (root.y − bounds.min.y) and passes it here to keep the feet on the floor.
+    public void SetFootOffset(float offset) => footOffsetY = offset;
+
     private void LateUpdate()
     {
         var h = head != null ? head : (Camera.main != null ? Camera.main.transform : null);

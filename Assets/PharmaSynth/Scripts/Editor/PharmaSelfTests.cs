@@ -935,10 +935,57 @@ public static class PharmaSelfTests
         A("avatar: foot keeps XZ", Near(foot.x, 2f) && Near(foot.z, -3f));
         A("avatar: foot sits on floor+offset", Near(foot.y, 0.27f));
 
+        // Per-piece PPE (user 2026-07-10): all three required; missing-summary text.
+        var ppeSet = new PPESetModel();
+        A("ppe: nothing worn at start", !ppeSet.AllWorn && ppeSet.WornCount == 0);
+        A("ppe: missing lists all three", ppeSet.MissingSummary() == "lab coat, goggles and gloves");
+        A("ppe: don returns newly-worn", ppeSet.Don(PPEPiece.Coat) && !ppeSet.Don(PPEPiece.Coat));
+        A("ppe: coat alone is not enough", !ppeSet.AllWorn);
+        A("ppe: missing pair reads naturally", ppeSet.MissingSummary() == "goggles and gloves");
+        ppeSet.Don(PPEPiece.Goggles);
+        A("ppe: one missing reads singly", ppeSet.MissingSummary() == "gloves");
+        ppeSet.Don(PPEPiece.Gloves);
+        A("ppe: all three = fully dressed", ppeSet.AllWorn && ppeSet.MissingSummary() == "");
+        A("ppe: clear strips everything", ppeSet.Clear() && !ppeSet.AllWorn && !ppeSet.Clear());
+
         // Pharmee flight lean: proportional to speed, clamped, zero at rest.
         A("pharmee: lean scales with speed", Near(PharmeeAttitude.LeanFor(0.5f, 22f, 14f), 11f));
         A("pharmee: lean clamped", Near(PharmeeAttitude.LeanFor(3f, 22f, 14f), 14f));
         A("pharmee: no lean at rest", Near(PharmeeAttitude.LeanFor(0f, 22f, 14f), 0f));
+
+        // Station VFX (user 2026-07-10): verb → effect style, edit-mode-safe toggling.
+        A("vfx: heat steams", StationVfx.StyleFor(StationSim.Heat) == "steam");
+        A("vfx: crystallise frosts", StationVfx.StyleFor(StationSim.Crystallise) == "frost");
+        A("vfx: filter drips", StationVfx.StyleFor(StationSim.Filter) == "drip");
+        A("vfx: collect bubbles", StationVfx.StyleFor(StationSim.Collect) == "bubbles");
+        A("vfx: none is empty", StationVfx.StyleFor(StationSim.None) == "");
+
+        // Proctor roaming (user 2026-07-10): idle → walk out → observe → walk home.
+        var roam = new ProctorRoamModel(3, idleMin: 1f, idleMax: 1f, observeSeconds: 2f, seed: 7);
+        A("roam: starts at home", roam.Current == ProctorRoamModel.Phase.AtHome && !roam.IsWalking);
+        roam.Tick(1.5f, true, true);                                     // idle expires
+        A("roam: heads out to point 0", roam.Current == ProctorRoamModel.Phase.WalkingOut && roam.TargetIndex == 0 && roam.IsWalking);
+        roam.Tick(0.1f, true, false);                                    // still walking
+        A("roam: keeps walking until arrival", roam.Current == ProctorRoamModel.Phase.WalkingOut);
+        roam.Tick(0.1f, true, true);                                     // arrived
+        A("roam: observes on arrival", roam.Current == ProctorRoamModel.Phase.Observing);
+        roam.Tick(2.5f, true, true);                                     // observation done
+        A("roam: walks home after observing", roam.Current == ProctorRoamModel.Phase.WalkingHome);
+        roam.Tick(0.1f, true, true);
+        A("roam: back home", roam.Current == ProctorRoamModel.Phase.AtHome);
+        roam.Tick(1.5f, true, true);
+        A("roam: round-robins to point 1", roam.TargetIndex == 1);
+        roam.Tick(0.1f, false, false);                                   // quiz begins mid-walk
+        A("roam: quiz forces him home", roam.Current == ProctorRoamModel.Phase.WalkingHome);
+        var stay = new ProctorRoamModel(3, 1f, 1f, 2f, 7);
+        stay.Tick(10f, false, true);
+        A("roam: never leaves during quiz", stay.Current == ProctorRoamModel.Phase.AtHome);
+
+        // Pharmee gate moods (user 2026-07-10): happy default, warning on trouble.
+        A("mood: friendly at the door", PharmeeMood.ExpressionForGate(GateState.ModeChoice) == PharmeeFaceExpression.Happy);
+        A("mood: warns on supply trouble", PharmeeMood.ExpressionForGate(GateState.SupplyPrompt) == PharmeeFaceExpression.Warning);
+        A("mood: celebrates the debrief", PharmeeMood.ExpressionForGate(GateState.Debrief) == PharmeeFaceExpression.Happy);
+        A("mood: neutral while picking", PharmeeMood.ExpressionForGate(GateState.EpisodePick) == PharmeeFaceExpression.Neutral);
 
         // Sim-loop audio: verb → SoundBank key mapping, and safe without clips.
         A("sfx: heat loops bubble", SimLoopAudio.KeyFor(StationSim.Heat) == "bubble");

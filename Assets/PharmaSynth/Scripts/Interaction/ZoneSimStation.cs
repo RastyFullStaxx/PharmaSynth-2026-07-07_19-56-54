@@ -29,9 +29,13 @@ public class ZoneSimStation : MonoBehaviour
 
     private bool _subscribed;
     private SimLoopAudio _loop;
+    private StationVfx _vfx;
 
     /// Optional looping apparatus audio, driven by occupancy (set by the builder).
     public void SetLoopAudio(SimLoopAudio loop) => _loop = loop;
+
+    /// Optional particle effect (steam/frost/drip/bubbles), driven like the audio loop.
+    public void SetVfx(StationVfx vfx) => _vfx = vfx;
 
     /// Configure at build time. Registers the auto-check condition immediately (if a
     /// graph exists) and re-registers on every ExperimentStarted (Retry-safe).
@@ -84,6 +88,7 @@ public class ZoneSimStation : MonoBehaviour
         if (_runner == null || !_runner.IsRunning)
         {
             if (_loop != null) _loop.SetRunning(false);
+            if (_vfx != null) _vfx.SetRunning(false);
             return;
         }
         Drive(Time.deltaTime, _sensor != null && _sensor.IsOccupied);
@@ -93,6 +98,7 @@ public class ZoneSimStation : MonoBehaviour
     public void Drive(float dt, bool occupied)
     {
         if (_loop != null) _loop.SetRunning(occupied);
+        if (_vfx != null) _vfx.SetRunning(occupied);
         switch (_kind)
         {
             case StationSim.Heat:

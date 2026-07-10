@@ -15,7 +15,7 @@ public class PharmeeGatekeeper : MonoBehaviour
         [TextArea] public string campaignExplain = "The Campaign takes you through the class periods. Pass every experiment with 90% or better to unlock the next. Ready to pick your episode?";
         [TextArea] public string episodePrompt = "Which episode will it be?";
         [TextArea] public string lockedEpisode = "That episode is still locked — clear the earlier ones first!";
-        [TextArea] public string coatPrompt = "Safety first! Put on your lab coat at the locker before we begin.";
+        [TextArea] public string coatPrompt = "Safety first! Gear up at the locker — lab coat, goggles, AND gloves — before we begin.";
         [TextArea] public string readyPrompt = "All geared up! Are you prepared to begin?";
         [TextArea] public string thresholdWarn = "The period will start as soon as you walk in. Step through when you're ready!";
         [TextArea] public string congrats = "Congratulations! You handled that experiment brilliantly. Let's head back outside.";
@@ -31,6 +31,7 @@ public class PharmeeGatekeeper : MonoBehaviour
     [SerializeField] private ExperimentRunner runner;
     [SerializeField] private GameObject doorBlocker;      // legacy holo barrier (optional)
     [SerializeField] private DoorOpener doorOpener;       // the real hinged lab door
+    [SerializeField] private MonoBehaviour faceBehaviour; // optional IPharmeeFace (expressions)
 
     [Header("Return loop")]
     [SerializeField] private Transform frontDoorSpawn;    // where the player lands after passing
@@ -115,7 +116,10 @@ public class PharmeeGatekeeper : MonoBehaviour
 
     public void OnPPEWorn()
     {
-        if (Model.State == GateState.CoatPrompt) Model.Fire(GateEvent.Coated);
+        if (Model.State != GateState.CoatPrompt) return;
+        if (ppe == null || ppe.PPEWorn) { Model.Fire(GateEvent.Coated); return; }
+        // Partially dressed — tell the player what's still missing (per-piece PPE).
+        Say("Almost there — you still need your " + ppe.MissingSummary() + ".");
     }
 
     /// Door panel option pressed — meaning depends on the current state.
@@ -176,6 +180,8 @@ public class PharmeeGatekeeper : MonoBehaviour
     private void OnTransition(GateState from, GateState to)
     {
         ApplyDoor(to);
+        // Face mood tracks the conversation (PharmeeMood resets to happy after lines).
+        (faceBehaviour as IPharmeeFace)?.SetExpression(PharmeeMood.ExpressionForGate(to));
         switch (to)
         {
             case GateState.Blocked:
@@ -205,7 +211,7 @@ public class PharmeeGatekeeper : MonoBehaviour
             case GateState.CoatPrompt:
                 if (ppe != null && ppe.PPEWorn) { Model.Fire(GateEvent.Coated); return; }
                 Say(lines.coatPrompt);
-                panel?.Show("Wear your lab coat from the locker beside you.", new List<string> { "Back" });
+                panel?.Show("Wear the lab coat, goggles and gloves from the locker beside you.", new List<string> { "Back" });
                 break;
 
             case GateState.ReadyPrompt:

@@ -114,6 +114,9 @@ public class ExperimentSceneBuilder : MonoBehaviour
             var loop = pad.AddComponent<SimLoopAudio>();
             loop.Bind(SimLoopAudio.KeyFor(s.sim));
             rig.SetLoopAudio(loop);
+            var vfx = pad.AddComponent<StationVfx>();   // steam/frost/drip/bubbles while occupied
+            vfx.Bind(s.sim);
+            rig.SetVfx(vfx);
 
             // Hot-surface hazard (§1): touching a HEAT station once it is
             // actually hot records a handling mistake. Player-only (props
