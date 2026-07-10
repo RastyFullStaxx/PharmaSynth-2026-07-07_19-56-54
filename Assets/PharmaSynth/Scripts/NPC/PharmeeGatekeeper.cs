@@ -32,6 +32,7 @@ public class PharmeeGatekeeper : MonoBehaviour
     [SerializeField] private GameObject doorBlocker;      // legacy holo barrier (optional)
     [SerializeField] private DoorOpener doorOpener;       // the real hinged lab door
     [SerializeField] private MonoBehaviour faceBehaviour; // optional IPharmeeFace (expressions)
+    [SerializeField] private LabTourGuide tourGuide;      // location-triggered lab tour (optional)
 
     [Header("Return loop")]
     [SerializeField] private Transform frontDoorSpawn;    // where the player lands after passing
@@ -194,6 +195,7 @@ public class PharmeeGatekeeper : MonoBehaviour
 
     private void OnTransition(GateState from, GateState to)
     {
+        if (from == GateState.LabTour && to != GateState.LabTour) tourGuide?.End();
         ApplyDoor(to);
         // Face mood tracks the conversation (PharmeeMood resets to happy after lines).
         (faceBehaviour as IPharmeeFace)?.SetExpression(PharmeeMood.ExpressionForGate(to));
@@ -211,7 +213,9 @@ public class PharmeeGatekeeper : MonoBehaviour
             case GateState.LabTour:
                 panel?.Hide();
                 launcher?.Launch(GameFlow.SelectedModuleId, LaunchMode.StageOnly);
-                StartLabTour();          // guided narrated tour (storyboard), poke to end
+                // Location-triggered tour if a guide is wired + its landmarks resolve;
+                // otherwise the timed narrated sequence (storyboard). Poke to end either.
+                if (tourGuide == null || tourGuide.Begin(s => Say(s)) == 0) StartLabTour();
                 break;
 
             case GateState.CampaignExplain:

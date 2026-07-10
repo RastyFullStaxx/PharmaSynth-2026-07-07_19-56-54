@@ -38045,6 +38045,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4467159820709882772, guid: 70b989489405b6f4da587631e978a478, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1688781736}
+    - targetCorrespondingSourceObject: {fileID: 4467159820709882772, guid: 70b989489405b6f4da587631e978a478, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1688781737}
     - targetCorrespondingSourceObject: {fileID: 2404794717661024943, guid: 70b989489405b6f4da587631e978a478, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1041731699}
@@ -43673,6 +43676,7 @@ MonoBehaviour:
   doorBlocker: {fileID: 0}
   doorOpener: {fileID: 898115341}
   faceBehaviour: {fileID: 1579804415}
+  tourGuide: {fileID: 1688781737}
   frontDoorSpawn: {fileID: 2108314338}
   playerRig: {fileID: 1464837115}
   cameraOverride: {fileID: 0}
@@ -43782,6 +43786,38 @@ MonoBehaviour:
   player: {fileID: 900974259}
   personalSpace: 0.95
   maxPush: 0.65
+--- !u!114 &1688781737
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1579804411}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42642937fbd237f48a1b4931b9e13c83, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LabTourGuide
+  player: {fileID: 0}
+  speakCooldown: 3.5
+  stops:
+  - landmarkName: LabTablet
+    beat: "This is your tablet \u2014 grab it anytime to see the full step-by-step
+      procedure. The progress bar and timer up top track your pace."
+    radius: 1.8
+  - landmarkName: EquipmentShelf
+    beat: "The equipment cabinet \u2014 open it and pick the apparatus your tablet
+      calls for. Flick your wrist anytime for the live checklist."
+    radius: 2
+  - landmarkName: ReagentShelf
+    beat: "The reagent shelf holds your chemicals \u2014 take only what each step
+      needs. And Settings up top lets you tune audio, text size and comfort whenever
+      you like."
+    radius: 2
+  introBeat: "Welcome! Let's take a quick tour. The bench in the middle is your main
+    workspace \u2014 walk around and I'll point out the rest as you reach them."
+  closerBeat: That's the tour! Follow the glowing markers during a run, and poke
+    me whenever you're ready to take on a graded campaign.
 --- !u!1 &1689576486
 GameObject:
   m_ObjectHideFlags: 0

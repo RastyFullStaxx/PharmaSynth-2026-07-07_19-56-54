@@ -1601,6 +1601,17 @@ public static class PharmaSelfTests
             PharmeeLines.TourBeats.Length >= 6
             && PharmeeLines.TourBeats[PharmeeLines.TourBeats.Length - 1].ToLower().Contains("campaign"));
 
+        // Location-triggered tour (storyboard 2026-07-10): narrate the nearest unvisited landmark.
+        {
+            var pos = new[] { new Vector3(10, 0, 0), new Vector3(1, 0, 0), new Vector3(0, 0, 1) };
+            var vis = new[] { false, false, false };
+            var rad = new[] { 1.5f, 1.5f, 1.5f };
+            A("tour: fires the landmark you walk up to", LabTourGuide.FirstUnvisitedInRange(Vector3.zero, pos, vis, rad) == 1);
+            vis[1] = true;
+            A("tour: skips a visited landmark, finds the next", LabTourGuide.FirstUnvisitedInRange(Vector3.zero, pos, vis, rad) == 2);
+            A("tour: nothing in range → -1", LabTourGuide.FirstUnvisitedInRange(new Vector3(50, 0, 50), pos, vis, rad) == -1);
+        }
+
         // Give way (user 2026-07-10): Pharmee steps aside when the player bumps him.
         // Far away → no step.
         A("giveway: no step outside personal space",
