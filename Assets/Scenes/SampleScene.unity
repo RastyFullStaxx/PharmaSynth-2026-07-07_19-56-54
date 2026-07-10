@@ -6865,7 +6865,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: -23}
-  m_SizeDelta: {x: -56, y: -78}
+  m_SizeDelta: {x: -56, y: -84}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &243100596 stripped
 GameObject:
@@ -14285,7 +14285,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: -0.000000004855603}
-  m_SizeDelta: {x: 760, y: 220}
+  m_SizeDelta: {x: 900, y: 230}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &696505941
 MonoBehaviour:
@@ -17040,7 +17040,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -52, y: -26}
+  m_AnchoredPosition: {x: -100, y: -34}
   m_SizeDelta: {x: 150, y: 54}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &797896109
@@ -21875,7 +21875,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294960793
+    rgba: 4294957363
   m_fontColor: {r: 0.2, g: 0.85, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -21893,7 +21893,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 30
+  m_fontSize: 37.55
   m_fontSizeBase: 30
   m_fontWeight: 400
   m_enableAutoSizing: 1
