@@ -119,7 +119,7 @@ public static class LabNpcPolishBuilder
         foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include))
         {
             string n = t.name.ToLower();
-            if ((n.Contains("aircon") || n.Contains("air_cond") || n.Contains("airconditioner")
+            if ((n == "ac" || n.Contains("aircon") || n.Contains("air_cond") || n.Contains("airconditioner")
                  || n.Contains("ac_unit") || n.Contains("hvac") || n.Contains("vent"))
                 && t.GetComponentInChildren<Renderer>() != null)
                 humHosts.Add(t.gameObject);
