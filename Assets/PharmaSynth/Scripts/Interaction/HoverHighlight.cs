@@ -77,9 +77,26 @@ public class HoverHighlight : MonoBehaviour
         _cached = true;
     }
 
-    private void OnHoverEnter(HoverEnterEventArgs _) => SetHighlight(true);
+    // Global throttle so sweeping a ray across a shelf of items doesn't machine-gun
+    // the hover blip — at most one hover tick per this many seconds, lab-wide.
+    private const float HoverSfxInterval = 0.09f;
+    private static float _lastHoverSfx = -1f;
+
+    private void OnHoverEnter(HoverEnterEventArgs _)
+    {
+        SetHighlight(true);
+        if (Application.isPlaying && Time.unscaledTime - _lastHoverSfx >= HoverSfxInterval)
+        {
+            _lastHoverSfx = Time.unscaledTime;
+            AudioService.TryPlay("hover");
+        }
+    }
     private void OnHoverExit(HoverExitEventArgs _) => SetHighlight(false);
-    private void OnSelect(SelectEnterEventArgs _) => SetHighlight(false);   // grabbed → drop the glow
+    private void OnSelect(SelectEnterEventArgs _)
+    {
+        SetHighlight(false);                       // grabbed → drop the glow
+        if (Application.isPlaying) AudioService.TryPlay("grab");   // universal grab/hold cue
+    }
 
     /// Pure scale rule (self-tested): grow by factor while lit, back to base otherwise.
     public static Vector3 HighlightScale(Vector3 baseScale, bool on, float factor)

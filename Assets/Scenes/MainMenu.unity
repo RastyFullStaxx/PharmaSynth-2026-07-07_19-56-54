@@ -561,6 +561,7 @@ GameObject:
   - component: {fileID: 30940270}
   - component: {fileID: 30940269}
   - component: {fileID: 30940272}
+  - component: {fileID: 30940273}
   m_Layer: 0
   m_Name: QuitButton
   m_TagString: Untagged
@@ -697,6 +698,20 @@ MonoBehaviour:
   m_EffectColor: {r: 1, g: 0.45, b: 0.45, a: 0.9}
   m_EffectDistance: {x: 2.5, y: 2.5}
   m_UseGraphicAlpha: 1
+--- !u!114 &30940273
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 30940267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98d448f0fa44a974aab2bbf31a7da9c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UiButtonSounds
+  hoverKey: hover
+  clickKey: ui-click
 --- !u!1 &35034559
 GameObject:
   m_ObjectHideFlags: 0
@@ -821,6 +836,7 @@ GameObject:
   - component: {fileID: 45221388}
   - component: {fileID: 45221387}
   - component: {fileID: 45221389}
+  - component: {fileID: 45221390}
   m_Layer: 0
   m_Name: Row2
   m_TagString: Untagged
@@ -930,6 +946,20 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &45221390
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 45221385}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98d448f0fa44a974aab2bbf31a7da9c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UiButtonSounds
+  hoverKey: hover
+  clickKey: ui-click
 --- !u!1 &46084738
 GameObject:
   m_ObjectHideFlags: 0
@@ -1080,6 +1110,7 @@ GameObject:
   - component: {fileID: 64872406}
   - component: {fileID: 64872405}
   - component: {fileID: 64872408}
+  - component: {fileID: 64872409}
   m_Layer: 0
   m_Name: SettingsButton
   m_TagString: Untagged
@@ -1216,6 +1247,20 @@ MonoBehaviour:
   m_EffectColor: {r: 0.35, g: 0.85, b: 1, a: 1}
   m_EffectDistance: {x: 2.5, y: 2.5}
   m_UseGraphicAlpha: 1
+--- !u!114 &64872409
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 64872403}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98d448f0fa44a974aab2bbf31a7da9c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UiButtonSounds
+  hoverKey: hover
+  clickKey: ui-click
 --- !u!1 &68654708
 GameObject:
   m_ObjectHideFlags: 0
@@ -1409,6 +1454,7 @@ GameObject:
   - component: {fileID: 82332390}
   - component: {fileID: 82332389}
   - component: {fileID: 82332392}
+  - component: {fileID: 82332393}
   m_Layer: 0
   m_Name: ResultsButton
   m_TagString: Untagged
@@ -1545,6 +1591,20 @@ MonoBehaviour:
   m_EffectColor: {r: 0.35, g: 0.85, b: 1, a: 1}
   m_EffectDistance: {x: 2.5, y: 2.5}
   m_UseGraphicAlpha: 1
+--- !u!114 &82332393
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 82332387}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98d448f0fa44a974aab2bbf31a7da9c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UiButtonSounds
+  hoverKey: hover
+  clickKey: ui-click
 --- !u!1 &118896320
 GameObject:
   m_ObjectHideFlags: 0
@@ -1558,6 +1618,7 @@ GameObject:
   - component: {fileID: 118896323}
   - component: {fileID: 118896322}
   - component: {fileID: 118896325}
+  - component: {fileID: 118896326}
   m_Layer: 0
   m_Name: LaboratoryButton
   m_TagString: Untagged
@@ -1694,6 +1755,20 @@ MonoBehaviour:
   m_EffectColor: {r: 0.35, g: 0.85, b: 1, a: 1}
   m_EffectDistance: {x: 2.5, y: 2.5}
   m_UseGraphicAlpha: 1
+--- !u!114 &118896326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 118896320}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98d448f0fa44a974aab2bbf31a7da9c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UiButtonSounds
+  hoverKey: hover
+  clickKey: ui-click
 --- !u!1 &120868667
 GameObject:
   m_ObjectHideFlags: 0
@@ -2394,6 +2469,7 @@ GameObject:
   - component: {fileID: 179202019}
   - component: {fileID: 179202018}
   - component: {fileID: 179202020}
+  - component: {fileID: 179202021}
   m_Layer: 0
   m_Name: Row8
   m_TagString: Untagged
@@ -2503,6 +2579,20 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &179202021
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 179202016}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98d448f0fa44a974aab2bbf31a7da9c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UiButtonSounds
+  hoverKey: hover
+  clickKey: ui-click
 --- !u!1 &185588897
 GameObject:
   m_ObjectHideFlags: 0
@@ -2742,6 +2832,7 @@ GameObject:
   - component: {fileID: 197546210}
   - component: {fileID: 197546209}
   - component: {fileID: 197546211}
+  - component: {fileID: 197546212}
   m_Layer: 0
   m_Name: Row10
   m_TagString: Untagged
@@ -2851,6 +2942,20 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &197546212
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 197546207}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98d448f0fa44a974aab2bbf31a7da9c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UiButtonSounds
+  hoverKey: hover
+  clickKey: ui-click
 --- !u!1 &198732948
 GameObject:
   m_ObjectHideFlags: 0
@@ -4028,6 +4133,7 @@ GameObject:
   - component: {fileID: 318306244}
   - component: {fileID: 318306243}
   - component: {fileID: 318306247}
+  - component: {fileID: 318306248}
   m_Layer: 0
   m_Name: MenuCanvas
   m_TagString: Untagged
@@ -4145,6 +4251,22 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RaycastTriggerInteraction: 1
+--- !u!114 &318306248
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 318306242}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2f30265120f26c4085ad64dab64c27b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FaceCamera
+  yAxisOnly: 1
+  yawOffset: 0
+  faceTowardCamera: 0
+  preserveInitialTilt: 0
 --- !u!1 &321607128
 GameObject:
   m_ObjectHideFlags: 0
@@ -5279,6 +5401,7 @@ GameObject:
   - component: {fileID: 508158443}
   - component: {fileID: 508158442}
   - component: {fileID: 508158444}
+  - component: {fileID: 508158445}
   m_Layer: 0
   m_Name: Row4
   m_TagString: Untagged
@@ -5388,6 +5511,20 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &508158445
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 508158440}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98d448f0fa44a974aab2bbf31a7da9c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UiButtonSounds
+  hoverKey: hover
+  clickKey: ui-click
 --- !u!1 &528941676
 GameObject:
   m_ObjectHideFlags: 0
@@ -5608,6 +5745,7 @@ GameObject:
   - component: {fileID: 553247728}
   - component: {fileID: 553247727}
   - component: {fileID: 553247729}
+  - component: {fileID: 553247730}
   m_Layer: 0
   m_Name: Row5
   m_TagString: Untagged
@@ -5717,6 +5855,20 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &553247730
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 553247725}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98d448f0fa44a974aab2bbf31a7da9c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UiButtonSounds
+  hoverKey: hover
+  clickKey: ui-click
 --- !u!4 &555316168 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6981642495833523204, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
@@ -6355,6 +6507,7 @@ GameObject:
   - component: {fileID: 645486235}
   - component: {fileID: 645486234}
   - component: {fileID: 645486236}
+  - component: {fileID: 645486237}
   m_Layer: 0
   m_Name: Row1
   m_TagString: Untagged
@@ -6464,6 +6617,20 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &645486237
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 645486232}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98d448f0fa44a974aab2bbf31a7da9c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UiButtonSounds
+  hoverKey: hover
+  clickKey: ui-click
 --- !u!1 &648133286
 GameObject:
   m_ObjectHideFlags: 0
@@ -6897,6 +7064,7 @@ GameObject:
   - component: {fileID: 733110843}
   - component: {fileID: 733110842}
   - component: {fileID: 733110844}
+  - component: {fileID: 733110845}
   m_Layer: 0
   m_Name: Row6
   m_TagString: Untagged
@@ -7006,6 +7174,20 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &733110845
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 733110840}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98d448f0fa44a974aab2bbf31a7da9c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UiButtonSounds
+  hoverKey: hover
+  clickKey: ui-click
 --- !u!1 &741391564
 GameObject:
   m_ObjectHideFlags: 0
@@ -11031,6 +11213,7 @@ GameObject:
   - component: {fileID: 1187557188}
   - component: {fileID: 1187557187}
   - component: {fileID: 1187557189}
+  - component: {fileID: 1187557190}
   m_Layer: 0
   m_Name: Row9
   m_TagString: Untagged
@@ -11140,6 +11323,20 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1187557190
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1187557185}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98d448f0fa44a974aab2bbf31a7da9c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UiButtonSounds
+  hoverKey: hover
+  clickKey: ui-click
 --- !u!1 &1189892402
 GameObject:
   m_ObjectHideFlags: 0
@@ -11294,6 +11491,7 @@ GameObject:
   - component: {fileID: 1223238195}
   - component: {fileID: 1223238194}
   - component: {fileID: 1223238196}
+  - component: {fileID: 1223238197}
   m_Layer: 0
   m_Name: Row0
   m_TagString: Untagged
@@ -11403,6 +11601,20 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1223238197
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1223238192}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98d448f0fa44a974aab2bbf31a7da9c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UiButtonSounds
+  hoverKey: hover
+  clickKey: ui-click
 --- !u!1 &1224267373
 GameObject:
   m_ObjectHideFlags: 0
@@ -11416,6 +11628,7 @@ GameObject:
   - component: {fileID: 1224267376}
   - component: {fileID: 1224267375}
   - component: {fileID: 1224267378}
+  - component: {fileID: 1224267379}
   m_Layer: 0
   m_Name: ExportBtn
   m_TagString: Untagged
@@ -11552,6 +11765,20 @@ MonoBehaviour:
   m_EffectColor: {r: 0.35, g: 0.85, b: 1, a: 1}
   m_EffectDistance: {x: 2.5, y: 2.5}
   m_UseGraphicAlpha: 1
+--- !u!114 &1224267379
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1224267373}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98d448f0fa44a974aab2bbf31a7da9c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UiButtonSounds
+  hoverKey: hover
+  clickKey: ui-click
 --- !u!1 &1224884569
 GameObject:
   m_ObjectHideFlags: 0
@@ -11565,6 +11792,7 @@ GameObject:
   - component: {fileID: 1224884572}
   - component: {fileID: 1224884571}
   - component: {fileID: 1224884574}
+  - component: {fileID: 1224884575}
   m_Layer: 0
   m_Name: CloseBtn
   m_TagString: Untagged
@@ -11701,6 +11929,20 @@ MonoBehaviour:
   m_EffectColor: {r: 0.35, g: 0.85, b: 1, a: 1}
   m_EffectDistance: {x: 2.5, y: 2.5}
   m_UseGraphicAlpha: 1
+--- !u!114 &1224884575
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1224884569}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98d448f0fa44a974aab2bbf31a7da9c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UiButtonSounds
+  hoverKey: hover
+  clickKey: ui-click
 --- !u!4 &1248178698 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1670256625, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
@@ -13661,6 +13903,7 @@ GameObject:
   - component: {fileID: 1506137360}
   - component: {fileID: 1506137359}
   - component: {fileID: 1506137358}
+  - component: {fileID: 1506137363}
   m_Layer: 0
   m_Name: SettingsPanel
   m_TagString: Untagged
@@ -13788,6 +14031,22 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 1.5}
   m_SizeDelta: {x: 760, y: 620}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1506137363
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1506137357}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2f30265120f26c4085ad64dab64c27b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FaceCamera
+  yAxisOnly: 1
+  yawOffset: 0
+  faceTowardCamera: 0
+  preserveInitialTilt: 0
 --- !u!21 &1515621368
 Material:
   serializedVersion: 8
@@ -14811,6 +15070,7 @@ GameObject:
   - component: {fileID: 1573747780}
   - component: {fileID: 1573747779}
   - component: {fileID: 1573747781}
+  - component: {fileID: 1573747782}
   m_Layer: 0
   m_Name: Row7
   m_TagString: Untagged
@@ -14920,6 +15180,20 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1573747782
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1573747777}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98d448f0fa44a974aab2bbf31a7da9c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UiButtonSounds
+  hoverKey: hover
+  clickKey: ui-click
 --- !u!1 &1585214056
 GameObject:
   m_ObjectHideFlags: 0
@@ -15702,6 +15976,7 @@ GameObject:
   - component: {fileID: 1650664695}
   - component: {fileID: 1650664694}
   - component: {fileID: 1650664696}
+  - component: {fileID: 1650664697}
   m_Layer: 0
   m_Name: Row3
   m_TagString: Untagged
@@ -15811,6 +16086,20 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1650664697
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1650664692}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98d448f0fa44a974aab2bbf31a7da9c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UiButtonSounds
+  hoverKey: hover
+  clickKey: ui-click
 --- !u!1 &1663387942
 GameObject:
   m_ObjectHideFlags: 0
@@ -17382,7 +17671,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1857599496
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18038,6 +18327,7 @@ MonoBehaviour:
   voiceSource: {fileID: 1993296759}
   musicSource: {fileID: 1993296758}
   mixer: {fileID: 0}
+  sfxPitchJitter: 0.08
 --- !u!82 &1993296758
 AudioSource:
   m_ObjectHideFlags: 0
@@ -20303,7 +20593,7 @@ ParticleSystem:
           m_PostInfinity: 2
           m_RotationOrder: 4
       cycleCount: 1
-      repeatInterval: 0.0001
+      repeatInterval: 0.01
       probability: 1
     - serializedVersion: 2
       time: 0.4
@@ -20361,7 +20651,7 @@ ParticleSystem:
           m_PostInfinity: 2
           m_RotationOrder: 4
       cycleCount: 1
-      repeatInterval: 0.0001
+      repeatInterval: 0.01
       probability: 1
     - serializedVersion: 2
       time: 0.8
@@ -20419,7 +20709,7 @@ ParticleSystem:
           m_PostInfinity: 2
           m_RotationOrder: 4
       cycleCount: 1
-      repeatInterval: 0.0001
+      repeatInterval: 0.01
       probability: 1
   SizeModule:
     enabled: 1

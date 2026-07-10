@@ -66,6 +66,9 @@ public static class PharmaSelfTests
         LibrarySuite();
         ContentSuite();
         RosterDataSuite();
+        HoverInfoSuite();
+        GlyphSafeSuite();
+        MusicSpeakerSuite();
 
         string summary = $"PharmaSynth Self-Tests: {_total - _fail}/{_total} passed";
         if (_fail == 0) Debug.Log("<color=#4CD07D>" + summary + " — ALL GREEN</color>");
@@ -2065,6 +2068,70 @@ public static class PharmaSelfTests
         foreach (var t in g.Tasks)
             if (t.required && !g.IsComplete(t.taskId)) return false;
         return true;
+    }
+
+    // Hover-inspector knowledge base + panel animation (user 2026-07-10).
+    static void HoverInfoSuite()
+    {
+        A("info: equipment authored", LabInfoDatabase.EquipmentCount >= 25);
+        A("info: reagents authored", LabInfoDatabase.ReagentCount >= 30);
+
+        var beaker = LabInfoDatabase.Equipment("Prop_Beaker_100mL");
+        A("info: beaker resolves", beaker != null && beaker.Title == "Beaker" && beaker.Category == LabInfoCategory.Equipment);
+        var cyl = LabInfoDatabase.Equipment("GraduatedCylinder_50mL");
+        A("info: graduated cylinder resolves (specific before 'cylinder')", cyl != null && cyl.Title == "Graduated Cylinder");
+        var rack = LabInfoDatabase.Equipment("TestTubeRack_12Tubes");
+        A("info: test-tube RACK not plain test-tube", rack != null && rack.Title == "Test-Tube Rack");
+        A("info: unknown prop → no card", LabInfoDatabase.Equipment("Wall_Section_42") == null);
+
+        var naoh = LabInfoDatabase.Reagent("Sodium Hydroxide");
+        A("info: NaOH trivia present", naoh != null && naoh.Category == LabInfoCategory.Reagent && naoh.Body.Length > 20);
+        var unknownChem = LabInfoDatabase.Reagent("Unobtainium");
+        A("info: unknown reagent → generic card", unknownChem != null && unknownChem.Title == "Unobtainium");
+        A("info: empty reagent name safe", LabInfoDatabase.Reagent("") != null);
+
+        A("info: pharmee person card", LabInfoDatabase.Person(true).Title == "Pharmee");
+        A("info: jimenez person card", LabInfoDatabase.Person(false).Title.Contains("Jimenez"));
+
+        A("info: norm strips + lowercases", LabInfoDatabase.Norm("Beaker_100 mL") == "beaker100ml");
+
+        // Panel easing + accent mapping (pure).
+        A("panel: ease(0)=0", Near(HoverInfoPanel.Ease(0f), 0f));
+        A("panel: ease(1)=1", Near(HoverInfoPanel.Ease(1f), 1f));
+        A("panel: ease(0.5)=0.5", Near(HoverInfoPanel.Ease(0.5f), 0.5f));
+        A("panel: ease clamps", Near(HoverInfoPanel.Ease(2f), 1f) && Near(HoverInfoPanel.Ease(-1f), 0f));
+        A("panel: reagent accent amber", HoverInfoPanel.AccentFor(LabInfoCategory.Reagent).r > 0.9f);
+        A("panel: tags", HoverInfoPanel.Tag(LabInfoCategory.Equipment) == "EQUIPMENT" && HoverInfoPanel.Tag(LabInfoCategory.Person) == "LAB GUIDE");
+
+        // Placement must always sit IN FRONT of the struck surface (never occluded).
+        A("panel: close target → card in front", HoverInfoPanel.PlaceDistance(1.0f, 0.5f, 1.1f, 0.4f) <= 1.0f - 0.12f + 1e-4f);
+        A("panel: very close target floored", HoverInfoPanel.PlaceDistance(0.5f, 0.5f, 1.1f, 0.4f) <= 0.5f - 0.12f + 1e-4f);
+        A("panel: distant target stays readable-close", HoverInfoPanel.PlaceDistance(4f, 0.5f, 1.1f, 0.4f) <= 1.1f + 1e-4f);
+        A("panel: never negative", HoverInfoPanel.PlaceDistance(0.3f, 0.5f, 1.1f, 0.4f) >= 0.3f);
+    }
+
+    // Corner music speaker playlist advance (user 2026-07-10).
+    static void MusicSpeakerSuite()
+    {
+        A("music: single track stays", MusicSpeaker.NextIndex(0, 1, true, 0.9f) == 0);
+        A("music: sequential wraps", MusicSpeaker.NextIndex(4, 5, false, 0f) == 0);
+        A("music: sequential advances", MusicSpeaker.NextIndex(1, 5, false, 0f) == 2);
+        A("music: shuffle never repeats", MusicSpeaker.NextIndex(2, 5, true, 0.4f) != 2);   // 0.4*5=2 → bumped
+        int shuf = MusicSpeaker.NextIndex(0, 5, true, 0.99f);
+        A("music: shuffle in range", shuf >= 0 && shuf < 5);
+        A("music: empty safe", MusicSpeaker.NextIndex(0, 0, true, 0.5f) == 0);
+    }
+
+    // Font-safe glyph sanitiser for the lab pads / holo board (user 2026-07-10).
+    static void GlyphSafeSuite()
+    {
+        A("glyph: arrow → ->", GlyphSafe.Sanitize("purple→brown") == "purple->brown");
+        A("glyph: gas ↑ → (g)", GlyphSafe.Sanitize("CH4↑") == "CH4(g)");
+        A("glyph: delta → (heat)", GlyphSafe.Sanitize("NaOH →Δ CH4") == "NaOH ->(heat) CH4");
+        A("glyph: equilibrium ⇌", GlyphSafe.Sanitize("A⇌B") == "A<=>B");
+        A("glyph: box ▶ → »", GlyphSafe.Sanitize("▶ step") == "» step");
+        A("glyph: plain text untouched", GlyphSafe.Sanitize("Prepare 0.1N HCl (250 mL)") == "Prepare 0.1N HCl (250 mL)");
+        A("glyph: null/empty safe", GlyphSafe.Sanitize(null) == null && GlyphSafe.Sanitize("") == "");
     }
 }
 #endif

@@ -19,28 +19,20 @@ public class GrabPhysicsPolicy : MonoBehaviour
     public void Bind(Rigidbody rb, XRGrab grab)
     {
         if (_grab != null)
-        {
             _grab.selectExited.RemoveListener(OnSelectExited);
-            _grab.selectEntered.RemoveListener(OnSelectEntered);
-        }
         _rb = rb; _grab = grab;
         if (_grab != null)
-        {
             _grab.selectExited.AddListener(OnSelectExited);
-            _grab.selectEntered.AddListener(OnSelectEntered);
-        }
     }
 
     void OnDestroy()
     {
         if (_grab != null)
-        {
             _grab.selectExited.RemoveListener(OnSelectExited);
-            _grab.selectEntered.RemoveListener(OnSelectEntered);
-        }
     }
 
-    private void OnSelectEntered(SelectEnterEventArgs _) => AudioService.TryPlay("grab");
+    // Grab SFX is played centrally by HoverHighlight.OnSelect (on EVERY grabbable,
+    // not just physics props) so it fires exactly once — see HoverHighlight.
     private void OnSelectExited(SelectExitEventArgs _) => OnReleased();
 
     /// Make the item obey gravity from now on. Public so tests and non-XR

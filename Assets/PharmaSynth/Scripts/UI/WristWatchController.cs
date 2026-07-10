@@ -106,7 +106,7 @@ public class WristWatchController : MonoBehaviour
     {
         if (runner == null || runner.Graph == null) return "";
         string current = "—";
-        foreach (var t in runner.Graph.AvailableTasks()) { current = t.label; break; }
+        foreach (var t in runner.Graph.AvailableTasks()) { current = GlyphSafe.Sanitize(t.label); break; }
         return "Step: " + current
              + "\nProgress " + ExperimentHudController.FormatPercent(runner.Progress01)
              + "\nMastery " + Mathf.RoundToInt(runner.OverallMastery * 100f) + "%";

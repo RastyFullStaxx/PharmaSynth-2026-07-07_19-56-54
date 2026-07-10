@@ -35,7 +35,7 @@ public class TabletChecklistController : MonoBehaviour
 
     private void OnStarted(ExperimentModuleDefinition m)
     {
-        if (reactionText != null) reactionText.text = balancedReaction;
+        if (reactionText != null) reactionText.text = GlyphSafe.Sanitize(balancedReaction);
         Rebuild();
     }
 
@@ -62,8 +62,12 @@ public class TabletChecklistController : MonoBehaviour
                 sb.Append("<b>").Append(PhaseLabel(t.phase)).Append("</b>\n");
                 lastPhase = t.phase;
             }
-            string mark = graph.IsComplete(t.taskId) ? "☑" : (graph.IsAvailable(t.taskId) ? "▶" : "☐");
-            sb.Append(mark).Append(' ').Append(t.label).Append('\n');
+            // Font-safe markers (LiberationSans SDF lacks ☑▶☐ — they rendered as blank
+            // boxes on the pads): green • done, cyan » current, dim □ pending.
+            string mark = graph.IsComplete(t.taskId) ? "<color=#5FD08A>•</color>"
+                        : (graph.IsAvailable(t.taskId) ? "<color=#61D6FF>»</color>"
+                        : "<color=#7C8AA5>□</color>");
+            sb.Append(mark).Append(' ').Append(GlyphSafe.Sanitize(t.label)).Append('\n');
         }
         return sb.ToString().TrimEnd();
     }
