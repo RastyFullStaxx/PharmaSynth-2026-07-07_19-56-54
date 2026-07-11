@@ -1435,6 +1435,7 @@ public static class PharmaSelfTests
         var lay = AssetDatabase.LoadAssetAtPath<ExperimentLayout>("Assets/PharmaSynth/ScriptableObjects/Layouts/Layout_EthylAlcohol.asset");
         A("builder: library/registry/layout exist", lib != null && reg != null && lay != null);
         A("builder: library has prefabs + chemicals", lib != null && lib.prefabs.Count >= 40 && lib.chemicals.Count >= 20);
+        A("builder: library resolves Wine (winemaking end product)", lib != null && lib.GetChemical("Wine") != null);
         if (lib == null || lay == null) return;
 
         var module = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>("Assets/PharmaSynth/ScriptableObjects/Experiments/Prelim_EthylAlcohol.asset");
@@ -2396,8 +2397,10 @@ public static class PharmaSelfTests
         A("endproduct: ethanol is a product", DemoMode.IsEndProduct("Ethanol"));
         A("endproduct: acetone is a product", DemoMode.IsEndProduct("Acetone"));
         A("endproduct: aspirin is a product", DemoMode.IsEndProduct("Aspirin"));
+        A("endproduct: wine is the winemaking product", DemoMode.IsEndProduct("Wine"));
         A("endproduct: sulfuric acid is raw", !DemoMode.IsEndProduct("Sulfuric Acid"));
         A("endproduct: sodium acetate is feedstock", !DemoMode.IsEndProduct("Sodium Acetate"));
+        A("endproduct: grape juice is feedstock, not product", !DemoMode.IsEndProduct("Grape Juice"));
         A("endproduct: null safe", !DemoMode.IsEndProduct(null));
     }
 
@@ -2666,6 +2669,7 @@ public static class PharmaSelfTests
         bool products = true;
         foreach (var id in ids) if (string.IsNullOrEmpty(DemoMode.ProductFor(id))) products = false;
         A("demo: ready-made product for all 11 modules", products);
+        A("demo: winemaking product is Wine (not the grape-juice feedstock)", DemoMode.ProductFor("final-winemaking") == "Wine");
         A("demo: unknown module has none", DemoMode.ProductFor("nope") == null);
     }
 

@@ -81,7 +81,7 @@ public static class DemoMode
             case "final-benzamide": return "Benzamide";
             case "final-aspirin": return "Aspirin";
             case "final-caffeine": return "Caffeine";
-            case "final-winemaking": return "Grape Juice";
+            case "final-winemaking": return "Wine";
             default: return null;
         }
     }
@@ -90,7 +90,10 @@ public static class DemoMode
     /// regular laboratory these must NOT sit ready-made on the shelves — the
     /// player synthesises them; each experiment's own stage still spawns what
     /// its manuscript reagent list requires). Demo sessions show them.
-    /// (Sodium Acetate is excluded — it's methane's FEEDSTOCK, not a product.)
+    /// (Sodium Acetate and Grape Juice are excluded — they are FEEDSTOCKS, not
+    /// products: Sodium Acetate feeds Methane, Grape Juice ferments into Wine.
+    /// Both stay always-visible on the shelf; the fermented product Wine is the
+    /// gated end product of the Wine Making experiment.)
     public static bool IsEndProduct(string chemicalName)
     {
         switch (chemicalName)
@@ -103,7 +106,7 @@ public static class DemoMode
             case "Benzamide":
             case "Aspirin":
             case "Caffeine":
-            case "Grape Juice":
+            case "Wine":
                 return true;
             default:
                 return false;

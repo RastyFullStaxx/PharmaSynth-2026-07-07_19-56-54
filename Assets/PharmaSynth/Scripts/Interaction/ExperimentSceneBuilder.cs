@@ -67,7 +67,9 @@ public class ExperimentSceneBuilder : MonoBehaviour
 
         bool methane = moduleId == methaneModuleId;
         if (methaneStage != null) methaneStage.SetActive(methane);
-        SpawnDemoKit(stage, moduleId);              // demo sessions get the ready-made product
+        // Demo sessions no longer spawn a floating ready-made vial here (user
+        // 2026-07-12): the finished products live on the ReagentShelf and are
+        // revealed there by EndProductVisibility while a demo session is active.
         if (methane) return 0;                      // Methane uses its hand-built stage
 
         var layout = FindLayout(moduleId);
@@ -78,38 +80,6 @@ public class ExperimentSceneBuilder : MonoBehaviour
         foreach (var p in layout.props)    { BuildProp(stage, p); n++; }
         foreach (var v in layout.vessels)  { BuildVessel(stage, v); n++; }
         return n;
-    }
-
-    /// Demo sessions (user 2026-07-10): a ready-made vial of the module's end
-    /// product spawns on the raw-reagent cabinets' demo shelf, so panelists can
-    /// run the tests without performing the synthesis.
-    private void SpawnDemoKit(Transform stage, string moduleId)
-    {
-        if (!Application.isPlaying || !DemoSession.Active || assets == null) return;
-        string product = DemoMode.ProductFor(moduleId);
-        var chem = product != null ? assets.GetChemical(product) : null;
-        var prefab = assets.GetPrefab("TestTube_WithLiquid");
-        if (chem == null || prefab == null) return;
-
-        var anchor = GameObject.Find("ReagentCabinets");
-        Vector3 pos = anchor != null
-            ? anchor.transform.position + new Vector3(-0.35f, 1.0f, 0f)
-            : new Vector3(0f, 1.0f, -2.6f);
-        var inst = Instantiate(prefab, stage);
-        inst.name = "DemoKit_" + product.Replace(" ", "");
-        Normalise(inst, "TestTube_WithLiquid", 0.15f);
-        Seat(inst.transform, pos);
-        var lp = inst.GetComponent<LiquidPhysics>() ?? inst.AddComponent<LiquidPhysics>();
-        lp.registry = registry;
-        lp.currentChemical = chem;
-        lp.currentLiquidVolume = 40f;
-        PhysicsProfiles.EnsurePhysics(inst, "TestTube_WithLiquid");
-        GrabTuning.Apply(inst.GetComponent<XRGrab>());
-        inst.AddComponent<GrabPhysicsPolicy>();
-        var respawn = inst.AddComponent<DropRespawn>();
-        respawn.SetHome(inst.transform.position, inst.transform.rotation);
-        var pl = inst.AddComponent<ProximityLabel>();
-        pl.SetLabel("Ready-made: " + product + " (demo)", 1.6f);
     }
 
     // ---- builders ---------------------------------------------------------
