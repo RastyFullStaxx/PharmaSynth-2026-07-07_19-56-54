@@ -1,6 +1,10 @@
 # Changelog — session history (W1 → W5.10)
 
-Dated batch notes moved out of CLAUDE.md on 2026-07-12 (W5.11 docs consolidation). Preserved verbatim because git commit messages are thin (the user commits checkpoints). Newest first within each section. For CURRENT system behavior use `gameplay-flow.md`, `systems-reference.md`, `experiments-reference.md` — this file is history only.
+Dated batch notes moved out of CLAUDE.md on 2026-07-12 (W5.11 docs consolidation). Preserved verbatim because git commit messages are thin (the user commits checkpoints). Newest first within each section. For CURRENT system behavior use `gameplay-flow.md`, `systems-reference.md`, `experiments-reference.md` — this file is history only. **Format going forward (efficiency policy 2026-07-12): ONE line per batch** — `date · batch · 1-sentence summary · suite N/N`. The verbose blobs below are the pre-policy archive.
+
+- 2026-07-12 · W5.11b · Efficiency round 2: policy extended (session scoping, menu-over-RunCommand, single-check verification, script-written bulk); suite now writes Logs/selftest-result.txt for 1-line verification · suite 969/969
+- 2026-07-12 · W5.11 · Docs consolidation: CLAUDE.md rewritten lean + gameplay-flow/experiments-reference/systems-reference/changelog created, 6 obsolete docs deleted, checklist §13 queued playtest issues · suite 969/969
+
 
 ---
 

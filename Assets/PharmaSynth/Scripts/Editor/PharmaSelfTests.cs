@@ -96,6 +96,18 @@ public static class PharmaSelfTests
         string summary = $"PharmaSynth Self-Tests: {_total - _fail}/{_total} passed";
         if (_fail == 0) Debug.Log("<color=#4CD07D>" + summary + " — ALL GREEN</color>");
         else Debug.LogError(summary + " — " + _fail + " FAILED:\n" + string.Join("\n", _log));
+
+        // Cheap verification channel (efficiency policy 2026-07-12): sessions read
+        // this one-liner instead of wrapping the run in a RunCommand capture.
+        // Logs/ not Temp/ — Unity wipes Temp at startup.
+        try
+        {
+            System.IO.Directory.CreateDirectory("Logs");
+            System.IO.File.WriteAllText("Logs/selftest-result.txt",
+                summary + (_fail == 0 ? " — ALL GREEN" : " — " + _fail + " FAILED:\n" + string.Join("\n", _log))
+                + "\n(" + System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + ")\n");
+        }
+        catch { /* a locked file must never fail the suite */ }
     }
 
     static ExperimentTask T(string id, TaskPhase ph, float w, LabSkill sk, RubricCategory rc, params string[] pre)
