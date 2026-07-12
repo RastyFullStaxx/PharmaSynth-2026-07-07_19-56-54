@@ -186,7 +186,13 @@ public class PharmeeGatekeeper : MonoBehaviour
     public void OnApproachTriggerEntered() => Model.Fire(GateEvent.Approach);
 
     /// Poking Pharmee re-opens the conversation (e.g. to end a Lab Tour).
-    public void OnPharmeeTalk() => Model.Fire(GateEvent.TalkRequested);
+    /// Ignored while the wrist-watch gesture is active — the flipping hand can
+    /// brush his interactable and must not reopen the gate talk (user 2026-07-12).
+    public void OnPharmeeTalk()
+    {
+        if (WristWatchController.SuppressNpcPokes) return;
+        Model.Fire(GateEvent.TalkRequested);
+    }
 
     /// LabThresholdTrigger → the period starts the moment the player walks in.
     public void OnThresholdTriggerEntered()

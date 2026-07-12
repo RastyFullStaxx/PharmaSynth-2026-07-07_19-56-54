@@ -3,6 +3,8 @@ using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.XR.Interaction.Toolkit.UI;
 
 /// One procedures display (user 2026-07-10): the entrance LabTablet duplicated
 /// the wrist holo board, and the wrist mini-panel duplicated the holo header —
@@ -97,6 +99,143 @@ public static class PanelConsolidationBuilder
         Debug.Log("[PanelConsolidation] LabTablet retired, MiniPanel retired, holo board upgraded"
                   + (tablet == null ? " (no LabTablet found — already retired?)" : "")
                   + (guide == null ? ", NO tour guide found" : ", tour re-seeded") + ".");
+    }
+
+    /// W5.12 (user: "instruction step is one continuous row — wrap the texts and
+    /// make the panel scrollable"): every holo text wraps, and the checklist body
+    /// moves inside a masked, scrollable viewport with big ^ / v page buttons
+    /// (poke/ray-friendly) driven by HoloScroller. Idempotent.
+    [MenuItem("Tools/PharmaSynth/Fix Holo Board Scroll")]
+    public static void FixHoloScroll()
+    {
+        if (Application.isPlaying) { Debug.LogWarning("[PanelConsolidation] exit Play mode first."); return; }
+        var watch = FirstSceneObject<WristWatchController>();
+        if (watch == null) { Debug.LogError("[PanelConsolidation] no WristWatchController in the open scene."); return; }
+        var so = new SerializedObject(watch);
+        var holo = so.FindProperty("holoPanel")?.objectReferenceValue as GameObject;
+        var body = so.FindProperty("holoBody")?.objectReferenceValue as TMP_Text;
+        var summary = so.FindProperty("holoSummary")?.objectReferenceValue as TMP_Text;
+        var reaction = so.FindProperty("holoReaction")?.objectReferenceValue as TMP_Text;
+        if (holo == null || body == null)
+        { Debug.LogError("[PanelConsolidation] holo board refs missing — run Consolidate Procedure Panels first."); return; }
+
+        // 1. Wrap everything; never truncate. The summary grows to two lines
+        //    (step label on its own line — see ChecklistPager.BuildHeader).
+        foreach (var t in new[] { body, summary, reaction })
+        {
+            if (t == null) continue;
+            t.textWrappingMode = TextWrappingModes.Normal;
+            t.overflowMode = TextOverflowModes.Overflow;
+        }
+        if (summary != null) summary.rectTransform.sizeDelta = new Vector2(680f, 84f);
+
+        // 2. Masked, scrollable viewport around the body (left-of-buttons column).
+        var viewportT = holo.transform.Find("BodyViewport");
+        GameObject viewport = viewportT != null ? viewportT.gameObject : null;
+        if (viewport == null)
+        {
+            viewport = new GameObject("BodyViewport", typeof(RectTransform));
+            viewport.transform.SetParent(holo.transform, false);
+        }
+        var vpRt = viewport.GetComponent<RectTransform>();
+        vpRt.anchorMin = vpRt.anchorMax = new Vector2(0.5f, 0.5f);
+        vpRt.pivot = new Vector2(0.5f, 0.5f);
+        vpRt.sizeDelta = new Vector2(610f, 700f);
+        vpRt.anchoredPosition = new Vector2(-35f, -85f);
+        if (viewport.GetComponent<RectMask2D>() == null) viewport.AddComponent<RectMask2D>();
+        // An Image makes the viewport a raycast target so ray-drag scrolling works.
+        var vpImg = viewport.GetComponent<Image>() ?? viewport.AddComponent<Image>();
+        vpImg.color = new Color(0f, 0f, 0f, 0.001f);
+
+        // Body becomes the scrolled content: top-anchored, auto-height.
+        var bodyRt = body.rectTransform;
+        if (bodyRt.parent != vpRt) bodyRt.SetParent(vpRt, false);
+        bodyRt.anchorMin = new Vector2(0.5f, 1f);
+        bodyRt.anchorMax = new Vector2(0.5f, 1f);
+        bodyRt.pivot = new Vector2(0.5f, 1f);
+        bodyRt.sizeDelta = new Vector2(610f, 700f);
+        bodyRt.anchoredPosition = Vector2.zero;
+        var fitter = body.GetComponent<ContentSizeFitter>() ?? body.gameObject.AddComponent<ContentSizeFitter>();
+        fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+        var sr = viewport.GetComponent<ScrollRect>() ?? viewport.AddComponent<ScrollRect>();
+        sr.content = bodyRt;
+        sr.viewport = vpRt;
+        sr.horizontal = false;
+        sr.vertical = true;
+        sr.movementType = ScrollRect.MovementType.Clamped;
+        sr.scrollSensitivity = 30f;
+
+        // 3. HoloScroller + big page buttons on the right-edge column.
+        var scroller = holo.GetComponent<HoloScroller>() ?? holo.AddComponent<HoloScroller>();
+        scroller.Bind(sr);
+        EnsurePageButton(holo.transform, "PageUpButton", "^", new Vector2(330f, 60f), scroller, up: true);
+        EnsurePageButton(holo.transform, "PageDownButton", "v", new Vector2(330f, -230f), scroller, up: false);
+
+        // 4. The board's canvas must catch XR rays/pokes.
+        var canvas = holo.GetComponentInParent<Canvas>(true);
+        if (canvas != null)
+        {
+            if (canvas.GetComponent<GraphicRaycaster>() == null) canvas.gameObject.AddComponent<GraphicRaycaster>();
+            if (canvas.GetComponent<TrackedDeviceGraphicRaycaster>() == null)
+                canvas.gameObject.AddComponent<TrackedDeviceGraphicRaycaster>();
+        }
+
+        EditorSceneManager.MarkAllScenesDirty();
+        EditorSceneManager.SaveOpenScenes();
+        Debug.Log("[PanelConsolidation] holo board wraps + scrolls (viewport 610x700, page buttons wired)"
+                  + (canvas == null ? " — WARNING: no parent Canvas found" : "") + ".");
+    }
+
+    /// Load-or-create one ^ / v page button wired to the scroller (persistent
+    /// listener — no runtime wiring needed).
+    static void EnsurePageButton(Transform holo, string name, string glyph, Vector2 pos,
+                                 HoloScroller scroller, bool up)
+    {
+        var t = holo.Find(name);
+        GameObject go = t != null ? t.gameObject : null;
+        if (go == null)
+        {
+            go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(holo, false);
+        }
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = new Vector2(72f, 72f);
+        rt.anchoredPosition = pos;
+        var img = go.GetComponent<Image>() ?? go.AddComponent<Image>();
+        img.color = new Color(0.10f, 0.16f, 0.26f, 0.92f);
+        var btn = go.GetComponent<Button>() ?? go.AddComponent<Button>();
+        var colors = btn.colors;
+        colors.highlightedColor = new Color(0.25f, 0.55f, 0.85f, 1f);
+        colors.pressedColor = new Color(0.15f, 0.35f, 0.6f, 1f);
+        btn.colors = colors;
+
+        var labelT = go.transform.Find("Label");
+        TextMeshProUGUI label;
+        if (labelT != null) label = labelT.GetComponent<TextMeshProUGUI>();
+        else
+        {
+            var lgo = new GameObject("Label", typeof(RectTransform));
+            lgo.transform.SetParent(go.transform, false);
+            label = lgo.AddComponent<TextMeshProUGUI>();
+        }
+        var lrt = label.rectTransform;
+        lrt.anchorMin = Vector2.zero; lrt.anchorMax = Vector2.one;
+        lrt.offsetMin = lrt.offsetMax = Vector2.zero;
+        label.text = glyph;
+        label.fontSize = 40f;
+        label.fontStyle = FontStyles.Bold;
+        label.alignment = TextAlignmentOptions.Center;
+        label.color = new Color(0.61f, 0.85f, 1f);
+        label.raycastTarget = false;
+
+        // Re-wire idempotently: clear then add ONE persistent listener.
+        int n = UnityEngine.Events.UnityEventTools.RemovePersistentListenerCount(btn.onClick);
+        for (int i = n - 1; i >= 0; i--) UnityEditor.Events.UnityEventTools.RemovePersistentListener(btn.onClick, i);
+        UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(btn.onClick,
+            up ? (UnityEngine.Events.UnityAction)scroller.PageUp : scroller.PageDown);
     }
 
     static T FirstSceneObject<T>() where T : Component

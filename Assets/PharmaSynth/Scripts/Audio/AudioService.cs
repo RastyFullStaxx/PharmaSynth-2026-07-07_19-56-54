@@ -149,7 +149,7 @@ public class AudioService : MonoBehaviour
     /// Positional one-shot with tuned 3D rolloff + pitch variation — for spatial
     /// physical events (a beaker breaking / a tool clattering across the room), so
     /// they read as coming from that spot rather than flat 2D. Self-destroys.
-    public void PlayAt3D(string key, Vector3 pos)
+    public void PlayAt3D(string key, Vector3 pos, float volumeScale = 1f)
     {
         var e = bank != null ? bank.Get(key) : null;
         if (e == null || e.clip == null) return;
@@ -157,7 +157,7 @@ public class AudioService : MonoBehaviour
         go.transform.position = pos;
         var src = go.AddComponent<AudioSource>();
         src.clip = e.clip;
-        src.volume = _vol[(int)e.category] * Mathf.Clamp01(e.volume);
+        src.volume = _vol[(int)e.category] * Mathf.Clamp01(e.volume) * Mathf.Clamp01(volumeScale);
         src.pitch = PitchVaries(key) ? JitteredPitch(sfxPitchJitter, Random.value) : 1f;
         src.spatialBlend = 1f;                       // 3D
         src.rolloffMode = AudioRolloffMode.Linear;
@@ -168,7 +168,8 @@ public class AudioService : MonoBehaviour
     }
 
     /// Null-safe static positional one-shot (no-op before the service exists).
-    public static void TryPlayAt(string key, Vector3 pos) { if (Instance != null) Instance.PlayAt3D(key, pos); }
+    public static void TryPlayAt(string key, Vector3 pos, float volumeScale = 1f)
+    { if (Instance != null) Instance.PlayAt3D(key, pos, volumeScale); }
 
     public void StopAmbient() { if (ambientSource != null) ambientSource.Stop(); }
 

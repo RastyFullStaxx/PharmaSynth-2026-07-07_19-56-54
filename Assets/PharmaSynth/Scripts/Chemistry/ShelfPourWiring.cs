@@ -59,7 +59,7 @@ public static class ShelfPourWiring
         if (bottle.GetComponent<SpillMistake>() == null)
         {
             var spill = bottle.AddComponent<SpillMistake>();
-            spill.Bind(runner, lp, bottle.GetComponent<XRGrab>(), bottle.name);
+            spill.Bind(runner, lp, bottle.GetComponent<XRGrab>(), Mishandling.DisplayNameFor(bottle));
             added++;
         }
 

@@ -99,15 +99,33 @@ public static class PhysicsAudit
             }
             bool breakable = Mishandling.IsBreakable(prefabName)
                 || (prefabName.StartsWith("Reagent_") || go.name.StartsWith("Reagent_"));   // shelf bottles are glass
-            if (breakable && go.GetComponent<BreakableGlassware>() == null)
-                go.AddComponent<BreakableGlassware>().Bind(runner, go.GetComponent<DropRespawn>(), rb, go.name);
+            // Material-nature cleanup (user 2026-07-12: the scale/burner shattered
+            // like glass — an earlier unconditional pass left BreakableGlassware on
+            // non-glass items, and the component breaks whatever it's attached to).
+            var stale = go.GetComponent<BreakableGlassware>();
+            if (!breakable && stale != null) { Object.DestroyImmediate(stale); }
+            if (breakable)
+            {
+                var bg = go.GetComponent<BreakableGlassware>()
+                         ?? go.AddComponent<BreakableGlassware>();
+                bg.Bind(runner, go.GetComponent<DropRespawn>(), rb, Mishandling.DisplayNameFor(go));
+                // The threshold is a SERIALIZED field — stale scene components keep
+                // the old 4.5; re-pin every glass item to the current default.
+                var bgSo = new SerializedObject(bg);
+                var thr = bgSo.FindProperty("breakImpactSpeed");
+                if (thr != null && !Mathf.Approximately(thr.floatValue, Mishandling.DefaultBreakSpeed))
+                { thr.floatValue = Mishandling.DefaultBreakSpeed; bgSo.ApplyModifiedPropertiesWithoutUndo(); }
+            }
             var lp = go.GetComponent<LiquidPhysics>();
             if (lp != null && go.GetComponent<LiquidPourer>() != null && go.GetComponent<SpillMistake>() == null)
-                go.AddComponent<SpillMistake>().Bind(runner, lp, grab, go.name);
-            if (go.GetComponent<ImpactSound>() == null)
-                go.AddComponent<ImpactSound>().Bind(rb,
-                    breakable ? "glass-clink" : Mishandling.DropSoundKey(prefabName),
-                    breakable ? Mishandling.DefaultBreakSpeed : float.PositiveInfinity);
+                go.AddComponent<SpillMistake>().Bind(runner, lp, grab, Mishandling.DisplayNameFor(go));
+            // Re-key ImpactSound by material nature every pass (serialized — stale
+            // keys/ceilings persist otherwise).
+            var snd = go.GetComponent<ImpactSound>() ?? go.AddComponent<ImpactSound>();
+            snd.Bind(rb,
+                breakable ? "glass-clink" : Mishandling.DropSoundKey(prefabName),
+                breakable ? Mishandling.DefaultBreakSpeed : float.PositiveInfinity);
+            EditorUtility.SetDirty(go);
             fixedCount++;
         }
         UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();

@@ -42,6 +42,12 @@ public class WristWatchController : MonoBehaviour
     private bool _manualVisible;
     private bool _lastShow;
 
+    // Wrist-flip suppression window (user 2026-07-12: Pharmee dialogue kept
+    // firing when the panel was summoned — the twisting hand can select his
+    // interactable since he hovers close by). NPC poke handlers check this.
+    private static float _npcPokeSuppressedUntil = -1f;
+    public static bool SuppressNpcPokes => Application.isPlaying && Time.time < _npcPokeSuppressedUntil;
+
     public void BindHolo(GameObject panel, TMP_Text title, TMP_Text body)
     { holoPanel = panel; holoTitle = title; holoBody = body; }
 
@@ -90,6 +96,9 @@ public class WristWatchController : MonoBehaviour
         // No experiment content, no panels — otherwise the simulator's resting
         // palm-up controllers summon an empty board in the corridor/lab tour.
         if (runner == null || runner.Graph == null) show = false;
+        // While the panel is up (and shortly after), the gesture hand must not
+        // trigger Pharmee's poke/talk interactions.
+        if (show || _gestureVisible) _npcPokeSuppressedUntil = Time.time + 1.5f;
         // The wrist mini-panel is retired (user 2026-07-10: one procedures
         // display, centered) — the holo board below is the single panel now.
         if (panel != null && panel.activeSelf) panel.SetActive(false);

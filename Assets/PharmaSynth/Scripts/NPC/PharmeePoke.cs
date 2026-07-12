@@ -34,6 +34,7 @@ public class PharmeePoke : MonoBehaviour
     public void Poke()
     {
         if (brain == null) return;
+        if (WristWatchController.SuppressNpcPokes) return;   // wrist-flip, not a poke
         if (Time.time - _lastPoke < debounceSeconds) return;
         _lastPoke = Time.time;
         brain.InstructCurrent();

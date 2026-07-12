@@ -28,7 +28,9 @@ public class ImpactSound : MonoBehaviour
         if (v < minSpeed || v >= maxSpeed) return;
         _readyAt = Time.time + cooldownSeconds;
         // Positional: the clatter comes from where the item actually landed.
+        // Loudness scales with impact speed so a gentle set-down whispers and
+        // only a real drop clatters at full volume (user 2026-07-12).
         var at = c.contactCount > 0 ? c.GetContact(0).point : transform.position;
-        AudioService.TryPlayAt(key, at);
+        AudioService.TryPlayAt(key, at, Mishandling.ImpactVolume01(v));
     }
 }

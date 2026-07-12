@@ -22,7 +22,8 @@ public class SpillMistake : MonoBehaviour
     void Awake()
     {
         if (_liquid == null)
-            Bind(FindAnyObjectByType<ExperimentRunner>(), GetComponent<LiquidPhysics>(), GetComponent<XRGrab>(), name);
+            Bind(FindAnyObjectByType<ExperimentRunner>(), GetComponent<LiquidPhysics>(), GetComponent<XRGrab>(),
+                 Mishandling.DisplayNameFor(gameObject));   // proper name, not the code name
     }
 
     /// Edit-mode / builder seam.

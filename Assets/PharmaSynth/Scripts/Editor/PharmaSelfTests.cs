@@ -874,21 +874,39 @@ public static class PharmaSelfTests
             mc.convex = false;
             A("phys: concave colliders convexified", PhysicsProfiles.ConvexifyMeshColliders(go) == 1 && mc.convex);
 
-            // Drop respawn: kill-Z + idle return-to-home policy.
+            // Drop respawn: kill-Z + FLOOR-ONLY idle return-to-home (W5.12: items
+            // the player stages on tables/shelves are never reclaimed mid-run).
             A("respawn: below kill-Z", DropRespawnMath.ShouldRespawn(-1.2f, -1f));
             A("respawn: on bench safe", !DropRespawnMath.ShouldRespawn(0.9f, -1f));
-            A("respawn: abandoned item returns", DropRespawnMath.ShouldReturnHome(1.5f, 0f, false, 30f));
-            A("respawn: held item never returns", !DropRespawnMath.ShouldReturnHome(1.5f, 0f, true, 30f));
-            A("respawn: moving item waits", !DropRespawnMath.ShouldReturnHome(1.5f, 0.4f, false, 30f));
-            A("respawn: near home stays put", !DropRespawnMath.ShouldReturnHome(0.1f, 0f, false, 30f));
+            A("respawn: floor-abandoned item returns", DropRespawnMath.ShouldReturnHome(1.5f, 0f, false, 30f, 0.1f));
+            A("respawn: staged on the bench stays (W5.12)", !DropRespawnMath.ShouldReturnHome(1.5f, 0f, false, 30f, 0.93f));
+            A("respawn: staged on the gantry shelf stays (W5.12)", !DropRespawnMath.ShouldReturnHome(1.5f, 0f, false, 30f, 1.6f));
+            A("respawn: held item never returns", !DropRespawnMath.ShouldReturnHome(1.5f, 0f, true, 30f, 0.1f));
+            A("respawn: moving item waits", !DropRespawnMath.ShouldReturnHome(1.5f, 0.4f, false, 30f, 0.1f));
+            A("respawn: near home stays put", !DropRespawnMath.ShouldReturnHome(0.1f, 0f, false, 30f, 0.1f));
             var dr = go.AddComponent<DropRespawn>();
             dr.Bind(go.GetComponent<Rigidbody>(), null);
             dr.SetHome(new Vector3(1f, 2f, 3f), Quaternion.identity);
             go.transform.position = new Vector3(9f, -5f, 9f);
             var rbDyn = go.GetComponent<Rigidbody>(); rbDyn.isKinematic = false;
-            dr.GoHome();
-            A("respawn: teleports home", (go.transform.position - new Vector3(1f, 2f, 3f)).magnitude < 1e-4f);
-            A("respawn: re-freezes to shelf policy", rbDyn.isKinematic);
+            // Respawn = a FRESH replacement: home supply restored (W5.12 — an
+            // exhausted bottle used to come back empty and invisible).
+            var lpHome = go.AddComponent<LiquidPhysics>();
+            var chemHome = ScriptableObject.CreateInstance<ChemicalData>();
+            try
+            {
+                chemHome.chemicalName = "TestSupply";
+                lpHome.SetContents(chemHome, 120f);
+                dr.CaptureSupply();
+                lpHome.PourOut(120f);
+                A("respawn: bottle drained for the test", lpHome.currentLiquidVolume < 0.01f);
+                dr.GoHome();
+                A("respawn: teleports home", (go.transform.position - new Vector3(1f, 2f, 3f)).magnitude < 1e-4f);
+                A("respawn: re-freezes to shelf policy", rbDyn.isKinematic);
+                A("respawn: restores full home supply (W5.12)",
+                    Near(lpHome.currentLiquidVolume, 120f) && lpHome.currentChemical == chemHome);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(chemHome); }
         }
         finally { UnityEngine.Object.DestroyImmediate(go); }
     }
@@ -984,12 +1002,30 @@ public static class PharmaSelfTests
             if (!RealSizes.TryGet(n, out _)) { allReal = false; _log.Add("breakable not in RealSizes: " + n); }
         A("mishandle: breakables are real prefabs", allReal);
 
-        // Impact policy: a real drop breaks, but carrying + bumping a wall does not.
-        A("mishandle: hard drop breaks", Mishandling.ShouldBreak(4.6f));
-        A("mishandle: threshold impact breaks", Mishandling.ShouldBreak(4.5f));
-        A("mishandle: sub-threshold safe (raised to 4.5 in W5.8)", !Mishandling.ShouldBreak(4.4f));
+        // Impact policy (W5.12 leniency): only extreme falls / hard throws break —
+        // a normal bench-height drop always survives.
+        A("mishandle: extreme drop breaks", Mishandling.ShouldBreak(7.1f));
+        A("mishandle: threshold impact breaks", Mishandling.ShouldBreak(7.0f));
+        A("mishandle: sub-threshold safe (raised to 7.0 in W5.12)", !Mishandling.ShouldBreak(6.9f));
+        A("mishandle: bench-height drop survives (W5.12)", !Mishandling.ShouldBreak(4.5f));
         A("mishandle: carry-bump into wall safe", !Mishandling.ShouldBreak(2.5f));
         A("mishandle: gentle set-down safe", !Mishandling.ShouldBreak(0.8f));
+
+        // Impact loudness scales with speed (W5.12: soft contacts whispered at
+        // full volume before) — quiet set-down, full-volume real drop.
+        A("impact: gentle set-down whispers", Mishandling.ImpactVolume01(0.8f) < 0.3f);
+        A("impact: solid drop full volume", Mishandling.ImpactVolume01(4.5f) > 0.999f);
+        A("impact: louder with speed", Mishandling.ImpactVolume01(2f) > Mishandling.ImpactVolume01(1f));
+
+        // Display names for mistake messages (W5.12: no more code names).
+        A("names: reagent code prettified", Mishandling.Prettify("Reagent_AceticAcid_Diluted (2)") == "Acetic Acid Diluted");
+        A("names: liquid twin suffix stripped", Mishandling.Prettify("TestTube_WithLiquid") == "Test Tube");
+        A("names: unit tails stay intact", Mishandling.Prettify("Beaker_100mL(Clone)") == "Beaker 100mL");
+
+        // Narration pacing (W5.12: long lines no longer vanish right after the
+        // last character types in; short lines keep their authored dwell).
+        A("narration: long line keeps a read hold", Near(NPCNarrationController.HoldSecondsAfterReveal(3.5f, 4.7f), 1.2f));
+        A("narration: short line keeps authored dwell", Near(NPCNarrationController.HoldSecondsAfterReveal(3.5f, 1.0f), 2.5f));
 
         // Settle-freeze (W5.8): a released body at rest goes kinematic in place.
         A("settle: rested body freezes", DropRespawnMath.ShouldSettleFreeze(false, false, 0.01f, 3f));
@@ -1018,6 +1054,14 @@ public static class PharmaSelfTests
             && Mishandling.DropSoundKey("EvaporatingDish") == "glass-clink");
         A("sfx: metal clatters", Mishandling.DropSoundKey("CrucibleTongs") == "drop-metal");
         A("sfx: wood knocks", Mishandling.DropSoundKey("TestTubeRack") == "drop-wood");
+        // W5.12 nature audit: the scale + burners sound (and are) metal, never glass.
+        A("sfx: scale + burners are metal (W5.12)", Mishandling.DropSoundKey("Balance") == "drop-metal"
+            && Mishandling.DropSoundKey("BunsenBurner") == "drop-metal"
+            && Mishandling.DropSoundKey("AlcoholBurner") == "drop-metal"
+            && !Mishandling.IsBreakable("Balance") && !Mishandling.IsBreakable("BunsenBurner")
+            && !Mishandling.IsBreakable("AlcoholBurner"));
+        A("sfx: porcelain mortar clinks, never breaks (W5.12)",
+            Mishandling.DropSoundKey("Motar") == "glass-clink" && !Mishandling.IsBreakable("Motar"));
         A("sfx: fizz for gas outcomes", Mishandling.SfxForOutcome(ReactionOutcome.Fizzing) == "reaction-fizz"
             && Mishandling.SfxForOutcome(ReactionOutcome.GasEvolved) == "reaction-fizz");
         A("sfx: chime for visible outcomes", Mishandling.SfxForOutcome(ReactionOutcome.Precipitate) == "mixture-complete"

@@ -29,18 +29,18 @@ public static class Mishandling
     private static readonly HashSet<string> CeramicOrSolidGlass = new HashSet<string>
     {
         "GlassRod", "Funnel", "Dropper", "EvaporatingDish", "Crucible",
+        "Motar", "Pestle",   // porcelain (pack spells mortar "Motar")
     };
 
     public static bool IsBreakable(string prefabName) => Breakables.Contains(prefabName ?? "");
     public static IEnumerable<string> BreakableNames => Breakables;
 
-    /// An impact at or above this speed shatters glass. 4.5 m/s ≈ a free fall
-    /// of ~1.0 m onto a hard surface — a real drop from bench/shelf height
-    /// breaks, but carrying an item and bumping a wall or a neighbouring bottle
-    /// (a slow scrape, well under this) never does (raised 4.0→4.5 in W5.8 with
-    /// the settle-freeze pass: "generally less sensitive"). Held items are
-    /// additionally immune in BreakableGlassware regardless of speed.
-    public const float DefaultBreakSpeed = 4.5f;
+    /// An impact at or above this speed shatters glass. 7.0 m/s ≈ a free fall
+    /// of ~2.5 m onto a hard surface — only extreme heights or a genuine hard
+    /// throw breaks (user 2026-07-12: 4.5 was still hair-trigger in-headset; a
+    /// normal bench-height drop must survive). Held items are additionally
+    /// immune in BreakableGlassware regardless of speed.
+    public const float DefaultBreakSpeed = 7.0f;
 
     public static bool ShouldBreak(float impactSpeed, float breakSpeed = DefaultBreakSpeed)
         => impactSpeed >= breakSpeed;
@@ -49,7 +49,8 @@ public static class Mishandling
     private static readonly HashSet<string> MetalItems = new HashSet<string>
     {
         "CrucibleTongs", "Forceps", "Scoopula", "Spatula", "IronRing",
-        "Tripod", "RetortStand", "WireGauze", "BunsenBurner", "TestTubeHolder_Metal", "Balance",
+        "Tripod", "RetortStand", "WireGauze", "BunsenBurner", "AlcoholBurner",
+        "TestTubeHolder_Metal", "Balance", "ClayTriangle",   // clay triangle = wire frame
     };
 
     /// SoundBank key for a drop/impact clatter, by material.
@@ -80,4 +81,53 @@ public static class Mishandling
     /// decides whether that drain is a graded mishandling event).
     public static bool IsSpilling(float tiltDegrees, bool held, float liquidMl, float tiltThreshold = 60f)
         => !held && liquidMl > 0.5f && tiltDegrees > tiltThreshold;
+
+    /// Impact-loudness curve (user 2026-07-12: clinks/shatters fired at full
+    /// volume on the softest contacts): a gentle set-down is barely audible, a
+    /// solid drop reads at full volume. Below ImpactSound's minSpeed nothing
+    /// plays at all; this shapes what remains.
+    public static float ImpactVolume01(float impactSpeed, float quietSpeed = 0.7f, float fullSpeed = 4.0f)
+        => Mathf.Lerp(0.2f, 1f, Mathf.InverseLerp(quietSpeed, fullSpeed, impactSpeed));
+
+    /// Human-readable item name for mistake/shatter messages (user 2026-07-12:
+    /// "show the proper name of the asset shattered, not its code name").
+    /// Prefers the authored LabItem.displayName, then the contained chemical,
+    /// then a prettified version of the GO/prefab code name.
+    public static string DisplayNameFor(GameObject go)
+    {
+        if (go == null) return "Item";
+        var item = go.GetComponent<LabItem>();
+        if (item != null && !string.IsNullOrWhiteSpace(item.displayName)) return item.displayName;
+        var lp = go.GetComponent<LiquidPhysics>();
+        if (lp != null && lp.currentChemical != null
+            && !string.IsNullOrWhiteSpace(lp.currentChemical.chemicalName))
+            return lp.currentChemical.chemicalName;
+        return Prettify(go.name);
+    }
+
+    /// "Reagent_AceticAcid_Diluted (2)" → "Acetic Acid Diluted". Pure + tested.
+    public static string Prettify(string codeName)
+    {
+        if (string.IsNullOrWhiteSpace(codeName)) return "Item";
+        string n = codeName.Replace("(Clone)", "");
+        int paren = n.IndexOf(" (");                        // strip "(2)" copy suffixes
+        if (paren > 0) n = n.Substring(0, paren);
+        foreach (var prefix in new[] { "Reagent_", "Prop_", "Chem_", "Template_Raw_", "Raw_", "Spare_", "Staged" })
+            if (n.StartsWith(prefix)) { n = n.Substring(prefix.Length); break; }
+        foreach (var suffix in new[] { "_WithLiquid", "_WithLabel" })
+            if (n.EndsWith(suffix)) n = n.Substring(0, n.Length - suffix.Length);
+        n = n.Replace('_', ' ').Replace('-', ' ');
+        // Split camelCase ("AceticAcid" → "Acetic Acid") — but only at a real
+        // word boundary (upper between two lowers), so unit tails like the
+        // "mL" in "100mL" stay intact.
+        var sb = new System.Text.StringBuilder(n.Length + 8);
+        for (int i = 0; i < n.Length; i++)
+        {
+            if (i > 0 && char.IsUpper(n[i]) && char.IsLower(n[i - 1])
+                && i + 1 < n.Length && char.IsLower(n[i + 1])) sb.Append(' ');
+            sb.Append(n[i]);
+        }
+        var parts = sb.ToString().Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 0 ? "Item" : string.Join(" ", parts);
+    }
 }

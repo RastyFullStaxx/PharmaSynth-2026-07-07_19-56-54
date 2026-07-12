@@ -9,11 +9,22 @@ public static class DropRespawnMath
     /// Fell out of the world (through a gap, off the bench into the void).
     public static bool ShouldRespawn(float y, float killZ) => y < killZ;
 
+    /// Resting height below which an item counts as abandoned on the FLOOR.
+    /// Bench/table tops sit ≈0.93 m, the workspace shelf higher still — items the
+    /// player stages on any work surface must never be reclaimed mid-run (user
+    /// 2026-07-12: carried equipment vanished back to the shelves, making
+    /// experiments impossible). Floor litter still tidies itself.
+    public const float FloorY = 0.5f;
+
     /// Sat still, un-held, away from home long enough that the player has
-    /// clearly abandoned it.
+    /// clearly abandoned it — AND lying at floor level. Items resting on tables,
+    /// shelves or station pads stay exactly where the player put them.
     public static bool ShouldReturnHome(float distanceFromHome, float speed, bool held, float idleSeconds,
-                                        float minIdle = 25f, float minDistance = 0.4f, float restSpeed = 0.05f)
-        => !held && speed < restSpeed && idleSeconds >= minIdle && distanceFromHome > minDistance;
+                                        float restingY,
+                                        float minIdle = 25f, float minDistance = 0.4f, float restSpeed = 0.05f,
+                                        float floorY = FloorY)
+        => !held && speed < restSpeed && idleSeconds >= minIdle && distanceFromHome > minDistance
+           && restingY < floorY;
 
     /// Settle-freeze (W5.8 breakage pass): a released body that has genuinely
     /// come to rest goes kinematic IN PLACE. Released items used to stay
@@ -45,6 +56,16 @@ public class DropRespawn : MonoBehaviour
     private Rigidbody _rb;
     private XRGrab _grab;
 
+    // Home SUPPLY (user 2026-07-12: an exhausted bottle respawned empty — and
+    // bottles whose body renderer IS the fill visual respawned invisible, "only
+    // the lid and name tag"). Captured on the first play-mode Update, after the
+    // stage builder has filled spawned pourables; GoHome() restores it so every
+    // respawn is a genuinely fresh replacement (lab tour = unlimited by nature).
+    private ChemicalData _homeChem;
+    private float _homeMl;
+    private bool _supplyCaptured;
+    private LiquidPhysics _liquid;
+
     void Awake() { if (_rb == null) Bind(GetComponent<Rigidbody>(), GetComponent<XRGrab>()); }
 
     public void Bind(Rigidbody rb, XRGrab grab) { _rb = rb; _grab = grab; }
@@ -56,6 +77,7 @@ public class DropRespawn : MonoBehaviour
     void Update()
     {
         if (!_hasHome) return;
+        if (!_supplyCaptured) CaptureSupply();
         bool held = _grab != null && _grab.isSelected;
         float speed = _rb != null && !_rb.isKinematic ? _rb.linearVelocity.magnitude : 0f;
         float dist = (transform.position - _homePos).magnitude;
@@ -63,7 +85,8 @@ public class DropRespawn : MonoBehaviour
         _idle = held || speed >= 0.05f ? 0f : _idle + Time.deltaTime;
 
         if (!held && DropRespawnMath.ShouldRespawn(transform.position.y, killZ)) { GoHome(); return; }
-        if (DropRespawnMath.ShouldReturnHome(dist, speed, held, _idle, minIdleSeconds, minDistance)) { GoHome(); return; }
+        if (DropRespawnMath.ShouldReturnHome(dist, speed, held, _idle, transform.position.y,
+                                             minIdleSeconds, minDistance)) { GoHome(); return; }
 
         // Settle-freeze: at rest for a beat → kinematic in place (immune to
         // solver spikes; next grab re-frees it).
@@ -71,7 +94,19 @@ public class DropRespawn : MonoBehaviour
             _rb.isKinematic = true;
     }
 
-    /// Teleport back to the shelf spot and re-freeze (public for tests/tools).
+    /// Record the current contents as this item's fresh-replacement supply.
+    /// Public so tests (and future builders) can capture deterministically.
+    public void CaptureSupply()
+    {
+        if (_liquid == null) _liquid = GetComponent<LiquidPhysics>();
+        _homeChem = _liquid != null ? _liquid.currentChemical : null;
+        _homeMl = _liquid != null ? _liquid.currentLiquidVolume : 0f;
+        _supplyCaptured = true;
+    }
+
+    /// Teleport back to the shelf spot, re-freeze, and restore the home supply
+    /// (public for tests/tools). Empty receivers reset to empty — a respawned
+    /// vessel never keeps a mid-run mixture.
     public void GoHome()
     {
         if (!_hasHome) return;
@@ -80,6 +115,11 @@ public class DropRespawn : MonoBehaviour
             _rb.isKinematic = true;   // back to shelf policy; next release re-frees it
         }
         transform.SetPositionAndRotation(_homePos, _homeRot);
+        if (_supplyCaptured)
+        {
+            if (_liquid == null) _liquid = GetComponent<LiquidPhysics>();
+            if (_liquid != null) _liquid.SetContents(_homeChem, _homeMl);
+        }
         _idle = 0f;
     }
 }

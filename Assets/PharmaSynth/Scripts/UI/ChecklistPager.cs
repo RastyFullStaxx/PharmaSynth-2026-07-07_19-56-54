@@ -73,15 +73,16 @@ public static class ChecklistPager
         return sb.ToString().TrimEnd();
     }
 
-    /// One-line status header for the holo board — absorbs the retired wrist
-    /// mini-panel's summary (current step · progress · mastery).
+    /// Status header for the holo board — absorbs the retired wrist mini-panel's
+    /// summary. TWO lines (W5.12): the step label gets its own wrapped line so a
+    /// long instruction never renders as one unreadable row; stats sit below.
     public static string BuildHeader(ExperimentRunner runner)
     {
         if (runner == null || runner.Graph == null) return "";
         string current = "—";
         foreach (var t in runner.Graph.AvailableTasks()) { current = GlyphSafe.Sanitize(t.label); break; }
         return "<color=#61D6FF>»</color> " + current
-             + "   <color=#61D6FF>" + ExperimentHudController.FormatPercent(runner.Progress01) + "</color>"
-             + "   Mastery " + Mathf.RoundToInt(runner.OverallMastery * 100f) + "%";
+             + "\n<color=#61D6FF>" + ExperimentHudController.FormatPercent(runner.Progress01) + "</color>"
+             + " · Mastery " + Mathf.RoundToInt(runner.OverallMastery * 100f) + "%";
     }
 }

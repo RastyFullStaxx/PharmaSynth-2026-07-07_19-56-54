@@ -63,8 +63,29 @@ public class NPCNarrationController : MonoBehaviour
     private bool _skipReveal;
     private bool _voiceActive;   // a real voice clip is playing → suppress blips
 
+    // Lines that arrive while another is still TYPING are queued, not stomped
+    // (user 2026-07-12: Pharmee's dialogue cut off mid-sentence — every new line
+    // used to kill the reveal in progress). Bounded so stale chatter can't pile up.
+    private readonly Queue<(string subtitle, float seconds, AudioClip clip)> _queued
+        = new Queue<(string, float, AudioClip)>();
+    private const int MaxQueued = 2;
+
+    /// Post-reveal read time: the authored dwell minus what typing consumed,
+    /// floored so a long line always holds ≥ minHold once fully shown (long
+    /// lines used to vanish 0.6 s after the last character). Pure + tested.
+    public static float HoldSecondsAfterReveal(float authoredWait, float revealSeconds, float minHold = 1.2f)
+        => Mathf.Max(minHold, authoredWait - revealSeconds);
+
     /// Edit-mode/test binding for the auto-hidden bubble panel.
     public void SetPanelRoot(GameObject g) => panelRoot = g;
+
+    // Coroutines die on disable — reset the reveal flag and drop queued lines
+    // so a re-enabled narrator can't deadlock queueing behind a dead reveal.
+    private void OnDisable()
+    {
+        IsRevealing = false;
+        _queued.Clear();
+    }
 
     /// Voice-over seam: the hash-keyed clip bank + which character this channel is.
     public void BindVoice(VoiceBank bank, VoiceSpeaker who) { voiceBank = bank; speaker = who; }
@@ -79,6 +100,13 @@ public class NPCNarrationController : MonoBehaviour
     private void Start()
     {
         if (panelRoot != null) panelRoot.SetActive(false); // silent until spoken to
+        // Long lines must wrap and never truncate — some bubble/HUD texts were
+        // authored NoWrap/Ellipsis and visually cut lines off (user 2026-07-12).
+        if (subtitleText != null)
+        {
+            subtitleText.textWrappingMode = TextWrappingModes.Normal;
+            subtitleText.overflowMode = TextOverflowModes.Overflow;
+        }
         if (playOnStart)
             PlayTutorialNarration();
     }
@@ -91,11 +119,18 @@ public class NPCNarrationController : MonoBehaviour
         narrationRoutine = StartCoroutine(PlayLinesRoutine());
     }
 
-    /// Reactive single-line narration (interrupts the current line). Used by
-    /// PharmeeBrain for per-step instructions, warnings, and celebrations.
+    /// Reactive single-line narration. A line still TYPING is never stomped —
+    /// the new one queues behind it; a fully-revealed line (in its hold) is
+    /// interrupted as before. Used by PharmeeBrain for instructions/warnings.
     public void Say(string subtitle, float seconds = 3f, AudioClip clip = null)
     {
         if (!isActiveAndEnabled) return; // edit-mode / disabled: no coroutine
+        if (IsRevealing && IsSpeaking)
+        {
+            while (_queued.Count >= MaxQueued) _queued.Dequeue();   // drop the stalest
+            _queued.Enqueue((subtitle, seconds, clip));
+            return;
+        }
         if (narrationRoutine != null)
             StopCoroutine(narrationRoutine);
         narrationRoutine = StartCoroutine(SayRoutine(subtitle, seconds, clip));
@@ -139,6 +174,12 @@ public class NPCNarrationController : MonoBehaviour
         }
         yield return RevealAndHold(subtitle, waitSeconds);
         _voiceActive = false;
+        // Chain any line that queued while this one was typing.
+        if (_queued.Count > 0)
+        {
+            var next = _queued.Dequeue();
+            narrationRoutine = StartCoroutine(SayRoutine(next.subtitle, next.seconds, next.clip));
+        }
     }
 
     /// Type the line out character-by-character (with per-few-chars talking blips),
@@ -182,7 +223,7 @@ public class NPCNarrationController : MonoBehaviour
             revealTime = total / cps;
         }
 
-        yield return new WaitForSeconds(Mathf.Max(0.6f, waitSeconds - revealTime));
+        yield return new WaitForSeconds(HoldSecondsAfterReveal(waitSeconds, revealTime));
         EndLine();
     }
 
@@ -226,6 +267,13 @@ public class NPCNarrationController : MonoBehaviour
             narratorAudioSource.Stop();
 
         EndLine();
+        // Skip advances: play the next queued line if one is waiting.
+        if (_queued.Count > 0)
+        {
+            var next = _queued.Dequeue();
+            narrationRoutine = StartCoroutine(SayRoutine(next.subtitle, next.seconds, next.clip));
+            return;
+        }
         onNarrationFinished?.Invoke();
     }
 

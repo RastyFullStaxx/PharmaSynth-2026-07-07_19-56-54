@@ -26,8 +26,11 @@ public class BreakableGlassware : MonoBehaviour
 
     void Awake()
     {
+        // Display name, never the GO/prefab code name (user 2026-07-12: shatter
+        // messages read "Reagent_AceticAcid_Diluted").
         if (_rb == null)
-            Bind(FindAnyObjectByType<ExperimentRunner>(), GetComponent<DropRespawn>(), GetComponent<Rigidbody>(), name);
+            Bind(FindAnyObjectByType<ExperimentRunner>(), GetComponent<DropRespawn>(), GetComponent<Rigidbody>(),
+                 Mishandling.DisplayNameFor(gameObject));
     }
 
     /// Edit-mode / builder seam (Awake doesn't fire on edit-mode AddComponent).
