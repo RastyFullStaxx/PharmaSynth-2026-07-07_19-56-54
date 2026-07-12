@@ -54,5 +54,5 @@ For each experiment (drive via the hub select → build spawns it):
 - [ ] Final APK + user guide + technical handover.
 
 ## Known device-day risks (carry forward)
-- Standalone XR `InitManagerOnStart` is FALSE (headless-PC-safe); **Android keeps auto-init ON** — verify a real headset actually initializes OpenXR.
+- Standalone XR `InitManagerOnStart` toggles via **Tools ▸ PharmaSynth ▸ Headset Play Mode** (ON = drive a Link/Air Link Quest in editor Play; OFF = headless-PC-safe). **Android keeps auto-init ON** — verify a real headset actually initializes OpenXR.
 - XR Device Simulator "walk through walls" is an HMD-drag artifact; on device, body collision uses the CharacterController (r=0.25) + gravity — re-verify real collision.

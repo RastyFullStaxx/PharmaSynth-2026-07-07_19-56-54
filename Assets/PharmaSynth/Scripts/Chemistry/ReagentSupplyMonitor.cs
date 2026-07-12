@@ -61,6 +61,21 @@ public class ReagentSupplyMonitor : MonoBehaviour
     private void OnDisable() { if (runner != null) runner.ExperimentStarted -= OnStarted; }
     private void OnStarted(ExperimentModuleDefinition m) => _latched = false;
 
+    /// W5.9: "Keep trying" on the supply prompt used to be a soft dead-end — the
+    /// latch only cleared on a new attempt, so a genuine shortfall never
+    /// re-prompted and Running had no other exit. Dismissing the prompt now
+    /// un-latches after a grace window: if the shortfall still exists (or a new
+    /// one appears), Pharmee offers the restart again.
+    public void Unlatch(float graceSeconds = 20f)
+    {
+        _latched = false;
+        _next = Time.time + Mathf.Max(1f, graceSeconds);
+    }
+
+    /// Test seams (W5.9).
+    public bool Latched => _latched;
+    public void ForceLatch() => _latched = true;
+
     private void Update()
     {
         if (_latched || runner == null || !runner.IsRunning) return;

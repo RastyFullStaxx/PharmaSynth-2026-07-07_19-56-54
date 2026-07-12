@@ -100,6 +100,17 @@ MonoBehaviour:
     rubricCategory: 1
     required: 1
     hint: "Chloroform does not readily burn \u2014 unlike the acetone feedstock."
+  - taskId: test-oxidation
+    label: Oxidation test (dichromate + H2SO4)
+    phase: 2
+    prerequisites:
+    - dry-redistil
+    progressWeight: 1
+    skill: 5
+    rubricCategory: 1
+    required: 1
+    hint: "Warm chloroform with potassium dichromate and conc. H2SO4 \u2014 the pungent
+      phosgene-like odour confirms it. Fume hood!"
   - taskId: test-agno3
     label: Alcoholic AgNO3 (no precipitate cold)
     phase: 2
@@ -116,11 +127,13 @@ MonoBehaviour:
     prerequisites:
     - test-flammability
     - test-agno3
+    - test-oxidation
     progressWeight: 1
     skill: 0
     rubricCategory: 5
     required: 1
     hint: Enter chloroform mass, % yield and test results.
+  assessmentMode: 0
   masteryThreshold: 0.9
   bkt:
     pL0: 0.25

@@ -20,10 +20,10 @@ public class PharmeeBrain : MonoBehaviour
     [Serializable]
     public class DialogueSet
     {
-        [TextArea] public string greeting = "Welcome to the lab! I'm Pharmee. Follow the steps on your tablet and I'll guide you.";
+        [TextArea] public string greeting = "Welcome to the lab! I'm Pharmee. Follow the steps on your wrist checklist and I'll guide you.";
         [TextArea] public string celebrate = "Outstanding! You've completed the experiment. Great synthesis!";
         [TextArea] public string encourage = "Good effort — review the steps and give it another go. You've got this!";
-        [TextArea] public string wrongReagent = "Hmm, that isn't the reagent this step needs. Check your tablet.";
+        [TextArea] public string wrongReagent = "Hmm, that isn't the reagent this step needs. Check your wrist checklist.";
         [TextArea] public string wrongStep = "Let's not skip ahead — complete the current step first.";
         [TextArea] public string overheat = "Careful — it's overheating! Ease off the heat.";
         [TextArea] public string safety = "Safety first! Mind the hazard and keep your PPE on.";
@@ -132,10 +132,13 @@ public class PharmeeBrain : MonoBehaviour
     }
 
     /// Idle chatter: after a stretch of quiet mid-run, Pharmee offers a friendly
-    /// comment (never in assessment mode; never overlapping a fresh line).
+    /// comment (never in assessment mode; never overlapping a fresh line; W5.9:
+    /// never during the scripted review flow — IsRunning stays true through the
+    /// quiz, and idle lines were cutting off the gate's congratulations).
     private void Update()
     {
         if (!idleChatterEnabled || _assessment) return;
+        if (PharmeeGatekeeper.ReviewFlowActive) return;
         if (runner == null || !runner.IsRunning) return;
         if (Time.time - _lastLineTime < idleChatterGap) return;
         Speak(PharmeeState.Encouraging, PharmeeFaceExpression.Happy,

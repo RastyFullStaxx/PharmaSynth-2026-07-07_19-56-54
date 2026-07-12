@@ -15,6 +15,10 @@ public class PowderPourer : MonoBehaviour
     private PowderPhysics sourceContainer;
     private ParticleSystem.EmissionModule emissionModule;
 
+    // Null-safe mouth (W5.8): spout was never auto-created for powder jars, so an
+    // unwired `spout` used to NRE the whole Update loop on the first tilt.
+    private Transform Mouth => spout != null ? spout : transform;
+
     void Start()
     {
         sourceContainer = GetComponent<PowderPhysics>();
@@ -30,7 +34,7 @@ public class PowderPourer : MonoBehaviour
     {
         float tiltAngle = Vector3.Angle(Vector3.up, transform.up);
 
-        if (tiltAngle > pourThreshold && sourceContainer.currentPowderVolume > 0)
+        if (tiltAngle > pourThreshold && sourceContainer != null && sourceContainer.currentPowderVolume > 0)
         {
             Pour(tiltAngle);
         }
@@ -60,14 +64,23 @@ public class PowderPourer : MonoBehaviour
             }
         }
 
-        // 3. Raycast Physics to find target
-        RaycastHit hit;
-        // Powders fall straight down, so we raycast down from the spout
-        if (Physics.Raycast(spout.position, Vector3.down, out hit, 2.0f))
+        // 3. Raycast Physics to find target (triggers ignored — station sensor
+        // columns and socket spheres must never swallow the stream; own-body
+        // hits skipped like LiquidPourer.ResolveTarget).
+        var hits = Physics.RaycastAll(Mouth.position, Vector3.down, 2.0f, ~0, QueryTriggerInteraction.Ignore);
+        RaycastHit hit = default;
+        float bestDist = float.MaxValue;
+        for (int i = 0; i < hits.Length; i++)
+        {
+            if (hits[i].collider == null) continue;
+            if (hits[i].collider.transform.IsChildOf(transform)) continue;   // own body
+            if (hits[i].distance < bestDist) { bestDist = hits[i].distance; hit = hits[i]; }
+        }
+        if (hit.collider != null)
         {
             // Check if we hit another powder container
             PowderPhysics targetPowder = hit.collider.GetComponentInParent<PowderPhysics>();
-            
+
             // (Optional) Check if we hit a LIQUID container to dissolve the powder
             LiquidPhysics targetLiquid = hit.collider.GetComponentInParent<LiquidPhysics>();
 

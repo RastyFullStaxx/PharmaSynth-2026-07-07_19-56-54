@@ -51,6 +51,11 @@ public class ExperimentSceneBuilder : MonoBehaviour
         if (Application.isPlaying) Object.Destroy(go); else Object.DestroyImmediate(go);
     }
 
+    private static void Kill(Component c)
+    {
+        if (Application.isPlaying) Object.Destroy(c); else Object.DestroyImmediate(c);
+    }
+
     /// Build the setup for a module. Returns the number of spawned root objects.
     /// Public + returns count so edit-mode self-tests can verify it.
     public int Build(string moduleId)
@@ -76,10 +81,217 @@ public class ExperimentSceneBuilder : MonoBehaviour
         if (layout == null) { Debug.LogWarning("[SceneBuilder] no layout for " + moduleId); return 0; }
 
         int n = 0;
+        _currentLayout = layout;
         foreach (var s in layout.stations) { BuildStation(stage, s); n++; }
         foreach (var p in layout.props)    { BuildProp(stage, p); n++; }
         foreach (var v in layout.vessels)  { BuildVessel(stage, v); n++; }
+        WireVerbControllers(stage, layout);   // stir/grind/burner-gate (W5.8) — needs props+vessels spawned
+        SpawnRackKit(stage);                  // test-tube rack, pre-filled (W5.8)
+        SpawnSpares(stage);                   // spare beakers/flask (W5.8: duplicates of vital glass)
+        StageConsumables(stage, layout);      // matches + striker at Heat experiments (W5.8)
         return n;
+    }
+
+    /// A fixed test-tube rack near the vessels, pre-filled with 6 grabbable
+    /// tubes (full receiver treatment; each tube's DropRespawn home = its slot,
+    /// so the rack refills itself when tubes are abandoned).
+    private void SpawnRackKit(Transform stage)
+    {
+        var prefab = assets != null ? assets.GetPrefab("TestTubeRack") : null;
+        if (prefab == null) return;
+        var rack = Instantiate(prefab, stage);
+        rack.name = "RackKit";
+        Normalise(rack, "TestTubeRack", 0.18f);
+        Seat(rack.transform, LayoutTidyMath.RackPos);
+        var grab = rack.GetComponent<XRGrab>(); if (grab != null) Kill(grab);
+        var rrb = rack.GetComponent<Rigidbody>(); if (rrb != null) Kill(rrb);
+
+        var b = WB(rack);
+        var tubePrefab = assets.GetPrefab("TestTube");
+        if (tubePrefab == null) return;
+        for (int i = 0; i < 6; i++)
+        {
+            int col = i % 3, row = i / 3;
+            var pos = new Vector3(
+                Mathf.Lerp(b.min.x + 0.03f, b.max.x - 0.03f, col / 2f),
+                b.max.y + 0.02f,
+                Mathf.Lerp(b.min.z + 0.02f, b.max.z - 0.02f, row));
+            SpawnReceiver(stage, tubePrefab, "TestTube", "RackTube_" + i, "Test Tube", pos, 0.15f);
+        }
+    }
+
+    /// Spare vital glassware on the free front strip (user: "enough duplicates
+    /// of things that are vital like beakers").
+    private void SpawnSpares(Transform stage)
+    {
+        if (assets == null) return;
+        var specs = new (string prefab, string label)[]
+        {
+            ("Beaker_100mL", "Spare Beaker"),
+            ("Beaker_100mL", "Spare Beaker"),
+            ("ErlenmeyerFlask_400mL", "Spare Flask"),
+        };
+        for (int i = 0; i < specs.Length; i++)
+        {
+            var prefab = assets.GetPrefab(specs[i].prefab);
+            if (prefab == null) continue;
+            SpawnReceiver(stage, prefab, specs[i].prefab, "Spare_" + specs[i].prefab + "_" + i,
+                          specs[i].label, LayoutTidyMath.SparePos(i), 0.14f);
+        }
+    }
+
+    /// A grabbable empty receiver vessel with the full W5.8 treatment.
+    private void SpawnReceiver(Transform stage, GameObject prefab, string prefabName, string name,
+                               string label, Vector3 pos, float targetHeight)
+    {
+        var swap = VesselPrefabFor(prefabName);
+        var inst = Instantiate(swap != null ? swap : prefab, stage);
+        inst.name = name;
+        Normalise(inst, prefabName, targetHeight);
+        Seat(inst.transform, pos);
+        var item = inst.GetComponent<LabItem>() ?? inst.AddComponent<LabItem>();
+        item.itemId = name; item.displayName = label;
+        var rb = PhysicsProfiles.EnsurePhysics(inst, prefabName);
+        inst.AddComponent<GrabPhysicsPolicy>();
+        GrabTuning.Apply(inst.GetComponent<XRGrab>());
+        inst.AddComponent<HoverHighlight>().Bind(inst.GetComponent<XRGrab>());
+        var respawn = inst.AddComponent<DropRespawn>();
+        respawn.SetHome(inst.transform.position, inst.transform.rotation);
+        if (Mishandling.IsBreakable(prefabName))
+        {
+            var breakable = inst.AddComponent<BreakableGlassware>();
+            breakable.Bind(runner, respawn, rb, label);
+            inst.AddComponent<ImpactSound>().Bind(rb, Mishandling.DropSoundKey(prefabName), Mishandling.DefaultBreakSpeed);
+        }
+        else inst.AddComponent<ImpactSound>().Bind(rb, Mishandling.DropSoundKey(prefabName));
+        var lp = inst.GetComponent<LiquidPhysics>() ?? inst.AddComponent<LiquidPhysics>();
+        lp.registry = registry;
+        lp.SetContents(null, 0f);
+        EnsureLiquidVisual(inst, lp);
+        inst.AddComponent<HazardousMixReactor>().Bind(lp, runner);
+        var pl = inst.AddComponent<ProximityLabel>(); pl.SetLabel(label, 1.6f);
+        inst.AddComponent<VesselStatus>().Bind(lp, pl, label, 1.6f);
+        inst.AddComponent<MixFeedback>().Bind(lp);
+    }
+
+    /// Heat experiments stage two ready matchsticks + a striker block on the
+    /// table (the cabinet dispenser remains the endless source). Cloned from
+    /// the dispenser's hidden template when it exists; skipped silently if not.
+    private void StageConsumables(Transform stage, ExperimentLayout layout)
+    {
+        bool hasHeat = false;
+        foreach (var s in layout.stations) if (s.sim == StationSim.Heat) hasHeat = true;
+        if (!hasHeat) return;
+
+        // Striker block (always useful next to the matches).
+        var striker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        striker.name = "MatchStriker";
+        striker.transform.SetParent(stage, false);
+        striker.transform.localScale = new Vector3(0.09f, 0.02f, 0.06f);
+        Seat(striker.transform, LayoutTidyMath.StrikerPos);
+        striker.AddComponent<MatchStrikerSurface>();
+        var spl = striker.AddComponent<ProximityLabel>(); spl.SetLabel("Striker", 1.2f);
+
+        GameObject template = null;
+        foreach (var t in FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (t.name == "Template_Raw_Matchsticks") { template = t.gameObject; break; }
+        if (template == null) return;
+        for (int i = 0; i < 2; i++)
+        {
+            var match = Instantiate(template, stage);
+            match.name = "StagedMatch_" + i;
+            match.SetActive(true);
+            Seat(match.transform, LayoutTidyMath.MatchPos(i));
+            var respawn = match.GetComponent<DropRespawn>() ?? match.AddComponent<DropRespawn>();
+            respawn.Bind(match.GetComponent<Rigidbody>(), match.GetComponent<XRGrab>());
+            respawn.SetHome(match.transform.position, match.transform.rotation);
+        }
+    }
+
+    private ExperimentLayout _currentLayout;
+
+    /// Post-pass (W5.8): wire the tool verbs that span a station + a prop + a
+    /// vessel — the rod stirs the bindings vessel, the pestle grinds the mortar,
+    /// and a Heat station whose required prop is a burner only heats while LIT.
+    private void WireVerbControllers(Transform stage, ExperimentLayout layout)
+    {
+        foreach (var s in layout.stations)
+        {
+            if (s.sim == StationSim.Heat)
+            {
+                var prop = FindLayoutProp(layout, s.requiredItemId);
+                if (prop == null || (prop.prefabName != "BunsenBurner" && prop.prefabName != "AlcoholBurner")) continue;
+                var propGo = FindStageChild(stage, "Prop_" + s.requiredItemId);
+                var padGo = FindStageChild(stage, "Station_" + s.taskId);
+                if (propGo == null || padGo == null) continue;
+                var burner = propGo.GetComponent<BurnerController>() ?? propGo.AddComponent<BurnerController>();
+                var rig = padGo.GetComponent<ZoneSimStation>();
+                if (rig != null) rig.SetIgnitionGate(() => burner != null && burner.IsLit);
+                var status = padGo.GetComponent<StationStatusLabel>();
+                if (status != null) status.SetIgnitionHint(() => burner != null && burner.IsLit);
+                // The burner base doubles as a match striker.
+                if (propGo.GetComponent<MatchStrikerSurface>() == null) propGo.AddComponent<MatchStrikerSurface>();
+            }
+            else if (s.sim == StationSim.Stir)
+            {
+                var rodGo = FindStageChild(stage, "Prop_" + s.requiredItemId);
+                var vesselLp = FirstBindingsVessel(stage);
+                if (rodGo == null || vesselLp == null) continue;
+                var stir = vesselLp.GetComponent<StirController>() ?? vesselLp.gameObject.AddComponent<StirController>();
+                stir.Bind(runner, s.taskId, vesselLp, rodGo.transform);
+            }
+            else if (s.sim == StationSim.Grind)
+            {
+                WireGrind(stage, s.taskId);
+            }
+        }
+
+        // A staged mortar+pestle with no Grind station still grinds (educational).
+        bool hasGrindStation = false;
+        foreach (var s in layout.stations) if (s.sim == StationSim.Grind) hasGrindStation = true;
+        if (!hasGrindStation) WireGrind(stage, null);
+    }
+
+    private void WireGrind(Transform stage, string taskId)
+    {
+        GameObject mortar = null, pestle = null;
+        foreach (Transform t in stage)
+        {
+            if (t.name.StartsWith("Prop_"))
+            {
+                var li = t.GetComponent<LabItem>();
+                string dn = li != null ? (li.displayName ?? "") : "";
+                if (mortar == null && (dn.Contains("Mortar") || t.name.Contains("Motar") || dn.Contains("Motar"))) mortar = t.gameObject;
+                if (pestle == null && dn.Contains("Pestle")) pestle = t.gameObject;
+            }
+        }
+        if (mortar == null || pestle == null) return;
+        var grind = mortar.GetComponent<GrindController>() ?? mortar.AddComponent<GrindController>();
+        grind.Bind(runner, taskId, pestle.transform);
+    }
+
+    private static ExperimentLayout.Prop FindLayoutProp(ExperimentLayout layout, string itemId)
+    {
+        if (string.IsNullOrEmpty(itemId)) return null;
+        foreach (var p in layout.props) if (p.itemId == itemId) return p;
+        return null;
+    }
+
+    private static GameObject FindStageChild(Transform stage, string name)
+    {
+        foreach (Transform t in stage) if (t.name == name) return t.gameObject;
+        return null;
+    }
+
+    private LiquidPhysics FirstBindingsVessel(Transform stage)
+    {
+        foreach (Transform t in stage)
+        {
+            if (!t.name.StartsWith("Vessel_")) continue;
+            var bind = t.GetComponent<LiquidTaskBinding>();
+            if (bind != null && bind.ExpectedSteps.Count > 0) return t.GetComponent<LiquidPhysics>();
+        }
+        return null;
     }
 
     // ---- builders ---------------------------------------------------------
@@ -93,18 +305,27 @@ public class ExperimentSceneBuilder : MonoBehaviour
         pad.transform.localScale = new Vector3(0.3f, 0.012f, 0.3f);
         var box = pad.GetComponent<BoxCollider>();
         box.isTrigger = true; box.size = new Vector3(1.2f, 40f, 1.2f); box.center = new Vector3(0f, 20f, 0f);
+        // W5.8 (user): the visible pads cluttered the table — hide the cosmetic
+        // cube but keep its collider column + every sensor/sim living on it.
+        // The socket ghost + billboard label remain the "place here" cues.
+        var padMr = pad.GetComponent<MeshRenderer>();
+        if (padMr != null) padMr.enabled = false;
 
-        bool simDriven = s.sim != StationSim.None;
+        // Zone sims run a sustained chemistry sim; verb stations (Stir/Grind/
+        // Weigh, W5.8) complete through their own tool controllers. Only plain
+        // stations still complete on zone-touch.
+        bool zoneSim = s.sim == StationSim.Heat || s.sim == StationSim.Crystallise
+                    || s.sim == StationSim.Filter || s.sim == StationSim.Collect;
         var st = pad.AddComponent<ExperimentTaskStation>();
-        // Sim stations complete via the sustained verb's auto-check, not on zone-touch.
-        st.Configure(runner, s.taskId, s.requiredItemId, !simDriven, false);
+        st.Configure(runner, s.taskId, s.requiredItemId, s.sim == StationSim.None, false);
+        if (s.sim == StationSim.Weigh) BuildWeighStation(stage, s);
 
-        if (simDriven)
+        TemperatureSim temp = null; CrystallizationController cryst = null;
+        FiltrationController filt = null; GasCollection gas = null;
+        if (zoneSim)
         {
             var sensor = pad.AddComponent<ZoneItemSensor>();
             sensor.SetItemId(s.requiredItemId);
-            TemperatureSim temp = null; CrystallizationController cryst = null;
-            FiltrationController filt = null; GasCollection gas = null;
             switch (s.sim)
             {
                 case StationSim.Heat:       temp  = pad.AddComponent<TemperatureSim>(); break;
@@ -186,7 +407,69 @@ public class ExperimentSceneBuilder : MonoBehaviour
         sock.interactableHoverMeshMaterial = SocketGhostMaterial();
         sockGo.AddComponent<SelectSfx>().Bind(sock, "socket-snap");
 
-        MakeLabel(s.label, new Vector3(s.pos.x, s.pos.y + 0.32f, s.pos.z), 0.13f);
+        var labelTmp = MakeLabel(s.label, new Vector3(s.pos.x, s.pos.y + 0.32f, s.pos.z), 0.13f);
+        // Live status on the billboard (W5.8): Heat shows the temperature climb,
+        // the other sims show percent progress — the player can SEE the verb work.
+        if (zoneSim && labelTmp != null)
+            pad.AddComponent<StationStatusLabel>().Bind(labelTmp, s.label, s.sim, temp, cryst, filt, gas, s.simTargetC);
+    }
+
+    /// A functional balance fixture at a Weigh station (W5.8): the Balance model
+    /// (fixed, not grabbable), a live grams display, and the WeighStation whose
+    /// TaskGraph condition completes the weigh task. The required measure comes
+    /// from the layout's vessel binding for the same task (chemical mode); a
+    /// station with no such binding falls back to its requiredItemId (tool mode).
+    private void BuildWeighStation(Transform stage, ExperimentLayout.Station s)
+    {
+        GameObject balance;
+        var prefab = assets != null ? assets.GetPrefab("Balance") : null;
+        if (prefab != null)
+        {
+            balance = Instantiate(prefab, stage);
+            Normalise(balance, "Balance", 0.18f);
+        }
+        else
+        {
+            balance = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            balance.transform.SetParent(stage, false);
+            balance.transform.localScale = new Vector3(0.22f, 0.05f, 0.18f);
+        }
+        balance.name = "Weigh_" + s.taskId;
+        Seat(balance.transform, s.pos);
+        // Fixed fixture: collider yes, grab/physics no (the pan must stay put).
+        var grab = balance.GetComponent<XRGrab>();
+        if (grab != null) Kill(grab);
+        var brb = balance.GetComponent<Rigidbody>();
+        if (brb != null) Kill(brb);
+        if (balance.GetComponentInChildren<Collider>() == null)
+        {
+            var bc = balance.AddComponent<BoxCollider>();
+            bc.size = new Vector3(0.22f, 0.06f, 0.18f);
+        }
+
+        // Pan trigger just above the balance top.
+        var b = WB(balance);
+        var pan = new GameObject("Pan_" + s.taskId);
+        pan.transform.SetParent(balance.transform, true);
+        pan.transform.position = new Vector3(b.center.x, b.max.y + 0.05f, b.center.z);
+        var panCol = pan.AddComponent<BoxCollider>();
+        panCol.isTrigger = true;
+        panCol.size = new Vector3(0.24f, 0.16f, 0.2f);
+
+        // Grams display above the pan.
+        var display = MakeLabel("0.00 g", new Vector3(b.center.x, b.max.y + 0.22f, b.center.z), 0.1f);
+        var scale = balance.AddComponent<WeighingScaleController>();
+        if (display != null) scale.Bind(display);
+
+        // The required measure: the vessel binding that feeds this task.
+        string chem = null; float ml = 0f;
+        if (_currentLayout != null)
+            foreach (var v in _currentLayout.vessels)
+                foreach (var bind in v.bindings)
+                    if (bind.taskId == s.taskId) { chem = bind.reagentChemical; ml = bind.requiredMl; }
+
+        var ws = pan.AddComponent<WeighStation>();
+        ws.Bind(runner, s.taskId, s.requiredItemId, chem, ml, scale);
     }
 
     private static Material _socketGhostMat;
@@ -244,16 +527,18 @@ public class ExperimentSceneBuilder : MonoBehaviour
             lp.registry = registry;
             var chem = assets.GetChemical(p.fillChemical);
             if (chem != null)
-            {
-                lp.currentChemical = chem;
-                lp.currentLiquidVolume = SupplyFor(p, chem);   // finite: ~need + 2 spare pours
-            }
+                lp.SetContents(chem, SupplyFor(p, chem));   // finite: ~need + 2 spare pours
+            EnsureLiquidVisual(inst, lp);                    // visible fill (W5.8)
             var pourer = inst.GetComponent<LiquidPourer>() ?? inst.AddComponent<LiquidPourer>();
+            pourer.Bind(lp);
             if (pourer.spout == null)
             {
+                // Mouth at the TOP of the item's real bounds — the old guessed
+                // (0, 0.12, 0) sat mid-body on tall bottles and above short vials.
+                var b = WB(inst);
                 var spout = new GameObject("Spout").transform;
-                spout.SetParent(inst.transform, false);
-                spout.localPosition = new Vector3(0f, 0.12f, 0f);
+                spout.SetParent(inst.transform, true);
+                spout.position = new Vector3(b.center.x, b.max.y - 0.005f, b.center.z);
                 pourer.spout = spout;
             }
             var spill = inst.AddComponent<SpillMistake>();
@@ -261,34 +546,103 @@ public class ExperimentSceneBuilder : MonoBehaviour
             inst.AddComponent<HazardousMixReactor>().Bind(lp, runner);   // bad-mix consequences
         }
         var pl = inst.AddComponent<ProximityLabel>(); pl.SetLabel(p.displayName, 1.6f);
+        if (p.pourable)
+        {
+            var plp = inst.GetComponent<LiquidPhysics>();
+            if (plp != null)
+            {
+                inst.AddComponent<VesselStatus>().Bind(plp, pl, p.displayName, 1.6f);   // live supply tag (W5.8)
+                inst.AddComponent<MixFeedback>().Bind(plp);
+            }
+        }
+    }
+
+    /// Empty ChemLab prefabs have no liquid child mesh — their `_WithLiquid`
+    /// twin carries the authored PharmaLiquid setup (fill bounds, precipitate
+    /// renderer). Receiving vessels swap to the twin so poured liquid RENDERS
+    /// (W5.8: "pouring into a beaker showed nothing").
+    private GameObject VesselPrefabFor(string prefabName)
+    {
+        if (assets == null) return null;
+        if (!prefabName.EndsWith("_WithLiquid"))
+        {
+            var twin = assets.GetPrefab(prefabName + "_WithLiquid");
+            if (twin != null) return twin;
+        }
+        return assets.GetPrefab(prefabName);
     }
 
     private void BuildVessel(Transform stage, ExperimentLayout.Vessel v)
     {
-        var prefab = assets != null ? assets.GetPrefab(v.prefabName) : null;
+        var prefab = VesselPrefabFor(v.prefabName);
         if (prefab == null) { Debug.LogWarning("[SceneBuilder] missing vessel prefab " + v.prefabName); return; }
         var inst = Instantiate(prefab, stage);
-        inst.name = "Vessel_" + v.prefabName;
+        inst.name = "Vessel_" + v.prefabName;   // keep the AUTHORED name (RealSizes/Mishandling lookups)
         Normalise(inst, v.prefabName, v.targetHeight);
         Seat(inst.transform, v.pos);
         PhysicsProfiles.EnsurePhysics(inst, v.prefabName);   // vessels stay kinematic (no release policy)
         GrabTuning.Apply(inst.GetComponent<XRGrab>());       // collide while held; re-freezes on release
         var lp = inst.GetComponent<LiquidPhysics>() ?? inst.AddComponent<LiquidPhysics>();
         lp.registry = registry;
-        if (!string.IsNullOrEmpty(v.startChemical))
-        {
-            var chem = assets.GetChemical(v.startChemical);
-            if (chem != null) { lp.currentChemical = chem; lp.currentLiquidVolume = lp.maxVolume * 0.3f; }
-        }
+        // ALWAYS set contents explicitly: the _WithLiquid twin serializes a
+        // phantom half-fill, and a blank start must arm the wake-from-empty
+        // branch (chem null + 0 ml) so the first pour adopts its chemical.
+        var startChem = !string.IsNullOrEmpty(v.startChemical) ? assets.GetChemical(v.startChemical) : null;
+        lp.SetContents(startChem, startChem != null ? lp.maxVolume * 0.3f : 0f);
+        EnsureLiquidVisual(inst, lp);
         var bind = inst.AddComponent<LiquidTaskBinding>();
         bind.SetVesselAndRunner(lp, runner);
         foreach (var b in v.bindings)
         {
             var reagent = assets.GetChemical(b.reagentChemical);
-            if (reagent != null) bind.AddExpected(reagent, b.taskId, b.requiredMl);
+            if (reagent != null) bind.AddExpected(reagent, b.taskId, b.requiredMl, b.completesTask);
         }
         inst.AddComponent<HazardousMixReactor>().Bind(lp, runner);   // bad-mix consequences
         var pl = inst.AddComponent<ProximityLabel>(); pl.SetLabel(v.displayName, 1.6f);
+        inst.AddComponent<VesselStatus>().Bind(lp, pl, v.displayName, 1.6f);   // live "120 ml Ethanol" tag (W5.8)
+        inst.AddComponent<MixFeedback>().Bind(lp);                             // reaction/mix/overflow popups (W5.8)
+    }
+
+    /// Guarantee the vessel/prop can RENDER its liquid: if LiquidPhysics has no
+    /// mainRenderer (or it points at the glass shell, which lacks the PharmaLiquid
+    /// fill properties), build an inset "Liquid" child running the liquid shader.
+    /// sharedMaterial only — edit-mode safe (the suite drives the builder).
+    public static void EnsureLiquidVisual(GameObject inst, LiquidPhysics lp)
+    {
+        if (inst == null || lp == null) return;
+        if (lp.mainRenderer != null && lp.mainRenderer.sharedMaterial != null
+            && lp.mainRenderer.sharedMaterial.HasProperty("_Fill")) return;   // authored setup (e.g. _WithLiquid twin)
+
+        // Reuse an existing child named "Liquid" when present but unwired.
+        Renderer liquidR = null;
+        foreach (var r in inst.GetComponentsInChildren<Renderer>(true))
+            if (r.name == "Liquid" && r.sharedMaterial != null && r.sharedMaterial.HasProperty("_Fill")) { liquidR = r; break; }
+
+        if (liquidR == null)
+        {
+            var shader = Shader.Find("PharmaSynth/Liquid");
+            if (shader == null) return;   // shader stripped — leave numeric-only rather than magenta
+            var b = WB(inst);
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            go.name = "Liquid";
+            var col = go.GetComponent<Collider>();
+            if (col != null) { if (Application.isPlaying) Destroy(col); else DestroyImmediate(col); }
+            go.transform.SetParent(inst.transform, true);
+            // Inset cylinder ~72% of the glass footprint, floor to just under the rim.
+            float w = Mathf.Min(b.size.x, b.size.z) * 0.72f;
+            float h = Mathf.Max(0.01f, b.size.y * 0.86f);
+            go.transform.position = new Vector3(b.center.x, b.min.y + h * 0.5f + b.size.y * 0.04f, b.center.z);
+            go.transform.rotation = inst.transform.rotation;
+            var ls = inst.transform.lossyScale;
+            go.transform.localScale = new Vector3(
+                w / Mathf.Max(1e-4f, Mathf.Abs(ls.x)),
+                h * 0.5f / Mathf.Max(1e-4f, Mathf.Abs(ls.y)),   // cylinder mesh is 2 units tall
+                w / Mathf.Max(1e-4f, Mathf.Abs(ls.z)));
+            liquidR = go.GetComponent<Renderer>();
+            liquidR.sharedMaterial = new Material(shader) { name = "PharmaLiquid_Runtime" };
+            liquidR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        }
+        lp.mainRenderer = liquidR;
     }
 
     // ---- helpers ----------------------------------------------------------
@@ -351,17 +705,26 @@ public class ExperimentSceneBuilder : MonoBehaviour
         t.position += Vector3.up * (surfaceY + 0.005f - WB(t.gameObject).min.y);
     }
 
-    private void MakeLabel(string text, Vector3 pos, float scale)
+    private TextMeshPro MakeLabel(string text, Vector3 pos, float scale)
     {
-        if (labelsRoot == null) return;
+        // Fall back to the stage when the scene's WorldLabels root isn't wired
+        // (edit-mode builder tests) — stage teardown cleans those up anyway.
+        var parent = labelsRoot != null ? labelsRoot : Stage();
+        if (parent == null) return null;
         var go = new GameObject("DynLabel_" + text);
-        go.transform.SetParent(labelsRoot, false);
+        go.transform.SetParent(parent, false);
         go.transform.position = pos;
         go.transform.localScale = Vector3.one * scale;
         var tmp = go.AddComponent<TextMeshPro>();
         tmp.text = text; tmp.fontSize = 6f; tmp.alignment = TextAlignmentOptions.Center;
         tmp.color = Color.white; tmp.fontStyle = FontStyles.Bold;
-        tmp.outlineWidth = 0.25f; tmp.outlineColor = new Color32(6, 12, 22, 255);
+        // outlineWidth instances the font material — play-mode only (the edit-mode
+        // suite builds stages too, and .material instancing errors there).
+        if (Application.isPlaying)
+        {
+            tmp.outlineWidth = 0.25f; tmp.outlineColor = new Color32(6, 12, 22, 255);
+        }
         go.AddComponent<FaceCamera>();
+        return tmp;
     }
 }

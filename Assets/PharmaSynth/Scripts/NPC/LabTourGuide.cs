@@ -4,7 +4,7 @@ using UnityEngine;
 
 /// Location-triggered Lab Tour (storyboard, 2026-07-10): instead of narrating on a
 /// timer, Pharmee points each area out as the player physically walks up to it —
-/// tablet, workbench, equipment cabinet, reagent shelf — then signs off once they've
+/// workbench, equipment cabinet, reagent shelf — then signs off once they've
 /// seen them all. Started/stopped by PharmeeGatekeeper; speaks through its narration
 /// via a callback. Landmarks resolve by name (no scene wiring); if none resolve the
 /// gatekeeper falls back to the timed sequence. Pure proximity core is self-tested.

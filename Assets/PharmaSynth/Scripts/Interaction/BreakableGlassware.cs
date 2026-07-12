@@ -57,6 +57,15 @@ public class BreakableGlassware : MonoBehaviour
     public void Break()
     {
         _cooldownUntil = Time.time + rearmSeconds;
+        // Without a respawn there is no "fresh replacement" — a full shatter
+        // would leave the item standing there looking broken-but-fine. Late-bind
+        // if possible; otherwise downgrade to a hard clink and keep the item.
+        if (_respawn == null) _respawn = GetComponent<DropRespawn>();
+        if (_respawn == null)
+        {
+            AudioService.TryPlayAt("glass-clink", transform.position);
+            return;
+        }
         if (_runner != null)
             _runner.RecordMistake(LabErrorType.DroppedGlassware, _label + " shattered — handle glassware gently");
         // Positional shatter at the break point (2026-07-10) + shard burst.

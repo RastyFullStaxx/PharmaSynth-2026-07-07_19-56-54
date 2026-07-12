@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7ec9f7d9e755c8489d0b1555e5fad73, type: 3}
   m_Name: Chem_GrapeJuice
   m_EditorClassIdentifier: Assembly-CSharp::ChemicalData
-  chemicalName: Grape Juice
+  chemicalName: Mixed Fruit Juice
   state: 0
   liquidColor: {r: 0.35, g: 0.08, b: 0.3, a: 1}
   liquidTopColor: {r: 0.45, g: 0.12, b: 0.38, a: 1}
@@ -25,3 +25,5 @@ MonoBehaviour:
   hazard: 0
   requiresFumeHood: 0
   isDangerous: 0
+  isOxidizer: 0
+  isConcentratedAcid: 0

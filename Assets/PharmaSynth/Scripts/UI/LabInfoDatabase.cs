@@ -179,7 +179,7 @@ public static class LabInfoDatabase
         AddReagent("Murexide Reagent", "The reagent set for the murexide test: evaporate the sample with oxidiser, then add ammonia — a purple colour confirms caffeine.");
         AddReagent("Limewater", "Clear calcium hydroxide solution. Bubbling carbon dioxide through it turns it milky white — the classic confirmatory test for CO2 from fermentation or a carbonate.");
         AddReagent("Yeast", "Living fungus that ferments sugars into ethanol and carbon dioxide. It's the biological engine of the wine-making module — keep it warm, not hot, or you kill it.");
-        AddReagent("Grape Juice", "The sugar source yeast ferments into wine (ethanol) over the fermentation. Its dissolved sugars are the 'food' that drives the reaction.");
+        AddReagent("Mixed Fruit Juice", "Mixed non-grape fruit juice (the manuscript excludes grapes) - the sugar source yeast ferments into wine (ethanol). Its dissolved sugars are the 'food' that drives the reaction.");
         AddReagent("Sodium Carbonate", "Washing soda — a mild base and a by-product of the methane synthesis. Fizzes with acid, releasing CO2.");
         AddReagent("Calcium Carbonate", "Chalk or limestone. Treated with acid it fizzes and releases carbon dioxide, which you can confirm with limewater.");
         AddReagent("Carbon Dioxide", "Colourless gas that turns limewater milky — the standard confirmatory test. Given off by fermentation and by carbonates meeting acid.");

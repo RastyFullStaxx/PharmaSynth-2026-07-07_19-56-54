@@ -16,9 +16,17 @@ public class WeighingScaleController : MonoBehaviour
 
     private bool targetEventSent;
 
-    private void Update()
+    public float CurrentMass => currentMass;
+
+    /// Builder seam (W5.8): wire the display TMP at runtime.
+    public void Bind(TMP_Text display) => measurementText = display;
+
+    private void Update() => Tick(Time.deltaTime);
+
+    /// One interpolation step (public so the suite can drive it deterministically).
+    public void Tick(float dt)
     {
-        currentMass = Mathf.MoveTowards(currentMass, targetMass, interpolationSpeed * Time.deltaTime);
+        currentMass = Mathf.MoveTowards(currentMass, targetMass, interpolationSpeed * Mathf.Max(0f, dt));
         UpdateDisplay();
 
         if (!targetEventSent && Mathf.Abs(currentMass - targetMass) <= targetReachedEpsilon)

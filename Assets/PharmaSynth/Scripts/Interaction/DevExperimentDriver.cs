@@ -29,7 +29,12 @@ public class DevExperimentDriver : MonoBehaviour
         if (kb.digit3Key.wasPressedThisFrame) CompleteIndex(2);
         if (kb.digit4Key.wasPressedThisFrame) CompleteIndex(3);
         if (kb.digit5Key.wasPressedThisFrame) CompleteIndex(4);
-        if (kb.fKey.wasPressedThisFrame) { var res = runner.Finish(1f); Debug.Log("[Dev] Finish → grade " + res.grade.Total.ToString("0") + "% passed=" + res.passed); }
+        if (kb.fKey.wasPressedThisFrame)
+        {
+            // W5.9: Finish before Begin used to NRE; guard on a live run.
+            if (!runner.IsRunning) { Debug.Log("[Dev] Finish ignored — no run in progress (press B first)."); }
+            else { var res = runner.Finish(1f); Debug.Log("[Dev] Finish → grade " + res.grade.Total.ToString("0") + "% passed=" + res.passed); }
+        }
         if (kb.rKey.wasPressedThisFrame) { runner.Retry(); Debug.Log("[Dev] Retry"); }
     }
 

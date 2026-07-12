@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: Test_BenzamideAcid
   m_EditorClassIdentifier: Assembly-CSharp::ReactionRule
   inputChemicalA: {fileID: 11400000, guid: c670af5d85067014db38951819f05867, type: 2}
-  inputChemicalB: {fileID: 11400000, guid: d13418cb8b9805e4d9fe66c04d8e9894, type: 2}
+  inputChemicalB: {fileID: 11400000, guid: 168533e78797ab04fba6f8fd8441b373, type: 2}
   resultLiquid: {fileID: 0}
   resultPrecipitate: {fileID: 11400000, guid: 9d55f320c4f116f41a2ac51f08ae18f1, type: 2}
   hasPrecipitate: 1
   minTemperatureC: 40
   outcome: 3
   evolvesGas: 0
-  expectedObservation: White benzoic acid crystals separate on boiling with acid (amide hydrolysis, manual Exp 8).
+  expectedObservation: White benzoic acid crystals separate on boiling with acid
+    (amide hydrolysis, manual Exp 8).

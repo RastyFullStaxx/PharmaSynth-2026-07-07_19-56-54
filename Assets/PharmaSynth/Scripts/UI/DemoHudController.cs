@@ -18,7 +18,11 @@ public class DemoHudController : MonoBehaviour
 
     private void Update()
     {
-        bool running = DemoSession.Active && runner != null && runner.IsRunning;
+        // W5.9: IsRunning persists through the review corner, so Skip/Finish
+        // used to float (uselessly) beside the quiz — hide them there; only the
+        // Auto-Quiz button applies while the tablet is open.
+        bool review = PharmeeGatekeeper.ReviewFlowActive;
+        bool running = DemoSession.Active && runner != null && runner.IsRunning && !review;
         bool quizOpen = DemoSession.Active && postLab != null && postLab.IsOpen;
         Toggle(cluster, running || quizOpen);
         Toggle(skipButton, running);

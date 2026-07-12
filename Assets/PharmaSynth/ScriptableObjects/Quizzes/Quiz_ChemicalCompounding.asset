@@ -30,11 +30,12 @@ MonoBehaviour:
     - Chlorine
     correctIndex: 2
     explanation: Sodium displaces the -OH hydrogen, releasing hydrogen gas.
-  - prompt: Which reagent tests for unsaturation (C=C)?
+  - prompt: What shows that potassium permanganate has OXIDISED an alcohol?
     options:
-    - Bromine water
-    - Limewater
-    - Sodium chloride
-    - Distilled water
+    - The purple colour fades / turns brown
+    - The mixture freezes
+    - White smoke appears
+    - Nothing changes
     correctIndex: 0
-    explanation: Bromine water decolourises with unsaturated compounds.
+    explanation: "KMnO4's violet colour is discharged (brown MnO2 forms) as it oxidises
+      the alcohol \u2014 the manuscript's rate-of-oxidation test."

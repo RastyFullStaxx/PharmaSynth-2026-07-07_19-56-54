@@ -37,6 +37,12 @@ public class ZoneSimStation : MonoBehaviour
     /// Optional particle effect (steam/frost/drip/bubbles), driven like the audio loop.
     public void SetVfx(StationVfx vfx) => _vfx = vfx;
 
+    /// Optional ignition gate (W5.8): a Heat station whose required prop is a
+    /// burner only heats while the burner is LIT (light it with a match). Null
+    /// gate = legacy occupancy-only behaviour.
+    private System.Func<bool> _ignitionGate;
+    public void SetIgnitionGate(System.Func<bool> gate) => _ignitionGate = gate;
+
     /// Configure at build time. Registers the auto-check condition immediately (if a
     /// graph exists) and re-registers on every ExperimentStarted (Retry-safe).
     public void Bind(ExperimentRunner runner, string taskId, StationSim kind, ZoneItemSensor sensor,
@@ -102,7 +108,7 @@ public class ZoneSimStation : MonoBehaviour
         switch (_kind)
         {
             case StationSim.Heat:
-                if (_temp != null) _temp.SetHeating(occupied, heatSourceC);
+                if (_temp != null) _temp.SetHeating(occupied && (_ignitionGate == null || _ignitionGate()), heatSourceC);
                 break;
             case StationSim.Crystallise:
                 if (occupied && _cryst != null) _cryst.BeginCrystallization();  // ice bath: place & let it set

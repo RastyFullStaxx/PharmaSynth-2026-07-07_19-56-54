@@ -17,26 +17,26 @@ MonoBehaviour:
   - taskId: filter-mno2
     label: 3. Filter MnO2
     requiredItemId: filter-mno2
-    pos: {x: -0.053089857, y: 0.91, z: -3.790166}
+    pos: {x: -1.8, y: 0.91, z: -3.78}
     sim: 3
     simTargetC: 85
   - taskId: crystallise
     label: 5. Ice-bath crystallise
     requiredItemId: crystallise
-    pos: {x: -0.65308976, y: 0.91, z: -3.790166}
+    pos: {x: -1.3, y: 0.91, z: -3.78}
     sim: 2
     simTargetC: 85
   - taskId: test-litmus
     label: 6. Litmus test
     requiredItemId: test-litmus
-    pos: {x: -1.2530897, y: 0.91, z: -3.790166}
+    pos: {x: -0.79999995, y: 0.91, z: -3.78}
     sim: 0
     simTargetC: 85
   props:
   - prefabName: Vial_Brown
     itemId: prepare-permanganate
     displayName: KMnO4 Solution
-    pos: {x: 1.3969102, y: 0.91, z: -2.740166}
+    pos: {x: 1.33, y: 0.91, z: -3.52}
     targetHeight: 0.16
     pourable: 1
     fillChemical: Potassium Permanganate
@@ -44,7 +44,7 @@ MonoBehaviour:
   - prefabName: Vial_Brown
     itemId: oxidise-benzaldehyde
     displayName: Benzaldehyde
-    pos: {x: 1.3969102, y: 0.91, z: -3.040166}
+    pos: {x: 1.33, y: 0.91, z: -3.33}
     targetHeight: 0.16
     pourable: 1
     fillChemical: Benzaldehyde
@@ -52,7 +52,7 @@ MonoBehaviour:
   - prefabName: Vial_Brown
     itemId: acidify
     displayName: HCl 6N
-    pos: {x: 1.3969102, y: 0.91, z: -3.340166}
+    pos: {x: 1.33, y: 0.91, z: -3.1399999}
     targetHeight: 0.16
     pourable: 1
     fillChemical: Hydrochloric Acid 6N
@@ -60,7 +60,7 @@ MonoBehaviour:
   - prefabName: Vial_Brown
     itemId: test-fecl3
     displayName: Ferric Chloride
-    pos: {x: 1.3969102, y: 0.91, z: -3.640166}
+    pos: {x: 1.33, y: 0.91, z: -2.95}
     targetHeight: 0.16
     pourable: 1
     fillChemical: Ferric Chloride 10%
@@ -68,7 +68,7 @@ MonoBehaviour:
   - prefabName: Vial_Brown
     itemId: test-ester
     displayName: Sulfuric Acid
-    pos: {x: 1.3969102, y: 0.91, z: -3.940166}
+    pos: {x: 1.11, y: 0.91, z: -3.52}
     targetHeight: 0.16
     pourable: 1
     fillChemical: Sulfuric Acid
@@ -76,7 +76,7 @@ MonoBehaviour:
   - prefabName: Funnel
     itemId: filter-mno2
     displayName: Funnel
-    pos: {x: 1.3800015, y: 0.91, z: -2.840166}
+    pos: {x: -1.7, y: 0.91, z: -3.44}
     targetHeight: 0.2
     pourable: 0
     fillChemical: 
@@ -84,7 +84,7 @@ MonoBehaviour:
   - prefabName: WatchGlass
     itemId: crystallise
     displayName: Watch Glass
-    pos: {x: 1.3800015, y: 0.91, z: -3.140166}
+    pos: {x: -1.7, y: 0.91, z: -3.25}
     targetHeight: 0.12
     pourable: 0
     fillChemical: 
@@ -92,36 +92,53 @@ MonoBehaviour:
   - prefabName: Dropper
     itemId: test-litmus
     displayName: Dropper
-    pos: {x: 1.3800015, y: 0.91, z: -3.440166}
+    pos: {x: -1.7, y: 0.91, z: -3.06}
     targetHeight: 0.14
     pourable: 0
     fillChemical: 
     supplyMl: 0
+  - prefabName: Vial_Brown
+    itemId: test-ester-alcohol
+    displayName: Propyl Alcohol
+    pos: {x: 1.11, y: 0.91, z: -3.33}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Propyl Alcohol
+    supplyMl: 0
   vessels:
   - prefabName: Beaker_500mL
     displayName: Reaction Beaker
-    pos: {x: 0.74691033, y: 0.91, z: -3.4901662}
+    pos: {x: -0.25, y: 0.91, z: -3.18}
     targetHeight: 0.24
     startChemical: 
     bindings:
     - reagentChemical: Potassium Permanganate
       taskId: prepare-permanganate
       requiredMl: 50
+      completesTask: 1
     - reagentChemical: Benzaldehyde
       taskId: oxidise-benzaldehyde
       requiredMl: 50
+      completesTask: 1
     - reagentChemical: Hydrochloric Acid 6N
       taskId: acidify
       requiredMl: 50
+      completesTask: 1
   - prefabName: TestTube_WithLiquid
     displayName: Benzoate Test Tube
-    pos: {x: 0.8969102, y: 0.91, z: -3.790166}
+    pos: {x: 0.19999999, y: 0.91, z: -3.18}
     targetHeight: 0.13
     startChemical: Benzoic Acid
     bindings:
     - reagentChemical: Ferric Chloride 10%
       taskId: test-fecl3
       requiredMl: 50
+      completesTask: 1
     - reagentChemical: Sulfuric Acid
       taskId: test-ester
       requiredMl: 50
+      completesTask: 1
+    - reagentChemical: Propyl Alcohol
+      taskId: test-ester
+      requiredMl: 50
+      completesTask: 1

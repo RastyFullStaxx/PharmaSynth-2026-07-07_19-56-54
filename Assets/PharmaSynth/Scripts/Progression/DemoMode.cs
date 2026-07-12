@@ -90,8 +90,8 @@ public static class DemoMode
     /// regular laboratory these must NOT sit ready-made on the shelves — the
     /// player synthesises them; each experiment's own stage still spawns what
     /// its manuscript reagent list requires). Demo sessions show them.
-    /// (Sodium Acetate and Grape Juice are excluded — they are FEEDSTOCKS, not
-    /// products: Sodium Acetate feeds Methane, Grape Juice ferments into Wine.
+    /// (Sodium Acetate and Mixed Fruit Juice are excluded — they are FEEDSTOCKS, not
+    /// products: Sodium Acetate feeds Methane, the fruit juice ferments into Wine.
     /// Both stay always-visible on the shelf; the fermented product Wine is the
     /// gated end product of the Wine Making experiment.)
     public static bool IsEndProduct(string chemicalName)

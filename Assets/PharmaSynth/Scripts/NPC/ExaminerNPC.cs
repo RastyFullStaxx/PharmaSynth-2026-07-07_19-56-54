@@ -88,6 +88,9 @@ public class ExaminerNPC : MonoBehaviour
     {
         if (_talking && Time.time >= _talkUntil) SetTalking(false);
         if (!_running || _talking) return;
+        // W5.9: no ambient remarks during the scripted review — they were
+        // interrupting Jimenez's own quiz briefing / verdict mid-sentence.
+        if (PharmeeGatekeeper.ReviewFlowActive) return;
         if (Time.time < _nextRemark) return;
         Say(PharmeeLines.Pick(PharmeeLines.ExamRemarks, _variant++));
         _nextRemark = Time.time + Random.Range(remarkMin, remarkMax);

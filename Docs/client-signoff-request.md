@@ -68,3 +68,9 @@ Pharmee now states each experiment's **Intended Learning Outcomes** in the intro
 Pharmee and Dr. Jimenez now speak their lines via pre-generated ElevenLabs TTS clips (subtitles remain). Two asks:
 - ☐ **Approve the two voices** after the 4-line sample listen (Pharmee: bright/slightly synthetic; Dr. Jimenez: stern older male) — or nominate voices.
 - ☐ **Confirm dialogue copy** (same ask as the existing "dialogue copy pass" item) — voiced lines regenerate automatically per changed line, so copy edits stay cheap.
+
+## W5.9 additions (2026-07-12)
+
+- **Chemical Compounding module scope** — the game's test battery diverges from manuscript Exp 2 (see `manuscript-reconciliation.md` §7). Decide: keep the simplified single-substrate battery, or restore the manuscript's multi-substrate identification tests (FeCl3 enol / rate-of-oxidation / Tollen's / ester / aspirin hydrolysis)?
+- **Safety-skill mastery coupling** — safety mistakes currently dent the grade but not BKT mastery unless a module tracks the Safety skill. Coupling them everywhere raises difficulty; confirm preference.
+- **Per-attempt history** — only aggregate best-grade/attempt-count is persisted (no per-attempt log). Confirm the analytics descope still stands.

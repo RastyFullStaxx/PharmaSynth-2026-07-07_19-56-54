@@ -7,8 +7,12 @@ using UnityEngine;
 /// pin the policy.
 public static class Mishandling
 {
-    /// Glass / porcelain items that shatter when dropped. Metal, wood and
-    /// plastic tools (tongs, spatula, racks, wash bottles…) never break.
+    /// THIN GLASS that shatters when dropped — and nothing else (user 2026-07-12:
+    /// "some equipment breaks even when it's not glassware to begin with").
+    /// Sturdy solid glass (rods, funnels), droppers and porcelain (dish/crucible)
+    /// were delisted in W5.8: the rod is now the STIR tool, and shattering a tool
+    /// mid-verb is punitive; porcelain survives a bench drop in reality. Metal,
+    /// wood and plastic tools never break.
     private static readonly HashSet<string> Breakables = new HashSet<string>
     {
         "Beaker_100mL", "Beaker_100mL_WithLiquid",
@@ -17,20 +21,26 @@ public static class Mishandling
         "GraduatedCylinder_50mL", "GraduatedCylinder_50mL_WithLiquid",
         "TestTube", "TestTube_WithLiquid",
         "Vial", "Vial_Brown", "Vial_Brown_WithLabel", "Vial_WithLabel",
-        "WatchGlass", "GlassRod", "Funnel", "Dropper",
-        "EvaporatingDish", "Crucible",          // porcelain
+        "WatchGlass",
+    };
+
+    /// Delisted glass/ceramic (W5.8): robust in the hand, but still CLINKS like
+    /// glass on impact instead of falling through to the wooden knock.
+    private static readonly HashSet<string> CeramicOrSolidGlass = new HashSet<string>
+    {
+        "GlassRod", "Funnel", "Dropper", "EvaporatingDish", "Crucible",
     };
 
     public static bool IsBreakable(string prefabName) => Breakables.Contains(prefabName ?? "");
     public static IEnumerable<string> BreakableNames => Breakables;
 
-    /// An impact at or above this speed shatters glass. 4.0 m/s ≈ a free fall
-    /// of ~0.8 m onto a hard surface — a real drop from bench/shelf height
+    /// An impact at or above this speed shatters glass. 4.5 m/s ≈ a free fall
+    /// of ~1.0 m onto a hard surface — a real drop from bench/shelf height
     /// breaks, but carrying an item and bumping a wall or a neighbouring bottle
-    /// (a slow scrape, well under this) never does (user 2026-07-11: breakage
-    /// was far too twitchy). Held items are additionally immune in
-    /// BreakableGlassware regardless of speed.
-    public const float DefaultBreakSpeed = 4.0f;
+    /// (a slow scrape, well under this) never does (raised 4.0→4.5 in W5.8 with
+    /// the settle-freeze pass: "generally less sensitive"). Held items are
+    /// additionally immune in BreakableGlassware regardless of speed.
+    public const float DefaultBreakSpeed = 4.5f;
 
     public static bool ShouldBreak(float impactSpeed, float breakSpeed = DefaultBreakSpeed)
         => impactSpeed >= breakSpeed;
@@ -45,7 +55,7 @@ public static class Mishandling
     /// SoundBank key for a drop/impact clatter, by material.
     public static string DropSoundKey(string prefabName)
     {
-        if (IsBreakable(prefabName)) return "glass-clink";
+        if (IsBreakable(prefabName) || CeramicOrSolidGlass.Contains(prefabName ?? "")) return "glass-clink";
         if (MetalItems.Contains(prefabName ?? "")) return "drop-metal";
         return "drop-wood";
     }

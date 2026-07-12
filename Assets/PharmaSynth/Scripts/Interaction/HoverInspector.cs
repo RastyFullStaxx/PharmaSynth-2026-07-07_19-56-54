@@ -69,10 +69,11 @@ public class HoverInspector : MonoBehaviour
         if (col.GetComponentInParent<ProctorRoamer>() != null || col.GetComponentInParent<ExaminerNPC>() != null)
             return LabInfoDatabase.Person(false);
 
-        // Reagent bottle / filled vessel — identify by the liquid it holds.
+        // Reagent bottle / filled vessel — identify by the liquid it holds,
+        // with a LIVE contents line appended (W5.8: hover shows real state).
         var lp = col.GetComponentInParent<LiquidPhysics>();
         if (lp != null && lp.currentChemical != null)
-            return LabInfoDatabase.Reagent(lp.currentChemical.chemicalName);
+            return WithLiveLine(LabInfoDatabase.Reagent(lp.currentChemical.chemicalName), lp);
 
         // Apparatus — match by display name / item id / object name.
         var li = col.GetComponentInParent<LabItem>();
@@ -82,7 +83,20 @@ public class HoverInspector : MonoBehaviour
         var eq = LabInfoDatabase.Equipment(cand);
         if (eq == null)
             eq = LabInfoDatabase.Equipment(col.transform.root.name);   // e.g. "Prop_Beaker_100mL"
+        // An empty vessel still reports its live state ("Now: empty").
+        if (eq != null && lp != null) return WithLiveLine(eq, lp);
         return eq;
+    }
+
+    /// Clone an entry with the vessel's live contents appended to the body.
+    public static LabInfoEntry WithLiveLine(LabInfoEntry e, LiquidPhysics lp)
+    {
+        if (e == null || lp == null) return e;
+        string line = VesselStatusMath.HoverLine(
+            lp.currentChemical != null ? lp.currentChemical.chemicalName : null,
+            lp.currentLiquidVolume + lp.currentPptVolume,
+            lp.Ledger.Summary(3), lp.Ledger.Count);
+        return new LabInfoEntry(e.Title, e.Category, e.Body + "\n\n" + GlyphSafe.Sanitize(line));
     }
 
     private LabInfoEntry Resolve(Collider col, out Vector3 anchor) => ResolveFor(col, out anchor);

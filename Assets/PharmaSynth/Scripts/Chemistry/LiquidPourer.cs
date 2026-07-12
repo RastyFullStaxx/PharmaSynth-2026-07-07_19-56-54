@@ -54,14 +54,17 @@ public class LiquidPourer : MonoBehaviour
         }
     }
 
+    /// Edit-mode/test seam (Start doesn't run on AddComponent in edit mode).
+    public void Bind(LiquidPhysics source) => sourceContainer = source;
+
     void Update()
     {
         float tiltAngle = Vector3.Angle(Vector3.up, transform.up);
 
-        if (tiltAngle > pourThreshold && sourceContainer.currentLiquidVolume > 0)
+        if (tiltAngle > pourThreshold && sourceContainer != null && sourceContainer.currentLiquidVolume > 0)
         {
             EnsureStreamLine();
-            Pour(tiltAngle);
+            PourTick(Time.deltaTime, tiltAngle);
             UpdatePourAudio(true, smoothedFlow01);
             UpdatePourStream(true, smoothedFlow01);
         }
@@ -171,13 +174,51 @@ public class LiquidPourer : MonoBehaviour
         streamLine.enabled = false;
     }
 
-    void Pour(float currentTilt)
+    /// Pick the receiving vessel from a downward raycast set (W5.8 pour fix).
+    /// Skips the source's own colliders (a tilted bottle's ray often exits
+    /// through its own body — the old single-raycast could hit itself, fire
+    /// LiquidAdded on itself, and even complete pour tasks by self-tilting).
+    /// The nearest remaining hit decides: a LiquidPhysics there = the transfer
+    /// target; anything else = the waste/puddle surface. Static + real-collider
+    /// friendly so the self-test suite can exercise it in edit mode.
+    public static LiquidPhysics ResolveTarget(RaycastHit[] hits, LiquidPhysics source, out RaycastHit firstHit)
     {
+        firstHit = default;
+        float bestDist = float.MaxValue;
+        Collider bestCol = null;
+        for (int i = 0; i < hits.Length; i++)
+        {
+            var col = hits[i].collider;
+            if (col == null) continue;
+            // Own hierarchy (IsChildOf includes self). NOT transform.root — stage
+            // props and vessels share the DynamicStage root, and shelf bottles
+            // share the ReagentShelf root, so a root check would skip real targets.
+            if (source != null && col.transform.IsChildOf(source.transform)) continue;
+            if (hits[i].distance < bestDist)
+            {
+                bestDist = hits[i].distance;
+                bestCol = col;
+                firstHit = hits[i];
+            }
+        }
+        if (bestCol == null) return null;
+        var lp = bestCol.GetComponentInParent<LiquidPhysics>();
+        return (lp != null && lp != source) ? lp : null;
+    }
+
+    /// One pour step (extracted from Update so edit-mode tests can drive a real
+    /// transfer deterministically). Triggers are ignored — station sensor columns,
+    /// socket spheres and hot-surface zones must never swallow the stream.
+    public void PourTick(float dt, float currentTilt)
+    {
+        if (sourceContainer == null) sourceContainer = GetComponent<LiquidPhysics>();
+        if (sourceContainer == null) return;
+
         // Calculate Amount
         float tiltDelta = Mathf.InverseLerp(pourThreshold, 180f, currentTilt);
-        smoothedFlow01 = Mathf.Lerp(smoothedFlow01, tiltDelta, Time.deltaTime * flowSmoothingSpeed);
+        smoothedFlow01 = Mathf.Lerp(smoothedFlow01, tiltDelta, dt * flowSmoothingSpeed);
         float currentFlowRate = maxFlowRate * tiltDelta;
-        float amountToPour = currentFlowRate * Time.deltaTime;
+        float amountToPour = currentFlowRate * dt;
 
         // Visuals
         if (streamLine)
@@ -197,12 +238,12 @@ public class LiquidPourer : MonoBehaviour
         }
 
         // Raycast Physics
+        var hits = Physics.RaycastAll(Mouth.position, Vector3.down, 2.0f, ~0, QueryTriggerInteraction.Ignore);
         RaycastHit hit;
-        if (Physics.Raycast(Mouth.position, Vector3.down, out hit, 2.0f))
+        LiquidPhysics target = ResolveTarget(hits, sourceContainer, out hit);
+        if (hit.collider != null)
         {
             if (streamLine) DrawCurvedStream(Mouth.position, hit.point, smoothedFlow01);
-
-            LiquidPhysics target = hit.collider.GetComponentInParent<LiquidPhysics>();
 
             if (target != null)
             {

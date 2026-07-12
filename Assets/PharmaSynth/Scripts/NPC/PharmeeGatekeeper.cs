@@ -112,7 +112,12 @@ public class PharmeeGatekeeper : MonoBehaviour
             t += Time.deltaTime;
             yield return null;
         }
-        TeleportToFrontDoor();
+        // W5.9: if calibration outlasted the start fade-in, the snap would be
+        // visible — re-wrap the teleport in its own fade in that case.
+        if (ScreenFader.Instance != null && ScreenFader.Instance.State.Alpha < 0.5f)
+            DoFaded(TeleportToFrontDoor);
+        else
+            TeleportToFrontDoor();
         After(0.6f, SpeakWelcome);
     }
 
@@ -224,17 +229,27 @@ public class PharmeeGatekeeper : MonoBehaviour
                 if (index == 0)
                 {
                     // Penalty: the starved attempt is recorded as failed (grade screen
-                    // suppressed), the player returns to the door, the stage reloads.
+                    // suppressed, W5.9: failure OUTRO suppressed too — it used to play
+                    // over the restart), the player returns to the door inside the
+                    // Loading fade (W5.9: this was the one unfaded restart teleport).
                     if (runner != null && runner.IsRunning)
                     {
+                        var director = UnityEngine.Object.FindFirstObjectByType<CutsceneDirector>(FindObjectsInactive.Include);
+                        if (director != null) director.SkipNextOutro();
                         runner.Finish(0f);
                         var grade = UnityEngine.Object.FindFirstObjectByType<GradeScreenController>(FindObjectsInactive.Include);
                         if (grade != null) grade.Hide();
                     }
-                    TeleportToFrontDoor();
+                    _returnOnLoad = true;                 // teleport home inside the load fade
                     Model.Fire(GateEvent.RestartConfirmed);
                 }
-                else Model.Fire(GateEvent.Dismiss);
+                else
+                {
+                    // W5.9: "Keep trying" re-arms the monitor after a grace window —
+                    // a genuine shortfall re-prompts instead of dead-ending.
+                    supplyMonitor?.Unlatch();
+                    Model.Fire(GateEvent.Dismiss);
+                }
                 break;
         }
     }
@@ -266,10 +281,22 @@ public class PharmeeGatekeeper : MonoBehaviour
         After(lineSeconds + 1.5f, SpeakTourBeat);                 // gentle auto-advance
     }
 
+    /// The scripted review window is live (W5.9): ambient chatter + demo skip
+    /// buttons consult this (static like DemoSession.Active — no wiring needed).
+    public static bool ReviewFlowActive { get; private set; }
+
     private void OnTransition(GateState from, GateState to)
     {
         if (from == GateState.LabTour && to != GateState.LabTour) tourGuide?.End();
+        ReviewFlowActive = GatekeeperModel.IsReviewState(to);
         ApplyDoor(to);
+        // W5.9: Dismiss from an open-door state closes the door — but never trap a
+        // player already inside the lab behind it.
+        if (to == GateState.ModeChoice && PlayerInsideLab())
+        {
+            if (doorBlocker != null) doorBlocker.SetActive(false);
+            if (doorOpener != null) doorOpener.SetOpen(true);
+        }
         // Face mood tracks the conversation (PharmeeMood resets to happy after lines).
         (faceBehaviour as IPharmeeFace)?.SetExpression(PharmeeMood.ExpressionForGate(to));
         switch (to)
@@ -318,6 +345,15 @@ public class PharmeeGatekeeper : MonoBehaviour
             case GateState.Loading:
                 panel?.Hide();
                 LoadSelected();
+                // W5.9 watchdog: Loading's only exit is the fade callback firing
+                // Loaded — if a concurrent fade ever swallowed it, force the exit
+                // instead of wedging the single-exit state.
+                After(5f, () =>
+                {
+                    if (Model.State != GateState.Loading) return;
+                    Debug.LogWarning("[Gatekeeper] Loading watchdog fired — forcing Loaded.");
+                    Model.Fire(GateEvent.Loaded);
+                });
                 break;
 
             case GateState.ThresholdWarn:
@@ -379,10 +415,18 @@ public class PharmeeGatekeeper : MonoBehaviour
             case GateState.Debrief:
                 // Now AT the entrance, after the return teleport: quiz-completion
                 // congrats + a banded performance remark, then the unlock announce.
+                // W5.9: the line starts AFTER the fade-in reveals the scene (it used
+                // to begin while the screen was still black), and a final-campaign
+                // pass gets the campaign-flavoured remark.
                 panel?.Hide();
-                Say(PharmeeLines.Pick(PharmeeLines.DebriefCongrats, _remarkVariant++) + " "
-                    + PharmeeLines.DebriefRemark(_lastResult.HasValue ? _lastResult.Value.grade.Total : 100f));
-                After(lineSeconds + 1f, () => Model.Fire(GateEvent.DebriefDone));
+                After(0.5f, () =>
+                {
+                    if (Model.State != GateState.Debrief) return;
+                    Say(PharmeeLines.Pick(PharmeeLines.DebriefCongrats, _remarkVariant++) + " "
+                        + PharmeeLines.DebriefRemark(_lastResult.HasValue ? _lastResult.Value.grade.Total : 100f,
+                                                     AllCampaignComplete()));
+                });
+                After(lineSeconds + 1.5f, () => Model.Fire(GateEvent.DebriefDone));
                 break;
 
             case GateState.UnlockAnnounce:
@@ -406,6 +450,24 @@ public class PharmeeGatekeeper : MonoBehaviour
     /// GradeScreen Continue (pass-gated) — begin the debrief + return home.
     public void OnContinueAfterPass() => Model.Fire(GateEvent.ContinueAfterPass);
 
+    /// GradeScreen "Choose Another" (fail path, W5.9): the review used to trap a
+    /// failed player in a Retry-only loop — this returns them to the entrance
+    /// (full lab reset, no congratulatory debrief) so they can pick any unlocked
+    /// experiment at the door.
+    public void OnAbandonAfterFail()
+    {
+        if (Model.State != GateState.ScoreReview) return;
+        var grade = UnityEngine.Object.FindFirstObjectByType<GradeScreenController>(FindObjectsInactive.Include);
+        if (grade != null) grade.Hide();
+        postLab?.Close();
+        DoFaded(() =>
+        {
+            ResetLabForReturn();
+            Model.Fire(GateEvent.AbandonRun);   // ScoreReview → Blocked
+            SpeakWelcome();
+        });
+    }
+
     /// Pharmee's spawn/entrance greeting (scene load + after a HUD reset).
     public void SpeakWelcome()
     {
@@ -421,6 +483,13 @@ public class PharmeeGatekeeper : MonoBehaviour
     {
         void Do()
         {
+            // W5.9: actually END the attempt (the confirm text promises it) — a
+            // mid-run reset used to leave a zombie run ticking; a mid-review one
+            // left the grade card / quiz tablet floating at the entrance.
+            if (runner != null && runner.IsRunning) runner.Abort();
+            var grade = UnityEngine.Object.FindFirstObjectByType<GradeScreenController>(FindObjectsInactive.Include);
+            if (grade != null) grade.Hide();
+            postLab?.Close();
             string id = runner != null && runner.Module != null ? runner.Module.moduleId : GameFlow.SelectedModuleId;
             ExperimentStationRegistry.Clear();
             launcher?.Launch(id, LaunchMode.StageOnly);   // props/bottles back to original spawns
@@ -566,8 +635,28 @@ public class PharmeeGatekeeper : MonoBehaviour
     {
         var svc = new ProgressionService();
         svc.Load();
-        var newly = UnlockDiff.NewlyUnlocked(_unlockedAtStart, ProgressionFlow.Create(svc));
+        var flow = ProgressionFlow.Create(svc);
+        // W5.9: passing the LAST experiment used to promise "the next challenge"
+        // — which didn't exist. The whole-campaign finish now gets a real
+        // celebration: dedicated lines + confetti + the pass sting.
+        if (flow.AllComplete())
+        {
+            Say(PharmeeLines.Pick(PharmeeLines.CampaignComplete, _remarkVariant++));
+            AudioService.TryPlay("grade-pass");
+            if (Application.isPlaying)
+                EffectVfx.Confetti(transform.position + Vector3.up * 1.4f);
+            return;
+        }
+        var newly = UnlockDiff.NewlyUnlocked(_unlockedAtStart, flow);
         Say(UnlockDiff.AnnouncementFor(newly));
+    }
+
+    /// All 11 experiments passed (checked fresh from disk).
+    private bool AllCampaignComplete()
+    {
+        var svc = new ProgressionService();
+        svc.Load();
+        return ProgressionFlow.Create(svc).AllComplete();
     }
 
     /// Runtime: delayed action; edit mode/tests: immediate (deterministic).

@@ -16,6 +16,8 @@ public class LiquidTaskBinding : MonoBehaviour
         public string taskId;
         [Tooltip("Minimum ml poured in before the step completes. 0 = any amount (legacy).")]
         public float requiredMl;
+        [Tooltip("False = the pour is EXPECTED (no wrong-reagent mistake) and accumulates, but completion belongs to another verb (e.g. the weigh station). (W5.8)")]
+        public bool completesTask = true;
     }
 
     [SerializeField] private LiquidPhysics vessel;
@@ -86,10 +88,20 @@ public class LiquidTaskBinding : MonoBehaviour
             if (have < step.requiredMl) return;    // keep pouring — not enough yet
         }
 
+        // Threshold met. Steps owned by another verb (W5.8: the weigh station
+        // completes weigh-* tasks) only flag readiness — no wrong-reagent
+        // mistake was recorded (the pour IS expected), but completion is theirs.
+        if (!step.completesTask) { _ready.Add(step.taskId); return; }
+
         // Enough reagent delivered. CompleteTask enforces order and will
         // auto-record a WrongStep mistake if prerequisites aren't met yet.
         runner.CompleteTask(step.taskId);
     }
+
+    private readonly HashSet<string> _ready = new HashSet<string>();
+
+    /// A completesTask=false step whose pour threshold has been met (W5.8).
+    public bool ReadyFor(string taskId) => _ready.Contains(taskId);
 
     /// Delivered-so-far toward a step (the supply monitor reads this).
     public float AccumulatedFor(string taskId)
@@ -110,8 +122,8 @@ public class LiquidTaskBinding : MonoBehaviour
     }
 
     // Runtime helpers for authoring/binding.
-    public void AddExpected(ChemicalData reagent, string taskId, float requiredMl = 0f)
-        => expectedReagents.Add(new ReagentStep { reagent = reagent, taskId = taskId, requiredMl = requiredMl });
+    public void AddExpected(ChemicalData reagent, string taskId, float requiredMl = 0f, bool completesTask = true)
+        => expectedReagents.Add(new ReagentStep { reagent = reagent, taskId = taskId, requiredMl = requiredMl, completesTask = completesTask });
 
     public void SetVesselAndRunner(LiquidPhysics v, ExperimentRunner r) { vessel = v; runner = r; }
 }

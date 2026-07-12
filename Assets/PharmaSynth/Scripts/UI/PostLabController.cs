@@ -60,7 +60,14 @@ public class PostLabController : MonoBehaviour
     public void Open()
     {
         var moduleId = runner != null && runner.Module != null ? runner.Module.moduleId : null;
-        OpenFor(library != null ? library.GetBank(moduleId) : null);
+        var bank = library != null ? library.GetBank(moduleId) : null;
+        if (bank == null && !string.IsNullOrEmpty(moduleId))
+            Debug.LogWarning("[PostLab] no quiz bank for '" + moduleId + "' — Documentation defaults to full credit.");
+        // W5.9: freeze the clock on EVERY quiz path (the gatekeeper used to be
+        // the only freezer, so auto-open/dev flows let quiz time bleed into the
+        // Time-Management score). Idempotent; the next attempt unfreezes.
+        if (runner != null) runner.FreezeClock();
+        OpenFor(bank);
     }
 
     /// Open for a specific bank (bank may be null → a yield-only data sheet).
@@ -126,12 +133,22 @@ public class PostLabController : MonoBehaviour
     }
 
     /// Fraction correct (0..1) — drives the grader's Documentation sub-score.
-    public float ScoreFraction() => _bank != null ? _bank.Score(_answers) : 1f;
+    /// W5.9: a present-but-EMPTY bank counts like a missing one (full credit) —
+    /// it used to grade Documentation 0 while a missing bank graded 1.
+    public float ScoreFraction() => _bank != null && _bank.Count > 0 ? _bank.Score(_answers) : 1f;
 
     /// Read the yield the player typed into the input field (if any).
     private void ReadYieldFromField()
     {
         if (yieldInput != null && float.TryParse(yieldInput.text, out var v)) _yieldPercent = v;
+    }
+
+    /// Close without submitting (W5.9: HUD Restart / fail-abandon mid-quiz used
+    /// to leave the tablet floating). The attempt is NOT finished here.
+    public void Close()
+    {
+        _open = false;
+        if (root != null) root.SetActive(false);
     }
 
     /// Void wrapper for the Submit button's UnityEvent (persistent listeners need void).

@@ -87,3 +87,15 @@ For the "expected-yield ranges (display/reference only)" item. Yield is **record
 - §1 **ILO cards** → the ILO *text* is now sourced from Appendix C (§2); the card *art* remains the open production task.
 - §1 **yield ranges** → reference figures derived (§5); yield stays record-only.
 - Still genuinely open / client-only: Methane/Aspirin/Caffeine ILO+chemistry confirmation, and the scoring-weight sign-off (no manuscript weights found).
+
+---
+
+## 7. W5.9 re-verification sweep (2026-07-12)
+
+A second full pass of all 8 manuscript experiments against the game data. **Fixed in data** (menu `Tools ▸ PharmaSynth ▸ Apply W5.9 Manuscript Data`, suite-locked):
+- **Benzoic Acid ester test** was chemically inert (rule paired benzoic acid with sulfuric acid — no alcohol anywhere). Propyl alcohol (named by the module's own hint) is now staged, bound, and the rule fires on benzoic acid + propyl alcohol.
+- **Chloroform** gained the manuscript's missing confirmatory test: *oxidation with potassium dichromate + conc. H2SO4* (procedure L3419-21 AND the results data sheet) — new task `test-oxidation`, staged reagent, new reaction rule.
+- **Wine Making** no longer ferments grape juice against the manuscript's explicit grape exclusion (L3830-31): `Chem_GrapeJuice` renamed **Mixed Fruit Juice** (all references updated).
+- **Reagent fidelity:** iodoform tests (Exp 3 + 6) now stage their 10% KI alongside NaOCl; Ethyl Alcohol's ester test uses *diluted* acetic acid; Benzamide's acid test uses *diluted* HCl; Acetanilide preps 0.1N HCl as labeled — reaction-rule inputs re-pointed in lockstep so the tests still fire.
+
+**⚠ CLIENT DECISION — Chemical Compounding (manuscript Exp 2) diverges by design.** The manuscript is a multi-substrate identification lab (FeCl3 enol test, KMnO4 rate-of-oxidation on three butyl alcohols, Tollen's, ester formation, aspirin hydrolysis — plus Benedict's on the data sheet). The game module instead runs a single-substrate (ethanol) battery: combustion / sodium metal / bromine water / KMnO4 — only KMnO4 overlaps. Restoring the manuscript battery is a full module redesign (tasks + layout + quiz + rules) on a locked, regression-tested experiment; all needed chemicals already exist as assets (`Chem_FerricChloride10`, `Chem_TollensReagent`, the three butyl alcohols, `Chem_Phenol`, `Chem_Glycerol`…). The chemistry-misfit quiz question (bromine/unsaturation on an all-saturated module) was replaced with a manuscript-aligned KMnO4 question in the meantime. **Ask the client: keep the simplified battery, or restore the manuscript's Exp 2 tests?**

@@ -160,7 +160,7 @@ public static class EndProductShelfStocker
                    ?? AssetDatabase.LoadAssetAtPath<ChemicalData>(ChemDir + "Chem_Wine.asset");
         if (wine == null)
         {
-            var juice = lib.GetChemical("Grape Juice");
+            var juice = lib.GetChemical("Mixed Fruit Juice");   // W5.9: renamed (manuscript excludes grapes)
             wine = ScriptableObject.CreateInstance<ChemicalData>();
             wine.chemicalName = "Wine";
             wine.state = PhysicalState.Liquid;

@@ -29,7 +29,8 @@ public enum GateEvent
     TestsDone,      // last chemical-test phase completed → review flow begins
     QuizBegin,      // Jimenez's briefing done → the tablet quiz opens
     Graded,         // runner.Finish landed (quiz submitted) → score review
-    RetryRequested  // failed review → clean re-armed attempt at the door
+    RetryRequested, // failed review → clean re-armed attempt at the door
+    AbandonRun      // failed review → back to the entrance to choose ANOTHER experiment (W5.9)
 }
 
 /// Pure, table-driven state machine for the Pharmee door gate. No Unity types —
@@ -129,6 +130,7 @@ public class GatekeeperModel
             case GateState.ScoreReview:
                 if (e == GateEvent.ContinueAfterPass) return GateState.Returning;   // pass-gated by the grade screen
                 if (e == GateEvent.RetryRequested) return GateState.Loading;        // clean re-armed attempt
+                if (e == GateEvent.AbandonRun) return GateState.Blocked;            // fail → pick another experiment (W5.9)
                 break;
             case GateState.SupplyPrompt:
                 if (e == GateEvent.RestartConfirmed) return GateState.Loading;
@@ -155,6 +157,14 @@ public class GatekeeperModel
         => s == GateState.LabTour || s == GateState.DoorArmed || s == GateState.Running
         || s == GateState.SupplyPrompt || s == GateState.CoatPrompt || s == GateState.ReadyPrompt
         || s == GateState.QuizIntro || s == GateState.QuizTime || s == GateState.ScoreReview;
+
+    /// The scripted post-experiment review window (W5.9): ambient NPC chatter
+    /// (Pharmee idle lines, Jimenez exam remarks) and the demo skip buttons are
+    /// suppressed here so Jimenez's briefing/verdict and Pharmee's debrief are
+    /// never interrupted mid-sentence.
+    public static bool IsReviewState(GateState s)
+        => s == GateState.QuizIntro || s == GateState.QuizTime || s == GateState.ScoreReview
+        || s == GateState.Returning || s == GateState.Debrief || s == GateState.UnlockAnnounce;
 
     /// Pick the episode (period): resolves the first playable module in it, checks
     /// selectability, stores the module and advances. False = locked/empty, no move.

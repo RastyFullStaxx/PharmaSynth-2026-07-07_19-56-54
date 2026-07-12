@@ -17,38 +17,38 @@ MonoBehaviour:
   - taskId: filter-brew
     label: 2. Filter the brew
     requiredItemId: filter-brew
-    pos: {x: -0.053089857, y: 0.91, z: -3.790166}
+    pos: {x: -1.8, y: 0.91, z: -3.78}
     sim: 3
     simTargetC: 85
   - taskId: evaporate
     label: 5. Evaporate solvent
     requiredItemId: evaporate
-    pos: {x: -0.65308976, y: 0.91, z: -3.790166}
+    pos: {x: -1.3, y: 0.91, z: -3.78}
     sim: 0
     simTargetC: 85
   - taskId: sublime
     label: 6. Sublime caffeine
     requiredItemId: sublime
-    pos: {x: -1.2530897, y: 0.91, z: -3.790166}
+    pos: {x: -0.79999995, y: 0.91, z: -3.78}
     sim: 0
     simTargetC: 85
   - taskId: test-murexide
     label: 7. Murexide test
     requiredItemId: test-murexide
-    pos: {x: -0.053089857, y: 0.91, z: -2.9901662}
+    pos: {x: -0.29999995, y: 0.91, z: -3.78}
     sim: 0
     simTargetC: 85
   - taskId: test-meltingpoint
     label: 8. Melting point
     requiredItemId: test-meltingpoint
-    pos: {x: -0.65308976, y: 0.91, z: -2.9901662}
+    pos: {x: 0.20000005, y: 0.91, z: -3.78}
     sim: 0
     simTargetC: 85
   props:
   - prefabName: Vial_Brown
     itemId: brew-tea
     displayName: Sodium Carbonate
-    pos: {x: 1.3969102, y: 0.91, z: -2.740166}
+    pos: {x: 1.33, y: 0.91, z: -3.52}
     targetHeight: 0.16
     pourable: 1
     fillChemical: Sodium Carbonate
@@ -56,7 +56,7 @@ MonoBehaviour:
   - prefabName: Vial_Brown
     itemId: extract-dcm
     displayName: Dichloromethane
-    pos: {x: 1.3969102, y: 0.91, z: -3.040166}
+    pos: {x: 1.33, y: 0.91, z: -3.33}
     targetHeight: 0.16
     pourable: 1
     fillChemical: Dichloromethane
@@ -64,7 +64,7 @@ MonoBehaviour:
   - prefabName: Vial_Brown
     itemId: dry-na2so4
     displayName: Sodium Sulfate
-    pos: {x: 1.3969102, y: 0.91, z: -3.340166}
+    pos: {x: 1.33, y: 0.91, z: -3.1399999}
     targetHeight: 0.16
     pourable: 1
     fillChemical: Sodium Sulfate
@@ -72,7 +72,7 @@ MonoBehaviour:
   - prefabName: Funnel
     itemId: filter-brew
     displayName: Funnel
-    pos: {x: 1.3800015, y: 0.91, z: -2.840166}
+    pos: {x: -1.7, y: 0.91, z: -3.44}
     targetHeight: 0.2
     pourable: 0
     fillChemical: 
@@ -80,7 +80,7 @@ MonoBehaviour:
   - prefabName: EvaporatingDish
     itemId: evaporate
     displayName: Evaporating Dish
-    pos: {x: 1.3800015, y: 0.91, z: -3.140166}
+    pos: {x: -1.7, y: 0.91, z: -3.25}
     targetHeight: 0.1
     pourable: 0
     fillChemical: 
@@ -88,7 +88,7 @@ MonoBehaviour:
   - prefabName: WatchGlass
     itemId: sublime
     displayName: Sublimation Glass
-    pos: {x: 1.3800015, y: 0.91, z: -3.440166}
+    pos: {x: -1.7, y: 0.91, z: -3.06}
     targetHeight: 0.12
     pourable: 0
     fillChemical: 
@@ -96,7 +96,7 @@ MonoBehaviour:
   - prefabName: Vial_Brown
     itemId: test-murexide
     displayName: Murexide Reagent
-    pos: {x: 1.3969102, y: 0.91, z: -3.640166}
+    pos: {x: 1.33, y: 0.91, z: -2.95}
     targetHeight: 0.16
     pourable: 1
     fillChemical: Murexide Reagent
@@ -104,33 +104,53 @@ MonoBehaviour:
   - prefabName: GlassRod
     itemId: test-meltingpoint
     displayName: MP Capillary
-    pos: {x: 1.3800015, y: 0.91, z: -3.880003}
+    pos: {x: -1.46, y: 0.91, z: -3.44}
     targetHeight: 0.18
+    pourable: 0
+    fillChemical: 
+    supplyMl: 0
+  - prefabName: Motar
+    itemId: mortar
+    displayName: Mortar
+    pos: {x: -1.46, y: 0.91, z: -3.25}
+    targetHeight: 0.12
+    pourable: 0
+    fillChemical: 
+    supplyMl: 0
+  - prefabName: Pestle
+    itemId: pestle
+    displayName: Pestle
+    pos: {x: -1.46, y: 0.91, z: -3.06}
+    targetHeight: 0.12
     pourable: 0
     fillChemical: 
     supplyMl: 0
   vessels:
   - prefabName: Beaker_500mL
     displayName: Boiling Beaker
-    pos: {x: 0.74691033, y: 0.91, z: -3.4901662}
+    pos: {x: -0.25, y: 0.91, z: -3.18}
     targetHeight: 0.24
     startChemical: 
     bindings:
     - reagentChemical: Sodium Carbonate
       taskId: brew-tea
       requiredMl: 50
+      completesTask: 1
     - reagentChemical: Dichloromethane
       taskId: extract-dcm
       requiredMl: 50
+      completesTask: 1
     - reagentChemical: Sodium Sulfate
       taskId: dry-na2so4
       requiredMl: 50
+      completesTask: 1
   - prefabName: TestTube_WithLiquid
     displayName: Product Test Tube
-    pos: {x: 0.8969102, y: 0.91, z: -3.790166}
+    pos: {x: 0.19999999, y: 0.91, z: -3.18}
     targetHeight: 0.13
     startChemical: Caffeine
     bindings:
     - reagentChemical: Murexide Reagent
       taskId: test-murexide
       requiredMl: 50
+      completesTask: 1

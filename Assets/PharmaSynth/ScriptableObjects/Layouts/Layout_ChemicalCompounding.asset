@@ -17,20 +17,20 @@ MonoBehaviour:
   - taskId: test-combustion
     label: 2. Combustion test
     requiredItemId: test-combustion
-    pos: {x: -0.053089857, y: 0.91, z: -3.790166}
+    pos: {x: -1.8, y: 0.91, z: -3.78}
     sim: 0
     simTargetC: 85
   - taskId: test-sodium
     label: 3. Sodium metal test
     requiredItemId: test-sodium
-    pos: {x: -0.65308976, y: 0.91, z: -3.790166}
+    pos: {x: -1.3, y: 0.91, z: -3.78}
     sim: 0
     simTargetC: 85
   props:
   - prefabName: Vial_Brown
     itemId: gather-ethanol
     displayName: Ethanol
-    pos: {x: 1.3969102, y: 0.91, z: -2.740166}
+    pos: {x: 1.33, y: 0.91, z: -3.52}
     targetHeight: 0.16
     pourable: 1
     fillChemical: Ethanol
@@ -38,7 +38,7 @@ MonoBehaviour:
   - prefabName: Vial_Brown
     itemId: test-bromine
     displayName: Bromine Water
-    pos: {x: 1.3969102, y: 0.91, z: -3.040166}
+    pos: {x: 1.33, y: 0.91, z: -3.33}
     targetHeight: 0.16
     pourable: 1
     fillChemical: Bromine Water
@@ -46,7 +46,7 @@ MonoBehaviour:
   - prefabName: Vial_Brown
     itemId: test-kmno4
     displayName: KMnO4 Solution
-    pos: {x: 1.3969102, y: 0.91, z: -3.340166}
+    pos: {x: 1.33, y: 0.91, z: -3.1399999}
     targetHeight: 0.16
     pourable: 1
     fillChemical: Potassium Permanganate
@@ -54,7 +54,7 @@ MonoBehaviour:
   - prefabName: GlassRod
     itemId: test-combustion
     displayName: Lit Splint
-    pos: {x: 1.3800015, y: 0.91, z: -2.840166}
+    pos: {x: -1.7, y: 0.91, z: -3.44}
     targetHeight: 0.18
     pourable: 0
     fillChemical: 
@@ -62,7 +62,7 @@ MonoBehaviour:
   - prefabName: Spatula
     itemId: test-sodium
     displayName: Sodium Scoop
-    pos: {x: 1.3800015, y: 0.91, z: -3.140166}
+    pos: {x: -1.7, y: 0.91, z: -3.25}
     targetHeight: 0.16
     pourable: 0
     fillChemical: 
@@ -70,16 +70,19 @@ MonoBehaviour:
   vessels:
   - prefabName: Beaker_100mL
     displayName: Test Beaker
-    pos: {x: 0.74691033, y: 0.91, z: -3.4901662}
+    pos: {x: -0.25, y: 0.91, z: -3.18}
     targetHeight: 0.16
     startChemical: 
     bindings:
     - reagentChemical: Ethanol
       taskId: gather-ethanol
       requiredMl: 50
+      completesTask: 1
     - reagentChemical: Bromine Water
       taskId: test-bromine
       requiredMl: 50
+      completesTask: 1
     - reagentChemical: Potassium Permanganate
       taskId: test-kmno4
       requiredMl: 50
+      completesTask: 1

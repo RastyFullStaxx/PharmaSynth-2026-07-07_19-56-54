@@ -86,7 +86,19 @@ public class CutsceneDirector : MonoBehaviour
         return set.IsComplete;
     }
     private void OnPhaseCompleted(TaskPhase p) { if (p == TaskPhase.ReagentPrep) Play(reagentPrep); }
-    private void OnFinished(ExperimentResult r) => Play(SelectOutro(r));
+
+    private bool _skipNextOutro;
+
+    /// W5.9: a supply-starvation restart records the attempt via Finish(0) but
+    /// must NOT play the failure outro over the restart fade — call this right
+    /// before that Finish. One-shot; the next finish plays normally.
+    public void SkipNextOutro() => _skipNextOutro = true;
+
+    private void OnFinished(ExperimentResult r)
+    {
+        if (_skipNextOutro) { _skipNextOutro = false; return; }
+        Play(SelectOutro(r));
+    }
 
     /// The end cutscene always resolves to something (success or failure variant).
     public CutsceneData SelectOutro(ExperimentResult r) => r.passed ? success : failure;

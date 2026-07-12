@@ -7,9 +7,11 @@ using UnityEngine;
 /// so all 11 experiments share one lab scene instead of 11 hand-built scenes.
 /// Positions are WORLD-space (the lab is a fixed room).
 /// How a station completes. None = the prop simply entering the zone completes the
-/// step. The others run a real, sustained verb via a chemistry sim (the task then
-/// auto-completes through the TaskGraph condition once the sim reaches its target).
-public enum StationSim { None, Heat, Crystallise, Filter, Collect }
+/// step. Heat/Crystallise/Filter/Collect run a sustained chemistry sim while the
+/// prop occupies the zone. Stir/Grind/Weigh (W5.8, append-only — serialized ints
+/// stay valid) are TOOL verbs: circle the rod in the vessel, work the pestle in
+/// the mortar, rest the right load on the balance pan.
+public enum StationSim { None, Heat, Crystallise, Filter, Collect, Stir, Grind, Weigh }
 
 [CreateAssetMenu(fileName = "ExperimentLayout", menuName = "PharmaSynth/Experiment Layout")]
 public class ExperimentLayout : ScriptableObject
@@ -50,6 +52,8 @@ public class ExperimentLayout : ScriptableObject
             public string taskId;
             [Tooltip("Minimum ml poured before the step completes (0 = any amount).")]
             public float requiredMl;
+            [Tooltip("False = pouring only ACCUMULATES (expected, never a wrong-reagent mistake); something else — e.g. the weigh station — completes the task. (W5.8)")]
+            public bool completesTask = true;
         }
         public string prefabName;
         public string displayName;

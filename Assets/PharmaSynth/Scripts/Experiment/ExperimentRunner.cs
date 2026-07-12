@@ -187,21 +187,46 @@ public class ExperimentRunner : MonoBehaviour
         _graph.Tick();   // evaluate world-state auto-check conditions
     }
 
+    private ExperimentResult _lastResult;
+
     /// Compute the result without ending the attempt (for a live grade preview).
-    public ExperimentResult Evaluate(float quizFraction) => BuildResult(quizFraction);
+    /// Guarded: no attempt built yet → default result (W5.9 — used to NRE).
+    public ExperimentResult Evaluate(float quizFraction)
+        => _graph != null ? BuildResult(quizFraction) : default;
 
     /// End the attempt and emit the final result to the grade screen + gate.
+    /// W5.9 guards: calling with no attempt built is ignored instead of
+    /// throwing (dev F-key before B); a second call returns the SAME recorded
+    /// result instead of recomputing with a different quiz fraction.
     public ExperimentResult Finish(float quizFraction = 0f)
     {
-        ExperimentResult result = BuildResult(quizFraction);
-        if (!_finished)
+        if (_graph == null)
         {
-            _finished = true;
-            _running = false;
-            ExperimentFinished?.Invoke(result);
-            onExperimentFinished?.Invoke();
+            Debug.LogWarning("[ExperimentRunner] Finish called with no attempt built — ignored.");
+            return default;
         }
+        if (_finished) return _lastResult;
+
+        ExperimentResult result = BuildResult(quizFraction);
+        _lastResult = result;
+        _finished = true;
+        _running = false;
+        ExperimentFinished?.Invoke(result);
+        onExperimentFinished?.Invoke();
         return result;
+    }
+
+    /// End the attempt WITHOUT grading, recording or cutscenes (W5.9): the HUD
+    /// Restart / reset-to-entrance path — "your current attempt ends" — must not
+    /// leave a zombie run ticking (clock, graph auto-checks, supply monitor,
+    /// NPC chatter all key off IsRunning). No ExperimentFinished fires; a later
+    /// stray Finish() is a no-op via the _finished latch.
+    public void Abort()
+    {
+        _running = false;
+        _armed = false;
+        _finished = true;
+        _clockFrozen = false;
     }
 
     /// Retry rebuilds a fresh attempt from the module (deterministic reset).

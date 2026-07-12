@@ -23,6 +23,15 @@ public class MethaneApparatusRig : MonoBehaviour
     private bool _active;
     private bool _prevHeating;      // burner-ignite flame edge
     private bool _splintFired;      // splint flame-test pops once per collection
+    private float _collectedAt = -1f;   // when the tube filled (W5.8 splint timing)
+    public const float SplintMatchDistance = 0.25f;
+    public const float SplintAutoSeconds = 20f;
+
+    /// Pure (W5.8): the splint test fires when a LIT match reaches the filled
+    /// tube — or automatically after a grace period so nothing ever stalls.
+    public static bool SplintShouldFire(bool collected, bool alreadyFired, float matchDistance, bool matchLit, float sinceCollected)
+        => collected && !alreadyFired
+           && ((matchLit && matchDistance <= SplintMatchDistance) || sinceCollected >= SplintAutoSeconds);
 
     /// Edit-mode/test binding (OnEnable doesn't fire on AddComponent in edit mode).
     public void Bind(ExperimentRunner r, TemperatureSim t, GasCollection g,
@@ -83,12 +92,27 @@ public class MethaneApparatusRig : MonoBehaviour
         if (hot && gas != null && collectZone != null && collectZone.IsOccupied)
             gas.AddGas(gasMlPerSecond * Time.deltaTime);
 
-        // Splint flame test: once the tube fills, the collected methane pops with
-        // a flame when lit (fires once per collection).
-        if (!_splintFired && gas != null && gas.Collected(collectedFraction) && collectZone != null)
+        // Splint flame test (W5.8: interactive): once the tube fills, bring a LIT
+        // match to it and the methane pops — the real manuscript verb. An auto
+        // fallback still fires after a grace period so the tutorial never stalls.
+        bool collected = gas != null && gas.Collected(collectedFraction);
+        if (collected && _collectedAt < 0f) _collectedAt = Time.time;
+        if (!collected) _collectedAt = -1f;
+        if (!_splintFired && collected && collectZone != null)
         {
-            EffectVfx.FlamePop(collectZone.transform.position + Vector3.up * 0.1f);
-            _splintFired = true;
+            float best = float.MaxValue; bool anyLit = false;
+            foreach (var m in FindObjectsByType<Matchstick>(FindObjectsSortMode.None))
+            {
+                if (!m.IsLit) continue;
+                anyLit = true;
+                best = Mathf.Min(best, Vector3.Distance(m.transform.position, collectZone.transform.position));
+            }
+            if (SplintShouldFire(true, _splintFired, anyLit ? best : float.MaxValue, anyLit, Time.time - _collectedAt))
+            {
+                EffectVfx.FlamePop(collectZone.transform.position + Vector3.up * 0.1f);
+                FloatingText.Show("Pop! Methane confirmed", collectZone.transform.position + Vector3.up * 0.2f, new Color(0.7f, 1f, 0.7f));
+                _splintFired = true;
+            }
         }
     }
 }

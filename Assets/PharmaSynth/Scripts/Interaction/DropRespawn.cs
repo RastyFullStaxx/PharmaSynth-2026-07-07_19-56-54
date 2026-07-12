@@ -14,6 +14,16 @@ public static class DropRespawnMath
     public static bool ShouldReturnHome(float distanceFromHome, float speed, bool held, float idleSeconds,
                                         float minIdle = 25f, float minDistance = 0.4f, float restSpeed = 0.05f)
         => !held && speed < restSpeed && idleSeconds >= minIdle && distanceFromHome > minDistance;
+
+    /// Settle-freeze (W5.8 breakage pass): a released body that has genuinely
+    /// come to rest goes kinematic IN PLACE. Released items used to stay
+    /// dynamic indefinitely, so a physics-solver de-penetration spike on a
+    /// resting beaker could cross the break threshold — kinematic items are
+    /// immune in BreakableGlassware, and a still bench costs no solver time.
+    /// Grabbing re-frees the body (XRI + GrabPhysicsPolicy own that side).
+    public static bool ShouldSettleFreeze(bool held, bool kinematic, float speed, float settledSeconds,
+                                          float minSettle = 2.5f, float restSpeed = 0.05f)
+        => !held && !kinematic && speed < restSpeed && settledSeconds >= minSettle;
 }
 
 /// Sends a dropped prop home: below kill-Z → instant respawn; resting far from
@@ -53,7 +63,12 @@ public class DropRespawn : MonoBehaviour
         _idle = held || speed >= 0.05f ? 0f : _idle + Time.deltaTime;
 
         if (!held && DropRespawnMath.ShouldRespawn(transform.position.y, killZ)) { GoHome(); return; }
-        if (DropRespawnMath.ShouldReturnHome(dist, speed, held, _idle, minIdleSeconds, minDistance)) GoHome();
+        if (DropRespawnMath.ShouldReturnHome(dist, speed, held, _idle, minIdleSeconds, minDistance)) { GoHome(); return; }
+
+        // Settle-freeze: at rest for a beat → kinematic in place (immune to
+        // solver spikes; next grab re-frees it).
+        if (_rb != null && DropRespawnMath.ShouldSettleFreeze(held, _rb.isKinematic, speed, _idle))
+            _rb.isKinematic = true;
     }
 
     /// Teleport back to the shelf spot and re-freeze (public for tests/tools).

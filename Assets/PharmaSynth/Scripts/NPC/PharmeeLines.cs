@@ -9,7 +9,7 @@ public static class PharmeeLines
     // ---- Pharmee (friendly robot guide) -------------------------------------
     public static readonly string[] Greetings =
     {
-        "Welcome back to the lab! I'm Pharmee — follow your tablet and I'll be right here.",
+        "Welcome back to the lab! I'm Pharmee — follow your wrist checklist and I'll be right here.",
         "Suited up and ready? Let's synthesise something great today!",
         "Great to see you! Take it step by step and check your wrist for the procedure.",
         "Lab's all yours. Work safe, work smart, and call on me anytime.",
@@ -50,7 +50,7 @@ public static class PharmeeLines
 
     public static readonly string[] WrongReagent =
     {
-        "Hmm, that isn't the reagent this step needs — check your tablet.",
+        "Hmm, that isn't the reagent this step needs — check your wrist checklist.",
         "Wrong bottle! Look again at the procedure for the right reagent.",
         "That's not it. The step calls for a different chemical.",
     };
@@ -144,6 +144,24 @@ public static class PharmeeLines
         return "A solid pass — keep practising and the tricky steps will feel natural.";
     }
 
+    /// W5.9 overload: the FINAL campaign pass swaps in a campaign-flavoured
+    /// remark (the standard banded line reads oddly when nothing is left).
+    public static string DebriefRemark(float gradeTotal, bool campaignComplete)
+    {
+        if (!campaignComplete) return DebriefRemark(gradeTotal);
+        if (gradeTotal >= 97f) return "And what a way to finish — a flawless final experiment!";
+        return "And that was the very last experiment — you've done it!";
+    }
+
+    /// Whole-campaign completion celebration (W5.9): spoken at the entrance
+    /// instead of the unlock announcement once all 11 experiments are passed.
+    public static readonly string[] CampaignComplete =
+    {
+        "Congratulations, graduate! You've passed every experiment in the campaign — Tutorial, Prelims, Midterms and Finals. This lab is yours!",
+        "That was the final experiment — the entire campaign is complete! Dr. Jimenez and I are so proud of you. Gear up, synth it up — you did it!",
+        "Every single synthesis, test and quiz — finished! You've mastered the whole PharmaSynth course. Outstanding work, chemist!",
+    };
+
     // ---- Guided lab tour (storyboard beats, refined to exceed) ---------------
     // Played in order when the player picks "Lab Tour" — Pharmee walks them through
     // each area instead of the old single free-roam line. The last beat is the closer.
@@ -152,7 +170,7 @@ public static class PharmeeLines
         "Welcome to the lab! Let's take a quick tour so you feel right at home before any graded work.",
         "Flick your wrist face-up and glance at it — your holographic procedures board lays out every step of the experiment, live.",
         "The bench in front of you is your main workspace: prepare reagents, run your reactions, and handle glassware here.",
-        "Over there is the equipment cabinet — open it and pick the apparatus your tablet calls for.",
+        "Over there is the equipment cabinet — open it and pick the apparatus your checklist calls for.",
         "The reagent shelf holds your chemicals. Take only what each step needs — the bottles are limited!",
         "Flick your wrist anytime for the live checklist, and watch the progress bar and timer up top to track how you're doing.",
         "The Settings button up top lets you tune audio, text size and comfort options whenever you like.",

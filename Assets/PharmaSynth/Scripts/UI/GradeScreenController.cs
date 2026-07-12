@@ -17,10 +17,12 @@ public class GradeScreenController : MonoBehaviour
     [SerializeField] private GameObject passedVisuals;   // confetti + happy Pharmee
     [SerializeField] private GameObject failedVisuals;
     [SerializeField] private GameObject continueButton;  // hidden until passed
+    [SerializeField] private GameObject backButton;      // shown only on FAIL (W5.9: choose another experiment)
 
     [Header("Events")]
     public UnityEvent onRetry;
     public UnityEvent onContinue;
+    public UnityEvent onBackToEntrance;                   // fail-path exit (W5.9)
 
     [Header("Auto-show")]
     [SerializeField] private ExperimentRunner runner;
@@ -47,7 +49,9 @@ public class GradeScreenController : MonoBehaviour
     public void Show(ExperimentResult r)
     {
         if (root != null) root.SetActive(true);
-        if (gradeText != null) gradeText.text = Mathf.RoundToInt(r.grade.Total) + "%";
+        // FLOOR the gate-relevant numbers (W5.9): RoundToInt showed "90%" beside
+        // TRY AGAIN when the raw Total was 89.5-89.99 (the gate compares raw).
+        if (gradeText != null) gradeText.text = GradeDisplay.Percent(r.grade.Total) + "%";
         if (mistakesText != null) mistakesText.text = r.mistakeCount.ToString();
         if (timeText != null) timeText.text = ExperimentHudController.FormatTime(r.elapsedSeconds);
         if (resultText != null) resultText.text = r.passed ? "PASSED" : "TRY AGAIN";
@@ -55,6 +59,7 @@ public class GradeScreenController : MonoBehaviour
         if (passedVisuals != null) passedVisuals.SetActive(r.passed);
         if (failedVisuals != null) failedVisuals.SetActive(!r.passed);
         if (continueButton != null) continueButton.SetActive(r.passed); // gate: can't advance until passed
+        if (backButton != null) backButton.SetActive(!r.passed);        // fail: offer "choose another" (W5.9)
         if (AudioService.Instance != null) AudioService.Instance.Play(r.passed ? "grade-pass" : "grade-fail");
         // Confetti burst over the panel on a pass (VFX-set completion 2026-07-10).
         if (r.passed && Application.isPlaying)
@@ -69,6 +74,10 @@ public class GradeScreenController : MonoBehaviour
 
     public void OnRetryPressed() { Hide(); onRetry?.Invoke(); }
     public void OnContinuePressed() { Hide(); onContinue?.Invoke(); }
+    public void OnBackPressed() { Hide(); onBackToEntrance?.Invoke(); }   // fail-path exit (W5.9)
+
+    /// Builder seam (W5.9): lets Build Review Corner wire the fail-path button.
+    public void SetBackButton(GameObject b) => backButton = b;
 
     /// Per-criteria lines + the gate reason (why passed / what fell short).
     public static string BuildBreakdown(ExperimentResult r)
@@ -81,7 +90,7 @@ public class GradeScreenController : MonoBehaviour
         sb.Append("Time Management: ").Append(Mathf.RoundToInt(b.TimeManagement)).Append('\n');
         sb.Append("Sanitation: ").Append(Mathf.RoundToInt(b.Sanitation)).Append('\n');
         sb.Append("Documentation: ").Append(Mathf.RoundToInt(b.Documentation)).Append('\n');
-        sb.Append("Mastery: ").Append(Mathf.RoundToInt(r.overallMastery * 100f)).Append('%');
+        sb.Append("Mastery: ").Append(GradeDisplay.MasteryPercent(r.overallMastery)).Append('%');   // floored — gate-relevant (W5.9)
         if (!r.passed)
         {
             if (!r.gradePassed) sb.Append("\n<color=#FF7070>Grade below the pass mark.</color>");

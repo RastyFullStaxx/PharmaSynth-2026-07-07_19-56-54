@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: Test_BenzoateEster
   m_EditorClassIdentifier: Assembly-CSharp::ReactionRule
   inputChemicalA: {fileID: 11400000, guid: 9d55f320c4f116f41a2ac51f08ae18f1, type: 2}
-  inputChemicalB: {fileID: 11400000, guid: 89333b07235fc274f83a0b4a5784cb2a, type: 2}
+  inputChemicalB: {fileID: 11400000, guid: 8673077ef01954641bbf977bd77cb123, type: 2}
   resultLiquid: {fileID: 11400000, guid: 8dbe5a5a2e46b974aa073ac8e2cc74f3, type: 2}
   resultPrecipitate: {fileID: 0}
   hasPrecipitate: 0
   minTemperatureC: 40
   outcome: 4
   evolvesGas: 0
-  expectedObservation: Sweet aromatic ester odour on warming with alcohol and conc. H2SO4 (manual Exp 4).
+  expectedObservation: "Sweet aromatic ester odour \u2014 benzoic acid + propyl alcohol
+    (drop of H2SO4) on warming."

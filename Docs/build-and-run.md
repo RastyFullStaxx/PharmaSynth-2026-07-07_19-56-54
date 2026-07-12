@@ -1,6 +1,6 @@
 # PharmaSynth — Build & Run Guide
 
-How to run, test, and build **PharmaSynth**, the Meta Quest 3 VR chemistry-lab education game (Unity 6000.5.2f1, URP, OpenXR + XRI). This guide covers day-to-day in-editor iteration (XR Device Simulator + keyboard fallback), the headless regression suite that gates every change, scene/build wiring, the Quest 3 Android build configuration, the on-device performance budget, and the tooling gotchas specific to this workstation. Written 2026-07-08 on branch `main` (all W1–W5 work committed; `feature/asset-intake` is a stale stub at the planning commit — do not use it); verified state at time of writing: self-tests **157/157 green**, console zero-error.
+How to run, test, and build **PharmaSynth**, the Meta Quest 3 VR chemistry-lab education game (Unity 6000.5.2f1, URP, OpenXR + XRI). This guide covers day-to-day in-editor iteration (XR Device Simulator + keyboard fallback), the headless regression suite that gates every change, scene/build wiring, the Quest 3 Android build configuration, the on-device performance budget, and the tooling gotchas specific to this workstation. Written 2026-07-08 on branch `main` (all W1–W5 work committed; `feature/asset-intake` is a stale stub at the planning commit — do not use it); verified state at last doc refresh (2026-07-12, W5.11): self-tests **969/969 green**, console zero-error.
 
 ## Table of contents
 
@@ -35,7 +35,7 @@ Everything above is **already configured in the repo** — a fresh clone + open 
 ## 2. Running in-editor
 
 1. Open **`Assets/Scenes/SampleScene.unity`** (the assembled lab).
-2. Press **Play**. The XR Device Simulator (in-scene) stands in for the headset; `InitManagerOnStart` is OFF for Standalone, so play mode is safe on this headset-less PC.
+2. Press **Play**. Two ways to run: (a) **headless** — the XR Device Simulator + keyboard stand in for the headset (keep Standalone `InitManagerOnStart` OFF); (b) **headset** — connect a Quest via Quest Link / Air Link and turn Standalone `InitManagerOnStart` ON. Toggle either way with **Tools ▸ PharmaSynth ▸ Headset Play Mode (OpenXR on Play)** (checkmark = ON). As of 2026-07-12 it is **ON** (headset mode).
 3. Walk to the **Begin button**, don PPE at the **PPELocker**, and run the Methane tutorial — or skip all interaction with the keyboard driver below.
 
 You can also start from `Assets/Scenes/MainMenu.unity` to exercise the full menu → lab flow (§4).
@@ -86,7 +86,7 @@ Order is enforced by the runner: a wrong prop is ignored; the right prop out of 
 
 ## 3. The regression suite
 
-**Menu: `Tools ▸ PharmaSynth ▸ Run Self-Tests`** — `Assets/PharmaSynth/Scripts/Editor/PharmaSelfTests.cs`. Runs **157 assertions** entirely in edit mode (no Play button, no headset) across 13 suites: TaskGraph, Mastery (BKT), Score, Grader, Runner, Progression, ChemVisual, UI, W4 (cutscenes/crystallization/filtration/hazards), Interaction, ProgressionFlow, Library, and Content (loads and solves **all 11 experiment modules** to 100%).
+**Menu: `Tools ▸ PharmaSynth ▸ Run Self-Tests`** — `Assets/PharmaSynth/Scripts/Editor/PharmaSelfTests.cs`. Runs **969 assertions** entirely in edit mode (no Play button, no headset) across 50+ suites incl.: TaskGraph, Mastery (BKT), Score, Grader, Runner, Progression, ChemVisual, UI, W4 (cutscenes/crystallization/filtration/hazards), Interaction, ProgressionFlow, Library, and Content (loads and solves **all 11 experiment modules** to 100%).
 
 - **Green:** one console line — `PharmaSynth Self-Tests: 157/157 passed — ALL GREEN`.
 - **Red:** an error log listing every failed assertion by name.
@@ -130,7 +130,7 @@ The **active build target is already Android** — no target switch needed. Conf
 
 **XR initialization** (`Assets/XR/XRGeneralSettingsPerBuildTarget.asset`):
 - **Android: `InitManagerOnStart = true`** — the APK must bring OpenXR up automatically on the headset.
-- **Standalone: `InitManagerOnStart = false`** — deliberately off, because initializing OpenXR on this **headset-less dev PC kills play mode**. Editor play + XR Device Simulator work fine without it. Don't "fix" this to true.
+- **Standalone: `InitManagerOnStart`** — ON to drive a connected Quest (Link/Air Link) in editor Play; OFF for the headset-less keyboard/simulator loop (initializing OpenXR with NO headset can stall Play). Flip it with **Tools ▸ PharmaSynth ▸ Headset Play Mode (OpenXR on Play)**. Currently **ON** (2026-07-12, user is headset-testing).
 - OpenXRLoader is the sole loader for both targets.
 
 **Keystore: not yet created.** `AndroidKeystoreName` is empty and `androidUseCustomKeystore = 0`, so builds sign with Unity's debug keystore — fine for sideloaded QA builds via `adb install`, **not** for store/turnover delivery. Create a release keystore (Player Settings ▸ Publishing Settings) before final delivery and back it up off-repo (a lost keystore cannot be regenerated).

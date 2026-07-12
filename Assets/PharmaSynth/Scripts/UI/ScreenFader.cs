@@ -171,10 +171,21 @@ public class ScreenFader : MonoBehaviour
         _pulsing = false;
     }
 
+    /// Compose pending fade callbacks instead of overwriting (W5.9): starting a
+    /// new fade while another was mid-flight used to silently DROP the earlier
+    /// callback — e.g. a HUD Restart during the Loading fade lost DoLoad and
+    /// wedged the single-exit Loading state. Both actions now run, in order.
+    public static Action Compose(Action first, Action second)
+    {
+        if (first == null) return second;
+        if (second == null) return first;
+        return () => { first(); second(); };
+    }
+
     public void FadeOut(float seconds = -1f, Action done = null)
     {
         EnsureQuad();
-        _onDone = done;
+        _onDone = Compose(_onDone, done);
         _state.Begin(1f, seconds > 0f ? seconds : defaultSeconds);
         if (quad != null) quad.enabled = true;
     }
@@ -182,7 +193,7 @@ public class ScreenFader : MonoBehaviour
     public void FadeIn(float seconds = -1f, Action done = null)
     {
         EnsureQuad();
-        _onDone = done;
+        _onDone = Compose(_onDone, done);
         _state.Begin(0f, seconds > 0f ? seconds : defaultSeconds);
     }
 

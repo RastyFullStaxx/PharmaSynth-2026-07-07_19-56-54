@@ -38,6 +38,14 @@ public static class PharmaSelfTests
         InteractionSuite();
         RealVerbSuite();
         PourReactionSuite();
+        PourGuardSuite();
+        FeedbackSuite();
+        VerbSuite();
+        VerbWiringSuite();
+        LayoutSpacingSuite();
+        WorkspaceShelfSuite();
+        W59FlowSuite();
+        W59ManuscriptSuite();
         TestReactionSuite();
         SceneBuilderSuite();
         SimRigSuite();
@@ -885,13 +893,16 @@ public static class PharmaSelfTests
 
         var cases = new (string file, string seed, string[] reagents)[]
         {
+            // W5.9 manuscript fidelity: benzoic ester = PROPYL ALCOHOL (was the
+            // inert sulfuric-acid pairing); benzamide acid test + ethanol ester
+            // use the DILUTED acids; chloroform gains the dichromate oxidation.
             ("Layout_Aspirin",      "Salicylic Acid", new[] { "Ferric Chloride 10%" }),
-            ("Layout_BenzoicAcid",  "Benzoic Acid",   new[] { "Ferric Chloride 10%", "Sulfuric Acid" }),
+            ("Layout_BenzoicAcid",  "Benzoic Acid",   new[] { "Ferric Chloride 10%", "Propyl Alcohol" }),
             ("Layout_Acetanilide",  "Acetanilide",    new[] { "Bromine Water" }),
-            ("Layout_Benzamide",    "Benzamide",      new[] { "Sodium Hydroxide", "Sodium Nitrite", "Hydrochloric Acid 6N" }),
-            ("Layout_Chloroform",   "Chloroform",     new[] { "Silver Nitrate" }),
+            ("Layout_Benzamide",    "Benzamide",      new[] { "Sodium Hydroxide", "Sodium Nitrite", "Diluted Hydrochloric Acid" }),
+            ("Layout_Chloroform",   "Chloroform",     new[] { "Silver Nitrate", "Potassium Dichromate" }),
             ("Layout_Acetone",      "Acetone",        new[] { "Silver Nitrate", "Sodium Hypochlorite", "Schiff's Reagent" }),
-            ("Layout_EthylAlcohol", "Ethanol",        new[] { "Sodium Hypochlorite", "Glacial Acetic Acid" }),
+            ("Layout_EthylAlcohol", "Ethanol",        new[] { "Sodium Hypochlorite", "Diluted Acetic Acid" }),
             ("Layout_WineMaking",   "Carbon Dioxide", new[] { "Limewater" }),
             ("Layout_Caffeine",     "Caffeine",       new[] { "Murexide Reagent" }),
         };
@@ -944,21 +955,36 @@ public static class PharmaSelfTests
     static void MishandlingSuite()
     {
         // Fragility table: glass breaks, tools don't, and every entry is a real prefab.
-        A("mishandle: glass is breakable", Mishandling.IsBreakable("Beaker_100mL")
-            && Mishandling.IsBreakable("TestTube") && Mishandling.IsBreakable("GlassRod"));
+        A("mishandle: thin glass is breakable", Mishandling.IsBreakable("Beaker_100mL")
+            && Mishandling.IsBreakable("TestTube") && Mishandling.IsBreakable("Vial_WithLabel")
+            && Mishandling.IsBreakable("WatchGlass"));
         A("mishandle: tools are not", !Mishandling.IsBreakable("CrucibleTongs")
             && !Mishandling.IsBreakable("Spatula") && !Mishandling.IsBreakable("WashBottle")
             && !Mishandling.IsBreakable("TestTubeRack"));
+        // W5.8: solid glass / droppers / porcelain delisted — robust in the hand.
+        A("mishandle: stir rod never shatters (W5.8)", !Mishandling.IsBreakable("GlassRod"));
+        A("mishandle: funnel+dropper never shatter (W5.8)", !Mishandling.IsBreakable("Funnel")
+            && !Mishandling.IsBreakable("Dropper"));
+        A("mishandle: porcelain never shatters (W5.8)", !Mishandling.IsBreakable("EvaporatingDish")
+            && !Mishandling.IsBreakable("Crucible"));
         bool allReal = true;
         foreach (var n in Mishandling.BreakableNames)
             if (!RealSizes.TryGet(n, out _)) { allReal = false; _log.Add("breakable not in RealSizes: " + n); }
         A("mishandle: breakables are real prefabs", allReal);
 
         // Impact policy: a real drop breaks, but carrying + bumping a wall does not.
-        A("mishandle: hard drop breaks", Mishandling.ShouldBreak(4.5f));
-        A("mishandle: threshold impact breaks", Mishandling.ShouldBreak(4.0f));
+        A("mishandle: hard drop breaks", Mishandling.ShouldBreak(4.6f));
+        A("mishandle: threshold impact breaks", Mishandling.ShouldBreak(4.5f));
+        A("mishandle: sub-threshold safe (raised to 4.5 in W5.8)", !Mishandling.ShouldBreak(4.4f));
         A("mishandle: carry-bump into wall safe", !Mishandling.ShouldBreak(2.5f));
         A("mishandle: gentle set-down safe", !Mishandling.ShouldBreak(0.8f));
+
+        // Settle-freeze (W5.8): a released body at rest goes kinematic in place.
+        A("settle: rested body freezes", DropRespawnMath.ShouldSettleFreeze(false, false, 0.01f, 3f));
+        A("settle: held blocks", !DropRespawnMath.ShouldSettleFreeze(true, false, 0.01f, 3f));
+        A("settle: already kinematic no-op", !DropRespawnMath.ShouldSettleFreeze(false, true, 0.01f, 3f));
+        A("settle: moving body waits", !DropRespawnMath.ShouldSettleFreeze(false, false, 0.4f, 3f));
+        A("settle: needs the settle beat", !DropRespawnMath.ShouldSettleFreeze(false, false, 0.01f, 1f));
 
         // Spill policy: un-held + tipped + has liquid, and only then.
         A("mishandle: knocked-over bottle spills", Mishandling.IsSpilling(75f, false, 80f));
@@ -975,6 +1001,9 @@ public static class PharmaSelfTests
 
         // Action-SFX policy: material-aware drop clatter + reaction cues + stride.
         A("sfx: glass clinks", Mishandling.DropSoundKey("Beaker_100mL") == "glass-clink");
+        A("sfx: delisted glass still clinks (W5.8)", Mishandling.DropSoundKey("GlassRod") == "glass-clink"
+            && Mishandling.DropSoundKey("Funnel") == "glass-clink"
+            && Mishandling.DropSoundKey("EvaporatingDish") == "glass-clink");
         A("sfx: metal clatters", Mishandling.DropSoundKey("CrucibleTongs") == "drop-metal");
         A("sfx: wood knocks", Mishandling.DropSoundKey("TestTubeRack") == "drop-wood");
         A("sfx: fizz for gas outcomes", Mishandling.SfxForOutcome(ReactionOutcome.Fizzing) == "reaction-fizz"
@@ -1428,6 +1457,676 @@ public static class PharmaSelfTests
         Fires("Chem_Acetone", "Chem_SilverNitrate", "acetone + Tollens (negative)", false);
     }
 
+    // W5.8 pour-guard: the raycast transfer path, self-exclusion, trigger
+    // immunity and the fresh-vessel wake state — none of which the older pour
+    // suites exercised (they pre-seeded chem+volume and bypassed the raycast).
+    static void PourGuardSuite()
+    {
+        // Ledger math (display-only contents story).
+        var led = new VesselLedger();
+        A("ledger: empty summary blank", led.Summary() == "");
+        led.Add("Ethanol", 100f); led.Add("Ethanol", 20f); led.Add("NaOH", 50f);
+        A("ledger: accumulates per chemical", led.Summary() == "Ethanol 120 ml + NaOH 50 ml");
+        led.Add("Water", 10f);
+        A("ledger: caps with a more-tail", led.Summary(2) == "Ethanol 120 ml + NaOH 50 ml + 1 more");
+        led.React("Ester");
+        A("ledger: reaction collapses to the product", led.Summary() == "Ester 180 ml");
+        led.Clear();
+        A("ledger: clears", led.Count == 0 && led.Summary() == "");
+
+        ChemicalData Chem(string n) { var c = ScriptableObject.CreateInstance<ChemicalData>(); c.chemicalName = n; return c; }
+        var chemA = Chem("PG_A"); var chemB = Chem("PG_B"); var chemC = Chem("PG_C");
+        var reg = ScriptableObject.CreateInstance<ReactionRegistry>();
+        var rule = ScriptableObject.CreateInstance<ReactionRule>();
+        rule.inputChemicalA = chemA; rule.inputChemicalB = chemB; rule.resultLiquid = chemC;
+        reg.rules = new List<ReactionRule> { rule };
+
+        // Fresh-vessel wake: adopt on first add, react on second (the path the
+        // phantom-500ml default used to block on every stage-built vessel).
+        var wgo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        try
+        {
+            var lp = wgo.AddComponent<LiquidPhysics>();
+            lp.mainRenderer = null; lp.registry = reg;
+            A("wake: AddComponent default is EMPTY", lp.IsEmpty && lp.currentChemical == null);
+            lp.AddLiquid(chemA, 50f);
+            A("wake: first pour adopts the chemical", lp.currentChemical == chemA && Near(lp.currentLiquidVolume, 50f));
+            lp.AddLiquid(chemB, 30f);
+            A("wake: second pour reacts", lp.currentChemical == chemC);
+            A("wake: ledger collapsed to the product", lp.Ledger.Summary() == "PG_C 80 ml");
+            lp.SetContents(chemA, 40f);
+            A("setcontents: explicit fill", lp.currentChemical == chemA && Near(lp.currentLiquidVolume, 40f) && lp.Ledger.Count == 1);
+            lp.SetContents(null, 123f);
+            A("setcontents: blank arms empty regardless of ml", lp.IsEmpty && lp.currentChemical == null && lp.Ledger.Count == 0);
+        }
+        finally { UnityEngine.Object.DestroyImmediate(wgo); }
+
+        // ResolveTarget vs REAL colliders: self skipped, triggers ignored,
+        // nearest other vessel wins; then a full PourTick transfer.
+        var source = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var target = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var trigger = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        try
+        {
+            source.transform.position = new Vector3(50f, 0.6f, 50f);   // far corner: no scene geometry below
+            source.transform.localScale = Vector3.one * 0.2f;
+            target.transform.position = new Vector3(50f, 0.1f, 50f);
+            target.transform.localScale = new Vector3(0.3f, 0.2f, 0.3f);
+            trigger.transform.position = new Vector3(50f, 0.35f, 50f);
+            trigger.transform.localScale = Vector3.one * 0.15f;
+            trigger.GetComponent<Collider>().isTrigger = true;
+            var srcLp = source.AddComponent<LiquidPhysics>(); srcLp.mainRenderer = null;
+            var tgtLp = target.AddComponent<LiquidPhysics>(); tgtLp.mainRenderer = null; tgtLp.registry = reg;
+            Physics.SyncTransforms();
+
+            var hits = Physics.RaycastAll(new Vector3(50f, 1.2f, 50f), Vector3.down, 3f, ~0, QueryTriggerInteraction.Ignore);
+            RaycastHit hit;
+            var resolved = LiquidPourer.ResolveTarget(hits, srcLp, out hit);
+            A("resolve: skips self, finds the vessel below", resolved == tgtLp);
+            A("resolve: reports the receiving surface", hit.collider != null && hit.collider.gameObject == target);
+            bool sawTrigger = false;
+            foreach (var h in hits) if (h.collider != null && h.collider.gameObject == trigger) sawTrigger = true;
+            A("resolve: trigger zones never swallow the stream", !sawTrigger);
+
+            // Full PourTick: tilt 120° for 0.1 s → ≈ 35 · InverseLerp(45,180,120) · 0.1 ml.
+            srcLp.SetContents(chemA, 100f);
+            var pourer = source.AddComponent<LiquidPourer>();
+            pourer.Bind(srcLp);
+            var spout = new GameObject("Spout").transform;
+            spout.SetParent(source.transform, true);
+            spout.position = source.transform.position + new Vector3(0f, 0.15f, 0f);
+            pourer.spout = spout;
+            Physics.SyncTransforms();
+            float expected = 35f * Mathf.InverseLerp(45f, 180f, 120f) * 0.1f;
+            pourer.PourTick(0.1f, 120f);
+            A("pour: transfer lands in the vessel", Near(tgtLp.currentLiquidVolume, expected, 0.15f));
+            A("pour: source drained by the same amount", Near(srcLp.currentLiquidVolume, 100f - expected, 0.15f));
+            A("pour: receiver adopted the chemical", tgtLp.currentChemical == chemA);
+
+            // Self-pour: only the source below its own spout → nothing may land.
+            target.SetActive(false);
+            Physics.SyncTransforms();
+            bool selfAdded = false;
+            srcLp.LiquidAdded += (_, __) => selfAdded = true;
+            float before = srcLp.currentLiquidVolume;
+            pourer.PourTick(0.1f, 120f);
+            A("pour: self-tilt never fires LiquidAdded on itself", !selfAdded);
+            A("pour: self-tilt still wastes liquid", srcLp.currentLiquidVolume < before);
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(source);
+            UnityEngine.Object.DestroyImmediate(target);
+            UnityEngine.Object.DestroyImmediate(trigger);
+        }
+    }
+
+    // W5.8 feedback layer: live vessel/station status formats + mix popups.
+    static void FeedbackSuite()
+    {
+        // Vessel status formats.
+        A("status: named contents", VesselStatusMath.Compose("Beaker", "Ethanol", 120.4f) == "Beaker — 120 ml Ethanol");
+        A("status: empty vessel", VesselStatusMath.Compose("Beaker", null, 0f) == "Beaker — empty");
+        A("status: unknown liquid", VesselStatusMath.Compose("Beaker", null, 55f) == "Beaker — 55 ml liquid");
+        A("status: reagent bottle drops the echo", VesselStatusMath.Compose("Ethanol", "Ethanol", 150f) == "Ethanol — 150 ml");
+        A("status: null name safe", VesselStatusMath.Compose(null, "Ethanol", 10f) == "Vessel — 10 ml Ethanol");
+
+        // Hover live line.
+        A("hover: empty line", VesselStatusMath.HoverLine(null, 0f, "", 0) == "Now: empty");
+        A("hover: contents line", VesselStatusMath.HoverLine("Ethanol", 120f, "", 1) == "Now: 120 ml Ethanol");
+        A("hover: mixed story appended", VesselStatusMath.HoverLine("Ethanol", 170f, "Ethanol 120 ml + NaOH 50 ml", 2)
+            == "Now: 170 ml Ethanol\nMixed from: Ethanol 120 ml + NaOH 50 ml");
+
+        // Station billboards.
+        A("station: heat line", VesselStatusMath.HeatLine("4. Heat", 61.7f, 150f) == "4. Heat\n62 C -> 150 C");
+        A("station: progress line", VesselStatusMath.ProgressLine("5. Filter", "Filtering", 0.404f) == "5. Filter\nFiltering 40%");
+        A("station: progress clamps", VesselStatusMath.ProgressLine("x", "Collecting", 1.7f) == "x\nCollecting 100%");
+
+        // Formats survive the TMP glyph map unchanged (no boxed glyphs).
+        A("status: glyph-safe", GlyphSafe.Sanitize(VesselStatusMath.HeatLine("Heat", 62f, 150f)) == "Heat\n62 C -> 150 C");
+
+        // Mix-popup policy: hazards stay silent here (the reactor owns them).
+        A("mixfeed: harmless mix announces", MixFeedback.ShouldAnnounceWrongMix(HazardousMix.HazardOutcome.None));
+        A("mixfeed: toxic gas silent", !MixFeedback.ShouldAnnounceWrongMix(HazardousMix.HazardOutcome.ToxicGas));
+        A("mixfeed: fire silent", !MixFeedback.ShouldAnnounceWrongMix(HazardousMix.HazardOutcome.FireOrExplosion));
+        A("mixfeed: fizz silent", !MixFeedback.ShouldAnnounceWrongMix(HazardousMix.HazardOutcome.GenericFizz));
+
+        // StationStatusLabel composes from live sims (edit-mode components).
+        var go = new GameObject("fb_station");
+        var lgo = new GameObject("fb_label");
+        try
+        {
+            var temp = go.AddComponent<TemperatureSim>();
+            var tmp = lgo.AddComponent<TMPro.TextMeshPro>();
+            var lab = go.AddComponent<StationStatusLabel>();
+            lab.Bind(tmp, "4. Heat", StationSim.Heat, temp, null, null, null, 150f);
+            A("stationlabel: heat status composes", lab.ComposeStatus().StartsWith("4. Heat\n") && lab.ComposeStatus().EndsWith("-> 150 C"));
+            var gas = go.AddComponent<GasCollection>();
+            var lab2 = go.AddComponent<StationStatusLabel>();
+            lab2.Bind(tmp, "6. Collect", StationSim.Collect, null, null, null, gas, 0f);
+            gas.AddGas(25f);
+            A("stationlabel: collect shows percent", lab2.ComposeStatus().Contains("Collecting"));
+        }
+        finally { UnityEngine.Object.DestroyImmediate(go); UnityEngine.Object.DestroyImmediate(lgo); }
+
+        // Hover live-line cloning keeps title/category, appends "Now:".
+        var vgo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        try
+        {
+            var lp = vgo.AddComponent<LiquidPhysics>();
+            lp.mainRenderer = null;
+            var chem = ScriptableObject.CreateInstance<ChemicalData>(); chem.chemicalName = "FB_Chem";
+            lp.SetContents(chem, 80f);
+            var baseEntry = new LabInfoEntry("Beaker", LabInfoCategory.Equipment, "Base body.");
+            var live = HoverInspector.WithLiveLine(baseEntry, lp);
+            A("hover: live line appended", live.Title == "Beaker" && live.Body.Contains("Now: 80 ml FB_Chem"));
+        }
+        finally { UnityEngine.Object.DestroyImmediate(vgo); }
+    }
+
+    // W5.8 tool verbs: stir/grind orbit math, weighing, match striking, burner
+    // ignition, the methane splint, and the completesTask=false pour flag.
+    static void VerbSuite()
+    {
+        // OrbitMath — swept-angle accumulation.
+        var om = new OrbitMath { requiredRevs = 1f };
+        for (int i = 0; i <= 8; i++)
+        {
+            float a = i * 45f * Mathf.Deg2Rad;
+            om.Feed(Mathf.Cos(a), Mathf.Sin(a), true);
+        }
+        A("orbit: one full circle completes one rev", om.IsDone && Near(om.SweptDegrees, 360f, 0.5f));
+
+        var om2 = new OrbitMath { requiredRevs = 1f };
+        om2.Feed(Mathf.Cos(170f * Mathf.Deg2Rad), Mathf.Sin(170f * Mathf.Deg2Rad), true);
+        om2.Feed(Mathf.Cos(-170f * Mathf.Deg2Rad), Mathf.Sin(-170f * Mathf.Deg2Rad), true);
+        A("orbit: wraps across +/-180", Near(om2.SweptDegrees, 20f, 0.5f));
+
+        var om3 = new OrbitMath { requiredRevs = 1f };
+        om3.Feed(1f, 0f, true);
+        om3.Feed(-1f, 0f, true);   // 180° teleport
+        A("orbit: per-sample clamp blocks teleport cheats", Near(om3.SweptDegrees, OrbitMath.MaxDegPerSample, 0.5f));
+
+        var om4 = new OrbitMath { requiredRevs = 1f };
+        om4.Feed(1f, 0f, true);
+        om4.Feed(Mathf.Cos(40f * Mathf.Deg2Rad), Mathf.Sin(40f * Mathf.Deg2Rad), true);
+        float before = om4.SweptDegrees;
+        om4.Feed(0f, 0f, false);                       // lift the rod out — pause
+        om4.Feed(Mathf.Cos(220f * Mathf.Deg2Rad), Mathf.Sin(220f * Mathf.Deg2Rad), true);   // re-entry re-anchors
+        A("orbit: leaving pauses, never resets", Near(om4.SweptDegrees, before, 0.5f));
+        om4.Reset();
+        A("orbit: reset clears", om4.SweptDegrees == 0f && !om4.IsDone);
+
+        // WeighMath.
+        A("weigh: contents mass 1g/ml", Near(WeighMath.MassOf(48.6f), 48.6f) && Near(WeighMath.MassOf(10f, 5f), 15f));
+        A("weigh: tolerance pass", WeighMath.WithinTolerance(45f, 50f));
+        A("weigh: tolerance fail", !WeighMath.WithinTolerance(44f, 50f));
+        A("weigh: settle beat required", WeighMath.PanSettled(0.8f) && !WeighMath.PanSettled(0.5f));
+        A("weigh: chemical mode satisfied", WeighMath.Satisfied(true, "Salicylic Acid", "Salicylic Acid", 48f, 50f, "", null));
+        A("weigh: chemical mode short", !WeighMath.Satisfied(true, "Salicylic Acid", "Salicylic Acid", 30f, 50f, "", null));
+        A("weigh: chemical mode wrong chem", !WeighMath.Satisfied(true, "Salicylic Acid", "Ethanol", 60f, 50f, "", null));
+        A("weigh: item mode satisfied", WeighMath.Satisfied(true, "", null, 0f, 0f, "weigh-acetates", "weigh-acetates"));
+        A("weigh: item mode wrong item", !WeighMath.Satisfied(true, "", null, 0f, 0f, "weigh-acetates", "prep-koh"));
+        A("weigh: open mode any settled load", WeighMath.Satisfied(true, "", null, 0f, 0f, "", null));
+        A("weigh: unsettled never", !WeighMath.Satisfied(false, "", null, 0f, 0f, "", null));
+
+        // Match striking + burner ignition + splint.
+        A("strike: held swipe on striker lights", Matchstick.ShouldStrike(true, false, false, 0.5f, true));
+        A("strike: unheld never", !Matchstick.ShouldStrike(false, false, false, 0.5f, true));
+        A("strike: slow rub never", !Matchstick.ShouldStrike(true, false, false, 0.2f, true));
+        A("strike: plain surface never", !Matchstick.ShouldStrike(true, false, false, 0.5f, false));
+        A("strike: lit/spent never", !Matchstick.ShouldStrike(true, true, false, 0.5f, true)
+            && !Matchstick.ShouldStrike(true, false, true, 0.5f, true));
+        A("burner: lit match near ignites", BurnerController.ShouldIgnite(false, true, 0.1f));
+        A("burner: unlit match never", !BurnerController.ShouldIgnite(false, false, 0.1f));
+        A("burner: far match never", !BurnerController.ShouldIgnite(false, true, 0.5f));
+        A("burner: already lit no-op", !BurnerController.ShouldIgnite(true, true, 0.1f));
+        A("splint: lit match at tube fires", MethaneApparatusRig.SplintShouldFire(true, false, 0.1f, true, 1f));
+        A("splint: auto fallback fires", MethaneApparatusRig.SplintShouldFire(true, false, float.MaxValue, false, 25f));
+        A("splint: waits for a match first", !MethaneApparatusRig.SplintShouldFire(true, false, float.MaxValue, false, 5f));
+        A("splint: not collected never", !MethaneApparatusRig.SplintShouldFire(false, false, 0.1f, true, 30f));
+        A("splint: fires once", !MethaneApparatusRig.SplintShouldFire(true, true, 0.1f, true, 30f));
+
+        // Stir end-to-end: circle the rod → TaskGraph condition completes.
+        var module = ScriptableObject.CreateInstance<ExperimentModuleDefinition>();
+        module.graphTasks = new List<ExperimentTask> {
+            T("stir-x", TaskPhase.Synthesis, 1, LabSkill.Transfer, RubricCategory.Procedure),
+        };
+        module.trackedSkills = new List<LabSkill> { LabSkill.Transfer };
+        var rgo = new GameObject("verb_runner");
+        var vgo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var rodGo = new GameObject("verb_rod");
+        try
+        {
+            var runner = rgo.AddComponent<ExperimentRunner>();
+            runner.SetModule(module);
+            runner.StartExperiment();
+            var lp = vgo.AddComponent<LiquidPhysics>();
+            lp.mainRenderer = null;
+            var chem = ScriptableObject.CreateInstance<ChemicalData>(); chem.chemicalName = "VB_Chem";
+            lp.SetContents(chem, 60f);
+            var stir = vgo.AddComponent<StirController>();
+            stir.Bind(runner, "stir-x", lp, rodGo.transform, requiredRevs: 1f);
+            for (int i = 0; i <= 9; i++)
+            {
+                float a = i * 45f * Mathf.Deg2Rad;
+                stir.Tick(Mathf.Cos(a) * 0.05f, Mathf.Sin(a) * 0.05f, true);
+            }
+            runner.Graph.Tick();
+            A("stir: circling the rod completes the task", runner.Graph.IsComplete("stir-x"));
+
+            // Weigh end-to-end via ForceLoad.
+            var module2 = ScriptableObject.CreateInstance<ExperimentModuleDefinition>();
+            module2.graphTasks = new List<ExperimentTask> {
+                T("weigh-x", TaskPhase.ReagentPrep, 1, LabSkill.Measuring, RubricCategory.Procedure),
+            };
+            module2.trackedSkills = new List<LabSkill> { LabSkill.Measuring };
+            runner.SetModule(module2);
+            runner.StartExperiment();
+            var wsGo = new GameObject("verb_pan");
+            try
+            {
+                var ws = wsGo.AddComponent<WeighStation>();
+                ws.Bind(runner, "weigh-x", "", "VB_Chem", 50f, null);
+                A("weigh: empty pan not satisfied", !ws.IsSatisfied);
+                ws.ForceLoad(null, lp, 1.5f);
+                A("weigh: right vessel settled satisfies", ws.IsSatisfied);
+                runner.Graph.Tick();
+                A("weigh: task completes on the pan", runner.Graph.IsComplete("weigh-x"));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(wsGo); }
+            UnityEngine.Object.DestroyImmediate(module2);
+
+            // completesTask=false: pours accumulate + flag ready, never complete.
+            var module3 = ScriptableObject.CreateInstance<ExperimentModuleDefinition>();
+            module3.graphTasks = new List<ExperimentTask> {
+                T("weigh-y", TaskPhase.ReagentPrep, 1, LabSkill.Measuring, RubricCategory.Procedure),
+            };
+            module3.trackedSkills = new List<LabSkill> { LabSkill.Measuring };
+            runner.SetModule(module3);
+            runner.StartExperiment();
+            var bind = vgo.AddComponent<LiquidTaskBinding>();
+            bind.SetVesselAndRunner(lp, runner);
+            bind.AddExpected(chem, "weigh-y", 40f, completesTask: false);
+            bind.HandleReagent(chem, 50f);
+            A("bindflag: threshold met but not completed", !runner.Graph.IsComplete("weigh-y"));
+            A("bindflag: readiness flagged", bind.ReadyFor("weigh-y"));
+            UnityEngine.Object.DestroyImmediate(module3);
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(rgo);
+            UnityEngine.Object.DestroyImmediate(vgo);
+            UnityEngine.Object.DestroyImmediate(rodGo);
+            UnityEngine.Object.DestroyImmediate(module);
+        }
+    }
+
+    // W5.8 builder wiring for the verb stations (pins the applied layout data).
+    static void VerbWiringSuite()
+    {
+        var lib = AssetDatabase.LoadAssetAtPath<SceneAssetLibrary>("Assets/PharmaSynth/ScriptableObjects/SceneAssetLibrary.asset");
+        var reg = AssetDatabase.LoadAssetAtPath<ReactionRegistry>("Assets/PharmaSynth/ScriptableObjects/Reactions/MasterReactionRegistry.asset");
+        var layouts = new List<ExperimentLayout>();
+        foreach (var g in AssetDatabase.FindAssets("t:ExperimentLayout", new[] { "Assets/PharmaSynth/ScriptableObjects/Layouts" }))
+            layouts.Add(AssetDatabase.LoadAssetAtPath<ExperimentLayout>(AssetDatabase.GUIDToAssetPath(g)));
+        if (lib == null || layouts.Count == 0) { A("verbwire: assets available", false); return; }
+
+        // Layout data applied (menu Tools ▸ PharmaSynth ▸ Apply W5.8 Verb Data).
+        ExperimentLayout aspirin = null, acetone = null, benzamide = null, caffeine = null;
+        foreach (var l in layouts)
+        {
+            if (l.moduleId == "final-aspirin") aspirin = l;
+            if (l.moduleId == "midterm-acetone") acetone = l;
+            if (l.moduleId == "final-benzamide") benzamide = l;
+            if (l.moduleId == "final-caffeine") caffeine = l;
+        }
+        bool aspStation = false, aspFlagged = false;
+        if (aspirin != null)
+        {
+            foreach (var s in aspirin.stations) if (s.taskId == "weigh-salicylic" && s.sim == StationSim.Weigh) aspStation = true;
+            foreach (var v in aspirin.vessels) foreach (var b in v.bindings)
+                if (b.taskId == "weigh-salicylic" && !b.completesTask) aspFlagged = true;
+        }
+        A("verbwire: aspirin weigh station authored", aspStation);
+        A("verbwire: aspirin pour binding defers to the scale", aspFlagged);
+        bool acetoneWeigh = false;
+        if (acetone != null) foreach (var s in acetone.stations) if (s.taskId == "weigh-acetates" && s.sim == StationSim.Weigh) acetoneWeigh = true;
+        A("verbwire: acetone weigh authored", acetoneWeigh);
+        bool benzStir = false;
+        if (benzamide != null) foreach (var s in benzamide.stations) if (s.taskId == "stand" && s.sim == StationSim.Stir) benzStir = true;
+        A("verbwire: benzamide stir authored", benzStir);
+        bool cafMortar = false, cafPestle = false;
+        if (caffeine != null) foreach (var p in caffeine.props)
+        {
+            if (p.prefabName == "Motar") cafMortar = true;
+            if (p.prefabName == "Pestle") cafPestle = true;
+        }
+        A("verbwire: caffeine mortar+pestle staged", cafMortar && cafPestle);
+
+        // Builder wires the controllers (fresh runner, no graph — Register no-ops).
+        var rgo = new GameObject("vw_runner"); var bgo = new GameObject("vw_builder");
+        try
+        {
+            var runner = rgo.AddComponent<ExperimentRunner>();
+            var builder = bgo.AddComponent<ExperimentSceneBuilder>();
+            builder.SetRefs(runner, lib, reg, layouts);
+
+            builder.Build("final-benzamide");
+            A("verbwire: benzamide rod stirs the vessel", bgo.GetComponentInChildren<StirController>() != null);
+
+            builder.Build("final-aspirin");
+            A("verbwire: aspirin balance built", bgo.GetComponentInChildren<WeighStation>() != null);
+
+            builder.Build("midterm-acetone");
+            A("verbwire: acetone balance built", bgo.GetComponentInChildren<WeighStation>() != null);
+            var heatProp = FindChildByName(bgo.transform, "Prop_heat-glow");
+            A("verbwire: acetone burner is ignitable + a striker", heatProp != null
+                && heatProp.GetComponent<BurnerController>() != null
+                && heatProp.GetComponent<MatchStrikerSurface>() != null);
+
+            builder.Build("final-caffeine");
+            A("verbwire: caffeine mortar grinds (educational)", bgo.GetComponentInChildren<GrindController>() != null);
+        }
+        finally { UnityEngine.Object.DestroyImmediate(rgo); UnityEngine.Object.DestroyImmediate(bgo); }
+    }
+
+    static GameObject FindChildByName(Transform root, string name)
+    {
+        foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            if (t.name == name) return t.gameObject;
+        return null;
+    }
+
+    // W5.8 table pass: every layout re-zoned onto the deck with real spacing.
+    static void LayoutSpacingSuite()
+    {
+        // The zoning grid itself keeps its promises (one full station row = the
+        // busiest module's 7 stations).
+        bool stationPitch = true;
+        for (int i = 0; i < LayoutTidyMath.StationsPerRow - 1; i++)
+            for (int j = i + 1; j < LayoutTidyMath.StationsPerRow; j++)
+                if (Vector3.Distance(LayoutTidyMath.StationPos(i), LayoutTidyMath.StationPos(j)) < LayoutTidyMath.MinStationDistance - 0.01f)
+                    stationPitch = false;
+        A("tidy: station row keeps 0.5 m pitch", stationPitch);
+
+        var slots = new List<Vector3>();
+        for (int i = 0; i < LayoutTidyMath.StationsPerRow; i++) slots.Add(LayoutTidyMath.StationPos(i));
+        for (int i = 0; i < 3; i++) slots.Add(LayoutTidyMath.VesselPos(i));
+        for (int i = 0; i < 8; i++) slots.Add(LayoutTidyMath.ReagentPos(i));
+        for (int i = 0; i < 6; i++) slots.Add(LayoutTidyMath.ToolPos(i));
+        slots.Add(LayoutTidyMath.RackPos);
+        for (int i = 0; i < 3; i++) slots.Add(LayoutTidyMath.SparePos(i));
+        for (int i = 0; i < 2; i++) slots.Add(LayoutTidyMath.MatchPos(i));
+        slots.Add(LayoutTidyMath.StrikerPos);
+        bool zonesApart = true, zonesOnDeck = true;
+        for (int i = 0; i < slots.Count; i++)
+        {
+            if (!LayoutTidyMath.OnDeck(slots[i])) zonesOnDeck = false;
+            for (int j = i + 1; j < slots.Count; j++)
+                if (Vector3.Distance(slots[i], slots[j]) < LayoutTidyMath.MinPairDistance) zonesApart = false;
+        }
+        A("tidy: all grid slots on the deck", zonesOnDeck);
+        A("tidy: no two grid slots collide", zonesApart);
+
+        // Every authored layout obeys the invariants (pins the Tidy run).
+        int badDeck = 0, badPair = 0, badStations = 0;
+        foreach (var g in AssetDatabase.FindAssets("t:ExperimentLayout", new[] { "Assets/PharmaSynth/ScriptableObjects/Layouts" }))
+        {
+            var layout = AssetDatabase.LoadAssetAtPath<ExperimentLayout>(AssetDatabase.GUIDToAssetPath(g));
+            if (layout == null) continue;
+            var all = new List<Vector3>();
+            foreach (var s in layout.stations) all.Add(s.pos);
+            foreach (var p in layout.props) all.Add(p.pos);
+            foreach (var v in layout.vessels) all.Add(v.pos);
+            foreach (var p in all) if (!LayoutTidyMath.OnDeck(p)) badDeck++;
+            for (int i = 0; i < all.Count; i++)
+                for (int j = i + 1; j < all.Count; j++)
+                    if (Vector3.Distance(all[i], all[j]) < LayoutTidyMath.MinPairDistance) badPair++;
+            for (int i = 0; i < layout.stations.Count; i++)
+                for (int j = i + 1; j < layout.stations.Count; j++)
+                    if (Vector3.Distance(layout.stations[i].pos, layout.stations[j].pos) < LayoutTidyMath.MinStationDistance) badStations++;
+        }
+        A("tidy: every layout position on the deck", badDeck == 0);
+        A("tidy: no overlapping layout items (historical (1.38,-3.88) pairs fixed)", badPair == 0);
+        A("tidy: stations keep verb elbow room", badStations == 0);
+    }
+
+    // W5.10 center-table shelf platforms — geometry invariants.
+    static void WorkspaceShelfSuite()
+    {
+        const int n = 3;
+        // Tiles rest ON the rail tops (matches the user's plank top 1.563).
+        A("shelf: top sits on the rails", Near(WorkspaceShelfMath.TopY, 1.563f, 0.001f));
+
+        // Tiles tile the full width with only the seam gap between them, and
+        // stay inside [XMin, XMax].
+        bool spanOk = true, seamOk = true;
+        float prevRight = WorkspaceShelfMath.XMin;
+        for (int i = 0; i < n; i++)
+        {
+            var c = WorkspaceShelfMath.TileCenter(i, n);
+            var s = WorkspaceShelfMath.TileSize(n);
+            float left = c.x - s.x * 0.5f, right = c.x + s.x * 0.5f;
+            if (left < WorkspaceShelfMath.XMin - 0.001f || right > WorkspaceShelfMath.XMax + 0.001f) spanOk = false;
+            float seam = left - prevRight;   // gap from the previous tile's right edge
+            if (i > 0 && seam > WorkspaceShelfMath.Gap + 0.001f) seamOk = false;   // no gap wider than the seam
+            prevRight = right;
+        }
+        A("shelf: tiles stay within the rail width", spanOk);
+        A("shelf: no gap wider than the seam (equipment seats anywhere)", seamOk);
+        A("shelf: last tile reaches the right rail end", Near(prevRight, WorkspaceShelfMath.XMax, WorkspaceShelfMath.Gap + 0.001f));
+
+        // Each tile bridges both rails (front z=-3.15, back z=-3.50).
+        var size = WorkspaceShelfMath.TileSize(n);
+        float zFrontEdge = WorkspaceShelfMath.ZCenter + size.z * 0.5f;
+        float zBackEdge = WorkspaceShelfMath.ZCenter - size.z * 0.5f;
+        A("shelf: tile bridges both rails", zFrontEdge >= -3.16f && zBackEdge <= -3.49f);
+        A("shelf: tiles are thin planks", Near(size.y, WorkspaceShelfMath.Thickness) && size.y < 0.05f);
+    }
+
+    // W5.9 flow-smoothness audit fixes.
+    static void W59FlowSuite()
+    {
+        // F2: displayed percentages FLOOR (the gate compares raw values).
+        A("display: 89.9 floors to 89", GradeDisplay.Percent(89.9f) == 89);
+        A("display: 90.0 shows 90", GradeDisplay.Percent(90f) == 90);
+        A("display: clamps", GradeDisplay.Percent(-3f) == 0 && GradeDisplay.Percent(140f) == 100);
+        A("display: mastery floors", GradeDisplay.MasteryPercent(0.899f) == 89);
+
+        // F6: the scripted review window suppresses ambient chatter.
+        A("review: all review states flagged",
+            GatekeeperModel.IsReviewState(GateState.QuizIntro) && GatekeeperModel.IsReviewState(GateState.QuizTime)
+            && GatekeeperModel.IsReviewState(GateState.ScoreReview) && GatekeeperModel.IsReviewState(GateState.Returning)
+            && GatekeeperModel.IsReviewState(GateState.Debrief) && GatekeeperModel.IsReviewState(GateState.UnlockAnnounce));
+        A("review: play states not flagged",
+            !GatekeeperModel.IsReviewState(GateState.Running) && !GatekeeperModel.IsReviewState(GateState.Blocked)
+            && !GatekeeperModel.IsReviewState(GateState.Loading) && !GatekeeperModel.IsReviewState(GateState.LabTour));
+
+        // F4: the fail path can abandon back to the entrance.
+        A("gate: fail can abandon to entrance", GatekeeperModel.Next(GateState.ScoreReview, GateEvent.AbandonRun) == GateState.Blocked);
+        A("gate: abandon illegal elsewhere", GatekeeperModel.Next(GateState.Running, GateEvent.AbandonRun) == GateState.Running
+            && GatekeeperModel.Next(GateState.QuizTime, GateEvent.AbandonRun) == GateState.QuizTime);
+        A("gate: pass-continue and retry unchanged",
+            GatekeeperModel.Next(GateState.ScoreReview, GateEvent.ContinueAfterPass) == GateState.Returning
+            && GatekeeperModel.Next(GateState.ScoreReview, GateEvent.RetryRequested) == GateState.Loading);
+
+        // F7: fader callbacks compose instead of overwriting.
+        int order = 0, aAt = 0, bAt = 0;
+        var composed = ScreenFader.Compose(() => aAt = ++order, () => bAt = ++order);
+        composed();
+        A("fader: composed callbacks both run in order", aAt == 1 && bAt == 2);
+        System.Action solo = () => { };
+        A("fader: compose null-safe", ScreenFader.Compose(null, null) == null
+            && ScreenFader.Compose(solo, null) == solo && ScreenFader.Compose(null, solo) == solo);
+
+        // F3: Abort + Finish guards.
+        var module = ScriptableObject.CreateInstance<ExperimentModuleDefinition>();
+        module.graphTasks = new List<ExperimentTask> {
+            T("w59-a", TaskPhase.Synthesis, 1, LabSkill.Transfer, RubricCategory.Procedure),
+        };
+        module.trackedSkills = new List<LabSkill> { LabSkill.Transfer };
+        var rgo = new GameObject("w59_runner");
+        try
+        {
+            var runner = rgo.AddComponent<ExperimentRunner>();
+            runner.Finish(1f);   // no attempt built — must not throw
+            A("runner: finish before start is safe", !runner.IsRunning);
+
+            runner.SetModule(module);
+            runner.StartExperiment();
+            runner.FreezeClock();
+            runner.Abort();
+            A("runner: abort ends the run + unfreezes", !runner.IsRunning && !runner.ClockFrozen);
+            bool finishedFired = false;
+            runner.ExperimentFinished += _ => finishedFired = true;
+            runner.Finish(1f);
+            A("runner: finish after abort is a no-op", !finishedFired);
+
+            runner.StartExperiment();
+            var r1 = runner.Finish(0.5f);
+            var r2 = runner.Finish(1f);   // second call must return the SAME recorded result
+            A("runner: double finish returns the recorded result", Near(r1.grade.Total, r2.grade.Total));
+
+            // F8: quiz-bank edge cases + freeze-on-open.
+            var pgo = new GameObject("w59_postlab");
+            try
+            {
+                var post = pgo.AddComponent<PostLabController>();
+                post.OpenFor(null);
+                A("quiz: missing bank = full documentation credit", Near(post.ScoreFraction(), 1f));
+                var empty = ScriptableObject.CreateInstance<QuizBank>();
+                empty.questions = new List<QuizQuestion>();
+                post.OpenFor(empty);
+                A("quiz: EMPTY bank also full credit (was 0)", Near(post.ScoreFraction(), 1f));
+                UnityEngine.Object.DestroyImmediate(empty);
+
+                runner.StartExperiment();
+                post.SetRefs(runner, null);
+                post.Open();
+                A("quiz: opening freezes the clock on every path", runner.ClockFrozen);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(pgo); }
+        }
+        finally { UnityEngine.Object.DestroyImmediate(rgo); UnityEngine.Object.DestroyImmediate(module); }
+
+        // F5: supply monitor un-latches on "keep trying".
+        var mgo = new GameObject("w59_monitor");
+        try
+        {
+            var mon = mgo.AddComponent<ReagentSupplyMonitor>();
+            mon.ForceLatch();
+            A("supply: latched after prompt", mon.Latched);
+            mon.Unlatch();
+            A("supply: keep-trying re-arms the monitor", !mon.Latched);
+        }
+        finally { UnityEngine.Object.DestroyImmediate(mgo); }
+
+        // F1: campaign-complete celebration copy.
+        A("campaign: celebration pool authored", PharmeeLines.CampaignComplete.Length >= 3);
+        A("campaign: debrief remark swaps on completion",
+            PharmeeLines.DebriefRemark(95f, true) != PharmeeLines.DebriefRemark(95f, false));
+        A("campaign: non-final remark unchanged", PharmeeLines.DebriefRemark(95f, false) == PharmeeLines.DebriefRemark(95f));
+
+        // F10: data-integrity guards (silent-unpassable + "outro always plays").
+        int emptyModules = 0;
+        foreach (var g in AssetDatabase.FindAssets("t:ExperimentModuleDefinition", new[] { "Assets/PharmaSynth/ScriptableObjects/Experiments" }))
+        {
+            var m = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>(AssetDatabase.GUIDToAssetPath(g));
+            if (m == null || m.graphTasks == null || m.graphTasks.Count == 0) emptyModules++;
+        }
+        A("data: every module has tasks (mastery gate reachable)", emptyModules == 0);
+
+        var cuts = AssetDatabase.LoadAssetAtPath<CutsceneLibrary>("Assets/PharmaSynth/ScriptableObjects/CutsceneLibrary.asset");
+        int badOutros = 0;
+        foreach (var e in ExperimentCatalog.Entries)
+        {
+            var set = cuts != null ? cuts.GetSet(e.moduleId) : null;
+            if (set == null
+                || set.success == null || set.success.beats == null || set.success.beats.Count == 0
+                || set.failure == null || set.failure.beats == null || set.failure.beats.Count == 0) badOutros++;
+        }
+        A("data: every module has non-empty success+failure outros", badOutros == 0);
+
+        var quizLib = AssetDatabase.LoadAssetAtPath<QuizBankLibrary>("Assets/PharmaSynth/ScriptableObjects/QuizBankLibrary.asset");
+        int missingBanks = 0;
+        foreach (var e in ExperimentCatalog.Entries)
+            if (quizLib == null || quizLib.GetBank(e.moduleId) == null) missingBanks++;
+        A("data: every module resolves a quiz bank", missingBanks == 0);
+    }
+
+    // W5.9 manuscript re-verification fixes.
+    static void W59ManuscriptSuite()
+    {
+        var reg = AssetDatabase.LoadAssetAtPath<ReactionRegistry>("Assets/PharmaSynth/ScriptableObjects/Reactions/MasterReactionRegistry.asset");
+        var lib = AssetDatabase.LoadAssetAtPath<SceneAssetLibrary>("Assets/PharmaSynth/ScriptableObjects/SceneAssetLibrary.asset");
+        ChemicalData Chem(string f) => AssetDatabase.LoadAssetAtPath<ChemicalData>("Assets/PharmaSynth/ScriptableObjects/Chemicals/" + f + ".asset");
+        ExperimentLayout Layout(string f) => AssetDatabase.LoadAssetAtPath<ExperimentLayout>("Assets/PharmaSynth/ScriptableObjects/Layouts/" + f + ".asset");
+
+        // M1: benzoic ester test finally has its alcohol.
+        var esterRule = AssetDatabase.LoadAssetAtPath<ReactionRule>("Assets/PharmaSynth/ScriptableObjects/Reactions/Test_BenzoateEster.asset");
+        A("m1: ester rule uses propyl alcohol", esterRule != null && esterRule.inputChemicalB == Chem("Chem_PropylAlcohol"));
+        A("m1: benzoic+propyl reaction resolves", reg != null
+            && reg.FindReaction(Chem("Chem_BenzoicAcid"), Chem("Chem_PropylAlcohol")) != null);
+        bool m1Binding = false;
+        var benzoic = Layout("Layout_BenzoicAcid");
+        if (benzoic != null)
+            foreach (var v in benzoic.vessels) foreach (var b in v.bindings)
+                if (b.reagentChemical == "Propyl Alcohol" && b.taskId == "test-ester") m1Binding = true;
+        A("m1: propyl alcohol staged + bound", m1Binding);
+
+        // M2: chloroform oxidation test (manuscript procedure + results sheet).
+        var oxRule = AssetDatabase.LoadAssetAtPath<ReactionRule>("Assets/PharmaSynth/ScriptableObjects/Reactions/Test_ChloroformOxidation.asset");
+        A("m2: oxidation rule exists + registered", oxRule != null && reg != null && reg.rules.Contains(oxRule));
+        A("m2: chloroform+dichromate reaction resolves", reg != null
+            && reg.FindReaction(Chem("Chem_Chloroform"), Chem("Chem_PotassiumDichromate")) != null);
+        var chloroModule = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>("Assets/PharmaSynth/ScriptableObjects/Experiments/Midterm_Chloroform.asset");
+        bool m2Task = false, m2Gated = false;
+        if (chloroModule != null)
+            foreach (var t in chloroModule.graphTasks)
+            {
+                if (t.taskId == "test-oxidation" && t.phase == TaskPhase.ChemicalTests) m2Task = true;
+                if (t.taskId == "record-yield" && t.prerequisites.Contains("test-oxidation")) m2Gated = true;
+            }
+        A("m2: module has the oxidation test task", m2Task);
+        A("m2: data sheet waits for it", m2Gated);
+
+        // M3: no grapes (manuscript exclusion).
+        A("m3: fruit juice renamed", Chem("Chem_GrapeJuice") != null && Chem("Chem_GrapeJuice").chemicalName == "Mixed Fruit Juice");
+        A("m3: old name no longer resolves", lib != null && lib.GetChemical("Grape Juice") == null
+            && lib.GetChemical("Mixed Fruit Juice") != null);
+        var wine = Layout("Layout_WineMaking");
+        bool m3Start = false;
+        if (wine != null) foreach (var v in wine.vessels) if (v.startChemical == "Mixed Fruit Juice") m3Start = true;
+        A("m3: fermentation jar starts with fruit juice", m3Start);
+
+        // M4: reagent fidelity — layouts AND rules agree.
+        var esterForm = AssetDatabase.LoadAssetAtPath<ReactionRule>("Assets/PharmaSynth/ScriptableObjects/Reactions/EsterFormation.asset");
+        A("m4: ethanol ester uses diluted acetic acid", esterForm != null && esterForm.inputChemicalB == Chem("Chem_DilutedAceticAcid"));
+        var acidRule = AssetDatabase.LoadAssetAtPath<ReactionRule>("Assets/PharmaSynth/ScriptableObjects/Reactions/Test_BenzamideAcid.asset");
+        A("m4: benzamide acid test uses diluted HCl", acidRule != null && acidRule.inputChemicalB == Chem("Chem_DilutedHydrochloricAcid"));
+        bool m4Acet = false;
+        var acetanilide = Layout("Layout_Acetanilide");
+        if (acetanilide != null)
+            foreach (var p in acetanilide.props)
+                if (p.itemId == "prep-hcl" && p.fillChemical == "Hydrochloric Acid 0.1N") m4Acet = true;
+        A("m4: acetanilide preps 0.1N HCl", m4Acet);
+        int kiBindings = 0;
+        foreach (var name in new[] { "Layout_EthylAlcohol", "Layout_Acetone" })
+        {
+            var lay = Layout(name);
+            if (lay == null) continue;
+            foreach (var v in lay.vessels) foreach (var b in v.bindings)
+                if (b.reagentChemical == "Potassium Iodide 10%" && b.taskId == "test-iodoform") kiBindings++;
+        }
+        A("m4: iodoform tests stage their KI", kiBindings == 2);
+
+        // M5a: the chemistry-misfit quiz question is gone.
+        var quiz = AssetDatabase.LoadAssetAtPath<QuizBank>("Assets/PharmaSynth/ScriptableObjects/Quizzes/Quiz_ChemicalCompounding.asset");
+        A("m5: compounding quiz Q3 manuscript-aligned", quiz != null && quiz.questions.Count >= 3
+            && !quiz.questions[2].prompt.Contains("unsaturation") && quiz.questions[2].prompt.Contains("OXIDISED"));
+    }
+
     static void SceneBuilderSuite()
     {
         var lib = AssetDatabase.LoadAssetAtPath<SceneAssetLibrary>("Assets/PharmaSynth/ScriptableObjects/SceneAssetLibrary.asset");
@@ -1448,7 +2147,7 @@ public static class PharmaSelfTests
             builder.SetRefs(runner, lib, reg, new List<ExperimentLayout> { lay });
 
             int n = builder.Build("prelim-ethyl-alcohol");
-            A("builder: spawns 10 roots (2 stations + 6 props + 2 vessels)", n == 10);
+            A("builder: spawns 11 roots (2 stations + 7 props + 2 vessels)", n == 11);   // W5.9: +KI vial
             A("builder: 2 task stations built", bgo.GetComponentsInChildren<ExperimentTaskStation>().Length == 2);
 
             // §2 sockets: each station gets a snap socket filtered to its item.
@@ -1494,7 +2193,24 @@ public static class PharmaSelfTests
                 A("socket: filtered socket rejects null", !StationSocketFilter.Matches("warm-waterbath", null));
             }
             finally { UnityEngine.Object.DestroyImmediate(li.gameObject); }
-            A("builder: props carry LabItem ids", bgo.GetComponentsInChildren<LabItem>().Length == 6);
+            int propItems = 0;
+            foreach (var li2 in bgo.GetComponentsInChildren<LabItem>())
+                if (li2.name.StartsWith("Prop_")) propItems++;
+            A("builder: props carry LabItem ids", propItems == 7);   // W5.9: +KI vial
+
+            // W5.8 kits: rack pre-filled with 6 tubes, 3 spare vessels, pads hidden.
+            A("builder: rack kit spawns with 6 tubes", FindChildByName(bgo.transform, "RackKit") != null
+                && FindChildByName(bgo.transform, "RackTube_5") != null);
+            A("builder: 3 spare vessels staged", FindChildByName(bgo.transform, "Spare_Beaker_100mL_0") != null
+                && FindChildByName(bgo.transform, "Spare_Beaker_100mL_1") != null
+                && FindChildByName(bgo.transform, "Spare_ErlenmeyerFlask_400mL_2") != null);
+            bool padsHidden = true;
+            foreach (var st2 in bgo.GetComponentsInChildren<ExperimentTaskStation>())
+            {
+                var mr2 = st2.GetComponent<MeshRenderer>();
+                if (mr2 != null && mr2.enabled) padsHidden = false;
+            }
+            A("builder: station pads invisible (logic intact)", padsHidden);
 
             var bind = bgo.GetComponentInChildren<LiquidTaskBinding>();
             A("builder: vessel has a LiquidTaskBinding", bind != null);
@@ -1504,6 +2220,35 @@ public static class PharmaSelfTests
                 bind.HandleReagent(sugar);            // = pour Brown Sugar into the fermentation beaker
                 A("builder: pouring sugar completes prepare-must", runner.Graph.IsComplete("prepare-must"));
             }
+
+            // W5.8 pour fix: receiving vessels must spawn EMPTY (wake branch
+            // armed — the old phantom 500 ml default blocked chemical adoption
+            // forever) and must be able to RENDER liquid (_Fill contract).
+            bool mainEmptyOk = false, mainRenderOk = false, seededKeepsFill = true;
+            foreach (var vlp in bgo.GetComponentsInChildren<LiquidPhysics>())
+            {
+                if (!vlp.name.StartsWith("Vessel_")) continue;
+                if (vlp.currentChemical == null)
+                {
+                    mainEmptyOk = vlp.currentLiquidVolume <= 0.1f;
+                    mainRenderOk = vlp.mainRenderer != null && vlp.mainRenderer.sharedMaterial != null
+                                   && vlp.mainRenderer.sharedMaterial.HasProperty("_Fill");
+                }
+                else if (vlp.currentLiquidVolume <= 1f) seededKeepsFill = false;
+            }
+            A("builder: main vessel spawns empty (wake armed)", mainEmptyOk);
+            A("builder: main vessel can render liquid", mainRenderOk);
+            A("builder: seeded test vessel keeps its fill", seededKeepsFill);
+            bool twinsOk = true;
+            foreach (var nm in new[] { "Beaker_100mL", "Beaker_500mL", "ErlenmeyerFlask_400mL", "GraduatedCylinder_50mL", "TestTube" })
+                if (lib.GetPrefab(nm + "_WithLiquid") == null) twinsOk = false;
+            A("builder: every vessel swap twin resolves", twinsOk);
+
+            // W5.8 feedback layer: sim stations show live status; vessels and
+            // pourables carry live tags + mix popups.
+            A("builder: sim stations get live status labels", bgo.GetComponentsInChildren<StationStatusLabel>().Length >= 1);
+            A("builder: vessels get live status + mix feedback",
+                bgo.GetComponentsInChildren<VesselStatus>().Length >= 2 && bgo.GetComponentsInChildren<MixFeedback>().Length >= 2);
 
             int m = builder.Build("tutorial-methane");
             A("builder: Methane builds 0 dynamic (uses its hand-built stage)", m == 0);
@@ -1845,8 +2590,18 @@ public static class PharmaSelfTests
             runner.Graph.Tick();
             A("simrig: warm-waterbath pending before heating", !runner.Graph.IsComplete("warm-waterbath"));
 
-            // Perform the verb: prop in zone → heat to target → auto-check completes it.
+            // W5.8 ignition gate: the station's prop is a BunsenBurner, so heat
+            // only advances once the burner is LIT (light it with a match).
+            var burnerProp = FindChildByName(bgo.transform, "Prop_warm-waterbath");
+            var burner = burnerProp != null ? burnerProp.GetComponent<BurnerController>() : null;
+            A("simrig: waterbath burner is ignitable (W5.8)", burner != null);
             sensor.ForceOccupied(true);
+            heatRig.Drive(1f, true);           // burner present but UNLIT → no heat
+            for (int i = 0; i < 4; i++) temp.Tick(1f);
+            A("simrig: unlit burner never heats (W5.8)", !temp.AtLeast(85f));
+
+            // Perform the verb: light the burner → heat to target → auto-completes.
+            if (burner != null) burner.Ignite();
             heatRig.Drive(1f, true);           // flame on
             for (int i = 0; i < 4; i++) temp.Tick(1f);
             A("simrig: temperature reached target", temp.AtLeast(85f));
@@ -2080,7 +2835,7 @@ public static class PharmaSelfTests
         foreach (var (file, tasks) in new[] {
             ("Tutorial_Methane", 5), ("Prelim_ChemicalCompounding", 6), ("Prelim_EthylAlcohol", 7),
             ("Midterm_BenzoicAcid", 9), ("Final_Aspirin", 7),
-            ("Midterm_Acetanilide", 10), ("Midterm_Acetone", 10), ("Midterm_Chloroform", 10),
+            ("Midterm_Acetanilide", 10), ("Midterm_Acetone", 10), ("Midterm_Chloroform", 11),   // W5.9: +test-oxidation
             ("Final_Benzamide", 9), ("Final_Caffeine", 9), ("Final_WineMaking", 8) })
         {
             var m = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>(dir + file + ".asset");
@@ -2318,13 +3073,15 @@ public static class PharmaSelfTests
         try
         {
             A("shelfpour: non-liquid rejected", ShelfPourWiring.WireBottle(bottle, null, null) == -1);
-            bottle.AddComponent<LiquidPhysics>();
+            var blp = bottle.AddComponent<LiquidPhysics>();
             int added = ShelfPourWiring.WireBottle(bottle, null, null);
-            A("shelfpour: adds pourer+spout+spill+reactor", added == 4);
+            A("shelfpour: adds visual+pourer+spout+spill+reactor+feedback", added == 6);   // W5.8: +visual +MixFeedback
             var pourer = bottle.GetComponent<LiquidPourer>();
             A("shelfpour: pourer present", pourer != null);
             A("shelfpour: spout wired", pourer != null && pourer.spout != null);
             A("shelfpour: spill present", bottle.GetComponent<SpillMistake>() != null);
+            A("shelfpour: liquid visual wired (W5.8)", blp.mainRenderer != null
+                && blp.mainRenderer.sharedMaterial != null && blp.mainRenderer.sharedMaterial.HasProperty("_Fill"));
             A("shelfpour: idempotent", ShelfPourWiring.WireBottle(bottle, null, null) == 0);
         }
         finally { UnityEngine.Object.DestroyImmediate(bottle); }
@@ -2400,7 +3157,7 @@ public static class PharmaSelfTests
         A("endproduct: wine is the winemaking product", DemoMode.IsEndProduct("Wine"));
         A("endproduct: sulfuric acid is raw", !DemoMode.IsEndProduct("Sulfuric Acid"));
         A("endproduct: sodium acetate is feedstock", !DemoMode.IsEndProduct("Sodium Acetate"));
-        A("endproduct: grape juice is feedstock, not product", !DemoMode.IsEndProduct("Grape Juice"));
+        A("endproduct: fruit juice is feedstock, not product", !DemoMode.IsEndProduct("Mixed Fruit Juice") && !DemoMode.IsEndProduct("Grape Juice"));
         A("endproduct: null safe", !DemoMode.IsEndProduct(null));
     }
 

@@ -14,29 +14,35 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ExperimentLayout
   moduleId: final-aspirin
   stations:
+  - taskId: weigh-salicylic
+    label: 1. Weigh salicylic acid
+    requiredItemId: 
+    pos: {x: -1.8, y: 0.91, z: -3.78}
+    sim: 7
+    simTargetC: 0
   - taskId: warm-waterbath
     label: 3. Warm water bath
     requiredItemId: warm-waterbath
-    pos: {x: -0.053089857, y: 0.91, z: -3.790166}
+    pos: {x: -1.3, y: 0.91, z: -3.78}
     sim: 1
     simTargetC: 85
   - taskId: crystallise-ice
     label: 4. Ice crystallise
     requiredItemId: crystallise-ice
-    pos: {x: -0.65308976, y: 0.91, z: -3.790166}
+    pos: {x: -0.79999995, y: 0.91, z: -3.78}
     sim: 2
     simTargetC: 85
   - taskId: buchner-filter
     label: 5. Buchner filter
     requiredItemId: buchner-filter
-    pos: {x: -1.2530897, y: 0.91, z: -3.790166}
+    pos: {x: -0.29999995, y: 0.91, z: -3.78}
     sim: 3
     simTargetC: 85
   props:
   - prefabName: Vial_Brown
     itemId: weigh-salicylic
     displayName: Salicylic Acid
-    pos: {x: 1.3969102, y: 0.91, z: -2.740166}
+    pos: {x: 1.33, y: 0.91, z: -3.52}
     targetHeight: 0.16
     pourable: 1
     fillChemical: Salicylic Acid
@@ -44,7 +50,7 @@ MonoBehaviour:
   - prefabName: Vial_Brown
     itemId: add-anhydride
     displayName: Acetic Anhydride
-    pos: {x: 1.3969102, y: 0.91, z: -3.040166}
+    pos: {x: 1.33, y: 0.91, z: -3.33}
     targetHeight: 0.16
     pourable: 1
     fillChemical: Acetic Anhydride
@@ -52,7 +58,7 @@ MonoBehaviour:
   - prefabName: Vial_Brown
     itemId: test-fecl3
     displayName: Ferric Chloride
-    pos: {x: 1.3969102, y: 0.91, z: -3.340166}
+    pos: {x: 1.33, y: 0.91, z: -3.1399999}
     targetHeight: 0.16
     pourable: 1
     fillChemical: Ferric Chloride 10%
@@ -60,7 +66,7 @@ MonoBehaviour:
   - prefabName: BunsenBurner
     itemId: warm-waterbath
     displayName: Bunsen Burner
-    pos: {x: 1.3800015, y: 0.91, z: -2.840166}
+    pos: {x: -1.7, y: 0.91, z: -3.44}
     targetHeight: 0.22
     pourable: 0
     fillChemical: 
@@ -68,7 +74,7 @@ MonoBehaviour:
   - prefabName: WatchGlass
     itemId: crystallise-ice
     displayName: Watch Glass
-    pos: {x: 1.3800015, y: 0.91, z: -3.140166}
+    pos: {x: -1.7, y: 0.91, z: -3.25}
     targetHeight: 0.12
     pourable: 0
     fillChemical: 
@@ -76,7 +82,7 @@ MonoBehaviour:
   - prefabName: Funnel
     itemId: buchner-filter
     displayName: Buchner Funnel
-    pos: {x: 1.3800015, y: 0.91, z: -3.440166}
+    pos: {x: -1.7, y: 0.91, z: -3.06}
     targetHeight: 0.2
     pourable: 0
     fillChemical: 
@@ -84,22 +90,25 @@ MonoBehaviour:
   vessels:
   - prefabName: ErlenmeyerFlask_400mL
     displayName: Synthesis Flask
-    pos: {x: 0.74691033, y: 0.91, z: -3.4901662}
+    pos: {x: -0.25, y: 0.91, z: -3.18}
     targetHeight: 0.22
     startChemical: 
     bindings:
     - reagentChemical: Salicylic Acid
       taskId: weigh-salicylic
       requiredMl: 50
+      completesTask: 0
     - reagentChemical: Acetic Anhydride
       taskId: add-anhydride
       requiredMl: 50
+      completesTask: 1
   - prefabName: TestTube_WithLiquid
     displayName: Product Test Tube (FeCl3)
-    pos: {x: 0.8969102, y: 0.91, z: -3.790166}
+    pos: {x: 0.19999999, y: 0.91, z: -3.18}
     targetHeight: 0.13
     startChemical: Salicylic Acid
     bindings:
     - reagentChemical: Ferric Chloride 10%
       taskId: test-fecl3
       requiredMl: 50
+      completesTask: 1

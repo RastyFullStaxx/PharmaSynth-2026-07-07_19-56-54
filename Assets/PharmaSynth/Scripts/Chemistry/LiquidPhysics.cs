@@ -19,7 +19,12 @@ public class LiquidPhysics : MonoBehaviour
 
     [Header("Volume Settings")]
     public float maxVolume = 1000f;
-    public float currentLiquidVolume = 500f;
+    // 0 by default (W5.8): a freshly AddComponent'ed receiver must start EMPTY so
+    // AddLiquid's wake-from-empty branch can adopt the first poured chemical.
+    // (The old 500 default left stage-built vessels with a phantom half-fill that
+    // blocked adoption forever — the "pouring into a beaker does nothing" bug.
+    // Serialized prefabs/scene objects keep their authored values.)
+    public float currentLiquidVolume = 0f;
     public float currentPptVolume = 0f;
     public float HorizonalFloatAdj = 0.13f;
 
@@ -27,6 +32,24 @@ public class LiquidPhysics : MonoBehaviour
     public ChemicalData currentChemical;
     public ChemicalData currentPptChemical;
     public ReactionRegistry registry;
+
+    /// Display-only story of what went in ("Ethanol 120 ml + NaOH 50 ml") for
+    /// hover cards and mix feedback. Chemistry stays in the fields above.
+    public VesselLedger Ledger { get; } = new VesselLedger();
+
+    /// Truly empty (nothing visible, wake branch armed).
+    public bool IsEmpty => currentLiquidVolume <= 1f && currentPptVolume <= 1f;
+
+    /// Builder/test seam: set the vessel's contents explicitly WITHOUT touching
+    /// materials (edit-mode safe — visuals catch up in Update once playing).
+    /// Blank contents = chem null + 0 ml arms the wake-from-empty branch.
+    public void SetContents(ChemicalData chem, float ml)
+    {
+        currentChemical = chem;
+        currentLiquidVolume = chem != null ? Mathf.Max(0f, ml) : 0f;
+        Ledger.Clear();
+        if (chem != null && currentLiquidVolume > 0f) Ledger.Add(chem.chemicalName, currentLiquidVolume);
+    }
 
     [Header("Visual Smoothness")]
     public float colorChangeSpeed = 2.0f;
@@ -227,6 +250,7 @@ public class LiquidPhysics : MonoBehaviour
         }
 
         LiquidAdded?.Invoke(incomingChemical, amountToAdd);
+        Ledger.Add(incomingChemical.chemicalName, amountToAdd);
 
         // If waking up from empty, ensure visuals update
         if (currentLiquidVolume <= 0.1f && currentPptVolume <= 0.1f)
@@ -260,6 +284,7 @@ public class LiquidPhysics : MonoBehaviour
                     currentLiquidVolume += amountToAdd;
                 }
                 UpdateAllVisuals(); // Update Color only on reaction
+                Ledger.React(currentChemical != null ? currentChemical.chemicalName : null);
                 string cue = Mishandling.SfxForOutcome(rule.outcome);
                 if (cue.Length > 0) AudioService.TryPlay(cue);
                 ReactionOccurred?.Invoke(rule);
@@ -277,6 +302,11 @@ public class LiquidPhysics : MonoBehaviour
 
     public void UpdateAllVisuals()
     {
+        // Play-mode only: LerpColor instantiates renderer.material, which leaks
+        // (and errors) in edit mode — the suite drives AddLiquid on vessels that
+        // now carry REAL liquid renderers (W5.8), so guard here, not per-caller.
+        if (!Application.isPlaying) return;
+
         // 1. Handle Main Liquid Transition
         if (currentChemical != null && mainRenderer != null)
         {
