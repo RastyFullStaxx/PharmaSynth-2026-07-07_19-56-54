@@ -11,6 +11,7 @@ public static class RealSizes
     private static readonly Dictionary<string, float> Table = new Dictionary<string, float>
     {
         { "AlcoholBurner", 0.125f },
+        { "Aspirator", 0.12f },                 // W5.12 generated
         { "Balance", 0.26f },
         { "Beaker_100mL", 0.08f },
         { "Beaker_100mL_WithLiquid", 0.08f },
@@ -18,13 +19,16 @@ public static class RealSizes
         { "Beaker_500mL_WithLiquid", 0.13f },
         { "BunsenBurner", 0.45f },              // incl. gas hose
         { "ClayTriangle", 0.13f },
+        { "Condenser", 0.28f },                 // W5.12 generated (Liebig)
         { "Crucible", 0.055f },
         { "CrucibleTongs", 0.32f },
+        { "DeliveryTube", 0.20f },              // W5.12 generated (bent glass + rubber)
         { "DistillingFlask", 0.20f },           // W5.12: glTFast model, prefabbed by AdoptManualLayout
         { "Dropper", 0.12f },
         { "ErlenmeyerFlask_400mL", 0.16f },
         { "ErlenmeyerFlask_400mL_WithLiquid", 0.16f },
         { "EvaporatingDish", 0.11f },
+        { "FlorenceFlask", 0.16f },             // W5.12: round-bottom boiling flask (existing .glb)
         { "Forceps", 0.12f },
         { "Funnel", 0.20f },
         { "GlassRod", 0.25f },
@@ -33,7 +37,9 @@ public static class RealSizes
         { "IronRing", 0.18f },
         { "Motar", 0.11f },
         { "Pestle", 0.10f },
+        { "Pipette", 0.25f },                   // W5.12: MechanicalPipette pack, wired
         { "RetortStand", 0.50f },
+        { "RubberStopper", 0.04f },             // W5.12 generated (bored, 1 hole)
         { "Scoopula", 0.15f },
         { "Spatula", 0.16f },
         { "TestTube", 0.13f },
@@ -44,7 +50,10 @@ public static class RealSizes
         { "TestTubeRack", 0.18f },
         { "TestTubeRack_12Tubes", 0.18f },
         { "TestTubeRack_WithDryingPins", 0.18f },
+        { "Thermometer", 0.30f },               // W5.12: Thermometer pack, wired
         { "Tripod", 0.18f },
+        { "UtilityClamp", 0.20f },              // W5.12 generated (3-prong)
+        { "WaterBath", 0.20f },                 // W5.12 generated (shallow steel pan)
         { "Vial", 0.09f },
         { "Vial_Brown", 0.09f },
         { "Vial_Brown_WithLabel", 0.09f },

@@ -1,0 +1,23 @@
+{
+    "asset": "1de64028364a68146ae7bdae9a6ae8d3",
+    "fileName": "019f58b9-7e1a-7850-98c2-cf639a05ac7d.glb",
+    "prompt": "a shallow round metal water bath / beaker-in-bath: a wide low aluminium pan of water a flask sits in, ~15 cm across. Real length 0.16 m. (A 500 mL beaker of water improvises this today — lowest urgency.)",
+    "negativePrompt": "",
+    "model": "model3d-tripo-p1",
+    "modelName": "Tripo P1",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "promptImageReferenceGuid": "62be55fce84c45f4c8c9a7f3168b7a4f",
+    "modelReferenceGuid": "",
+    "multiviewFrontGuid": "",
+    "multiviewBackGuid": "",
+    "multiviewLeftGuid": "",
+    "multiviewRightGuid": "",
+    "multiviewTopGuid": "",
+    "multiviewBottomGuid": "",
+    "multiviewLeftFrontGuid": "",
+    "multiviewRightFrontGuid": "",
+    "faceLimit": -1
+}

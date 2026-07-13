@@ -1,0 +1,23 @@
+{
+    "asset": "da49f56c0f19c7e48a8a6ad86ed1cbc7",
+    "fileName": "019f58bf-6574-71b4-ae09-ea461613e8cc.glb",
+    "prompt": " a bench water-aspirator / filter pump, small tapered brass-and-glass fitting, ~12 cm. Real length 0.12 m. (Listed in every experiment header but rarely central to a graded step.)",
+    "negativePrompt": "",
+    "model": "model3d-tripo-p1",
+    "modelName": "Tripo P1",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "promptImageReferenceGuid": "bfd94d012377ef240b75163a1428f382",
+    "modelReferenceGuid": "",
+    "multiviewFrontGuid": "",
+    "multiviewBackGuid": "",
+    "multiviewLeftGuid": "",
+    "multiviewRightGuid": "",
+    "multiviewTopGuid": "",
+    "multiviewBottomGuid": "",
+    "multiviewLeftFrontGuid": "",
+    "multiviewRightFrontGuid": "",
+    "faceLimit": -1
+}

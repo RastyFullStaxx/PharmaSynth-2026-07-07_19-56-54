@@ -1,5 +1,17 @@
 # Assets to generate — Tripo brief (W5.12, 2026-07-12)
 
+## ✅ COMPLETE 2026-07-13 — all 6 generated, wired, placed
+Condenser, RubberStopper, DeliveryTube, WaterBath, UtilityClamp, Aspirator were
+generated (gpt-image-1-5 refs → Tripo P1), wired into SceneAssetLibrary +
+RealSizes/PhysicsProfiles/Mishandling, and placed beside the flask via
+`Tools ▸ PharmaSynth ▸ Wire Distillation Apparatus (W5.12)`. The reference PNGs
+were disposed to `Docs/raw-art-sources/tripo-refs/`. Also wired the 3 previously
+raw-only models: Pipette, Thermometer, FlorenceFlask. **Nothing left to generate
+here** — the sections below are kept only as a record of the prompts used.
+
+---
+
+
 Derived from the manuscript Appendix C apparatus lists (`Docs/experiments-reference.md`).
 Generate each in the Unity **AI panel** (MCP Tripo loses the reference-image instance ID —
 see CLAUDE.md gotcha), then save the prefab into this folder under the **exact name** in

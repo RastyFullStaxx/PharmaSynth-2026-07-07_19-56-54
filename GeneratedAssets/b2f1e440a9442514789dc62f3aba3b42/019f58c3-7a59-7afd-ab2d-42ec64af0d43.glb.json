@@ -1,0 +1,23 @@
+{
+    "asset": "b2f1e440a9442514789dc62f3aba3b42",
+    "fileName": "019f58c3-7a59-7afd-ab2d-42ec64af0d43.glb",
+    "prompt": "a 3-prong burette/utility clamp with a boss head, matte steel + cork jaws, ~18 cm; clamps a flask or condenser to the retort stand. Real length 0.20 m. (We have the iron ring; this is the \"hold the glassware\" upgrade.)",
+    "negativePrompt": "",
+    "model": "model3d-tripo-p1",
+    "modelName": "Tripo P1",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "promptImageReferenceGuid": "f54ad41d7e3c6664bbeb4cf819cc7011",
+    "modelReferenceGuid": "",
+    "multiviewFrontGuid": "",
+    "multiviewBackGuid": "",
+    "multiviewLeftGuid": "",
+    "multiviewRightGuid": "",
+    "multiviewTopGuid": "",
+    "multiviewBottomGuid": "",
+    "multiviewLeftFrontGuid": "",
+    "multiviewRightFrontGuid": "",
+    "faceLimit": -1
+}

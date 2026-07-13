@@ -17,7 +17,7 @@ public static class Mishandling
     {
         "Beaker_100mL", "Beaker_100mL_WithLiquid",
         "Beaker_500mL", "Beaker_500mL_WithLiquid",
-        "DistillingFlask",
+        "DistillingFlask", "FlorenceFlask",
         "ErlenmeyerFlask_400mL", "ErlenmeyerFlask_400mL_WithLiquid",
         "GraduatedCylinder_50mL", "GraduatedCylinder_50mL_WithLiquid",
         "TestTube", "TestTube_WithLiquid",
@@ -31,6 +31,8 @@ public static class Mishandling
     {
         "GlassRod", "Funnel", "Dropper", "EvaporatingDish", "Crucible",
         "Motar", "Pestle",   // porcelain (pack spells mortar "Motar")
+        // W5.12 sturdy glass tools/tubes — clink, never shatter mid-verb.
+        "Condenser", "DeliveryTube", "Pipette", "Thermometer",
     };
 
     public static bool IsBreakable(string prefabName) => Breakables.Contains(prefabName ?? "");
@@ -52,6 +54,7 @@ public static class Mishandling
         "CrucibleTongs", "Forceps", "Scoopula", "Spatula", "IronRing",
         "Tripod", "RetortStand", "WireGauze", "BunsenBurner", "AlcoholBurner",
         "TestTubeHolder_Metal", "Balance", "ClayTriangle",   // clay triangle = wire frame
+        "WaterBath", "UtilityClamp", "Aspirator",            // W5.12 metal apparatus
     };
 
     /// SoundBank key for a drop/impact clatter, by material.

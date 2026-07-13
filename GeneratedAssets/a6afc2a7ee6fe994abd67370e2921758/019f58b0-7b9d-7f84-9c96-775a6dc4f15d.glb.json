@@ -1,0 +1,23 @@
+{
+    "asset": "a6afc2a7ee6fe994abd67370e2921758",
+    "fileName": "019f58b0-7b9d-7f84-9c96-775a6dc4f15d.glb",
+    "prompt": "a tapered rubber/cork stopper with ONE bored hole through the centre (for a delivery tube), dark grey-brown, ~3 cm. Real length 0.04 m",
+    "negativePrompt": "",
+    "model": "model3d-tripo-p1",
+    "modelName": "Tripo P1",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "promptImageReferenceGuid": "3ce56a280fcb1fe4fa5fdf209b08723b",
+    "modelReferenceGuid": "",
+    "multiviewFrontGuid": "",
+    "multiviewBackGuid": "",
+    "multiviewLeftGuid": "",
+    "multiviewRightGuid": "",
+    "multiviewTopGuid": "",
+    "multiviewBottomGuid": "",
+    "multiviewLeftFrontGuid": "",
+    "multiviewRightFrontGuid": "",
+    "faceLimit": -1
+}

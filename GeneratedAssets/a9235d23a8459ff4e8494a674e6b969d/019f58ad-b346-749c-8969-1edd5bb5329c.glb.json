@@ -1,0 +1,23 @@
+{
+    "asset": "a9235d23a8459ff4e8494a674e6b969d",
+    "fileName": "019f58ad-b346-749c-8969-1edd5bb5329c.glb",
+    "prompt": "a Liebig condenser: straight inner glass tube inside an angled outer water jacket, two hose nipples (top + bottom), ~25 cm, borosilicate glass. Real length 0.28 m.",
+    "negativePrompt": "",
+    "model": "model3d-tripo-p1",
+    "modelName": "Tripo P1",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "promptImageReferenceGuid": "ce323e14c93b6044c8bc14470d741e23",
+    "modelReferenceGuid": "",
+    "multiviewFrontGuid": "",
+    "multiviewBackGuid": "",
+    "multiviewLeftGuid": "",
+    "multiviewRightGuid": "",
+    "multiviewTopGuid": "",
+    "multiviewBottomGuid": "",
+    "multiviewLeftFrontGuid": "",
+    "multiviewRightFrontGuid": "",
+    "faceLimit": -1
+}

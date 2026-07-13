@@ -791,7 +791,7 @@ public static class PharmaSelfTests
 
     static void RealSizeSuite()
     {
-        A("size: table count", RealSizes.Count == 43);   // +DistillingFlask (W5.12)
+        A("size: table count", RealSizes.Count == 52);   // +DistillingFlask +9 distillation apparatus (W5.12)
         var lib = AssetDatabase.LoadAssetAtPath<SceneAssetLibrary>("Assets/PharmaSynth/ScriptableObjects/SceneAssetLibrary.asset");
         if (lib != null)
         {

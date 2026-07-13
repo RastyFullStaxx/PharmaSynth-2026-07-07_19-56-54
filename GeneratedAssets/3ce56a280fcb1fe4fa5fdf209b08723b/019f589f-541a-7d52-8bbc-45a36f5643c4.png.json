@@ -1,0 +1,31 @@
+{
+    "asset": "3ce56a280fcb1fe4fa5fdf209b08723b",
+    "fileName": "019f589f-541a-7d52-8bbc-45a36f5643c4.png",
+    "prompt": "A single tapered laboratory rubber stopper (bung) in dark grey-brown rubber, conical shape wider at the top, with exactly one bored hole running vertically through its centre, about 4 cm tall. Single object centered on a plain light-grey seamless studio background, even soft lighting, no shadows, no other objects, sharp product photograph, three-quarter view showing the hole, the entire object fully visible within the frame.",
+    "negativePrompt": "",
+    "model": "gpt-image-1-5",
+    "modelName": "GPT Image 1.5",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0,
+    "dynamicParams": {
+        "serializedData": []
+    }
+}

@@ -1,0 +1,31 @@
+{
+    "asset": "f54ad41d7e3c6664bbeb4cf819cc7011",
+    "fileName": "019f58a1-603a-72ba-953f-86300ab459cb.png",
+    "prompt": "A laboratory three-prong extension clamp (utility clamp) with a boss-head clamp holder, matte steel rods and black cork-lined jaws, about 18 cm long. Single object centered on a plain light-grey seamless studio background, even soft lighting, no shadows, no other objects, sharp product photograph, three-quarter view, the entire object fully visible within the frame.",
+    "negativePrompt": "",
+    "model": "gpt-image-1-5",
+    "modelName": "GPT Image 1.5",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0,
+    "dynamicParams": {
+        "serializedData": []
+    }
+}

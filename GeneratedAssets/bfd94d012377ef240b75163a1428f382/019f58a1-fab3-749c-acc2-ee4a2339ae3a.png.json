@@ -1,0 +1,31 @@
+{
+    "asset": "bfd94d012377ef240b75163a1428f382",
+    "fileName": "019f58a1-fab3-749c-acc2-ee4a2339ae3a.png",
+    "prompt": "A laboratory water aspirator / filter pump: a small tapered brass-and-glass vacuum fitting with a hose barb at the top and a side outlet nozzle, about 12 cm long. Single object centered on a plain light-grey seamless studio background, even soft lighting, no shadows, no other objects, sharp product photograph, side view, the entire object fully visible within the frame.",
+    "negativePrompt": "",
+    "model": "gpt-image-1-5",
+    "modelName": "GPT Image 1.5",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0,
+    "dynamicParams": {
+        "serializedData": []
+    }
+}

@@ -28,6 +28,7 @@ public static class PhysicsProfiles
     private static readonly Dictionary<string, PhysicsProfile> Table = new Dictionary<string, PhysicsProfile>
     {
         { "AlcoholBurner",                    new PhysicsProfile(0.25f,  RestPose.Upright) },
+        { "Aspirator",                        new PhysicsProfile(0.12f,  RestPose.LieLongAxis) },   // W5.12
         { "Balance",                          new PhysicsProfile(4.00f,  RestPose.Upright) },
         { "Beaker_100mL",                     new PhysicsProfile(0.10f,  RestPose.Upright) },
         { "Beaker_100mL_WithLiquid",          new PhysicsProfile(0.18f,  RestPose.Upright) },
@@ -35,13 +36,16 @@ public static class PhysicsProfiles
         { "Beaker_500mL_WithLiquid",          new PhysicsProfile(0.60f,  RestPose.Upright) },
         { "BunsenBurner",                     new PhysicsProfile(1.20f,  RestPose.Upright) },
         { "ClayTriangle",                     new PhysicsProfile(0.04f,  RestPose.Flat) },
+        { "Condenser",                        new PhysicsProfile(0.30f,  RestPose.LieLongAxis) },  // W5.12
         { "Crucible",                         new PhysicsProfile(0.06f,  RestPose.Upright) },
         { "CrucibleTongs",                    new PhysicsProfile(0.15f,  RestPose.LieLongAxis) },
+        { "DeliveryTube",                     new PhysicsProfile(0.03f,  RestPose.LieLongAxis) },  // W5.12
         { "Dropper",                          new PhysicsProfile(0.015f, RestPose.LieLongAxis) },
         { "DistillingFlask",                  new PhysicsProfile(0.16f,  RestPose.Upright) },   // W5.12 glTFast model
         { "ErlenmeyerFlask_400mL",            new PhysicsProfile(0.18f,  RestPose.Upright) },
         { "ErlenmeyerFlask_400mL_WithLiquid", new PhysicsProfile(0.45f,  RestPose.Upright) },
         { "EvaporatingDish",                  new PhysicsProfile(0.09f,  RestPose.Upright) },
+        { "FlorenceFlask",                    new PhysicsProfile(0.15f,  RestPose.Upright) },      // W5.12
         { "Forceps",                          new PhysicsProfile(0.03f,  RestPose.LieLongAxis) },
         { "Funnel",                           new PhysicsProfile(0.08f,  RestPose.LieLongAxis) },   // can't stand on its stem
         { "GlassRod",                         new PhysicsProfile(0.03f,  RestPose.LieLongAxis) },
@@ -50,7 +54,9 @@ public static class PhysicsProfiles
         { "IronRing",                         new PhysicsProfile(0.20f,  RestPose.Flat) },
         { "Motar",                            new PhysicsProfile(0.60f,  RestPose.Upright) },
         { "Pestle",                           new PhysicsProfile(0.15f,  RestPose.LieLongAxis) },
+        { "Pipette",                          new PhysicsProfile(0.02f,  RestPose.LieLongAxis) },  // W5.12
         { "RetortStand",                      new PhysicsProfile(2.50f,  RestPose.Upright) },
+        { "RubberStopper",                    new PhysicsProfile(0.02f,  RestPose.Upright) },      // W5.12
         { "Scoopula",                         new PhysicsProfile(0.04f,  RestPose.LieLongAxis) },
         { "Spatula",                          new PhysicsProfile(0.04f,  RestPose.LieLongAxis) },
         { "TestTube",                         new PhysicsProfile(0.025f, RestPose.LieLongAxis) },
@@ -61,7 +67,10 @@ public static class PhysicsProfiles
         { "TestTubeRack",                     new PhysicsProfile(0.35f,  RestPose.Upright) },
         { "TestTubeRack_12Tubes",             new PhysicsProfile(0.40f,  RestPose.Upright) },
         { "TestTubeRack_WithDryingPins",      new PhysicsProfile(0.45f,  RestPose.Upright) },
+        { "Thermometer",                      new PhysicsProfile(0.03f,  RestPose.LieLongAxis) },  // W5.12
         { "Tripod",                           new PhysicsProfile(0.70f,  RestPose.Upright) },
+        { "UtilityClamp",                     new PhysicsProfile(0.25f,  RestPose.LieLongAxis) },  // W5.12
+        { "WaterBath",                        new PhysicsProfile(0.80f,  RestPose.Upright) },      // W5.12 shallow pan
         { "Vial",                             new PhysicsProfile(0.03f,  RestPose.Upright) },
         { "Vial_Brown",                       new PhysicsProfile(0.03f,  RestPose.Upright) },
         { "Vial_Brown_WithLabel",             new PhysicsProfile(0.03f,  RestPose.Upright) },
