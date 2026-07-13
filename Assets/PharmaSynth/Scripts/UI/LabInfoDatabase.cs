@@ -125,7 +125,7 @@ public static class LabInfoDatabase
             "Solid glass rod. Stir to dissolve or mix evenly, and pour liquid DOWN the rod so it runs into a funnel or flask without splashing. Also used to touch a drop onto litmus paper.");
         AddEquip("dropper", "Dropper", "Adds liquid one drop at a time for small, precise additions — perfect when a test needs 'a few drops' of a reagent. Don't let the tip touch the sample, or you'll contaminate the bottle.");
         AddEquip("scoopula", "Scoopula", "Curved scoop for transferring powdered or crystalline solids. Keep it clean and DRY between chemicals so nothing cross-contaminates.");
-        AddEquip("spatula", "Spatula", "Transfers small amounts of solid reagent onto the balance or into a flask. Wipe it clean between chemicals to avoid mixing reagents.");
+        AddEquip("spatula", "Porcelain Spatula", "Porcelain spatula — transfers small amounts of solid reagent onto the balance or into a flask. Wipe it clean between chemicals to avoid mixing reagents.");
         AddEquip("forceps", "Forceps", "Fine tweezers for handling crystals, small solids or strips of paper without touching them with your fingers (which adds moisture and oils).");
         AddEquip("motar", "Mortar & Pestle", "The bowl (mortar) and grinder (pestle) crush lumps into a fine, even powder — a bigger surface area means the solid dissolves and reacts faster.");
         AddEquip("mortar", "Mortar & Pestle", "The bowl (mortar) and grinder (pestle) crush lumps into a fine, even powder — a bigger surface area means the solid dissolves and reacts faster.");

@@ -791,7 +791,13 @@ public static class PharmaSelfTests
 
     static void RealSizeSuite()
     {
-        A("size: table count", RealSizes.Count == 52);   // +DistillingFlask +9 distillation apparatus (W5.12)
+        A("size: table count", RealSizes.Count == 51);   // +DistillingFlask +8 distillation apparatus (pipette dropped) (W5.12)
+
+        // W5.12 Methane stage visibility (user 2026-07-13): shown only during Lab
+        // Tour OR the Methane attempt; hidden otherwise.
+        A("methane-vis: shown in lab tour", MethaneStageVisibility.ShouldShow(true, false));
+        A("methane-vis: shown during methane attempt", MethaneStageVisibility.ShouldShow(false, true));
+        A("methane-vis: hidden otherwise", !MethaneStageVisibility.ShouldShow(false, false));
         var lib = AssetDatabase.LoadAssetAtPath<SceneAssetLibrary>("Assets/PharmaSynth/ScriptableObjects/SceneAssetLibrary.asset");
         if (lib != null)
         {

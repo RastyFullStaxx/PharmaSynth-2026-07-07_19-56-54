@@ -1,0 +1,84 @@
+#if UNITY_EDITOR
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEditor.XR.Management;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.XR.Management;
+
+/// One-click switch between the two ways to run PharmaSynth in the editor, so you
+/// never have to hunt the Hierarchy or Project Settings:
+///   • PC Dev Mode — OpenXR auto-init OFF + the "XR Device Simulator" GameObject
+///     ENABLED, so W/A/S/D + mouse move the view on the PC with no headset.
+///   • Headset Mode — OpenXR auto-init ON + the simulator DISABLED, so a Quest on
+///     Quest Link / Air Link drives the view.
+/// Each mode fixes BOTH halves (the XR init setting AND the scene's simulator
+/// object) and saves, which the old "Headset Play Mode" toggle did not — that one
+/// only flipped the init setting, leaving the simulator off, so nothing drove the
+/// camera. Menu shows a checkmark for the active mode. Android is left untouched.
+public static class PlayModeSwitch
+{
+    const string SimName = "XR Device Simulator";
+    const string PcMenu  = "Tools/PharmaSynth/Play Mode/PC Dev Mode (keyboard + simulator)";
+    const string HmdMenu = "Tools/PharmaSynth/Play Mode/Headset Mode (Quest Link)";
+
+    static XRGeneralSettings Standalone()
+    {
+        EditorBuildSettings.TryGetConfigObject(XRGeneralSettings.k_SettingsKey, out XRGeneralSettingsPerBuildTarget per);
+        return per != null ? per.SettingsForBuildTarget(BuildTargetGroup.Standalone) : null;
+    }
+
+    [MenuItem(PcMenu, priority = 2010)]
+    static void PcMode() => Apply(headset: false);
+
+    [MenuItem(HmdMenu, priority = 2011)]
+    static void HmdMode() => Apply(headset: true);
+
+    static void Apply(bool headset)
+    {
+        if (Application.isPlaying) { Debug.LogWarning("[PlayMode] exit Play mode first, then switch."); return; }
+
+        // 1. OpenXR auto-init on the Standalone (PC) target.
+        var s = Standalone();
+        if (s != null) { s.InitManagerOnStart = headset; EditorUtility.SetDirty(s); AssetDatabase.SaveAssets(); }
+        else Debug.LogWarning("[PlayMode] no Standalone XR settings (assign OpenXR under XR Plug-in Management ▸ Desktop).");
+
+        // 2. XR Device Simulator active state in every open scene (ON for PC, OFF for headset).
+        int touched = 0;
+        for (int i = 0; i < SceneManager.sceneCount; i++)
+        {
+            var scene = SceneManager.GetSceneAt(i);
+            if (!scene.isLoaded) continue;
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                var sim = FindDeep(root.transform, SimName);
+                if (sim == null) continue;
+                if (sim.gameObject.activeSelf != !headset)
+                {
+                    sim.gameObject.SetActive(!headset);
+                    EditorSceneManager.MarkSceneDirty(scene);
+                    touched++;
+                }
+            }
+        }
+        if (touched > 0) EditorSceneManager.SaveOpenScenes();
+
+        Debug.Log(headset
+            ? "<color=#4CD07D>[PlayMode] HEADSET MODE — OpenXR on Play, simulator off. Connect the Quest (Quest Link / Air Link), then press Play.</color>"
+            : "<color=#4CD07D>[PlayMode] PC DEV MODE — simulator on, OpenXR off. Press Play; move with W/A/S/D, hold Right-Mouse to look (Q/E = down/up).</color>");
+    }
+
+    static Transform FindDeep(Transform root, string name)
+    {
+        foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            if (t.name == name) return t;
+        return null;
+    }
+
+    [MenuItem(PcMenu, validate = true)]
+    static bool PcValidate() { var s = Standalone(); Menu.SetChecked(PcMenu, s != null && !s.InitManagerOnStart); return true; }
+
+    [MenuItem(HmdMenu, validate = true)]
+    static bool HmdValidate() { var s = Standalone(); Menu.SetChecked(HmdMenu, s != null && s.InitManagerOnStart); return true; }
+}
+#endif

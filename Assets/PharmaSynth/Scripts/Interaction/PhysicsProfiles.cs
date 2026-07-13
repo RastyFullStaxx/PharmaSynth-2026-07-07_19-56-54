@@ -54,7 +54,6 @@ public static class PhysicsProfiles
         { "IronRing",                         new PhysicsProfile(0.20f,  RestPose.Flat) },
         { "Motar",                            new PhysicsProfile(0.60f,  RestPose.Upright) },
         { "Pestle",                           new PhysicsProfile(0.15f,  RestPose.LieLongAxis) },
-        { "Pipette",                          new PhysicsProfile(0.02f,  RestPose.LieLongAxis) },  // W5.12
         { "RetortStand",                      new PhysicsProfile(2.50f,  RestPose.Upright) },
         { "RubberStopper",                    new PhysicsProfile(0.02f,  RestPose.Upright) },      // W5.12
         { "Scoopula",                         new PhysicsProfile(0.04f,  RestPose.LieLongAxis) },

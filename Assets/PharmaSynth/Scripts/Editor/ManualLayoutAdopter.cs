@@ -56,7 +56,7 @@ public static class ManualLayoutAdopter
 
     static readonly Regex DupSuffix = new Regex(@"^(.*?)\s*\((\d+)\)$");
 
-    static int RenameAndWireDuplicates()
+    internal static int RenameAndWireDuplicates()
     {
         var runner = Object.FindAnyObjectByType<ExperimentRunner>(FindObjectsInactive.Include);
         var registry = AssetDatabase.LoadAssetAtPath<ReactionRegistry>(

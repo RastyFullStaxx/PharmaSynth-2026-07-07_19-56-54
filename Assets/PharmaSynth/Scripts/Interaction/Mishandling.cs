@@ -30,9 +30,9 @@ public static class Mishandling
     private static readonly HashSet<string> CeramicOrSolidGlass = new HashSet<string>
     {
         "GlassRod", "Funnel", "Dropper", "EvaporatingDish", "Crucible",
-        "Motar", "Pestle",   // porcelain (pack spells mortar "Motar")
+        "Motar", "Pestle", "Spatula",   // porcelain (pack spells mortar "Motar"; spatula = porcelain per manuscript)
         // W5.12 sturdy glass tools/tubes — clink, never shatter mid-verb.
-        "Condenser", "DeliveryTube", "Pipette", "Thermometer",
+        "Condenser", "DeliveryTube", "Thermometer",
     };
 
     public static bool IsBreakable(string prefabName) => Breakables.Contains(prefabName ?? "");
@@ -51,7 +51,7 @@ public static class Mishandling
     /// Metal apparatus — everything else non-glass lands as a dull wooden knock.
     private static readonly HashSet<string> MetalItems = new HashSet<string>
     {
-        "CrucibleTongs", "Forceps", "Scoopula", "Spatula", "IronRing",
+        "CrucibleTongs", "Forceps", "Scoopula", "IronRing",   // (Spatula moved to porcelain/ceramic)
         "Tripod", "RetortStand", "WireGauze", "BunsenBurner", "AlcoholBurner",
         "TestTubeHolder_Metal", "Balance", "ClayTriangle",   // clay triangle = wire frame
         "WaterBath", "UtilityClamp", "Aspirator",            // W5.12 metal apparatus

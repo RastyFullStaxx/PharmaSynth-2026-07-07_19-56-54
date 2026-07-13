@@ -37,8 +37,8 @@ public static class DistillationApparatusWiring
         new Spec("UtilityClamp",  "Utility Clamp",  Refs+"UtilityClamp.prefab",  Refs+"UtilityClamp.prefab",  false),
         new Spec("Aspirator",     "Aspirator",      Refs+"Aspirator.prefab",     Refs+"Aspirator.prefab",     false),
         // Existing raw models — prefab them here, then register + place.
-        new Spec("Pipette",       "Pipette",        "Assets/PharmaSynth/Art/Equipment/MechanicalPipette/Mechanical_Pipette_Full.fbx",
-                                                    "Assets/PharmaSynth/Art/Equipment/MechanicalPipette/Pipette.prefab", false),
+        // (Pipette dropped 2026-07-13 — modern micropipette; Dropper + graduated
+        //  cylinder cover the manuscript's drops/ml role.)
         new Spec("Thermometer",   "Thermometer",    "Assets/PharmaSynth/Art/Equipment/Thermometer/thermometer.glb",
                                                     "Assets/PharmaSynth/Art/Equipment/Thermometer/Thermometer.prefab", false),
         new Spec("FlorenceFlask", "Florence Flask", Refs+"FlorenceFlask.glb", Refs+"FlorenceFlask.prefab", true),
@@ -48,6 +48,16 @@ public static class DistillationApparatusWiring
     public static void Wire()
     {
         if (Application.isPlaying) { Debug.LogWarning("[DistApparatus] exit Play mode first."); return; }
+        // NEVER clobber a hand-placed layout (user 2026-07-13: a re-run reset
+        // manually moved + duplicated apparatus). Same guard the shelf/kits
+        // builders use — once the layout is manual, this menu is one-shot-done.
+        if (ManualLayoutAdopter.LayoutIsManual())
+        {
+            Debug.LogError("[DistApparatus] the scene layout is HAND-PLACED (ManualLayout_W512 marker) — "
+                + "re-running would reset your moved/duplicated apparatus. It is already wired; nothing to do. "
+                + "Delete the marker object only if you truly want to rebuild the default row.");
+            return;
+        }
         var lib = AssetDatabase.LoadAssetAtPath<SceneAssetLibrary>(LibraryPath);
         if (lib == null) { Debug.LogError("[DistApparatus] SceneAssetLibrary not found."); return; }
         var registry = AssetDatabase.LoadAssetAtPath<ReactionRegistry>(

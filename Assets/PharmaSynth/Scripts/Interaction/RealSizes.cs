@@ -37,7 +37,6 @@ public static class RealSizes
         { "IronRing", 0.18f },
         { "Motar", 0.11f },
         { "Pestle", 0.10f },
-        { "Pipette", 0.25f },                   // W5.12: MechanicalPipette pack, wired
         { "RetortStand", 0.50f },
         { "RubberStopper", 0.04f },             // W5.12 generated (bored, 1 hole)
         { "Scoopula", 0.15f },

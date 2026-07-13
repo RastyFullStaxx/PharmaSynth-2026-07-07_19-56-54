@@ -62,7 +62,6 @@ MonoBehaviour:
   - {fileID: 3443482504336311581, guid: 1de64028364a68146ae7bdae9a6ae8d3, type: 3}
   - {fileID: 5520825053924775857, guid: b2f1e440a9442514789dc62f3aba3b42, type: 3}
   - {fileID: 4897220670179442916, guid: da49f56c0f19c7e48a8a6ad86ed1cbc7, type: 3}
-  - {fileID: 6464328987457631258, guid: 0caa5d59a0475b84aa5100d66efa2066, type: 3}
   - {fileID: 3924551947461368560, guid: d241ee305ab717042ad4eacbe3301e7e, type: 3}
   - {fileID: 773818284801471335, guid: 994cfd24522696e45b40188c06197d45, type: 3}
   chemicals:

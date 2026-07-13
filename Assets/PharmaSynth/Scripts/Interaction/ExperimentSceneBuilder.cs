@@ -71,7 +71,9 @@ public class ExperimentSceneBuilder : MonoBehaviour
         }
 
         bool methane = moduleId == methaneModuleId;
-        if (methaneStage != null) methaneStage.SetActive(methane);
+        // Methane stage visibility is owned by MethaneStageVisibility now (shows
+        // during Lab Tour + the Methane attempt only) — the builder no longer
+        // toggles it, so the two never fight. (W5.12, user 2026-07-13.)
         // Demo sessions no longer spawn a floating ready-made vial here (user
         // 2026-07-12): the finished products live on the ReagentShelf and are
         // revealed there by EndProductVisibility while a demo session is active.
