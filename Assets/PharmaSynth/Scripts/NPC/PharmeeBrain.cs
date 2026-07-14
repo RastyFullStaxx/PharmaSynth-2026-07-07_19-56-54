@@ -39,7 +39,7 @@ public class PharmeeBrain : MonoBehaviour
 
     [Header("Ambient chatter (user 2026-07-10: richer interactions)")]
     [Tooltip("Seconds of quiet before Pharmee offers an idle comment while a run is active.")]
-    [SerializeField] private float idleChatterGap = 16f;
+    [SerializeField] private float idleChatterGap = 45f;   // W5.12: was 16 s — too chatty
     [SerializeField] private bool idleChatterEnabled = true;
 
     private IPharmeeFace _face;
@@ -137,10 +137,19 @@ public class PharmeeBrain : MonoBehaviour
     /// quiz, and idle lines were cutting off the gate's congratulations).
     private void Update()
     {
+        // While the wrist procedures panel is up, actively CLEAR any line Pharmee
+        // is mid-way through so it never lingers over the panel (user 2026-07-13).
+        if (WristWatchController.SuppressNpcPokes)
+        {
+            if (narration != null && narration.IsSpeaking) narration.EndLine();
+            return;
+        }
         if (!idleChatterEnabled || _assessment) return;
         if (PharmeeGatekeeper.ReviewFlowActive) return;
         if (runner == null || !runner.IsRunning) return;
-        if (Time.time - _lastLineTime < idleChatterGap) return;
+        // Enforce a long quiet gap even if the scene serialized the old 16 s
+        // (user 2026-07-13: Pharmee was on the player's nerves).
+        if (Time.time - _lastLineTime < Mathf.Max(idleChatterGap, 45f)) return;
         Speak(PharmeeState.Encouraging, PharmeeFaceExpression.Happy,
               PharmeeLines.Pick(PharmeeLines.Idle, _variant++));
     }

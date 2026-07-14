@@ -13,6 +13,8 @@ public class Matchstick : MonoBehaviour
     public const float IgniteTempC = 80f;
     public const float StrikeMinSpeed = 0.35f;
     [SerializeField] private float burnSeconds = 25f;
+    [Tooltip("The phosphorus head is at the NEGATIVE end of the match's longest axis (user 2026-07-14: flame was on the butt). Flip if the flame lights the wrong end.")]
+    [SerializeField] private bool headAtPositiveEnd = false;
 
     private bool _lit, _spent;
     private float _litAt;
@@ -71,8 +73,33 @@ public class Matchstick : MonoBehaviour
         if (Application.isPlaying)
         {
             _flame = new GameObject("MatchFlame");
-            _flame.transform.SetParent(transform, false);
-            _flame.transform.localPosition = new Vector3(0f, 0.05f, 0f);
+            // Sit the flame on the phosphorus HEAD (user 2026-07-13: it was pinned
+            // to a fixed offset near the match's origin, so it burned mid-stick).
+            // The head is one end of the longest axis; parent to the match so it
+            // tracks as the stick is waved around.
+            _flame.transform.SetParent(transform, true);
+            _flame.transform.position = HeadWorldPos();
+
+            // A small looping flame at the tip (user 2026-07-13: it was only a
+            // light + colour change — now it has an actual little flame).
+            var ps = _flame.AddComponent<ParticleSystem>();
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            var main = ps.main;
+            main.loop = true; main.playOnAwake = false;
+            main.simulationSpace = ParticleSystemSimulationSpace.Local;
+            main.startLifetime = 0.22f;
+            main.startSpeed = 0.16f;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.006f, 0.014f);
+            main.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.62f, 0.2f, 0.9f), new Color(1f, 0.85f, 0.35f, 0.85f));
+            main.maxParticles = 24;
+            var em = ps.emission; em.rateOverTime = 35f;
+            var sh = ps.shape; sh.shapeType = ParticleSystemShapeType.Cone; sh.angle = 6f; sh.radius = 0.003f;
+            sh.rotation = new Vector3(-90f, 0f, 0f);   // upward from the tip
+            var pr = ps.GetComponent<ParticleSystemRenderer>();
+            pr.material = EffectVfx.ParticleMaterial();
+            pr.sortingOrder = 10;
+            ps.Play();
+
             var light = _flame.AddComponent<Light>();
             light.type = LightType.Point;
             light.color = new Color(1f, 0.62f, 0.25f);
@@ -87,5 +114,34 @@ public class Matchstick : MonoBehaviour
         _lit = false;
         if (spent) _spent = true;
         if (_flame != null) Destroy(_flame);
+    }
+
+    /// World position of the match HEAD. Prefers a hand-placed "FlameAnchor" child
+    /// (drag it onto the phosphorus tip; user 2026-07-14) — otherwise falls back to
+    /// the far end of the longest local axis of the combined mesh bounds.
+    private Vector3 HeadWorldPos()
+    {
+        var anchor = transform.Find("FlameAnchor");
+        if (anchor != null) return anchor.position;
+        var rs = GetComponentsInChildren<Renderer>();
+        if (rs.Length == 0) return transform.position + transform.up * 0.05f;
+        var b = rs[0].bounds;
+        for (int i = 1; i < rs.Length; i++) b.Encapsulate(rs[i].bounds);
+        Vector3 axis = LongestLocalAxis(transform, b, out float halfLen);
+        return b.center + axis * (halfLen * (headAtPositiveEnd ? 1f : -1f));
+    }
+
+    /// The object-local axis (right/up/forward) along which an AABB is longest,
+    /// plus that half-extent. Shared shape logic for tip placement.
+    public static Vector3 LongestLocalAxis(Transform t, Bounds b, out float halfExtent)
+    {
+        Vector3 best = t.up; float bestE = -1f;
+        foreach (var a in new[] { t.right, t.up, t.forward })
+        {
+            float e = Mathf.Abs(a.x) * b.extents.x + Mathf.Abs(a.y) * b.extents.y + Mathf.Abs(a.z) * b.extents.z;
+            if (e > bestE) { bestE = e; best = a; }
+        }
+        halfExtent = bestE;
+        return best;
     }
 }

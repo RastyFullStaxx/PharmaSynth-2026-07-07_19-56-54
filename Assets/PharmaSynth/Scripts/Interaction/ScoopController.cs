@@ -38,8 +38,10 @@ public static class ScoopMath
 /// bounds; only a HELD scoop transfers, so shelf contact never scoops).
 public class ScoopController : MonoBehaviour
 {
-    [SerializeField] private float probeRadius = 0.035f;
+    [SerializeField] private float probeRadius = 0.055f;
     [SerializeField] private float actionCooldown = 0.5f;
+    [Tooltip("The scooping BLADE/BOWL is at the NEGATIVE end of the tool's longest axis (user 2026-07-14: the heap was riding the handle butt). Flip if the heap rides the handle.")]
+    [SerializeField] private bool bladeAtPositiveEnd = false;
 
     private XRGrab _grab;
     private ChemicalData _carrying;
@@ -79,13 +81,18 @@ public class ScoopController : MonoBehaviour
                 _carrying = chem; _carryingG = charge; _lastSource = lp;
                 _readyAt = Time.time + actionCooldown;
                 ShowHeap(chem);
+                RefreshPowder(lp);                                  // source mound shrinks
+                AudioService.TryPlayAt("pour", probe, 0.45f);       // dip/scoop sfx
                 FloatingText.Show("+" + charge.ToString("0.#") + " g " + chem.chemicalName,
                                   probe + Vector3.up * 0.05f, new Color(1f, 0.95f, 0.6f), 0.8f);
                 return;
             }
             if (!ScoopMath.CanDeposit(true, lp == _lastSource)) continue;
+            var deposited = _carrying;
             lp.AddLiquid(_carrying, _carryingG);
-            FloatingText.Show(ScoopMath.DepositLabel(_carrying.chemicalName, _carryingG, lp.currentLiquidVolume),
+            RefreshPowder(lp);                                      // receiver mound grows
+            AudioService.TryPlayAt("pour", probe, 0.85f);          // pour-scooped sfx
+            FloatingText.Show(ScoopMath.DepositLabel(deposited.chemicalName, _carryingG, lp.currentLiquidVolume),
                               probe + Vector3.up * 0.05f, new Color(0.6f, 1f, 0.7f), 0.8f);
             _carrying = null; _carryingG = 0f; _lastSource = null;
             _readyAt = Time.time + actionCooldown;
@@ -104,13 +111,22 @@ public class ScoopController : MonoBehaviour
         }
     }
 
+    /// The scooping BLADE tip — the far end of the tool's longest axis (user
+    /// 2026-07-13: the pick-up probe and the carried heap were at the whole-tool
+    /// centre, so the powder appeared to ride the middle of the handle and the
+    /// bowl never seemed to touch the jar). Now both live on the blade.
     private Vector3 ProbeCenter()
     {
+        // Hand-placed "ScoopAnchor" child wins (drag it onto the bowl/blade; user
+        // 2026-07-14) — otherwise use the far end of the tool's longest axis.
+        var anchor = transform.Find("ScoopAnchor");
+        if (anchor != null) return anchor.position;
         var rs = GetComponentsInChildren<Renderer>();
         if (rs.Length == 0) return transform.position;
         var b = rs[0].bounds;
         for (int i = 1; i < rs.Length; i++) b.Encapsulate(rs[i].bounds);
-        return b.center;
+        Vector3 axis = Matchstick.LongestLocalAxis(transform, b, out float halfLen);
+        return b.center + axis * (halfLen * (bladeAtPositiveEnd ? 1f : -1f));
     }
 
     /// Small tinted mound riding the blade while a charge is carried.
@@ -140,4 +156,17 @@ public class ScoopController : MonoBehaviour
     }
 
     private void HideHeap() { if (_heap != null) _heap.SetActive(false); }
+
+    /// Keep a solid/powder container's mound in sync with its contents so it grows
+    /// as scoops go in and shrinks as they come out (user 2026-07-14: "content
+    /// should appear nicely and increase as more is poured in").
+    private void RefreshPowder(LiquidPhysics lp)
+    {
+        if (lp == null) return;
+        var c = lp.currentChemical;
+        if (c == null || (c.state != PhysicalState.Solid && c.state != PhysicalState.Powder)) return;
+        float fill = Mathf.Clamp01(lp.currentLiquidVolume / 20f);
+        if (lp.currentLiquidVolume > 0.01f) fill = Mathf.Max(0.28f, fill);   // one scoop is still visible
+        ExperimentSceneBuilder.EnsurePowderVisual(lp.gameObject, c, fill);
+    }
 }

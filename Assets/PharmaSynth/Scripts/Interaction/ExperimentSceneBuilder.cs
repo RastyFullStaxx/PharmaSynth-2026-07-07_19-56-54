@@ -616,6 +616,18 @@ public class ExperimentSceneBuilder : MonoBehaviour
     public static void EnsureLiquidVisual(GameObject inst, LiquidPhysics lp)
     {
         if (inst == null || lp == null) return;
+
+        // Solids/powders (sodium acetate, soda lime, salicylic acid…) must NOT
+        // read as a sloshing liquid vial (user 2026-07-13: "it's misleading… the
+        // vial and its content is for liquid"). Render an opaque granular mound in
+        // the lower part of the jar instead of the translucent liquid shader.
+        var chem = lp.currentChemical;
+        if (chem != null && (chem.state == PhysicalState.Solid || chem.state == PhysicalState.Powder))
+        {
+            EnsurePowderVisual(inst, chem);
+            return;
+        }
+
         if (lp.mainRenderer != null && lp.mainRenderer.sharedMaterial != null
             && lp.mainRenderer.sharedMaterial.HasProperty("_Fill")) return;   // authored setup (e.g. _WithLiquid twin)
 
@@ -651,6 +663,64 @@ public class ExperimentSceneBuilder : MonoBehaviour
         lp.mainRenderer = liquidR;
     }
 
+    /// Opaque powder mound for solid/powder reagents: a low, wide, matte heap
+    /// sitting in the bottom of the jar so it reads as granular, not liquid.
+    /// Idempotent (reuses a child named "Powder"); sharedMaterial only.
+    public static void EnsurePowderVisual(GameObject inst, ChemicalData chem, float fill01 = 1f)
+    {
+        if (inst == null) return;
+        fill01 = Mathf.Clamp01(fill01);
+        Renderer heap = null;
+        foreach (var r in inst.GetComponentsInChildren<Renderer>(true))
+        {
+            if (r.name == "Powder") heap = r;
+            else if (r.name == "Liquid")   // an earlier liquid-fill twin — drop it
+            {
+                if (Application.isPlaying) Destroy(r.gameObject); else DestroyImmediate(r.gameObject);
+            }
+        }
+
+        // Measure the JAR only — never the mound itself. Including the "Powder"
+        // child made every re-run encapsulate the previous (bigger) mound, so it
+        // ballooned into a giant blob (user 2026-07-14). Skip fill/heap children.
+        var b = BoundsExcluding(inst, "Powder", "Liquid");
+        if (heap == null)
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);   // squashed = a mound
+            go.name = "Powder";
+            var col = go.GetComponent<Collider>();
+            if (col != null) { if (Application.isPlaying) Destroy(col); else DestroyImmediate(col); }
+            go.transform.SetParent(inst.transform, true);
+            heap = go.GetComponent<Renderer>();
+            heap.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            var shader = Shader.Find("Universal Render Pipeline/Lit");
+            heap.sharedMaterial = new Material(shader != null ? shader : Shader.Find("Standard"))
+                { name = "PharmaPowder_Runtime" };
+        }
+        // Empty → hide the mound entirely (a scooped-out source shows no powder).
+        if (fill01 <= 0.001f) { heap.gameObject.SetActive(false); return; }
+        heap.gameObject.SetActive(true);
+        // Low wide mound: ~78% of the footprint, a shallow dome near the bottom;
+        // both width and height grow with how full the jar is.
+        float w = Mathf.Min(b.size.x, b.size.z) * 0.78f * Mathf.Lerp(0.55f, 1f, fill01);
+        float dome = Mathf.Max(0.008f, b.size.y * 0.30f) * Mathf.Lerp(0.2f, 1f, fill01);
+        heap.transform.position = new Vector3(b.center.x, b.min.y + dome * 0.35f, b.center.z);
+        var ls = inst.transform.lossyScale;
+        heap.transform.localScale = new Vector3(
+            w / Mathf.Max(1e-4f, Mathf.Abs(ls.x)),
+            dome / Mathf.Max(1e-4f, Mathf.Abs(ls.y)),
+            w / Mathf.Max(1e-4f, Mathf.Abs(ls.z)));
+        var mat = heap.sharedMaterial;
+        var c = chem != null ? chem.liquidColor : new Color(0.9f, 0.88f, 0.82f); c.a = 1f;
+        if (mat != null)
+        {
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", c);
+            if (mat.HasProperty("_Color")) mat.SetColor("_Color", c);
+            if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", 0.08f);   // matte, not glossy
+            if (mat.HasProperty("_Glossiness")) mat.SetFloat("_Glossiness", 0.08f);
+        }
+    }
+
     // ---- helpers ----------------------------------------------------------
 
     /// Finite bottle supply: the authored supplyMl, or 2.5x the summed requiredMl of
@@ -674,6 +744,26 @@ public class ExperimentSceneBuilder : MonoBehaviour
         Bounds b = rs.Length > 0 ? rs[0].bounds : new Bounds(g.transform.position, Vector3.one * 0.1f);
         for (int i = 1; i < rs.Length; i++) b.Encapsulate(rs[i].bounds);
         return b;
+    }
+
+    /// World bounds of a prop's SOLID mesh only — skips the given child names
+    /// (the powder/liquid fill so it can't inflate its own host on a re-run) AND
+    /// any non-mesh renderer: floating TMP name labels, the pour-arc LineRenderer,
+    /// particle systems. Those used to balloon the measured jar size, so a tiny
+    /// vial grew a beach-ball of powder (user 2026-07-14).
+    private static Bounds BoundsExcluding(GameObject g, params string[] skipNames)
+    {
+        Bounds b = default; bool has = false;
+        foreach (var r in g.GetComponentsInChildren<Renderer>(true))
+        {
+            if (!(r is MeshRenderer || r is SkinnedMeshRenderer)) continue;   // no text/line/particle
+            if (r.GetComponent<TMPro.TMP_Text>() != null) continue;           // TMP labels use a MeshRenderer
+            bool skip = false;
+            foreach (var n in skipNames) if (r.name == n) { skip = true; break; }
+            if (skip) continue;
+            if (!has) { b = r.bounds; has = true; } else b.Encapsulate(r.bounds);
+        }
+        return has ? b : new Bounds(g.transform.position, Vector3.one * 0.05f);
     }
 
     private static void Normalise(GameObject g, float targetHeight)

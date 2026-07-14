@@ -417,8 +417,10 @@ public static class PharmaSelfTests
 
             // 2026-07-11: the PPE locker moved just inside the lab → the door is
             // open through the gear-up steps (the run still gates on PPE + walk-in).
-            A("gate: coat prompt opens the door", GatekeeperModel.DoorOpen(GateState.CoatPrompt)
-                && GatekeeperModel.DoorOpen(GateState.ReadyPrompt));
+            A("gate: door SHUT during PPE + ready (W5.12), opens only when armed",
+                !GatekeeperModel.DoorOpen(GateState.CoatPrompt)
+                && !GatekeeperModel.DoorOpen(GateState.ReadyPrompt)
+                && GatekeeperModel.DoorOpen(GateState.DoorArmed));
             A("gate: coat then ready", m.Fire(GateEvent.Coated) && m.Fire(GateEvent.Ready) && m.State == GateState.Loading);
             A("gate: loaded warns", m.Fire(GateEvent.Loaded) && m.State == GateState.ThresholdWarn && !GatekeeperModel.DoorOpen(m.State));
             A("gate: cross before confirm refused", !m.Fire(GateEvent.CrossedThreshold));
@@ -1100,6 +1102,14 @@ public static class PharmaSelfTests
         ppeSet.Don(PPEPiece.Gloves);
         A("ppe: all three = fully dressed", ppeSet.AllWorn && ppeSet.MissingSummary() == "");
         A("ppe: clear strips everything", ppeSet.Clear() && !ppeSet.AllWorn && !ppeSet.Clear());
+        // Hard door gate (user 2026-07-14): campaign entry needs full PPE; tour/review don't.
+        A("ppe: armed door requires PPE", GatekeeperModel.RequiresPPEToOpen(GateState.DoorArmed)
+            && GatekeeperModel.RequiresPPEToOpen(GateState.Running));
+        A("ppe: tour/review need no PPE", !GatekeeperModel.RequiresPPEToOpen(GateState.LabTour)
+            && !GatekeeperModel.RequiresPPEToOpen(GateState.ScoreReview));
+        // A lit burner blows out when lifted (user 2026-07-14) and only re-lights once down.
+        A("burner: lifted blows out", BurnerController.ShouldBlowOut(true, true));
+        A("burner: rests stay lit", !BurnerController.ShouldBlowOut(true, false));
 
         // Pharmee flight lean: proportional to speed, clamped, zero at rest.
         A("pharmee: lean scales with speed", Near(PharmeeAttitude.LeanFor(0.5f, 22f, 14f), 11f));

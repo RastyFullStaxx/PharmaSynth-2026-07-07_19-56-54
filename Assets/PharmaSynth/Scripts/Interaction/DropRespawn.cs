@@ -108,6 +108,29 @@ public class DropRespawn : MonoBehaviour
         _supplyCaptured = true;
     }
 
+    /// FULL lab reset (user 2026-07-14: "when we reset, reset everything — item
+    /// locations, materials, not just the player"). Disassembles every snapped
+    /// apparatus, then sends every loose item back to its home spot and restores
+    /// its home contents. Called on Restart / abort / return-to-entrance so the
+    /// bench looks untouched for the next attempt, regardless of where the player
+    /// left things. Complements launcher.Launch(StageOnly), which only rebuilds
+    /// the stage-SPAWNED props — hand-placed workspace apparatus needs this.
+    public static void ResetAllHome()
+    {
+        // 1) Break apart any assembled apparatus so members are free to return.
+        foreach (var snap in FindObjectsByType<ApparatusSnap>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            int guard = 0;
+            while (snap.DetachNewest() && guard++ < 64) { }
+        }
+        // 2) Every loose prop/reagent back to its home transform + home supply.
+        foreach (var dr in FindObjectsByType<DropRespawn>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            dr.Suspended = false;
+            dr.GoHome();
+        }
+    }
+
     /// Teleport back to the shelf spot, re-freeze, and restore the home supply
     /// (public for tests/tools). Empty receivers reset to empty — a respawned
     /// vessel never keeps a mid-run mixture.

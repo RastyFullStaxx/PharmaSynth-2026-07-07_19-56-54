@@ -154,9 +154,21 @@ public class GatekeeperModel
     /// CoatPrompt/ReadyPrompt are open since 2026-07-11: the PPE locker moved to
     /// the corner just INSIDE the lab, so gearing up happens through the door.)
     public static bool DoorOpen(GateState s)
+        // The door stays SHUT through all prep — mode pick, episode pick, PPE
+        // (CoatPrompt), and "I'm ready" (ReadyPrompt) — and only opens once the
+        // experiment is ARMED (user 2026-07-13: the door was opening the moment
+        // Pharmee said to wear PPE, before the player was ready). The PPE locker
+        // is on the entrance side, so it's reachable with the door closed.
         => s == GateState.LabTour || s == GateState.DoorArmed || s == GateState.Running
-        || s == GateState.SupplyPrompt || s == GateState.CoatPrompt || s == GateState.ReadyPrompt
+        || s == GateState.SupplyPrompt
         || s == GateState.QuizIntro || s == GateState.QuizTime || s == GateState.ScoreReview;
+
+    /// States where the door may only open once the player is FULLY dressed
+    /// (user 2026-07-14: "the door opens when I haven't worn all three needed").
+    /// The campaign in-lab states require PPE; the Lab Tour and the review-corner
+    /// states do NOT (the tour is a walk-through and PPE is stripped for review).
+    public static bool RequiresPPEToOpen(GateState s)
+        => s == GateState.DoorArmed || s == GateState.Running || s == GateState.SupplyPrompt;
 
     /// The scripted post-experiment review window (W5.9): ambient NPC chatter
     /// (Pharmee idle lines, Jimenez exam remarks) and the demo skip buttons are

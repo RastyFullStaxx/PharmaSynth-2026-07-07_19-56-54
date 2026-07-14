@@ -16,6 +16,7 @@ public class GrindController : MonoBehaviour
     private bool _doneAnnounced;
     private int _lastShownPct = -1;
     private float _nextPopupAt;
+    private float _nextDustAt;   // throttles the grinding dust puff (W5.12)
     private GameObject _heap;
 
     public OrbitMath Math => _math;
@@ -86,6 +87,15 @@ public class GrindController : MonoBehaviour
         _math.Feed(x, z, inside);
 
         if (!inside) return;
+
+        // Grinding animation (user 2026-07-13): a soft tan dust puff keeps rising
+        // from the bowl while the pestle works, so the grind reads as an action.
+        if (!_math.IsDone && Application.isPlaying && Time.time >= _nextDustAt)
+        {
+            _nextDustAt = Time.time + 0.28f;
+            EffectVfx.Smoke(transform.position + Vector3.up * 0.03f, new Color(0.82f, 0.72f, 0.55f, 0.45f));
+        }
+
         int pct = Mathf.RoundToInt(_math.Progress01 * 100f);
         if (!_math.IsDone && pct != _lastShownPct && pct % 25 == 0 && pct > 0 && Time.time >= _nextPopupAt)
         {

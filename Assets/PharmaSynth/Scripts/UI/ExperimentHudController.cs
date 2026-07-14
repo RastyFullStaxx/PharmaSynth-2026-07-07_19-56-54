@@ -77,7 +77,12 @@ public class ExperimentHudController : MonoBehaviour
 
     private void OnProgress(float p) { _graphProgress = p; RefreshProgress(); }
 
-    private void OnTaskCompleted(ExperimentTask t) => ShowToast((t != null ? t.label : "Task") + "  ✓");
+    private void OnTaskCompleted(ExperimentTask t)
+    {
+        ShowToast("Step complete:  " + (t != null ? t.label : "Task") + "  ✓");
+        // A clear success chime with the on-screen toast (user 2026-07-13).
+        if (AudioService.Instance != null) AudioService.Instance.Play("grade-pass");
+    }
 
     private void OnMistake(LabErrorType type, string message)
     {

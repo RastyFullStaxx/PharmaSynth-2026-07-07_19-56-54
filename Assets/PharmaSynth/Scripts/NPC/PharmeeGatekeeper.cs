@@ -202,10 +202,16 @@ public class PharmeeGatekeeper : MonoBehaviour
 
     public void OnPPEWorn()
     {
-        if (Model.State != GateState.CoatPrompt) return;
-        if (ppe == null || ppe.PPEWorn) { Model.Fire(GateEvent.Coated); return; }
-        // Partially dressed — tell the player what's still missing (per-piece PPE).
-        Say("Almost there — you still need your " + ppe.MissingSummary() + ".");
+        if (Model.State == GateState.CoatPrompt)
+        {
+            if (ppe == null || ppe.PPEWorn) { Model.Fire(GateEvent.Coated); return; }
+            // Partially dressed — tell the player what's still missing (per-piece PPE).
+            Say("Almost there — you still need your " + ppe.MissingSummary() + ".");
+            return;
+        }
+        // PPE changed outside CoatPrompt (e.g. the player finished dressing at the
+        // armed door) → re-evaluate the physical door so the hard gate opens it.
+        ApplyDoor(Model.State);
     }
 
     /// Door panel option pressed — meaning depends on the current state.
@@ -499,6 +505,7 @@ public class PharmeeGatekeeper : MonoBehaviour
             string id = runner != null && runner.Module != null ? runner.Module.moduleId : GameFlow.SelectedModuleId;
             ExperimentStationRegistry.Clear();
             launcher?.Launch(id, LaunchMode.StageOnly);   // props/bottles back to original spawns
+            DropRespawn.ResetAllHome();                    // hand-placed apparatus + reagents back home too
             // Wearables back on their pegs (+ worn PPE stripped) so the next campaign is dressable.
             if (WearableReseat.Instance != null) WearableReseat.Instance.Reseat();
             else if (ppe != null) ppe.RemovePPE();        // wearables off
@@ -529,10 +536,11 @@ public class PharmeeGatekeeper : MonoBehaviour
         var mod = runner != null ? runner.Module : null;
         string id = mod != null ? mod.moduleId : GameFlow.SelectedModuleId;
         ExperimentStationRegistry.Clear();
+        void Relaunch() { launcher?.Launch(id, LaunchMode.FullStart); DropRespawn.ResetAllHome(); }
         if (ScreenFader.Instance != null && Application.isPlaying)
-            ScreenFader.Instance.FadeAround(() => launcher?.Launch(id, LaunchMode.FullStart));
+            ScreenFader.Instance.FadeAround(Relaunch);
         else
-            launcher?.Launch(id, LaunchMode.FullStart);
+            Relaunch();
     }
 
     /// Jimenez's two-beat quiz briefing at the review corner, then the quiz opens.
@@ -586,6 +594,7 @@ public class PharmeeGatekeeper : MonoBehaviour
         string id = runner != null && runner.Module != null ? runner.Module.moduleId : GameFlow.SelectedModuleId;
         ExperimentStationRegistry.Clear();
         launcher?.Launch(id, LaunchMode.StageOnly);
+        DropRespawn.ResetAllHome();                    // hand-placed apparatus + reagents back home
         if (WearableReseat.Instance != null) WearableReseat.Instance.Reseat();
         else if (ppe != null) ppe.RemovePPE();
         TeleportToFrontDoor();
@@ -709,6 +718,15 @@ public class PharmeeGatekeeper : MonoBehaviour
     private void ApplyDoor(GateState s)
     {
         bool open = GatekeeperModel.DoorOpen(s);
+        // Hard PPE gate (user 2026-07-14): the physical door must NOT open for a
+        // campaign entry unless all three PPE pieces are actually worn — even if
+        // the FSM somehow advanced. Self-heals: donning the last piece fires
+        // OnPPEWorn → ApplyDoor again.
+        if (open && GatekeeperModel.RequiresPPEToOpen(s) && ppe != null && !ppe.PPEWorn)
+        {
+            open = false;
+            Say("Hold on — you still need your " + ppe.MissingSummary() + " before you can enter.");
+        }
         if (doorBlocker != null) doorBlocker.SetActive(!open);
         if (doorOpener != null) doorOpener.SetOpen(open);
     }
