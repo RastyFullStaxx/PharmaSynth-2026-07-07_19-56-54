@@ -89,12 +89,19 @@ public class BurnerController : MonoBehaviour
     private void BuildFlame()
     {
         _flame = new GameObject("BurnerFlame");
-        // Parent to the BARREL's transform, not the burner root, so the flame
-        // stays welded to the mouth even as the burner is picked up and carried
-        // around (user 2026-07-13: keep it consistent while moving).
-        var barrel = Barrel();
-        _flame.transform.SetParent(barrel != null ? barrel.transform : transform, true);
-        _flame.transform.position = FlamePos();
+        // Parent to the burner ROOT — NOT the barrel mesh. A nested barrel transform
+        // can carry a tiny import scale, which shrank the particles to invisibility
+        // (user 2026-07-15: Prop_burner had no flame while Kit_BunsenBurner did).
+        // The root still carries the flame when the burner is moved.
+        _flame.transform.SetParent(transform, true);
+        _flame.transform.position = FlamePos();   // FlameAnchor child wins, else barrel top
+        // Neutralise the host's scale so the flame is always real-world sized,
+        // identical on every burner regardless of its import scale.
+        var ls = transform.lossyScale;
+        _flame.transform.localScale = new Vector3(
+            1f / Mathf.Max(1e-4f, Mathf.Abs(ls.x)),
+            1f / Mathf.Max(1e-4f, Mathf.Abs(ls.y)),
+            1f / Mathf.Max(1e-4f, Mathf.Abs(ls.z)));
 
         var ps = _flame.AddComponent<ParticleSystem>();
         ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);

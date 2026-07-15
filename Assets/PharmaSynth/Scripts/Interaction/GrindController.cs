@@ -1,4 +1,5 @@
 using UnityEngine;
+using XRGrab = UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable;
 
 /// The GRIND verb (W5.8): work the pestle in circles inside this mortar's bowl
 /// and the grind task completes (dual-path on Methane: the legacy zone-touch
@@ -10,29 +11,68 @@ public class GrindController : MonoBehaviour
     private ExperimentRunner _runner;
     private string _taskId;
     private Transform _pestle;
-    private float _bowlRadius = 0.09f;
-    private float _bowlBandY = 0.16f;
     private bool _subscribed;
     private bool _doneAnnounced;
     private int _lastShownPct = -1;
     private float _nextPopupAt;
     private float _nextDustAt;   // throttles the grinding dust puff (W5.12)
-    private GameObject _heap;
+
+    // Forgiving completion (user 2026-07-15: grinding did nothing). VR grinding is
+    // rarely a clean circle, and tracking the pestle's ORIGIN missed the bowl when
+    // the origin was the handle. Now the pestle TIP (closest point to the bowl) is
+    // tracked, and the grind completes on EITHER 3 revs OR ~1.1 m of any motion
+    // inside a generous bowl radius.
+    private float _travel;
+    private Vector3 _lastTip;
+    private bool _haveTip;
+    private float _nextSfxAt;
+    private float _nextHintAt;          // throttles the "add the reagent first" hint
+    private LiquidPhysics _vessel;      // the mortar's own contents (must be loaded to grind)
+    private const float TravelNeeded = 1.1f;
+    private const float GrindReach = 0.12f;
 
     public OrbitMath Math => _math;
 
-    /// Builder seam. taskId may be null/empty (cosmetic grind).
+    /// The grind is finished once EITHER circular revs OR total motion is enough.
+    public bool IsGrindComplete() => _math.IsDone || _travel >= TravelNeeded;
+
+    /// Pure (suite): may this mortar be ground? Only when it actually holds the
+    /// reagent — grinding an EMPTY mortar must not complete the step while the
+    /// powder is still on the scoop (user 2026-07-15). A mortar with no
+    /// LiquidPhysics at all (cosmetic/educational) always grinds.
+    public static bool CanGrind(bool hasVessel, float contentsMl) => !hasVessel || contentsMl > 0.5f;
+
+    /// This mortar currently holds something to grind.
+    private bool HasMixture()
+    {
+        if (_vessel == null) _vessel = GetComponent<LiquidPhysics>();
+        return CanGrind(_vessel != null, _vessel != null ? _vessel.currentLiquidVolume : 0f);
+    }
+
+    /// Builder seam. taskId may be null/empty (cosmetic grind). bowlRadius/bowlBandY
+    /// are legacy no-ops kept for call-site compatibility — the bowl is now measured
+    /// from the mortar's own bounds and the pestle tip.
     public void Bind(ExperimentRunner runner, string taskId, Transform pestle,
                      float bowlRadius = 0.09f, float bowlBandY = 0.16f, float requiredRevs = 3f)
     {
         _runner = runner; _taskId = taskId; _pestle = pestle;
-        _bowlRadius = bowlRadius; _bowlBandY = bowlBandY;
         _math.requiredRevs = requiredRevs;
         Resubscribe();
         Register();
     }
 
     public void SetPestle(Transform pestle) => _pestle = pestle;
+
+    /// Hand the grind its runner at runtime — _runner isn't serialized, so after a
+    /// domain reload it's null and Register() would no-op (the task never completed).
+    /// The Methane rig calls this when it aims the mortar at "prepare-mixture"
+    /// (user 2026-07-15: grinding produced no completion).
+    public void BindRunner(ExperimentRunner runner)
+    {
+        _runner = runner;
+        Resubscribe();
+        Register();
+    }
 
     /// Re-point which task this grind completes (W5.12: the Methane rig aims the
     /// shared workspace mortar at "prepare-mixture" while its tutorial runs, then
@@ -56,87 +96,174 @@ public class GrindController : MonoBehaviour
     public void Register()
     {
         _math.Reset();
+        _travel = 0f; _haveTip = false;
         _doneAnnounced = false;
         _lastShownPct = -1;
-        if (_heap != null) { Destroy(_heap); _heap = null; }
         if (_runner == null || _runner.Graph == null || string.IsNullOrEmpty(_taskId)) return;
-        _runner.Graph.RegisterCondition(_taskId, () => _math.IsDone);
+        _runner.Graph.RegisterCondition(_taskId, IsGrindComplete);
     }
 
-    /// True while the pestle tip works inside the bowl (mortar-relative).
+    /// Bowl centre in world space. A hand-placed "BowlAnchor" child wins (drag it
+    /// into the bowl so the ground powder + dust land exactly right — user
+    /// 2026-07-15); otherwise the middle of the mortar, a touch above centre.
+    private Vector3 BowlCenter()
+    {
+        var a = transform.Find("BowlAnchor");
+        if (a != null) return a.position;
+        var b = MortarBounds();
+        return new Vector3(b.center.x, b.center.y + b.size.y * 0.12f, b.center.z);
+    }
+
+    private Bounds MortarBounds()
+    {
+        var rends = GetComponentsInChildren<Renderer>();
+        Bounds b = rends.Length > 0 ? rends[0].bounds : new Bounds(transform.position, Vector3.one * 0.06f);
+        for (int i = 1; i < rends.Length; i++)
+            if (rends[i].name != "PowderHeap" && rends[i].name != "Powder") b.Encapsulate(rends[i].bounds);
+        return b;
+    }
+
+    /// Closest point of the pestle to the bowl — origin-agnostic, so it works no
+    /// matter which end of the pestle model is its transform pivot.
+    private Vector3 PestleTip(Vector3 to)
+    {
+        if (_pestle == null) return to + Vector3.up;
+        var rends = _pestle.GetComponentsInChildren<Renderer>();
+        if (rends.Length == 0) return _pestle.position;
+        var b = rends[0].bounds;
+        for (int i = 1; i < rends.Length; i++) b.Encapsulate(rends[i].bounds);
+        return b.ClosestPoint(to);
+    }
+
+    /// True while any part of the pestle is inside the (generous) bowl radius.
     public bool PestleInBowl()
     {
         if (_pestle == null) return false;
-        Vector3 d = _pestle.position - transform.position;
-        float horiz = new Vector2(d.x, d.z).magnitude;
-        return horiz <= _bowlRadius && d.y > -0.02f && d.y <= _bowlBandY;
+        Vector3 bowl = BowlCenter();
+        return Vector3.Distance(PestleTip(bowl), bowl) <= GrindReach;
+    }
+
+    /// Last-resort pestle lookup so the grind still works if nothing bound one.
+    private void AutoFindPestle()
+    {
+        foreach (var li in FindObjectsByType<LabItem>(FindObjectsSortMode.None))
+        {
+            if (li == null) continue;
+            string id = (li.itemId ?? "") + " " + (li.displayName ?? "") + " " + li.name;
+            if (id.ToLowerInvariant().Contains("pestle")) { _pestle = li.transform; return; }
+        }
     }
 
     private void Update()
     {
+        if (_pestle == null) AutoFindPestle();
         if (_pestle == null) return;
         if (_runner != null && !string.IsNullOrEmpty(_taskId) && !_runner.IsRunning) return;
-        Vector3 d = _pestle.position - transform.position;
-        Tick(d.x, d.z, PestleInBowl());
+
+        // Grind ONLY while the pestle is actually held (user 2026-07-15: the mortar
+        // smoked at play-start because a pestle resting in the bowl kept "grinding").
+        var pg = _pestle.GetComponent<XRGrab>();
+        bool held = pg != null && pg.isSelected;
+
+        Vector3 bowl = BowlCenter();
+        Vector3 tip = PestleTip(bowl);
+        bool reaching = held && Vector3.Distance(tip, bowl) <= GrindReach;
+
+        // …and only while the mortar actually CONTAINS the reagent (user 2026-07-15:
+        // you could grind an empty mortar and still finish the step while the powder
+        // was still sitting on the scoop). A mortar with no LiquidPhysics is a
+        // cosmetic/educational mortar and still grinds freely.
+        bool inside = reaching && HasMixture();
+        if (reaching && !HasMixture() && Application.isPlaying && Time.time >= _nextHintAt)
+        {
+            _nextHintAt = Time.time + 2.5f;
+            FloatingText.Show("Add the reagent to the mortar first", BowlCenter() + Vector3.up * 0.14f,
+                              new Color(1f, 0.85f, 0.5f), 1.2f);
+        }
+
+        // Accumulate pestle motion inside the bowl (forgiving path).
+        if (inside && _haveTip)
+            _travel += Mathf.Min(Vector3.Distance(tip, _lastTip), 0.05f);
+        _lastTip = tip; _haveTip = true;
+
+        Vector3 d = tip - bowl;
+        Tick(d.x, d.z, inside);
     }
 
     /// One grind sample (public so tests can drive it without physics).
     public void Tick(float x, float z, bool inside)
     {
-        bool wasDone = _math.IsDone;
         _math.Feed(x, z, inside);
 
         if (!inside) return;
 
-        // Grinding animation (user 2026-07-13): a soft tan dust puff keeps rising
-        // from the bowl while the pestle works, so the grind reads as an action.
-        if (!_math.IsDone && Application.isPlaying && Time.time >= _nextDustAt)
+        bool done = IsGrindComplete();
+        // Combined progress: whichever of circular-revs / total-motion is further.
+        float progress = Mathf.Max(_math.Progress01, _travel / TravelNeeded);
+
+        // Grinding feedback while it works: a rising tan dust puff + a soft
+        // repeating grind sound, so the action clearly reads (user 2026-07-15).
+        if (!done && Application.isPlaying && Time.time >= _nextDustAt)
         {
-            _nextDustAt = Time.time + 0.28f;
-            EffectVfx.Smoke(transform.position + Vector3.up * 0.03f, new Color(0.82f, 0.72f, 0.55f, 0.45f));
+            _nextDustAt = Time.time + 0.25f;
+            EffectVfx.Smoke(BowlCenter(), new Color(0.82f, 0.72f, 0.55f, 0.45f));
+            if (Time.time >= _nextSfxAt) { _nextSfxAt = Time.time + 0.35f; AudioService.TryPlayAt("stir", transform.position, 0.6f); }
         }
 
-        int pct = Mathf.RoundToInt(_math.Progress01 * 100f);
-        if (!_math.IsDone && pct != _lastShownPct && pct % 25 == 0 && pct > 0 && Time.time >= _nextPopupAt)
+        int pct = Mathf.RoundToInt(progress * 100f);
+        if (!done && pct >= _lastShownPct + 20 && pct > 0 && Time.time >= _nextPopupAt)
         {
-            _lastShownPct = pct;
-            _nextPopupAt = Time.time + 0.8f;
-            FloatingText.Show("Grinding... " + pct + "%", transform.position + Vector3.up * 0.2f, new Color(1f, 0.92f, 0.7f), 0.8f);
-            AudioService.TryPlayAt("stir", transform.position);
+            _lastShownPct = pct - (pct % 20);
+            _nextPopupAt = Time.time + 0.5f;
+            FloatingText.Show("Grinding... " + pct + "%", BowlCenter() + Vector3.up * 0.12f, new Color(1f, 0.92f, 0.7f), 0.8f);
         }
-        if (_math.IsDone && !wasDone && !_doneAnnounced)
+        if (done && !_doneAnnounced)
         {
             _doneAnnounced = true;
-            FloatingText.Show("Ground to a fine powder!", transform.position + Vector3.up * 0.24f, new Color(0.6f, 1f, 0.7f));
+            FloatingText.Show("Ground & mixed to a fine powder!", BowlCenter() + Vector3.up * 0.16f, new Color(0.6f, 1f, 0.7f));
             AudioService.TryPlayAt("mixture-complete", transform.position);
-            BuildHeap();
+            MarkGround();
         }
     }
 
-    /// Small tan powder heap resting in the bowl (runtime cosmetic).
-    private void BuildHeap()
+    /// On completion, UPDATE the existing scooped mound rather than spawn a second
+    /// blob (user 2026-07-15: "the gray sludge should just be updated, not produce
+    /// a new one on top"). Reuses the mortar's "Powder" child; only makes one if
+    /// nothing was scooped in. Recolours it to a fine, mixed look.
+    private void MarkGround()
     {
-        if (!Application.isPlaying || _heap != null) return;
-        _heap = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        _heap.name = "PowderHeap";
-        var col = _heap.GetComponent<Collider>();
-        if (col != null) Destroy(col);
-        _heap.transform.SetParent(transform, false);
-        var rends = GetComponentsInChildren<Renderer>();
-        float topY = 0.04f;
-        if (rends.Length > 0)
+        if (!Application.isPlaying) return;
+        Renderer powder = null;
+        foreach (var r in GetComponentsInChildren<Renderer>(true))
+            if (r.name == "Powder" || r.name == "PowderHeap") { powder = r; break; }
+
+        if (powder == null)
         {
-            var b = rends[0].bounds;
-            for (int i = 1; i < rends.Length; i++) b.Encapsulate(rends[i].bounds);
-            topY = (b.center.y - transform.position.y) + b.size.y * 0.1f;
+            var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            go.name = "Powder";
+            var col = go.GetComponent<Collider>();
+            if (col != null) Destroy(col);
+            go.transform.SetParent(transform, true);
+            go.transform.position = BowlCenter();
+            var b = MortarBounds();
+            float w = Mathf.Min(Mathf.Min(b.size.x, b.size.z) * 0.42f, 0.032f);
+            var ls = transform.lossyScale;
+            go.transform.localScale = new Vector3(
+                w / Mathf.Max(1e-4f, Mathf.Abs(ls.x)),
+                (w * 0.4f) / Mathf.Max(1e-4f, Mathf.Abs(ls.y)),
+                w / Mathf.Max(1e-4f, Mathf.Abs(ls.z)));
+            powder = go.GetComponent<Renderer>();
+            powder.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            powder.sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"));
         }
-        _heap.transform.localPosition = new Vector3(0f, topY, 0f);
-        var ls = transform.lossyScale;
-        _heap.transform.localScale = new Vector3(0.06f / Mathf.Max(1e-4f, ls.x), 0.018f / Mathf.Max(1e-4f, ls.y), 0.06f / Mathf.Max(1e-4f, ls.z));
-        var mr = _heap.GetComponent<Renderer>();
-        var mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-        mat.color = new Color(0.9f, 0.86f, 0.72f);
-        mr.sharedMaterial = mat;
-        EffectVfx.Smoke(transform.position + Vector3.up * 0.08f, new Color(0.92f, 0.88f, 0.75f, 0.5f));
+        // Recolour the SAME mound to a fine ground-powder look — no extra blob.
+        var mat = powder.sharedMaterial;
+        var c = new Color(0.86f, 0.84f, 0.78f);
+        if (mat != null)
+        {
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", c);
+            if (mat.HasProperty("_Color")) mat.SetColor("_Color", c);
+        }
+        EffectVfx.Smoke(BowlCenter(), new Color(0.92f, 0.88f, 0.75f, 0.5f));
     }
 }

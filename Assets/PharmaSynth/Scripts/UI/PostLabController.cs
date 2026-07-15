@@ -32,6 +32,17 @@ public class PostLabController : MonoBehaviour
     [Tooltip("Open automatically when ChemicalTests completes. The gatekeeper's review flow sets this false and opens the quiz itself after Jimenez's briefing.")]
     [SerializeField] private bool autoOpen = true;
 
+    [Header("Review navigation (user 2026-07-15)")]
+    [Tooltip("Step back/forward through the questions to review answers before submitting.")]
+    [SerializeField] private Button prevButton;
+    [SerializeField] private Button nextButton;
+    /// Tint of the option you already picked vs the rest, while reviewing.
+    private static readonly Color SelectedTint = new Color(0.35f, 0.78f, 1f);
+    private static readonly Color NormalTint = Color.white;
+
+    [Tooltip("Optional label for the score / prompt feedback on the tablet.")]
+    [SerializeField] private TMP_Text feedbackText;
+
     private QuizBank _bank;
     private int[] _answers;      // chosen option per question, -1 = unanswered
     private int _current;
@@ -102,14 +113,39 @@ public class PostLabController : MonoBehaviour
     public void OnOptionSelected(int optionIndex)
     {
         if (!_open || _bank == null || _current < 0 || _current >= _bank.Count) return;
+        bool wasUnanswered = _answers != null && _answers[_current] < 0;
         AnswerCurrent(optionIndex);
         if (explanationText != null)
         {
             var q = _bank.questions[_current];
             explanationText.text = q.explanation;
         }
-        if (_current < _bank.Count - 1) { _current++; Render(); }
-        else Render();   // stay on last; Submit becomes available
+        // First pass: auto-advance so answering flows. REVIEWING an already-answered
+        // question: stay put so the choice can be compared/changed without the page
+        // jumping away (user 2026-07-15: review answers before submitting).
+        if (wasUnanswered && _current < _bank.Count - 1) _current++;
+        Render();
+    }
+
+    // ---- review navigation (user 2026-07-15) --------------------------------
+
+    /// Pure (suite): is there a previous / next question from here?
+    public static bool CanGoBack(int index) => index > 0;
+    public static bool CanGoNext(int index, int count) => index < count - 1;
+
+    /// Back / Next buttons — step through the questions to review answers.
+    public void PreviousQuestion()
+    {
+        if (!_open || !CanGoBack(_current)) return;
+        _current--;
+        Render();
+    }
+
+    public void NextQuestion()
+    {
+        if (!_open || _bank == null || !CanGoNext(_current, _bank.Count)) return;
+        _current++;
+        Render();
     }
 
     /// Record an answer for the current question and advance the cursor no further.
@@ -151,8 +187,43 @@ public class PostLabController : MonoBehaviour
         if (root != null) root.SetActive(false);
     }
 
-    /// Void wrapper for the Submit button's UnityEvent (persistent listeners need void).
-    public void Submit() { SubmitAndFinish(); }
+    /// Every answer correct.
+    public bool IsPerfect => ScoreFraction() >= 0.999f;
+
+    /// Correct answers out of the bank's total (for the score display).
+    public int CorrectCount => _bank == null ? 0 : Mathf.RoundToInt(ScoreFraction() * _bank.Count);
+
+    /// Pure (suite): the score line shown to the player — "Quiz: 2 / 3 (67%)".
+    public static string ScoreLine(int correct, int total)
+        => total <= 0 ? "" : $"Quiz: {correct} / {total} ({Mathf.RoundToInt(100f * correct / total)}%)";
+
+    /// Wipe every answer and return to question 1 — a clean retry, in place.
+    public void ResetAnswers()
+    {
+        if (_answers != null)
+            for (int i = 0; i < _answers.Length; i++) _answers[i] = -1;
+        _current = 0;
+        Render();
+    }
+
+    /// Submit button. NEVER score-gated (client rule): any score submits and is
+    /// shown plainly on the grade screen, where the player chooses Retry (to
+    /// perfect it) or Complete Experiment (user 2026-07-15).
+    public void Submit()
+    {
+        if (!AllAnswered) { SetFeedback("Answer every question before submitting."); return; }
+        SetFeedback(ScoreLine(CorrectCount, _bank != null ? _bank.Count : 0));
+        SubmitAndFinish();
+    }
+
+    private void SetFeedback(string s)
+    {
+        if (feedbackText != null) feedbackText.text = GlyphSafe.Sanitize(s);
+        LastFeedback = s;
+    }
+
+    /// The last message shown to the player (suite/dev visibility).
+    public string LastFeedback { get; private set; } = "";
 
     /// Finish the attempt: complete the terminal data-sheet task and grade.
     public ExperimentResult SubmitAndFinish()
@@ -189,8 +260,20 @@ public class PostLabController : MonoBehaviour
             bool on = i < q.options.Count;
             if (optionButtons[i] != null) optionButtons[i].gameObject.SetActive(on);
             if (i < optionLabels.Length && optionLabels[i] != null && on) optionLabels[i].text = q.options[i];
+            // Show the answer already chosen for THIS question, so stepping back to
+            // review makes your previous pick obvious (user 2026-07-15).
+            if (on && optionButtons[i] != null)
+            {
+                var img = optionButtons[i].GetComponent<Image>();
+                if (img != null) img.color = (_answers != null && _answers[_current] == i) ? SelectedTint : NormalTint;
+            }
         }
-        if (explanationText != null && _answers[_current] < 0) explanationText.text = "";
+        // Re-show the explanation of an answered question while reviewing it.
+        if (explanationText != null)
+            explanationText.text = (_answers != null && _answers[_current] >= 0) ? q.explanation : "";
+
+        if (prevButton != null) prevButton.interactable = CanGoBack(_current);
+        if (nextButton != null) nextButton.interactable = CanGoNext(_current, _bank.Count);
         if (submitButton != null) submitButton.gameObject.SetActive(AllAnswered);
     }
 

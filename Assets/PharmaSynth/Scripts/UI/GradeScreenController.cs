@@ -90,6 +90,10 @@ public class GradeScreenController : MonoBehaviour
         sb.Append("Time Management: ").Append(Mathf.RoundToInt(b.TimeManagement)).Append('\n');
         sb.Append("Sanitation: ").Append(Mathf.RoundToInt(b.Sanitation)).Append('\n');
         sb.Append("Documentation: ").Append(Mathf.RoundToInt(b.Documentation)).Append('\n');
+        // The quiz score, plainly (user 2026-07-15) — the quiz is never gated, so
+        // this is what you weigh when choosing Retry (to perfect it) vs Complete.
+        sb.Append("Quiz: ").Append(Mathf.RoundToInt(r.quizScore01 * 100f)).Append("%")
+          .Append(r.quizScore01 >= 0.999f ? "  <color=#5FD08A>perfect!</color>" : "").Append('\n');
         sb.Append("Mastery: ").Append(GradeDisplay.MasteryPercent(r.overallMastery)).Append('%');   // floored — gate-relevant (W5.9)
         if (!r.passed)
         {

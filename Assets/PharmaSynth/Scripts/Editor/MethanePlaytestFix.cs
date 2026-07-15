@@ -66,11 +66,15 @@ public static class MethanePlaytestFix
                     grind.Bind(runner, null, pestle);
                     grinders++; EditorUtility.SetDirty(go);
                 }
-                if (go.GetComponent<LiquidPhysics>() == null)
                 {
-                    var mlp = go.AddComponent<LiquidPhysics>();
+                    var mlp = go.GetComponent<LiquidPhysics>() ?? go.AddComponent<LiquidPhysics>();
                     mlp.registry = registry;
-                    mlp.SetContents(null, 0f);          // starts empty; scoops fill it
+                    if (mlp.currentChemical == null && mlp.currentLiquidVolume <= 0.01f)
+                        mlp.SetContents(null, 0f);       // starts empty; scoops fill it
+                    // The mortar's OWN mesh must never become the fill renderer (that
+                    // vanished it in play — user 2026-07-14). LiquidPhysics.Start now
+                    // refuses to adopt an opaque host mesh, so mainRenderer stays null
+                    // and the mortar mesh is never disabled; the mound is a Powder child.
                     EditorUtility.SetDirty(go);
                 }
             }

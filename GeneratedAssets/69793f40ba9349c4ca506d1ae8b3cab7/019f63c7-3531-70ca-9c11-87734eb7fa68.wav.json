@@ -1,0 +1,15 @@
+{
+    "asset": "69793f40ba9349c4ca506d1ae8b3cab7",
+    "fileName": "019f63c7-3531-70ca-9c11-87734eb7fa68.wav",
+    "prompt": "Dry granular scoop: a small porcelain spatula blade digging and scraping into a pile of loose crystalline powder. Close-mic, crisp gritty crunch, short single one-shot, no music, no reverb, no voice.",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 1.0,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

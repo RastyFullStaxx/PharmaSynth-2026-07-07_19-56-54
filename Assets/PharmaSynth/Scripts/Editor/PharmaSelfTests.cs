@@ -1110,6 +1110,19 @@ public static class PharmaSelfTests
         // A lit burner blows out when lifted (user 2026-07-14) and only re-lights once down.
         A("burner: lifted blows out", BurnerController.ShouldBlowOut(true, true));
         A("burner: rests stay lit", !BurnerController.ShouldBlowOut(true, false));
+        // LiquidPhysics must NOT adopt an opaque vessel mesh as its fill renderer —
+        // it disables mainRenderer when empty, which vanished the mortar in play
+        // (user 2026-07-14). Only a PharmaLiquid "_Fill" surface may be adopted.
+        {
+            var litSh = Shader.Find("Universal Render Pipeline/Lit");
+            var fillSh = Shader.Find("PharmaSynth/Liquid");
+            if (litSh != null)
+                A("liquidphysics: opaque vessel mesh not adopted as fill",
+                  !LiquidPhysics.ShouldAdoptHostRenderer(new Material(litSh)));
+            if (fillSh != null)
+                A("liquidphysics: liquid _Fill surface is adopted",
+                  LiquidPhysics.ShouldAdoptHostRenderer(new Material(fillSh)));
+        }
 
         // Pharmee flight lean: proportional to speed, clamped, zero at rest.
         A("pharmee: lean scales with speed", Near(PharmeeAttitude.LeanFor(0.5f, 22f, 14f), 11f));
@@ -1797,6 +1810,31 @@ public static class PharmaSelfTests
         A("burner: unlit match never", !BurnerController.ShouldIgnite(false, false, 0.1f));
         A("burner: far match never", !BurnerController.ShouldIgnite(false, true, 0.5f));
         A("burner: already lit no-op", !BurnerController.ShouldIgnite(true, true, 0.1f));
+        // Live instrument readout (user 2026-07-15): only shows while something is
+        // happening; reuses the pinned station formats so it reads the same.
+        A("readout: hidden at ambient", !ProcessReadout.ShouldShow(true, 22f, 22f, false, 0f));
+        A("readout: shows once heating", ProcessReadout.ShouldShow(true, 60f, 22f, false, 0f));
+        A("readout: shows while collecting", ProcessReadout.ShouldShow(false, 0f, 22f, true, 0.2f));
+        A("readout: hidden with nothing collected", !ProcessReadout.ShouldShow(false, 0f, 22f, true, 0f));
+        // Grinding needs the reagent IN the mortar (user 2026-07-15: you could grind
+        // an empty mortar while the powder sat on the scoop).
+        A("grind: empty mortar can't grind", !GrindController.CanGrind(true, 0f));
+        A("grind: loaded mortar grinds", GrindController.CanGrind(true, 2f));
+        A("grind: cosmetic mortar always grinds", GrindController.CanGrind(false, 0f));
+        // Quiz is NEVER score-gated (client rule) — the score is just shown plainly.
+        A("quiz: score line reads correct/total", PostLabController.ScoreLine(2, 3) == "Quiz: 2 / 3 (67%)");
+        A("quiz: perfect score line", PostLabController.ScoreLine(3, 3) == "Quiz: 3 / 3 (100%)");
+        A("quiz: no bank → no score line", PostLabController.ScoreLine(0, 0) == "");
+        // Review navigation: Back/Next bound by the ends of the bank.
+        A("quiz: no back on first", !PostLabController.CanGoBack(0));
+        A("quiz: back from second", PostLabController.CanGoBack(1));
+        A("quiz: next while more remain", PostLabController.CanGoNext(0, 3));
+        A("quiz: no next on last", !PostLabController.CanGoNext(2, 3));
+        // Red-hot tube glow: cold below 60% of target, saturated at temperature.
+        A("glow: cold tube does not glow", Near(MethaneApparatusRig.GlowFor(22f, 120f), 0f));
+        A("glow: saturates at target", Near(MethaneApparatusRig.GlowFor(120f, 120f), 1f));
+        A("glow: ramps mid-climb", MethaneApparatusRig.GlowFor(100f, 120f) > 0f
+            && MethaneApparatusRig.GlowFor(100f, 120f) < 1f);
         A("splint: lit match at tube fires", MethaneApparatusRig.SplintShouldFire(true, false, 0.1f, true, 1f));
         A("splint: auto fallback fires", MethaneApparatusRig.SplintShouldFire(true, false, float.MaxValue, false, 25f));
         A("splint: waits for a match first", !MethaneApparatusRig.SplintShouldFire(true, false, float.MaxValue, false, 5f));

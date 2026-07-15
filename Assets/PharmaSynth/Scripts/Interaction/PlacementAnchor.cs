@@ -15,11 +15,29 @@ public class PlacementAnchor : MonoBehaviour
     public Color gizmoColor = new Color(1f, 0.5f, 0.1f, 0.9f);
     public float gizmoRadius = 0.006f;
 
+    [Tooltip("ONLY for anchors whose SCALE sets a size (PowderAnchor). Draws a wire preview of that size. " +
+             "Position-only anchors (FlameAnchor/ScoopAnchor/BowlAnchor) must leave this OFF — their scale is 1, " +
+             "which would draw a useless 1-metre sphere over the whole bench.")]
+    public bool previewsScale = false;
+
     void OnDrawGizmos()
     {
+        // A dot marks the spot.
         Gizmos.color = gizmoColor;
         Gizmos.DrawSphere(transform.position, gizmoRadius);
-        Gizmos.color = new Color(gizmoColor.r, gizmoColor.g, gizmoColor.b, 0.35f);
-        Gizmos.DrawWireSphere(transform.position, gizmoRadius * 2.2f);
+
+        if (!previewsScale)
+        {
+            // Position-only anchor → a small fixed halo, nothing scale-dependent.
+            Gizmos.color = new Color(gizmoColor.r, gizmoColor.g, gizmoColor.b, 0.35f);
+            Gizmos.DrawWireSphere(transform.position, gizmoRadius * 2.2f);
+            return;
+        }
+        // Size-setting anchor → a wire ellipsoid matching the REAL extents it will
+        // give the powder, so it can be eyeballed while scaling.
+        Gizmos.color = new Color(gizmoColor.r, gizmoColor.g, gizmoColor.b, 0.5f);
+        Gizmos.matrix = Matrix4x4.TRS(transform.position, transform.rotation, transform.lossyScale);
+        Gizmos.DrawWireSphere(Vector3.zero, 0.5f);   // unit sphere → diameter == world scale
+        Gizmos.matrix = Matrix4x4.identity;
     }
 }

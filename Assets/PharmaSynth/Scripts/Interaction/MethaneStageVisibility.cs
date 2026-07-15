@@ -23,14 +23,11 @@ public class MethaneStageVisibility : MonoBehaviour
     public const string MethaneModuleId = "tutorial-methane";
 
     /// The methane-only props (by LabItem.itemId) that must hide with the stage.
+    /// NOTE the bench TOOLS (mortar/pestle/scoop) are deliberately NOT here — the
+    /// user wants them usable in BOTH modes all the time, so they are detached from
+    /// the stage and stay visible (see menu "Make Methane Bench Tools Permanent").
     private static readonly HashSet<string> PropItemIds = new HashSet<string>
-    { "burner", "glass-tube", "collection-tube", "reagent-jar", "lit-splint" };
-
-    /// The methane bench TOOLS (by name substring) that also belong to the set —
-    /// they carry no methane itemId, so they were never toggled and a mortar the
-    /// user parented under the stage vanished at play-start (user 2026-07-14).
-    private static readonly string[] ToolNames =
-    { "Motar", "Mortar", "Pestle", "Scoopula", "Spatula" };
+    { "burner", "glass-tube", "collection-tube", "reagent-jar" };   // lit-splint removed 2026-07-15 (not in manuscript)
 
     private readonly List<GameObject> _looseProps = new List<GameObject>();
     private bool _gathered;
@@ -47,56 +44,52 @@ public class MethaneStageVisibility : MonoBehaviour
     private void Start()
     {
         Gather();
-        Apply(false);   // hidden by default at lab entry
+        Apply(ShowNow());
     }
 
     private void Update()
     {
-        if (!Application.isPlaying) return;
+        if (!Application.isPlaying) return;   // EDITOR: always visible for arranging
+        Apply(ShowNow());
+    }
+
+    /// The METHANE-SPECIFIC staged props are present only where they belong (user
+    /// 2026-07-15): the Lab Tour and the Methane tutorial. Any other campaign
+    /// experiment hides them — nothing else uses sodium-acetate/soda-lime, the
+    /// hard-glass tube or the gas collection tube.
+    ///
+    /// This is NOT a violation of the all-tools-always-present rule: that rule
+    /// protects the GENERAL apparatus + raw reagents every experiment draws from
+    /// (kits, racks, shelf/cabinet reagents), which stay out permanently. These
+    /// four are methane-only staged props.
+    ///
+    /// Detection deliberately covers the WHOLE methane flow — from the moment
+    /// methane is CHOSEN, not just once its graph is live — because gating on the
+    /// live run left the player unable to pick the tubes up while setting up.
+    private bool ShowNow()
+    {
         bool tourActive = tour != null && tour.IsActive;
-        // Show through the WHOLE methane flow, not only once the run graph is live:
-        // the moment methane is the chosen module (episode-pick → gear-up → armed →
-        // running) the bench must be dressed (user 2026-07-14: the mortar was gone
-        // when setting up). Any OTHER active experiment hides the methane set.
         bool methaneRunning = runner != null && runner.Graph != null
                               && runner.Module != null && runner.Module.moduleId == MethaneModuleId;
         bool methaneSelected = GameFlow.SelectedModuleId == MethaneModuleId;
         bool otherRunning = runner != null && runner.Module != null
                             && runner.Module.moduleId != MethaneModuleId;
-        bool methaneActive = (methaneRunning || methaneSelected) && !otherRunning;
-        Apply(ShouldShow(tourActive, methaneActive));
+        return ShouldShow(tourActive, (methaneRunning || methaneSelected) && !otherRunning);
     }
 
-    /// Find the loose methane props + bench tools once (while still active, so
-    /// they're findable). Tools are also captured when they sit UNDER the stage,
-    /// so we control them directly rather than relying on the parent toggle.
+    /// Find the loose methane props once (while still active, so they're findable).
     private void Gather()
     {
         if (_gathered) return;
         _gathered = true;
         _looseProps.Clear();
-        var seen = new HashSet<GameObject>();
         foreach (var li in FindObjectsByType<LabItem>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             if (li == null || !PropItemIds.Contains(li.itemId)) continue;
             // Skip props already inside the stage (the stage toggle covers them);
             // capture only the ones the user moved out onto the workspace.
             if (stage != null && li.transform.IsChildOf(stage.transform)) continue;
-            if (seen.Add(li.gameObject)) _looseProps.Add(li.gameObject);
-        }
-        // Bench tools by name (mortar/pestle/scoop) — the grind + scoop verbs live
-        // on these; without them the methane bench is unusable.
-        foreach (var t in FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-        {
-            var go = t.gameObject;
-            bool isTool = false;
-            foreach (var n in ToolNames) if (go.name.Contains(n)) { isTool = true; break; }
-            if (!isTool) continue;
-            // Only ROOT tools (a mortar's mesh child also contains "Mortar") — the one
-            // with the verb component or a LabItem, not every sub-mesh.
-            if (go.GetComponent<GrindController>() == null && go.GetComponent<ScoopController>() == null
-                && go.GetComponent<LabItem>() == null) continue;
-            if (seen.Add(go)) _looseProps.Add(go);
+            _looseProps.Add(li.gameObject);
         }
     }
 

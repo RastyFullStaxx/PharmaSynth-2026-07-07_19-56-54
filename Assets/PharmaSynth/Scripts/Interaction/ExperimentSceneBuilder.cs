@@ -625,7 +625,8 @@ public class ExperimentSceneBuilder : MonoBehaviour
         if (chem != null && (chem.state == PhysicalState.Solid || chem.state == PhysicalState.Powder))
         {
             EnsurePowderVisual(inst, chem);
-            return;
+            return;   // mainRenderer stays whatever it was; the Start guard in
+                      // LiquidPhysics keeps it off the opaque vessel mesh.
         }
 
         if (lp.mainRenderer != null && lp.mainRenderer.sharedMaterial != null
@@ -663,6 +664,52 @@ public class ExperimentSceneBuilder : MonoBehaviour
         lp.mainRenderer = liquidR;
     }
 
+    // ---- vessel fitting (local space) ---------------------------------------
+    // Contents must be placed in the vessel's LOCAL frame, never world axes — a
+    // tilted/held tube would otherwise get a world-vertical fill sticking out of
+    // it (user 2026-07-15: "the content isn't aligned/contained").
+
+    /// Local-space bounds of a vessel's solid meshes, skipping fill/label children.
+    public static Bounds LocalMeshBounds(Transform root, params string[] skipNames)
+    {
+        Bounds b = default; bool has = false;
+        foreach (var mf in root.GetComponentsInChildren<MeshFilter>(true))
+        {
+            if (mf == null || mf.sharedMesh == null) continue;
+            if (mf.GetComponent<TMPro.TMP_Text>() != null) continue;
+            bool skip = false;
+            foreach (var n in skipNames) if (mf.gameObject.name == n) { skip = true; break; }
+            if (skip) continue;
+            var mb = mf.sharedMesh.bounds;
+            for (int i = 0; i < 8; i++)
+            {
+                var corner = new Vector3(
+                    (i & 1) == 0 ? mb.min.x : mb.max.x,
+                    (i & 2) == 0 ? mb.min.y : mb.max.y,
+                    (i & 4) == 0 ? mb.min.z : mb.max.z);
+                var local = root.InverseTransformPoint(mf.transform.TransformPoint(corner));
+                if (!has) { b = new Bounds(local, Vector3.zero); has = true; } else b.Encapsulate(local);
+            }
+        }
+        return has ? b : new Bounds(Vector3.zero, Vector3.one * 0.05f);
+    }
+
+    /// Index of the longest axis (0=x, 1=y, 2=z) — a vessel's "up" from its base.
+    public static int LongestAxis(Vector3 size)
+        => (size.y >= size.x && size.y >= size.z) ? 1 : (size.z >= size.x ? 2 : 0);
+
+    /// Rotation mapping a primitive's +Y onto the given local axis.
+    public static Quaternion AxisAlign(int axis)
+        => axis == 1 ? Quaternion.identity
+         : axis == 0 ? Quaternion.Euler(0f, 0f, -90f)
+                     : Quaternion.Euler(90f, 0f, 0f);
+
+    /// The two extents perpendicular to `axis` → the vessel's internal bore.
+    public static float BoreOf(Vector3 size, int axis)
+        => axis == 0 ? Mathf.Min(size.y, size.z)
+         : axis == 1 ? Mathf.Min(size.x, size.z)
+                     : Mathf.Min(size.x, size.y);
+
     /// Opaque powder mound for solid/powder reagents: a low, wide, matte heap
     /// sitting in the bottom of the jar so it reads as granular, not liquid.
     /// Idempotent (reuses a child named "Powder"); sharedMaterial only.
@@ -680,10 +727,9 @@ public class ExperimentSceneBuilder : MonoBehaviour
             }
         }
 
-        // Measure the JAR only — never the mound itself. Including the "Powder"
-        // child made every re-run encapsulate the previous (bigger) mound, so it
-        // ballooned into a giant blob (user 2026-07-14). Skip fill/heap children.
-        var b = BoundsExcluding(inst, "Powder", "Liquid");
+        // (The vessel is measured below in its LOCAL frame, always excluding the
+        // mound itself — including it once made each re-run wrap the previous,
+        // bigger mound and balloon it into a giant blob. — user 2026-07-14.)
         if (heap == null)
         {
             var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);   // squashed = a mound
@@ -700,16 +746,43 @@ public class ExperimentSceneBuilder : MonoBehaviour
         // Empty → hide the mound entirely (a scooped-out source shows no powder).
         if (fill01 <= 0.001f) { heap.gameObject.SetActive(false); return; }
         heap.gameObject.SetActive(true);
-        // Low wide mound: ~78% of the footprint, a shallow dome near the bottom;
-        // both width and height grow with how full the jar is.
-        float w = Mathf.Min(b.size.x, b.size.z) * 0.78f * Mathf.Lerp(0.55f, 1f, fill01);
-        float dome = Mathf.Max(0.008f, b.size.y * 0.30f) * Mathf.Lerp(0.2f, 1f, fill01);
-        heap.transform.position = new Vector3(b.center.x, b.min.y + dome * 0.35f, b.center.z);
-        var ls = inst.transform.lossyScale;
-        heap.transform.localScale = new Vector3(
-            w / Mathf.Max(1e-4f, Mathf.Abs(ls.x)),
-            dome / Mathf.Max(1e-4f, Mathf.Abs(ls.y)),
-            w / Mathf.Max(1e-4f, Mathf.Abs(ls.z)));
+
+        // Fit the mound INSIDE the vessel in its own LOCAL frame, so a tilted or
+        // held vessel (e.g. the hard-glass tube) keeps its contents aligned and
+        // contained instead of a world-vertical blob poking out (user 2026-07-15).
+        var lb = LocalMeshBounds(inst.transform, "Powder", "Liquid", "CollectedGas");
+        int ax = LongestAxis(lb.size);
+        float bore = BoreOf(lb.size, ax);
+        // Size PURELY as a fraction of the vessel's own local bounds — never mix in
+        // absolute metres. lb is in LOCAL units, so a metre cap here becomes
+        // microscopic on an import-scaled prefab (user 2026-07-15: the powder was
+        // invisible inside the glass tube). Fractions stay contained at any scale.
+        float w = bore * 0.5f * Mathf.Lerp(0.6f, 1f, fill01);                       // half the bore
+        float h = Mathf.Min(lb.size[ax] * 0.22f, bore * 0.6f) * Mathf.Lerp(0.4f, 1f, fill01);
+        h = Mathf.Max(lb.size[ax] * 0.03f, h);                                      // always a little visible
+
+        // A hand-placed anchor wins for BOTH placement and SIZE (user 2026-07-15:
+        // "add the anchor to the powder in the glass tube so I can set its size
+        // manually"). Drag it where the powder should sit and SCALE it to the size
+        // you want at full — the fill fraction shrinks it from there.
+        // "PowderAnchor" = any vessel; "BowlAnchor" = the mortar (also drives grind).
+        var anchor = inst.transform.Find("PowderAnchor") ?? inst.transform.Find("BowlAnchor");
+        if (anchor != null)
+        {
+            heap.transform.localPosition = anchor.localPosition;
+            heap.transform.localRotation = anchor.localRotation;
+            heap.transform.localScale = anchor.localScale * Mathf.Lerp(0.55f, 1f, fill01);
+        }
+        else
+        {
+            // Rest on the vessel floor, centred in the bore, along the vessel's axis.
+            Vector3 lp = lb.center;
+            lp[ax] = lb.min[ax] + h * 0.5f + lb.size[ax] * 0.05f;
+            heap.transform.localPosition = lp;
+            heap.transform.localRotation = AxisAlign(ax);
+            // Local scale is in the vessel's frame → no lossyScale compensation.
+            heap.transform.localScale = new Vector3(w, h, w);
+        }
         var mat = heap.sharedMaterial;
         var c = chem != null ? chem.liquidColor : new Color(0.9f, 0.88f, 0.82f); c.a = 1f;
         if (mat != null)

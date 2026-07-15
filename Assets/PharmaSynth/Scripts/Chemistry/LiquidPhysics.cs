@@ -90,10 +90,25 @@ public class LiquidPhysics : MonoBehaviour
     // State
     private bool isWobbling = true; // Start active to settle initial state
 
+    /// Pure (suite-pinned): may LiquidPhysics adopt its host's OWN renderer as the
+    /// liquid fill surface? Only when that material runs the PharmaLiquid "_Fill"
+    /// shader. An opaque VESSEL mesh must NOT be adopted — UpdateFillPhysics disables
+    /// mainRenderer while empty, so a mortar/beaker that lent its own mesh vanished
+    /// in Play the moment it was empty (user 2026-07-14).
+    public static bool ShouldAdoptHostRenderer(Material hostMaterial)
+        => hostMaterial != null && hostMaterial.HasProperty("_Fill");
+
     void Start()
     {
-        if (mainRenderer == null) mainRenderer = GetComponent<Renderer>();
-        mesh = GetComponent<MeshFilter>().mesh;
+        if (mainRenderer == null)
+        {
+            var host = GetComponent<Renderer>();
+            if (host != null && ShouldAdoptHostRenderer(host.sharedMaterial)) mainRenderer = host;
+            // else: leave null → the fill visual is a no-op; the solid mound is a
+            // separate "Powder" child, and the vessel's own mesh is never disabled.
+        }
+        var mf = GetComponent<MeshFilter>();
+        mesh = mf != null ? mf.mesh : null;
 
         SendMeshBounds();
         UpdateAllVisuals();

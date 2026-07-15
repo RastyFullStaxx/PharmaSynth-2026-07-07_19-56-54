@@ -28,6 +28,15 @@ public class SoundBank : ScriptableObject
         return null;
     }
 
+    /// True when this key exists AND has a real clip — lets callers pick a sensible
+    /// fallback instead of playing the wrong material's sound (user 2026-07-15:
+    /// scooping powder must never sound like pouring liquid).
+    public bool HasClip(string key)
+    {
+        var e = Get(key);
+        return e != null && e.clip != null;
+    }
+
     /// Keys the game expects to exist (so production has a checklist). Missing keys
     /// are reported by the self-test; missing *clips* are fine until the audio pass.
     public static readonly string[] ExpectedKeys =
@@ -36,5 +45,8 @@ public class SoundBank : ScriptableObject
         "ui-click", "ui-confirm", "ui-error", "task-complete", "grade-pass", "grade-fail",
         "pharmee-greet", "pharmee-instruct", "pharmee-warn", "pharmee-celebrate",
         "ambient-lab", "music-menu", "music-lab",
+        // Solids (user 2026-07-15): powder must sound granular, never like liquid.
+        "scoop",        // blade digging into a powder/crystal charge
+        "powder-pour",  // tipping a scoopful of solid into a vessel
     };
 }

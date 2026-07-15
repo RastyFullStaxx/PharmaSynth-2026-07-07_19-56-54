@@ -1,0 +1,15 @@
+{
+    "asset": "0947cd1a6a6eaae4e99d1eefc38f926b",
+    "fileName": "019f63c7-74d9-7691-b8f7-758a5445c9fc.wav",
+    "prompt": "Dry powder pouring: a scoopful of fine crystalline powder tipping off a spatula and pattering down into an empty glass vessel, settling into a small heap. Close-mic, soft granular patter, short single one-shot, no music, no reverb, no voice.",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 1.0,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

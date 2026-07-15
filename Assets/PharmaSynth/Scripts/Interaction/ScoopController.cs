@@ -82,7 +82,9 @@ public class ScoopController : MonoBehaviour
                 _readyAt = Time.time + actionCooldown;
                 ShowHeap(chem);
                 RefreshPowder(lp);                                  // source mound shrinks
-                AudioService.TryPlayAt("pour", probe, 0.45f);       // dip/scoop sfx
+                // GRANULAR, never liquid (user 2026-07-15): a dry blade-into-powder
+                // dig. No "pour" fallback — silence beats the wrong material's sound.
+                AudioService.TryPlayFirstAt(probe, 0.55f, "scoop");
                 FloatingText.Show("+" + charge.ToString("0.#") + " g " + chem.chemicalName,
                                   probe + Vector3.up * 0.05f, new Color(1f, 0.95f, 0.6f), 0.8f);
                 return;
@@ -91,7 +93,8 @@ public class ScoopController : MonoBehaviour
             var deposited = _carrying;
             lp.AddLiquid(_carrying, _carryingG);
             RefreshPowder(lp);                                      // receiver mound grows
-            AudioService.TryPlayAt("pour", probe, 0.85f);          // pour-scooped sfx
+            // Solid tipping out of the scoop — a granular patter, not a liquid pour.
+            AudioService.TryPlayFirstAt(probe, 0.85f, "powder-pour", "scoop");
             FloatingText.Show(ScoopMath.DepositLabel(deposited.chemicalName, _carryingG, lp.currentLiquidVolume),
                               probe + Vector3.up * 0.05f, new Color(0.6f, 1f, 0.7f), 0.8f);
             _carrying = null; _carryingG = 0f; _lastSource = null;

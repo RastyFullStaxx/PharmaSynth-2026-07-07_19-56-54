@@ -25,7 +25,6 @@ public class MethaneApparatusRig : MonoBehaviour
     [SerializeField, Range(0.1f, 1f)] private float collectedFraction = 0.9f;
     [SerializeField] private float heatDistance = 0.35f;     // lit burner within this of the tube heats it
     [SerializeField] private float collectDistance = 0.30f;  // collection tube within this of the tube collects
-    [SerializeField] private float assembleDistance = 0.30f; // tube + collection this close = "assembled"
 
     private const string ModuleId = "tutorial-methane";
     private bool _active, _prevHeating, _splintFired;
@@ -35,6 +34,10 @@ public class MethaneApparatusRig : MonoBehaviour
 
     private Transform _tube, _collect;
     private GrindController _mortar;
+    private float _nextBubbleAt;        // throttles the collecting bubble stream
+    private GameObject _gasColumn;      // pale gas level inside the collection tube
+    private Transform _glowTube;        // tube whose renderers are cached below
+    private Renderer[] _tubeRends;      // cached for the red-hot emissive glow
 
     /// Pure (W5.8): the splint test fires when a LIT match reaches the filled
     /// tube — or automatically after a grace period so nothing ever stalls.
@@ -96,11 +99,17 @@ public class MethaneApparatusRig : MonoBehaviour
         temperature.ResetSim();
         gas.ResetCollection();
         _tube = _collect = null;
+        if (_gasColumn != null) { Destroy(_gasColumn); _gasColumn = null; }   // fresh attempt = empty tube
+        _glowTube = null; _tubeRends = null;                                  // re-cache + glow back to cold
 
         // prepare-mixture: aim the nearest workspace mortar's grind at this step.
         AcquireMortar();
 
-        runner.Graph.RegisterCondition("setup-apparatus", Assembled);
+        // setup-apparatus: the ground mixture must be LOADED into the hard-glass
+        // tube (user 2026-07-15: heating an empty tube while the mix sits in the
+        // mortar made no sense — you scoop the mixture into the tube first, then
+        // heat it). Completes when the tube has received the solid.
+        runner.Graph.RegisterCondition("setup-apparatus", TubeLoaded);
         runner.Graph.RegisterCondition("heat-mixture", () => temperature != null && temperature.AtLeast(heatDoneC));
         runner.Graph.RegisterCondition("collect-gas", () => gas != null && gas.Collected(collectedFraction));
         runner.Graph.RegisterCondition("test-gas", () => _splintFired);
@@ -126,7 +135,8 @@ public class MethaneApparatusRig : MonoBehaviour
         {
             if (g == null) continue;
             _mortar = g;
-            _mortar.SetTaskId("prepare-mixture");
+            _mortar.BindRunner(runner);          // _runner isn't serialized — supply it now
+            _mortar.SetTaskId("prepare-mixture"); // registers the completion condition
             return;
         }
     }
@@ -136,11 +146,14 @@ public class MethaneApparatusRig : MonoBehaviour
         if (_mortar != null) { _mortar.SetTaskId(null); _mortar = null; }
     }
 
-    private bool Assembled()
+    /// The hard-glass tube has been loaded with the ground mixture (scoop from the
+    /// mortar into the tube). Any solid the player deposits counts.
+    private bool TubeLoaded()
     {
         FindItems();
-        return _tube != null && _collect != null
-               && WithinReach(Vector3.Distance(_tube.position, _collect.position), assembleDistance);
+        if (_tube == null) return false;
+        var lp = _tube.GetComponent<LiquidPhysics>();
+        return lp != null && lp.currentLiquidVolume > 0.5f;
     }
 
     // ---- per-frame action detection ----------------------------------------
@@ -157,11 +170,21 @@ public class MethaneApparatusRig : MonoBehaviour
         if (heating && !_prevHeating) EffectVfx.FlamePop(_tube.position + Vector3.up * 0.08f);
         _prevHeating = heating;
 
+        // The tube glows red-hot as it nears/holds the reaction temperature.
+        UpdateTubeGlow();
+
+        // Live instrument readouts over the two tubes (temperature + collection %).
+        EnsureReadouts();
+
         // Collect: hot apparatus + collection tube held at the tube → gas fills.
         bool hot = temperature != null && temperature.AtLeast(heatDoneC);
-        if (hot && gas != null && _collect != null
-            && WithinReach(Vector3.Distance(_tube.position, _collect.position), collectDistance))
+        bool collecting = hot && gas != null && _collect != null
+                          && WithinReach(Vector3.Distance(_tube.position, _collect.position), collectDistance);
+        if (collecting)
+        {
             gas.AddGas(gasMlPerSecond * Time.deltaTime);
+            CollectAnimation();
+        }
 
         // Splint: LIT match brought to the FILLED collection tube → pop.
         bool collected = gas != null && gas.Collected(collectedFraction);
@@ -182,6 +205,118 @@ public class MethaneApparatusRig : MonoBehaviour
                 FloatingText.Show("Pop! Methane confirmed", _collect.position + Vector3.up * 0.2f, new Color(0.7f, 1f, 0.7f));
                 _splintFired = true;
             }
+        }
+    }
+
+    // ---- glow + readouts + collecting animation -----------------------------
+
+    /// Pure (suite): how red-hot the tube looks — ramps in over the last stretch of
+    /// the climb and saturates at the reaction temperature (user 2026-07-15:
+    /// "a reddish glow to signify it is now at the correct boiling temperature").
+    public static float GlowFor(float currentC, float targetC)
+        => Mathf.Clamp01(Mathf.InverseLerp(targetC * 0.6f, targetC, currentC));
+
+    /// Drive an emissive red glow on the hard-glass tube's own meshes.
+    private void UpdateTubeGlow()
+    {
+        if (!Application.isPlaying || _tube == null || temperature == null) return;
+        if (_glowTube != _tube)
+        {
+            _glowTube = _tube;
+            var list = new System.Collections.Generic.List<Renderer>();
+            foreach (var r in _tube.GetComponentsInChildren<Renderer>())
+            {
+                if (r == null || !(r is MeshRenderer)) continue;
+                if (r.GetComponent<TMPro.TMP_Text>() != null) continue;
+                if (r.gameObject.name == "Powder" || r.gameObject.name == "CollectedGas") continue;
+                list.Add(r);
+            }
+            _tubeRends = list.ToArray();
+        }
+        float t = GlowFor(temperature.CurrentC, heatDoneC);
+        float pulse = 0.82f + 0.18f * Mathf.Sin(Time.time * 5f);       // gentle ember shimmer
+        Color e = new Color(1f, 0.16f, 0.04f) * (t * t * 2.6f * pulse); // black when cold
+        foreach (var r in _tubeRends)
+        {
+            if (r == null) continue;
+            var m = r.material;                                          // instanced once, then cached
+            if (m == null || !m.HasProperty("_EmissionColor")) continue;
+            if (t > 0.01f) m.EnableKeyword("_EMISSION");
+            m.SetColor("_EmissionColor", e);
+        }
+    }
+
+    // ---- readouts + collecting animation ------------------------------------
+
+    /// Attach the live readouts once the tubes are found: rising temperature over
+    /// the hard-glass tube, collection % over the collection tube (user 2026-07-15).
+    private void EnsureReadouts()
+    {
+        if (_tube != null && _tube.GetComponent<ProcessReadout>() == null)
+            _tube.gameObject.AddComponent<ProcessReadout>()
+                 .BindHeat("Hard-glass tube", temperature, heatDoneC);
+        if (_collect != null && _collect.GetComponent<ProcessReadout>() == null)
+            _collect.gameObject.AddComponent<ProcessReadout>()
+                    .BindCollect("Gas collection tube", gas);
+    }
+
+    /// Gas visibly travelling from the hot tube into the collection tube: a stream
+    /// of bubbles up the gap, plus a pale gas column that grows with the fill.
+    private void CollectAnimation()
+    {
+        if (!Application.isPlaying || _tube == null || _collect == null) return;
+
+        if (Time.time >= _nextBubbleAt)
+        {
+            _nextBubbleAt = Time.time + 0.12f;
+            // A bubble puff partway along the tube → collection-tube path.
+            Vector3 a = _tube.position + Vector3.up * 0.04f;
+            Vector3 b = _collect.position;
+            EffectVfx.Smoke(Vector3.Lerp(a, b, Random.Range(0.25f, 0.85f)) + Vector3.up * 0.02f,
+                            new Color(0.75f, 0.9f, 1f, 0.5f));
+            AudioService.TryPlayAt("bubble", _collect.position, 0.35f);
+        }
+        UpdateGasColumn();
+    }
+
+    /// A translucent pale-blue column inside the collection tube that rises with
+    /// the collected fraction — the "gas over water" level.
+    private void UpdateGasColumn()
+    {
+        if (gas == null || _collect == null) return;
+        float f = gas.FillFraction;
+        if (_gasColumn == null)
+        {
+            _gasColumn = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            _gasColumn.name = "CollectedGas";
+            var col = _gasColumn.GetComponent<Collider>();
+            if (col != null) Destroy(col);
+            _gasColumn.transform.SetParent(_collect, true);
+            var mr0 = _gasColumn.GetComponent<Renderer>();
+            mr0.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            var sh = Shader.Find("Universal Render Pipeline/Lit");
+            mr0.sharedMaterial = new Material(sh != null ? sh : Shader.Find("Standard"))
+            { name = "CollectedGas_Runtime" };
+        }
+        // Fit the column INSIDE the tube in its LOCAL frame, so a tilted/held tube
+        // keeps its gas aligned and contained (user 2026-07-15: it wasn't aligning).
+        var lb = ExperimentSceneBuilder.LocalMeshBounds(_collect, "CollectedGas", "Powder", "Liquid");
+        int ax = ExperimentSceneBuilder.LongestAxis(lb.size);
+        float bore = ExperimentSceneBuilder.BoreOf(lb.size, ax);
+        float w = bore * 0.6f;                                   // inside the walls
+        float h = Mathf.Max(0.004f, lb.size[ax] * 0.82f * f);    // rises with the fill
+        Vector3 lp = lb.center;
+        lp[ax] = lb.min[ax] + h * 0.5f + lb.size[ax] * 0.05f;    // grows up from the closed end
+        _gasColumn.transform.localPosition = lp;
+        _gasColumn.transform.localRotation = ExperimentSceneBuilder.AxisAlign(ax);
+        // Local frame → no lossyScale compensation; cylinder mesh is 2 units tall.
+        _gasColumn.transform.localScale = new Vector3(w, h * 0.5f, w);
+        var mat = _gasColumn.GetComponent<Renderer>().sharedMaterial;
+        var c = new Color(0.72f, 0.88f, 1f);
+        if (mat != null)
+        {
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", c);
+            if (mat.HasProperty("_Color")) mat.SetColor("_Color", c);
         }
     }
 

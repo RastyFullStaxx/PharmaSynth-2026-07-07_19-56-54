@@ -12,6 +12,7 @@ public struct ExperimentResult
     public bool passed;               // gate = gradePassed AND masteryPassed
     public int mistakeCount;
     public float elapsedSeconds;
+    public float quizScore01;         // fraction correct on the post-lab quiz (shown on the grade screen)
 }
 
 /// Runtime orchestrator for a single experiment attempt. Owns the TaskGraph,
@@ -250,7 +251,8 @@ public class ExperimentRunner : MonoBehaviour
             masteryPassed = masteryPass,
             passed = gradePass && masteryPass,
             mistakeCount = _mistakes.Count,
-            elapsedSeconds = _elapsed
+            elapsedSeconds = _elapsed,
+            quizScore01 = Mathf.Clamp01(quizFraction)
         };
     }
 }

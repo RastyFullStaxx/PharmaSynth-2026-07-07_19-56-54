@@ -7,9 +7,10 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// W5.9: the fail path used to trap the player in a Retry-only loop — this
-/// wires a "Choose Another" button onto the grade screen (shown only on FAIL,
-/// where Continue is hidden — they share the slot) that returns the player to
-/// the entrance so any unlocked experiment can be picked. Idempotent.
+/// wires a "Complete Experiment" button onto the grade screen (shown only on FAIL,
+/// where Continue is hidden — they share the slot) that ends the attempt and
+/// returns the player to the entrance, where any unlocked experiment can be
+/// picked. Label renamed from "Choose Another" (user 2026-07-15). Idempotent.
 public static class GradeBackButtonBuilder
 {
     [MenuItem("Tools/PharmaSynth/Wire Grade Back Button (W5.9)")]
@@ -40,7 +41,7 @@ public static class GradeBackButtonBuilder
         }
 
         var label = back.GetComponentInChildren<TMP_Text>(true);
-        if (label != null) label.text = "Choose Another";
+        if (label != null) label.text = "Complete Experiment";
 
         var btn = back.GetComponentInChildren<Button>(true);
         if (btn != null)
@@ -65,7 +66,7 @@ public static class GradeBackButtonBuilder
         EditorUtility.SetDirty(grade);
         EditorSceneManager.MarkAllScenesDirty();
         EditorSceneManager.SaveOpenScenes();
-        Debug.Log("[GradeBack] 'Choose Another' wired: fail-path back-to-entrance is live.");
+        Debug.Log("[GradeBack] 'Complete Experiment' wired: fail-path back-to-entrance is live.");
     }
 }
 #endif

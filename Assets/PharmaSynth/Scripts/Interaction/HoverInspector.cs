@@ -1,5 +1,7 @@
 using UnityEngine;
 using XRGrab = UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable;
+using SelectInteractor = UnityEngine.XR.Interaction.Toolkit.Interactors.IXRSelectInteractor;
+using XRSocket = UnityEngine.XR.Interaction.Toolkit.Interactors.XRSocketInteractor;
 
 /// Points-at-it inspector (user 2026-07-10): each frame it casts from the pointer
 /// (right-hand ray, falling back to gaze) and, if it lands on a known reagent bottle,
@@ -29,11 +31,35 @@ public class HoverInspector : MonoBehaviour
         return head;
     }
 
+    private SelectInteractor[] _handInteractors;
+
+    /// True while EITHER hand is holding a grabbable — a hand interactor (not a
+    /// socket) has a selection. While you're carrying something, the pointer must
+    /// NOT pop info cards over whatever it grazes (user 2026-07-14).
+    private bool AnyHandHolding()
+    {
+        if (_handInteractors == null)
+        {
+            Transform root = aimSource != null ? aimSource.root : (head != null ? head.root : null);
+            if (root != null) _handInteractors = root.GetComponentsInChildren<SelectInteractor>(true);
+        }
+        if (_handInteractors == null) return false;
+        foreach (var it in _handInteractors)
+        {
+            if (it == null || it is XRSocket) continue;   // sockets always "hold" — ignore
+            if (it.hasSelection) return true;
+        }
+        return false;
+    }
+
     private void Update()
     {
         if (panel == null) return;
         var src = Source();
         if (src == null) return;
+
+        // Holding something → no hover cards at all.
+        if (AnyHandHolding()) { panel.Hide(); return; }
 
         if (Physics.Raycast(src.position, src.forward, out var hit, maxDistance, mask, QueryTriggerInteraction.Ignore)
             && !IsHeld(hit.collider))   // don't card an item that's already in hand — it blocks using it

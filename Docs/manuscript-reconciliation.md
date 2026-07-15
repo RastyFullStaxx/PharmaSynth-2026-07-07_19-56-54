@@ -6,6 +6,19 @@ Extracted from `Docs/Documentations/manuscript.pdf` (2026-07-10) — the client'
 
 ---
 
+## 0. Apparatus evidence — splint vs delivery ("bent") tube (searched 2026-07-15)
+
+| Item | Manuscript verdict | Evidence |
+|---|---|---|
+| **Wooden splint** | **NEVER used — 0 occurrences of "splint"** anywhere in the manuscript. Every combustion/flame test uses a **"lighted matchstick"**. | Exp 3 (`manuscript.txt:2447, 2456`): *"Pour 1 ml of the distillate into a watch glass and apply a lighted matchstick… blue flame indicates complete combustion… yellow flame indicates incomplete."* |
+| **Delivery / "draw" tube** | **REQUIRED — but only in Exp 3 (Ethyl Alcohol)**, where it is called a **"bent tube"**: fitted to a **stopper** to bubble evolved **CO₂ into limewater**, led into a test tube topped with a **cotton swab**. | `manuscript.txt:2430–2434`. Reappears verbatim at `:2695` inside the **Exp 4** section — that is the known **copy-paste errata** (Exp 4's procedure duplicates Exp 3's fermentation; the game correctly uses benzaldehyde + KMnO₄). |
+| **Methane (tutorial)** | **Not an experiment in the manuscript at all** — "methane" appears only as a molecular-weight worked example (CH₄, `:1995`). The tutorial is 100% game-authored, so neither splint nor delivery tube is mandated for it. | `:1995–1996` |
+| **Exp 9 Wine Making** | A **group ACTIVITY**, not a bench procedure: no apparatus list, no bent tube, no limewater — take-home fermentation (≥250 mL, **grapes excluded**) + video documentation + wine-tasting event with a presentation rubric. | `:3808–3843` |
+
+**Consequences applied (2026-07-15):** the `lit-splint` prop was **deleted** (`Remove Lit Splint Prop`); the gas test fires off a **lit Matchstick**, matching the manuscript (the `SplintShouldFire` method name is legacy/suite-pinned only). The **delivery ("bent") tubes are KEPT** — they are real Exp 3 equipment (CO₂→limewater), not decoys. **Flag to client:** our winemaking CO₂/limewater test is game-authored (borrowed from Exp 3) since Exp 9 specifies no bench chemistry.
+
+---
+
 ## 1. Experiment ↔ game-module map
 
 | Manuscript (Appendix C) | Game module | Notes |

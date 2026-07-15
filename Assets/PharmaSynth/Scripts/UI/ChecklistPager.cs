@@ -57,6 +57,11 @@ public static class ChecklistPager
                                 : (graph.IsAvailable(t.taskId) ? "<color=#61D6FF>»</color>"
                                 : "<color=#7C8AA5>□</color>");
                     sb.Append(mark).Append(' ').Append(GlyphSafe.Sanitize(t.label)).Append('\n');
+                    // The CURRENT step also shows its how-to hint so the board tells
+                    // the player exactly what to do (user 2026-07-15).
+                    if (graph.IsAvailable(t.taskId) && !string.IsNullOrWhiteSpace(t.hint))
+                        sb.Append("    <size=78%><color=#AEB9CC>").Append(GlyphSafe.Sanitize(t.hint))
+                          .Append("</color></size>\n");
                 }
             }
             else if (done[phase] >= total[phase])

@@ -171,6 +171,23 @@ public class AudioService : MonoBehaviour
     public static void TryPlayAt(string key, Vector3 pos, float volumeScale = 1f)
     { if (Instance != null) Instance.PlayAt3D(key, pos, volumeScale); }
 
+    /// Play the FIRST key in `keys` that actually has a clip. Lets a caller name its
+    /// ideal sound and degrade to a same-material stand-in rather than the wrong one
+    /// (user 2026-07-15: scooping powder must not fall back to the liquid "pour").
+    /// Plays nothing if none are authored yet — silence beats a misleading sound.
+    public static void TryPlayFirstAt(Vector3 pos, float volumeScale, params string[] keys)
+    {
+        if (Instance == null || keys == null) return;
+        var bank = Instance.bank;
+        foreach (var k in keys)
+        {
+            if (string.IsNullOrEmpty(k)) continue;
+            if (bank != null && !bank.HasClip(k)) continue;   // no clip → try the next
+            Instance.PlayAt3D(k, pos, volumeScale);
+            return;
+        }
+    }
+
     public void StopAmbient() { if (ambientSource != null) ambientSource.Stop(); }
 
     // One-arg void wrappers for UI slider onValueChanged persistent listeners.

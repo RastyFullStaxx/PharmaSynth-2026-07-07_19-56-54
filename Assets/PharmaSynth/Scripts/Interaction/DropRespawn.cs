@@ -129,6 +129,18 @@ public class DropRespawn : MonoBehaviour
             dr.Suspended = false;
             dr.GoHome();
         }
+        // 3) PUT EVERY FLAME OUT — a burner must never still be burning after a
+        //    reset, and no match may stay lit (user 2026-07-15).
+        foreach (var b in FindObjectsByType<BurnerController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (b != null) b.Extinguish();
+        foreach (var m in FindObjectsByType<Matchstick>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (m != null && m.IsLit) m.Extinguish(true);
+
+        // 4) Clear every USED consumable (struck matchsticks, litmus strips, filter
+        //    paper, cotton swabs). Their dispensers immediately lay out a fresh one,
+        //    so the bench returns to a clean, fully-stocked state.
+        foreach (var d in FindObjectsByType<DispensedConsumable>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (d != null) Destroy(d.gameObject);
     }
 
     /// Teleport back to the shelf spot, re-freeze, and restore the home supply

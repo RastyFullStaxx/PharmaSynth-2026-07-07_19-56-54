@@ -71,6 +71,7 @@ Per module: intro (on start, with verbatim Appendix C ILO beats), reagent-prep (
 
 ## 10. Demo Mode (panelists; Chapter-3 participants must never see it)
 `StreamingAssets/demo-config.json` (persistentDataPath override wins) merely reveals the cube-room button. A demo SESSION: separate save, ALL periods unlocked, HUD Skip Step / Finish Exp. / Auto Quiz cluster (hidden during the review), infinite reagent refill (no SupplyPrompt), and the module's ready-made product available so tests can run without synthesis.
+- **⛔ ALL tools & reagents are ALWAYS present (client rule 2026-07-15):** every apparatus/instrument AND every raw reagent stays on the bench across ALL experiments — **never hide/remove/declutter/per-experiment-gate any apparatus or reagent** (the player chooses the right tools from the full set; reduce confusion with labels/hints, not removal). Only the 9 end products are gated (below).
 - **⭐ Raw-vs-product (client rule):** in REGULAR lab mode the player synthesises every product **from raw materials** — so ready-made bottles of the **9 end products** (Ethanol, Benzoic Acid, Acetanilide, Acetone, Chloroform, Benzamide, Aspirin, Caffeine, Wine) are **hidden everywhere** (BOTH the west `ReagentShelf` and the east `ReagentCabinets`, via `EndProductVisibility` — `DemoMode.IsEndProduct`). Only a **demo** session reveals them. Raw precursors (incl. **Sodium Acetate + Soda Lime** for methane, Mixed Fruit Juice for wine) are always present in both modes. See systems-reference §6.
 
 ## 11. Known playtest gaps (queued)
