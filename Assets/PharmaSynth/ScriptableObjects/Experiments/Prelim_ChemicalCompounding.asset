@@ -15,80 +15,166 @@ MonoBehaviour:
   moduleId: prelim-chemical-compounding
   moduleTitle: 'Prelim: Chemical Compounding'
   intendedLearningOutcomes:
-  - Identify functional groups by characteristic reactions
-  - Interpret combustion, metal, halogen and oxidation tests
-  - Record observations accurately
+  - Write chemical reactions involved in some organic compounds such as alcohols,
+    aldehydes, ketones, carboxylic acids and esters
+  - Differentiate tests for different organic compounds
   tasks: []
   graphTasks:
-  - taskId: gather-ethanol
-    label: Gather ethanol and test reagents
+  - taskId: prep-enol-tubes
+    label: Set up the enol-test tubes (5 alcohols)
     phase: 0
     prerequisites: []
     progressWeight: 1
     skill: 0
     rubricCategory: 0
     required: 1
-    hint: Collect ethanol, sodium, bromine water and KMnO4.
-  - taskId: test-combustion
-    label: Combustion test (clean flame)
+    hint: 'Place 1 ml each of Ethanol, n-Butyl Alcohol, Benzyl Alcohol, Phenol and
+      Glycerol into five separate test tubes, then dilute each with 10 ml of distilled
+      water.'
+  - taskId: test-enol-fecl3
+    label: Enol test - add ferric chloride to each tube
     phase: 2
     prerequisites:
-    - gather-ethanol
+    - prep-enol-tubes
     progressWeight: 1
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: Ignite a little ethanol; note the flame.
-  - taskId: test-sodium
-    label: Reaction with sodium (H2 evolved)
+    hint: 'Add 5 drops of 10% Ferric Chloride to each of the five tubes and compare
+      the colours. Only an enol gives the violet complex - watch the Phenol.'
+  - taskId: prep-oxidation-tubes
+    label: Set up the rate-of-oxidation tubes (4 tubes)
+    phase: 0
+    prerequisites: []
+    progressWeight: 1
+    skill: 0
+    rubricCategory: 0
+    required: 1
+    hint: 'Place 2 ml of 0.1% Potassium Permanganate plus 2 drops of 6N Sodium Hydroxide
+      into four separate test tubes.'
+  - taskId: test-oxidation-alkaline
+    label: Rate of oxidation in ALKALINE conditions
     phase: 2
     prerequisites:
-    - gather-ethanol
+    - prep-oxidation-tubes
     progressWeight: 1
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: Add a small piece of sodium; watch for effervescence.
-  - taskId: test-bromine
-    label: Bromine water test
+    hint: 'Add 5 drops of n-Butyl, sec-Butyl and tert-Butyl Alcohol to three of the
+      tubes - leave the FOURTH untouched as the negative control. Shake, then time
+      how long each takes to decolourise.'
+  - taskId: test-oxidation-acidic
+    label: Rate of oxidation in ACIDIC conditions
     phase: 2
     prerequisites:
-    - gather-ethanol
+    - test-oxidation-alkaline
     progressWeight: 1
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: Add bromine water; note any decolourisation.
-  - taskId: test-kmno4
-    label: "Oxidation with KMnO4 (purple\u2192brown)"
+    hint: 'Repeat the test using 2 drops of 6N Sulfuric Acid in place of the Sodium
+      Hydroxide, and compare the decolourisation times with the alkaline run.'
+  - taskId: test-tollens
+    label: Aldehyde vs ketone - Tollen's test
     phase: 2
     prerequisites:
-    - gather-ethanol
+    - test-oxidation-acidic
+    progressWeight: 1
+    skill: 1
+    rubricCategory: 1
+    required: 1
+    hint: 'Put 2 drops of Acetone and 2 drops of Acetaldehyde into separate tubes,
+      add 2 ml of Tollen''s Reagent to both, then heat them in the water bath for 5
+      minutes. Only the aldehyde gives the silver mirror.'
+  - taskId: test-ester-acetate
+    label: Ester formation - ethyl acetate
+    phase: 2
+    prerequisites:
+    - test-tollens
+    progressWeight: 1
+    skill: 1
+    rubricCategory: 1
+    required: 1
+    hint: 'Place 10 drops of Ethanol, 4 drops of Diluted Acetic Acid and 1 drop of
+      Concentrated Sulfuric Acid in a test tube, warm it in the water bath, then note
+      the odour.'
+  - taskId: test-ester-salicylate
+    label: Ester formation - methyl salicylate
+    phase: 2
+    prerequisites:
+    - test-ester-acetate
+    progressWeight: 1
+    skill: 1
+    rubricCategory: 1
+    required: 1
+    hint: 'Repeat using Methanol, 0.1 g of Salicylic Acid and Concentrated Sulfuric
+      Acid. Pour into 1 ml of distilled water and note the odour (oil of wintergreen).'
+  - taskId: prep-hydrolysis
+    label: Hydrolyse the aspirin (boil in the water bath)
+    phase: 2
+    prerequisites:
+    - test-ester-salicylate
+    progressWeight: 1
+    skill: 1
+    rubricCategory: 1
+    required: 1
+    hint: 'Place 0.5 g of Aspirin in a test tube, add 10 ml of distilled water and
+      1 drop of Concentrated Hydrochloric Acid, then boil gently in the water bath
+      for 3-5 minutes.'
+  - taskId: filter-hydrolysate
+    label: Filter off the undissolved crystals
+    phase: 2
+    prerequisites:
+    - prep-hydrolysis
+    progressWeight: 1
+    skill: 2
+    rubricCategory: 1
+    required: 1
+    hint: Filter the boiled mixture and keep the filtrate.
+  - taskId: test-hydrolysis-fecl3
+    label: Test the filtrate with ferric chloride
+    phase: 2
+    prerequisites:
+    - filter-hydrolysate
     progressWeight: 1
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: Add dilute KMnO4; watch the colour change.
+    hint: 'Add 2 drops of 10% Ferric Chloride to the filtrate. Violet means free
+      Salicylic Acid - the ester has been hydrolysed.'
+  - taskId: test-hydrolysis-control
+    label: Compare against UNhydrolysed aspirin
+    phase: 2
+    prerequisites:
+    - test-hydrolysis-fecl3
+    progressWeight: 1
+    skill: 5
+    rubricCategory: 1
+    required: 1
+    hint: 'Repeat the ferric chloride test on plain, unboiled Aspirin and compare -
+      the intact ester should NOT give the violet colour.'
   - taskId: record-observations
-    label: Record observations on the data sheet
+    label: Record every colour and odour on the data sheet
     phase: 3
     prerequisites:
-    - test-combustion
-    - test-sodium
-    - test-bromine
-    - test-kmno4
+    - test-enol-fecl3
+    - test-oxidation-acidic
+    - test-tollens
+    - test-ester-salicylate
+    - test-hydrolysis-control
     progressWeight: 1
     skill: 5
     rubricCategory: 5
     required: 1
-    hint: Note each test result on your tablet.
+    hint: Write up each test, the reaction involved and the colour/odour you observed.
   masteryThreshold: 0.9
   bkt:
     pL0: 0.25
     pTransit: 0.2
     pSlip: 0.1
     pGuess: 0.2
-  trackedSkills: 0000000005000000
+  trackedSkills: 00000000010000000200000005000000
   rubricWeights:
     procedure: 0.4
     chemicalTests: 0.2
@@ -96,4 +182,4 @@ MonoBehaviour:
     timeManagement: 0.1
     sanitation: 0.1
     documentation: 0.05
-  parTimeSeconds: 360
+  parTimeSeconds: 900

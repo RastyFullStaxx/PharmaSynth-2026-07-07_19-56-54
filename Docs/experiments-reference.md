@@ -11,7 +11,7 @@
 | Benzoic Acid route | Exp 4 "procedure" is a verbatim copy-paste of the ethanol fermentation (confirmed print defect); materials list names Benzaldehyde | Benzaldehyde + KMnO₄ oxidation | ✅ correct-by-intent; client rubber-stamp pending (§7 signoff) |
 | Acetanilide acylating agent | Appendix C procedure: acetyl chloride (intro prose wrongly says anhydride) | Acetyl chloride | ✅ matches; optional safer-anhydride swap = client call |
 | Benzamide nitrous test | Reagent header "sodium nitrate" (typo); procedure body: 10% sodium NITRITE | Sodium Nitrite | ✅ matches |
-| Chemical Compounding battery | Multi-substrate ID lab: FeCl₃ enol, KMnO₄ rate-of-oxidation (3 butyl alcohols), Tollen's, ester formation, aspirin hydrolysis (+Benedict's on data sheet) | Single-substrate (ethanol): combustion / sodium / bromine water / KMnO₄ — only KMnO₄ overlaps | ⚠ **CLIENT DECISION** — full module redesign if restored (all needed chemicals already exist as assets); reconciliation §7 |
+| Chemical Compounding battery | Multi-substrate ID lab: FeCl₃ enol, KMnO₄ rate-of-oxidation (3 butyl alcohols + control), Tollen's, ester formation ×2, aspirin hydrolysis | ~~Single-substrate ethanol (combustion/sodium/bromine/KMnO₄)~~ → **REBUILT to the manuscript 2026-07-15** (13-task graph, ILOs restored verbatim, quiz realigned) | ✅ **client chose "rebuild to manuscript"** — the old battery failed its own ILO ("differentiate tests for *different* compounds") and used sodium/bromine, which the manuscript never lists. Layout/bindings still to author. |
 | Wine fruit | Grapes EXCLUDED (L3830-31) | Ferments **Mixed Fruit Juice** (renamed from Grape Juice, W5.9) | ✅ fixed |
 | Chloroform oxidation test | Dichromate + conc H₂SO₄ (procedure + results sheet) | Added W5.9: `test-oxidation` + rule | ✅ fixed |
 | Methane / Aspirin / Caffeine | Not in Appendix C (Aspirin named in intro prose only) | Game-authored procedures + ILOs | ⚠ pending client confirmation |
@@ -26,6 +26,50 @@
 - **Manuscript lists** are OCR-extracted verbatim; minor column-merge artifacts (e.g. "bath Rubber tubing" = "water bath" + "rubber tubing") are the PDF's two-column layout, kept as-is for fidelity. **These lists are the source for apparatus grouping/kits** (queued work, checklist §13a).
 
 **Wine Making (Exp 9) materials note:** the manuscript frames it as a real-world group activity — 250–500 mL of a **non-grape** fruit juice, sugar, yeast, sealed fermentation vessel + airlock, ~1 week ferment, video documentation. Adapted for solo VR per client resolution (standard rubric); see reconciliation §4.
+
+---
+
+## ⭐ POLISH STATUS — we are perfecting the experiments ONE BY ONE
+
+**Method (user directive 2026-07-15):** take ONE module from "the data exists" to "actually playable end-to-end in VR", finish it, then move to the next. **Cross-check the module against the manuscript BEFORE building** — the tutorial burned hours on props the manuscript never mentions (`manuscript-reconciliation.md` §0: "splint" appears **nowhere**; the **bent/delivery tube is real but belongs to Exp 3 only**; Exp 9 is a group activity with no bench chemistry).
+
+| Module | Period | Polish status |
+|---|---|---|
+| **tutorial-methane** | Tutorial | ✅ **DONE (2026-07-15)** — playable end-to-end: scoop → grind → load tube → heat → collect → match test → quiz → grade |
+| **prelim-chemical-compounding** | Prelim | 🔨 **IN PROGRESS** — client chose **rebuild to manuscript** (2026-07-15). ✅ 13-task graph + ILOs + quiz authored. ⬜ **Next: `Layout_ChemicalCompounding`** (stations/vessels/bindings), reaction rules + `expectedObservation` per test, odour cue. |
+| **prelim-ethyl-alcohol** | Prelim | ⬜ then this — the ONLY module the manuscript gives a **bent (delivery) tube + stopper + cotton swab + CO₂→limewater** test (`manuscript.txt:2430-2434`). Those delivery tubes on the bench are real Exp 3 equipment. |
+| midterm-* / final-* | — | ⬜ not started |
+
+### The METHANE FLOW — the template every module follows
+1. **Gate** — Pharmee → Campaign → pick module → don **all 3 PPE** (hard-gated: `GatekeeperModel.RequiresPPEToOpen`) → "I'm ready" → cross the threshold (timer starts).
+2. **ReagentPrep** — scoop the solid from its open beaker into the mortar → grind with the pestle.
+3. **Synthesis** — **load** the ground mix into the reaction vessel → **heat** it → **collect** the product.
+4. **ChemicalTests** — confirm with the manuscript's own test (methane: lit **match** → pop; the manuscript always uses a "lighted matchstick", never a splint).
+5. **DataSheet** — clock freezes → review corner → Jimenez briefs → quiz → grade → Retry / Complete Experiment.
+
+### Reusable systems — REUSE THESE, don't rebuild
+| Need | Reuse | Notes |
+|---|---|---|
+| Step text on the wrist panel | task `label` + `hint`; `ChecklistPager` renders the ACTIVE step's hint | **Write hints to match the MECHANIC and name the exact item** ("Grab the item labelled *Hard-glass tube*"). A label naming a prop the code never checks (the phantom "delivery tube & trough") cost hours of confusion. |
+| Temperature monitoring | `ProcessReadout.BindHeat(name, TemperatureSim, targetC)` | Floats "62 C -> 120 C" over the vessel, tints cool-blue → hot-orange. **Every heating module reuses this.** It does NOT replace the thermometer — that apparatus stays on the bench. |
+| Collection progress | `ProcessReadout.BindCollect(name, GasCollection)` | "Collecting 45%". |
+| Hot-vessel glow | `MethaneApparatusRig.GlowFor(currentC, targetC)` | Emissive red ramp; saturates at the reaction temperature. |
+| Solid handling | `ScoopController` (2 g/dip) + `GrindController` | Grinding requires the mortar to actually HOLD the reagent (`CanGrind`) — else you finish the step with powder still on the scoop. |
+| Solid SFX | keys `scoop` / `powder-pour` via `AudioService.TryPlayFirstAt` | **Granular, never liquid** — deliberately NO liquid fallback (silence beats the wrong material). Clips in `Audio/Generated/`, wired by `Wire Scoop Sounds`. |
+| Powder / gas fills | `ExperimentSceneBuilder.EnsurePowderVisual` + `LocalMeshBounds` / `LongestAxis` / `AxisAlign` / `BoreOf` | Fit contents in the vessel's **LOCAL** frame, sized as a **FRACTION** of local bounds. |
+| Hand-tuned placement | `PlacementAnchor` children + menu `Add Placement Anchors` | `FlameAnchor` (match head / burner mouth), `ScoopAnchor` (blade), `BowlAnchor` (mortar), `PowderAnchor` (position **and size** — scale it). Only size-setting anchors set `previewsScale`. |
+| Quiz → grade | `PostLabController` | **NEVER score-gated** (client rule). Back/Next review nav, picked answer highlighted; score shown plainly on the grade screen (`ExperimentResult.quizScore01`); Retry re-runs the experiment, **Complete Experiment** exits. |
+| Full reset | `DropRespawn.ResetAllHome()` | Re-homes every item + restores contents, disassembles rigs, **extinguishes all burners/matches**, destroys used consumables so dispensers restock. |
+| Methane-only props | `MethaneStageVisibility` | Gates ONLY the 4 methane staged props. **All general apparatus/reagents stay permanent** — see the ⛔ rule in CLAUDE.md. |
+
+### ⚠ Hard-won gotchas — CHECK THESE FIRST on the next module
+- **`LiquidPhysics` on an opaque vessel makes the vessel VANISH in play.** `Start()` adopts the host's own renderer when `mainRenderer` is null, then disables it while empty (this hid the mortar for days). `ShouldAdoptHostRenderer` now only adopts a real `_Fill` surface — never point `mainRenderer` at a vessel's own mesh.
+- **Verb refs are NOT serialized.** `_runner` / `_pestle` are null after a domain reload, so the task silently never completes. Bind at runtime (`GrindController.BindRunner`, `AutoFindPestle`).
+- **Never mix absolute metres with local-unit bounds** — on an import-scaled prefab a "3 cm" cap becomes microscopic and the content is invisible.
+- **Never guess a tool's working end from bounds** (which end is the blade/head is unknowable) — use an anchor.
+- **World-space fills break on tilted/held vessels** — always fit in local space.
+- **A world-space canvas needs `TrackedDeviceGraphicRaycaster`**, or the XR ray cannot click it (the quiz answers were dead for this reason).
+- **Read `SampleScene.unity` directly to diagnose** — it is ground truth and far faster than theorising.
 
 ---
 
@@ -80,16 +124,29 @@
 **Manuscript Reagents:** 0.1% Potassium permanganate; Concentrated sulfuric; acid 10% Ferric chloride; Diluted acetic acid; 10% Sodium bicarbonate; Ethyl alcohol; 6N Sodium hydroxide; Glycerol; 6N Sulfuric acid; Methanol; Acetaldehyde; n-butyl alcohol; Acetone; Phenol; Aspirin; Salicylic acid; Benedict's reagent; Sec-butyl alcohol; Benzyl alcohol; Ter-butyl; alcohol Concentrated hydrochloric acid Tollen's; reagent
 
 
-### Task graph (play order)
+### Task graph (play order) — REBUILT to manuscript Exp 2 (2026-07-15)
 
-| # | task | phase | label | prerequisites | hint |
-|---|------|-------|-------|---------------|------|
-| 1 | `gather-ethanol` | ReagentPrep | Gather ethanol and test reagents | - | Collect ethanol, sodium, bromine water and KMnO4. |
-| 2 | `test-combustion` | ChemicalTests | Combustion test (clean flame) | gather-ethanol | Ignite a little ethanol; note the flame. |
-| 3 | `test-sodium` | ChemicalTests | Reaction with sodium (H2 evolved) | gather-ethanol | Add a small piece of sodium; watch for effervescence. |
-| 4 | `test-bromine` | ChemicalTests | Bromine water test | gather-ethanol | Add bromine water; note any decolourisation. |
-| 5 | `test-kmno4` | ChemicalTests | Oxidation with KMnO4 (purple\u2192brown) | gather-ethanol | Add dilute KMnO4; watch the colour change. |
-| 6 | `record-observations` | DataSheet | Record observations on the data sheet | test-combustion, test-sodium, test-bromine, test-kmno4 | Note each test result on your tablet. |
+Structure follows the manual's own sections **A → B → C → D**. Preps are free-order; each section gates the next.
+
+| # | task | phase | label | prereq | manual ref |
+|---|------|-------|-------|--------|-----------|
+| 1 | `prep-enol-tubes` | ReagentPrep | Set up the enol-test tubes (5 alcohols) | - | A.I.a |
+| 2 | `test-enol-fecl3` | ChemicalTests | Enol test - add ferric chloride to each tube | 1 | A.I.b-c |
+| 3 | `prep-oxidation-tubes` | ReagentPrep | Set up the rate-of-oxidation tubes (4 tubes) | - | A.II.a |
+| 4 | `test-oxidation-alkaline` | ChemicalTests | Rate of oxidation in ALKALINE conditions (+ negative control) | 3 | A.II.b-c |
+| 5 | `test-oxidation-acidic` | ChemicalTests | Rate of oxidation in ACIDIC conditions | 4 | A.II.d-e |
+| 6 | `test-tollens` | ChemicalTests | Aldehyde vs ketone - Tollen's test (water bath 5 min) | 5 | B.I |
+| 7 | `test-ester-acetate` | ChemicalTests | Ester formation - ethyl acetate | 6 | C.I.a-b |
+| 8 | `test-ester-salicylate` | ChemicalTests | Ester formation - methyl salicylate | 7 | C.I.c-d |
+| 9 | `prep-hydrolysis` | ChemicalTests | Hydrolyse the aspirin (boil in the water bath) | 8 | D.I.a-b |
+| 10 | `filter-hydrolysate` | ChemicalTests | Filter off the undissolved crystals | 9 | D.I.c |
+| 11 | `test-hydrolysis-fecl3` | ChemicalTests | Test the filtrate with ferric chloride | 10 | D.I.d |
+| 12 | `test-hydrolysis-control` | ChemicalTests | Compare against UNhydrolysed aspirin | 11 | D.I.e |
+| 13 | `record-observations` | DataSheet | Record every colour and odour on the data sheet | 2,5,6,8,12 | Data Sheet |
+
+**par time** 900 s · **tracked skills** Measuring, Heating, Filtration, TestInterpretation · **all 20 reagents already exist as `ChemicalData`**.
+
+**Still to author:** `Layout_ChemicalCompounding` (stations/vessels/bindings), the reaction rules + `expectedObservation` per test, and the odour cue (see VR-adaptation notes).
 
 ### Stage layout
 

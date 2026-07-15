@@ -14,28 +14,48 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuizBank
   moduleId: prelim-chemical-compounding
   questions:
-  - prompt: Ethanol contains which functional group?
+  - prompt: In the enol test, which sample turns violet with ferric chloride?
     options:
-    - Carbonyl
-    - Hydroxyl
-    - Carboxyl
-    - Amino
+    - Ethanol
+    - Phenol
+    - Glycerol
+    - n-Butyl alcohol
     correctIndex: 1
-    explanation: Ethanol is an alcohol (hydroxyl, -OH).
-  - prompt: 'Adding sodium metal to ethanol produces:'
+    explanation: Only an enol/phenol gives the violet iron(III) complex; simple alcohols
+      do not.
+  - prompt: In the rate-of-oxidation test, which alcohol resists oxidation by KMnO4?
     options:
-    - Oxygen
-    - Methane
-    - Hydrogen gas
-    - Chlorine
+    - n-Butyl alcohol (primary)
+    - sec-Butyl alcohol (secondary)
+    - tert-Butyl alcohol (tertiary)
+    - All oxidise at the same rate
     correctIndex: 2
-    explanation: Sodium displaces the -OH hydrogen, releasing hydrogen gas.
-  - prompt: What shows that potassium permanganate has OXIDISED an alcohol?
+    explanation: A tertiary alcohol has no H on the carbinol carbon, so KMnO4 is not
+      decolourised - primary oxidises fastest.
+  - prompt: Why is the fourth oxidation tube left with no alcohol added?
     options:
-    - The purple colour fades / turns brown
-    - The mixture freezes
-    - White smoke appears
-    - Nothing changes
-    correctIndex: 0
-    explanation: "KMnO4's violet colour is discharged (brown MnO2 forms) as it oxidises
-      the alcohol \u2014 the manuscript's rate-of-oxidation test."
+    - To save reagents
+    - As a negative control, to prove KMnO4 alone does not fade
+    - To rinse the pipette
+    - To dilute the others
+    correctIndex: 1
+    explanation: The control shows any colour change is caused by the alcohol, not
+      by the permanganate itself.
+  - prompt: In Tollen's test, the silver mirror forms with which sample?
+    options:
+    - Acetone (a ketone)
+    - Acetaldehyde (an aldehyde)
+    - Both equally
+    - Neither
+    correctIndex: 1
+    explanation: Aldehydes are oxidised by Tollen's reagent and deposit silver; ketones
+      are not.
+  - prompt: Adding ferric chloride to the BOILED aspirin filtrate gives violet. Why?
+    options:
+    - The aspirin is undissolved
+    - Hydrolysis freed salicylic acid, which has a phenol group
+    - The acid neutralised the iron
+    - Ferric chloride always turns violet
+    correctIndex: 1
+    explanation: Hydrolysing the ester frees salicylic acid; its phenolic -OH gives
+      the violet complex - intact aspirin does not.
