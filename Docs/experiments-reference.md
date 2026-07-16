@@ -14,7 +14,9 @@
 | Chemical Compounding battery | Multi-substrate ID lab: FeCl₃ enol, KMnO₄ rate-of-oxidation (3 butyl alcohols + control), Tollen's, ester formation ×2, aspirin hydrolysis | ~~Single-substrate ethanol (combustion/sodium/bromine/KMnO₄)~~ → **REBUILT to the manuscript 2026-07-15** (13-task graph, ILOs restored verbatim, quiz realigned) | ✅ **client chose "rebuild to manuscript"** — the old battery failed its own ILO ("differentiate tests for *different* compounds") and used sodium/bromine, which the manuscript never lists. Layout/bindings still to author. |
 | Wine fruit | Grapes EXCLUDED (L3830-31) | Ferments **Mixed Fruit Juice** (renamed from Grape Juice, W5.9) | ✅ fixed |
 | Chloroform oxidation test | Dichromate + conc H₂SO₄ (procedure + results sheet) | Added W5.9: `test-oxidation` + rule | ✅ fixed |
-| Methane / Aspirin / Caffeine | Not in Appendix C (Aspirin named in intro prose only) | Game-authored procedures + ILOs | ⚠ pending client confirmation |
+| **Methane** | Not in Appendix C — appears only as a molecular-weight worked example in Exp 1 (Stoichiometry) | Game-authored tutorial | ✅ **CLIENT-CONFIRMED 2026-07-16: methane REMAINS, as the tutorial-only experiment.** Being game-authored is NOT grounds to remove it — do not flag it alongside aspirin/caffeine. |
+| **Aspirin / Caffeine** | Not in Appendix C (Aspirin named in intro prose only; Caffeine absent entirely) | Game-authored modules + ILOs | ⚠ **NOT in the client's 2026-07-16 period grouping → pending "drop?" decision.** Nothing deleted yet. |
+| **Apparatus lists vs procedures** | Exp 3–8 repeat ONE identical boilerplate list; **Exp 2's list omits the water bath** it uses 3×; **no list mentions the bent/delivery tube** Exp 3 requires | Stage from the PROCEDURE, not the list | ⚠ list defects — see §Apparatus; harmless in-game (all tools are always present) but do NOT infer steps from the lists |
 | Wine rubric | Bespoke tasting/presentation rubric (group activity) | Standard 6-category rubric | ✅ client-resolved 2026-07-09 |
 | Yield | Data-sheet records yield | Record-only, never graded (±5 stepper on the quiz tablet) | ✅ client-resolved |
 
@@ -27,6 +29,125 @@
 
 **Wine Making (Exp 9) materials note:** the manuscript frames it as a real-world group activity — 250–500 mL of a **non-grape** fruit juice, sugar, yeast, sealed fermentation vessel + airlock, ~1 week ferment, video documentation. Adapted for solo VR per client resolution (standard rubric); see reconciliation §4.
 
+## Apparatus — what each tool is actually FOR
+
+**Why this exists:** the manuscript lists apparatus in one block per experiment and then **almost never names a tool in the procedure**. It says *"place 1 ml of ethanol"* — never *with what*. So the lists alone don't tell you what a step needs. This table maps every listed tool to the step that actually uses it (inferred from the procedure verbs), so a session knows what to stage and bind.
+
+### ⚠ The lists are UNRELIABLE — the PROCEDURE is the source of truth
+1. **Exp 3–8 all share ONE identical boilerplate list** (the same 19 items, verbatim). It is generic, not tailored — Exp 5 does no distillation yet still lists a condenser + distilling flask. **Never infer a step from the list.**
+2. **Exp 2's list omits the WATER BATH** — yet its procedure calls for one **three times** (`:2185` heat Tollen's 5 min, `:2192` warm the ester, `:2203` boil the aspirin). A genuine list defect, same class as the Exp 4 copy-paste.
+3. **No list anywhere mentions the bent/delivery tube** — yet Exp 3's procedure requires it (`:2430` *"attach a bent tube, fitted to a stopper"*). Equipment used but never listed.
+4. **Exp 9 (Wine) has no apparatus list at all** — it is a take-home group activity, not bench work.
+
+### Tool → real use
+| Apparatus | What the procedure uses it for (the manual rarely says so) | Experiments |
+|---|---|---|
+| **Pipette** | EVERY *"place N ml"* / *"add N drops"* of a **liquid**. Never named in a single procedure step. | 2–8 |
+| **Porcelain spatula** | EVERY *"place N grams"* of a **solid** (0.5 g aspirin, 0.1 g salicylic acid, 4 g yeast) | 2–8 |
+| **Test tube** | the vessel for every discrete test | 2–8 |
+| **Test tube holder** | gripping a tube that has been in the water bath | 2–8 |
+| **Test tube brush** | washing tubes between tests → feeds the **Sanitation** rubric criterion | 2–8 |
+| **Beaker** | bulk liquid, the dilution water, receiving a pour (Exp 2 `C.I.d`: *"pouring the beaker containing 1 ml of distilled water"*) | 2–8 |
+| **Erlenmeyer flask** | the larger reaction/fermentation vessel (Exp 3: *"prepare 100 ml of 12% brown sugar solution in a flask"*) | 2–8 |
+| **Stirring rod** | mixing / shaking | 2–8 |
+| **Water bath** | EVERY *"heat / warm / boil … using a water bath"* | **2** (×3, unlisted!), 3–8 |
+| **Aspirator** | suction for the *"filter off"* steps | 2 (`D.I.c`), 3–8 |
+| **Watch glass** | the **combustion test** (*"pour 1 ml of the distillate into a watch glass and apply a lighted matchstick"*); evaporation | 3–8 |
+| **Thermometer** | the distillation cut-off temperature (ethanol ~78 °C, acetone 56 °C) | 3–8 |
+| **Distilling flask** | the distillation pot | 3–8 |
+| **Condenser** | condensing the distillate | 3–8 |
+| **Cork / stopper** | stoppers the flask and **carries the bent/delivery tube** (Exp 3 `:2430`) | 3–8 |
+| **Rubber tubing** | condenser water lines | 3–8 |
+| **Iron stand · Iron clamp · S-clamp** | holds the distillation train / condenser | 3–8 |
+| **Bent (delivery) tube** | **UNLISTED but required** — bubbles evolved CO₂ into limewater (Exp 3 `:2430-2434`), with a cotton swab capping the receiving tube | **3 only** |
+| **Water** | distilled water — effectively a reagent, not a tool | 2–8 |
+
+### Manuscript item → game reality (STATUS FLAGS — review as each module is built)
+
+**Nothing here is removed.** Every tool stays on the bench (⛔ all-tools rule). This flags which canonical items currently do a **real job** vs which are **decorative** — so as we build each procedure we consciously either give them a job or accept them as set dressing.
+
+| Legend | Meaning |
+|---|---|
+| ✅ **Functional** | a verb/mechanic actually uses it |
+| 🔁 **Replaced / consolidated** | the prop was swapped or deleted; another prop or mechanic serves it |
+| 📋 **Served by a feature** | prop stays, but its FUNCTION is now a game feature |
+| ⬜ **Decorative (FLAGGED)** | present + grabbable, but no mechanic uses it **yet** — candidate for a job |
+
+| Manuscript item | Game reality | Status |
+|---|---|---|
+| **Pipette** | The glass pipette prop was **deleted** (`RemovePipette`, 2026-07-15) as redundant with the pack's **MechanicalPipette** (modern micropipette) which remains. Its FUNCTION — *"place 1 ml"* — is served by the **pour mechanic** (`LiquidPourer` + `requiredMl` threshold bindings): you tip the vessel and pour. | 🔁 Replaced |
+| **Thermometer** | Prop **kept** on the bench. Its FUNCTION — temperature monitoring — is served by **`ProcessReadout.BindHeat`**: "62 C -> 120 C" floats over the heated vessel, tinting cool-blue → hot-orange, plus the red-hot glow. The user can monitor without holding it. | 📋 Served by a feature (prop currently decorative) |
+| **Wooden splint** | **Deleted** — appears NOWHERE in the manuscript, which uses a *"lighted matchstick"*. `Matchstick` runs the gas/combustion test. | 🔁 Replaced |
+| **S-clamp · Iron clamp** | Consolidated into the game's **UtilityClamp** (3-prong, W5.12) alongside **RetortStand** + **IronRing**. | 🔁 Consolidated |
+| **Iron stand** | **RetortStand** | 🔁 Renamed |
+| **Water bath** | **WaterBath** prop + `StationSim.Heat` + `TemperatureSim` — every "heat/warm/boil using a water bath". | ✅ Functional |
+| **Porcelain spatula** | **`ScoopController`** — dip-and-deposit, 2 g per scoop. | ✅ Functional |
+| **Stirring rod** | **`StirController`** (OrbitMath circular motion). ⚠ needs a tip anchor — see below. | ✅ Functional |
+| **Test tube brush** | **`BrushController` + `CleanableVessel`** — real swipe-by-swipe scrubbing; feeds the **Sanitation** rubric. | ✅ Functional |
+| **Beaker · Erlenmeyer · Test tube · Distilling flask (as a vessel)** | `LiquidPhysics` vessels — pour targets with fill visuals. | ✅ Functional |
+| **Aspirator** | Present + grabbable. Suction filtration is served by **`FiltrationController` / `StationSim.Filter`**; the aspirator prop itself has no verb. | ⬜ Decorative (FLAGGED) |
+| **Condenser · Rubber tubing** | Present. **Distillation is modelled as Heat + Collect** (there is no distil sim), so nothing binds to them. | ⬜ Decorative (FLAGGED) |
+| **Cork / rubber stopper** | Present. Setup steps complete by **proximity/contents**, so a stopper is never mechanically required. | ⬜ Decorative (FLAGGED) |
+| **Test tube holder** | Present. Grabbing works directly and nothing is hot-to-touch, so it has no job. | ⬜ Decorative (FLAGGED) |
+| **Watch glass** | Present. The manual's combustion test pours onto it — **could** bind as a receiving vessel when we build Exp 3. | ⬜ Decorative (FLAGGED — give it a job in Exp 3) |
+| **Bent / delivery tube** | Present (×3). **Required by Exp 3** (CO₂ → limewater) but not yet bound to anything. | ⬜ Decorative (FLAGGED — job comes in Exp 3) |
+
+### Placement anchors — how the user hand-tunes positions
+
+**Why:** bounds-guessing cannot know an imported mesh's axis convention — we could not tell which end of a match is the head or which end of a spatula is the blade, and guessing wasted hours. So the code reads a **`PlacementAnchor`** child that the user **drags in the editor** to the exact spot. Menu **`Add Placement Anchors`** creates them at a best guess (orange gizmo); drag, then **`Lock My Layout`** to bake. Re-running never moves one you have already placed.
+
+| Anchor | Lives on | Supplies | Purpose |
+|---|---|---|---|
+| `FlameAnchor` | Matchstick · BurnerController | position | exactly where the flame appears (match **head**, burner **mouth**) |
+| `ScoopAnchor` | ScoopController (scoopula/spatula) | position | the **blade/bowl** — the pickup probe AND the carried heap ride it |
+| `BowlAnchor` | GrindController (mortar) | position | where the ground powder + grinding dust appear |
+| `PowderAnchor` | solid receivers (hard-glass tube) | position **+ SIZE** | drag it AND **scale it** — the scale is the powder's size at a full charge |
+
+**⚠ The rule that bit twice:** only an anchor with **`previewsScale = true`** supplies SIZE. A position-only anchor has scale **1**, so sizing from it produces a **1-metre blob** (this caused both the giant gizmos and the giant mortar mound). The flag is the discriminator — suite-pinned.
+
+**✅ LIQUIDS NEED NO ANCHOR** (confirmed with the user): liquid/gas fills auto-fit the vessel's **own interior** via `LocalMeshBounds` / `LongestAxis` / `BoreOf` — they follow the bore in the vessel's LOCAL frame, so they stay contained and aligned even when the vessel is tilted or held. Only **solids** (a mound's resting spot) and **point effects** (a flame's tip) need anchors, because those cannot be derived from bounds.
+
+**Anchor candidates — attach as each procedure needs the tool**
+| Tool | Anchor to add | Why |
+|---|---|---|
+| **Stirring rod** | **`StirAnchor`** (rod tip) | ⚠ **`StirController` tracks `_rod.position` — the transform ORIGIN.** This is the exact latent bug that made the grind silently never register (the origin can be the handle, never entering the vessel). **Exp 2 and Exp 3 both use the rod — fix this when we get there.** |
+| **Test tube brush** | `BrushAnchor` (bristle end) | `BrushController` accumulates origin travel; less brittle (any motion counts) but the contact point is the bristles |
+| **MechanicalPipette / dropper** | `TipAnchor` | only if we ever model drop-dispensing rather than pouring |
+| **Crucible tongs** | `GripAnchor` | only if we model gripping |
+| **Watch glass · funnel · any liquid vessel** | *(none)* | liquid auto-fits — see above |
+
+### Per-STEP apparatus — where to find it
+The manual gives one apparatus block per experiment and never names a tool in a step, so **each module's Task-graph table carries an `apparatus the step needs` column** — inferred from the procedure verbs. It is authored as each module is polished (the one-by-one method):
+- ✅ **tutorial-methane** — mortar · pestle · scoopula · open beaker (acetate+soda lime) · hard-glass tube · gas collection tube · burner · matches
+- ✅ **prelim-chemical-compounding** — full per-step column authored (2026-07-15); roll-up under its task graph
+- ⬜ **prelim-ethyl-alcohol → final-winemaking** — author the column as each module is reached. **Read the PROCEDURE, never the apparatus list** (see the defects above).
+
+**Verbatim per-experiment lists** are reproduced under each module's *Manuscript Equipment & Apparatus* line below (OCR artifacts kept for fidelity — "bath Rubber tubing" = *water bath* + *rubber tubing*, a two-column merge).
+
+**Game-status note:** the **pipette was deliberately dropped** (2026-07-15) as redundant with the modern micropipette already in the pack — but note the manuscript lists a pipette for **every** experiment, so pouring stands in for it. The **wooden splint was deleted** (never in the manuscript — it uses a *"lighted matchstick"*; see `manuscript-reconciliation.md` §0).
+
+---
+
+---
+
+## ⭐ CLIENT PERIOD GROUPING (2026-07-16)
+
+The client's grouping maps **exactly** onto the manuscript's 8 bench labs:
+
+| Period | Modules | Manuscript |
+|---|---|---|
+| **Tutorial** | methane | *game-authored — sits OUTSIDE the graded periods.* ✅ **Client-confirmed 2026-07-16: stays as the tutorial-only experiment.** |
+| **Prelim** | chemical reactions · ethyl | Exp 2 · Exp 3 |
+| **Midterm** | benzoic · acetanilide · acetone · chloroform | Exp 4 · 5 · 6 · 7 |
+| **Finals** | benzamide · wine making | Exp 8 · Exp 9 |
+
+**Manuscript Exp 1 = STOICHIOMETRY** — a pen-and-paper exercise (balance equations, molecular weight, dimensional analysis, % yield), NOT a bench lab (`:1899`, `:2055`). That is why "methane" appears in the manuscript only as a molecular-weight worked example (`:1995`) — the game's methane tutorial is entirely game-authored.
+
+### ⚠ OPEN — Aspirin + Caffeine are NOT in the client's grouping
+`final-aspirin` and `final-caffeine` are **game-authored** (Aspirin is named only in the manuscript's intro prose; Caffeine appears nowhere) and were already flagged "pending client confirmation". The client's Finals list is **benzamide + wine making only**, which reads as **both are dropped** → the chain goes **11 → 9** (tutorial + 8).
+
+**Nothing has been deleted.** Confirm with the client first. If dropped, the change touches: `ExperimentCatalog` (11-chain), the two module/quiz/layout assets, `ProgressionFlow` ordering, the roster suite pins (11 banks / 35 questions), CLAUDE.md's table, and the **9-end-product** demo rule (`DemoMode.IsEndProduct` — Aspirin + Caffeine are two of the nine).
+
 ---
 
 ## ⭐ POLISH STATUS — we are perfecting the experiments ONE BY ONE
@@ -36,7 +157,7 @@
 | Module | Period | Polish status |
 |---|---|---|
 | **tutorial-methane** | Tutorial | ✅ **DONE (2026-07-15)** — playable end-to-end: scoop → grind → load tube → heat → collect → match test → quiz → grade |
-| **prelim-chemical-compounding** | Prelim | 🔨 **IN PROGRESS** — client chose **rebuild to manuscript** (2026-07-15). ✅ 13-task graph + ILOs + quiz authored. ⬜ **Next: `Layout_ChemicalCompounding`** (stations/vessels/bindings), reaction rules + `expectedObservation` per test, odour cue. |
+| **prelim-chemical-compounding** | Prelim | 🔨 **IN PROGRESS** — client chose **rebuild to manuscript** (2026-07-15). ✅ 13-task graph + ILOs + quiz authored. 🗣 **VR-adaptation design is MID-DISCUSSION — read §VR adaptation in this module's section and resume from its OPEN list** (pre-set water?, period→module picker, replay rule) **before** authoring `Layout_ChemicalCompounding`. |
 | **prelim-ethyl-alcohol** | Prelim | ⬜ then this — the ONLY module the manuscript gives a **bent (delivery) tube + stopper + cotton swab + CO₂→limewater** test (`manuscript.txt:2430-2434`). Those delivery tubes on the bench are real Exp 3 equipment. |
 | midterm-* / final-* | — | ⬜ not started |
 
@@ -127,26 +248,70 @@
 ### Task graph (play order) — REBUILT to manuscript Exp 2 (2026-07-15)
 
 Structure follows the manual's own sections **A → B → C → D**. Preps are free-order; each section gates the next.
+**Apparatus column = what the step ACTUALLY needs, inferred from the procedure verbs** (the manual names almost no tool — see §Apparatus). **[pre-set]** = staged for the player per the constant/variable rule (§VR adaptation).
 
-| # | task | phase | label | prereq | manual ref |
-|---|------|-------|-------|--------|-----------|
-| 1 | `prep-enol-tubes` | ReagentPrep | Set up the enol-test tubes (5 alcohols) | - | A.I.a |
-| 2 | `test-enol-fecl3` | ChemicalTests | Enol test - add ferric chloride to each tube | 1 | A.I.b-c |
-| 3 | `prep-oxidation-tubes` | ReagentPrep | Set up the rate-of-oxidation tubes (4 tubes) | - | A.II.a |
-| 4 | `test-oxidation-alkaline` | ChemicalTests | Rate of oxidation in ALKALINE conditions (+ negative control) | 3 | A.II.b-c |
-| 5 | `test-oxidation-acidic` | ChemicalTests | Rate of oxidation in ACIDIC conditions | 4 | A.II.d-e |
-| 6 | `test-tollens` | ChemicalTests | Aldehyde vs ketone - Tollen's test (water bath 5 min) | 5 | B.I |
-| 7 | `test-ester-acetate` | ChemicalTests | Ester formation - ethyl acetate | 6 | C.I.a-b |
-| 8 | `test-ester-salicylate` | ChemicalTests | Ester formation - methyl salicylate | 7 | C.I.c-d |
-| 9 | `prep-hydrolysis` | ChemicalTests | Hydrolyse the aspirin (boil in the water bath) | 8 | D.I.a-b |
-| 10 | `filter-hydrolysate` | ChemicalTests | Filter off the undissolved crystals | 9 | D.I.c |
-| 11 | `test-hydrolysis-fecl3` | ChemicalTests | Test the filtrate with ferric chloride | 10 | D.I.d |
-| 12 | `test-hydrolysis-control` | ChemicalTests | Compare against UNhydrolysed aspirin | 11 | D.I.e |
-| 13 | `record-observations` | DataSheet | Record every colour and odour on the data sheet | 2,5,6,8,12 | Data Sheet |
+| # | task | phase | label | prereq | manual ref | apparatus the step needs |
+|---|------|-------|-------|--------|-----------|--------------------------|
+| 1 | `prep-enol-tubes` | ReagentPrep | Set up the enol-test tubes (5 alcohols) | - | A.I.a | **5 × test tube + rack**; *pour* (stands in for **pipette**) for the 5 samples; **beaker** of distilled water **[pre-set: the 10 ml water]** |
+| 2 | `test-enol-fecl3` | ChemicalTests | Enol test - add ferric chloride to each tube | 1 | A.I.b-c | **pipette/pour** (FeCl₃ ×5 tubes); the 5 tubes |
+| 3 | `prep-oxidation-tubes` | ReagentPrep | Set up the rate-of-oxidation tubes (4 tubes) | - | A.II.a | **4 × test tube + rack** **[pre-set: KMnO₄ + NaOH medium]** |
+| 4 | `test-oxidation-alkaline` | ChemicalTests | Rate of oxidation in ALKALINE conditions (+ negative control) | 3 | A.II.b-c | **pipette/pour** (3 butyl alcohols); **stirring rod** (shake); **per-tube decolorisation TIMER** (`ProcessReadout`) |
+| 5 | `test-oxidation-acidic` | ChemicalTests | Rate of oxidation in ACIDIC conditions | 4 | A.II.d-e | as #4, second rack **[pre-set: KMnO₄ + H₂SO₄ medium]**; both racks side-by-side |
+| 6 | `test-tollens` | ChemicalTests | Aldehyde vs ketone - Tollen's test (water bath 5 min) | 5 | B.I | **2 × test tube**; **pipette/pour** (acetone, acetaldehyde, Tollen's); ⚠ **WATER BATH** (*absent from Exp 2's own apparatus list*); **test tube holder** (hot tube) |
+| 7 | `test-ester-acetate` | ChemicalTests | Ester formation - ethyl acetate | 6 | C.I.a-b | **test tube**; **pipette/pour** (ethanol, acetic acid, conc H₂SO₄); ⚠ **WATER BATH**; **odour cue** (on-screen) |
+| 8 | `test-ester-salicylate` | ChemicalTests | Ester formation - methyl salicylate | 7 | C.I.c-d | **test tube**; **PORCELAIN SPATULA** (0.1 g salicylic acid = **solid → scoop**); **pipette/pour** (methanol, conc H₂SO₄); ⚠ **WATER BATH**; **beaker** (1 ml water); **odour cue** |
+| 9 | `prep-hydrolysis` | ChemicalTests | Hydrolyse the aspirin (boil in the water bath) | 8 | D.I.a-b | **test tube**; **PORCELAIN SPATULA** (0.5 g aspirin = **solid → scoop**); **pipette/pour** (10 ml water, conc HCl); ⚠ **WATER BATH** (boil) |
+| 10 | `filter-hydrolysate` | ChemicalTests | Filter off the undissolved crystals | 9 | D.I.c | **ASPIRATOR** (the list's filtration tool) or **funnel + filter paper**; receiving vessel — ⬜ *decides the aspirator's job* |
+| 11 | `test-hydrolysis-fecl3` | ChemicalTests | Test the filtrate with ferric chloride | 10 | D.I.d | **pipette/pour** (FeCl₃ ×2 drops) onto the filtrate |
+| 12 | `test-hydrolysis-control` | ChemicalTests | Compare against UNhydrolysed aspirin | 11 | D.I.e | **test tube**; **PORCELAIN SPATULA** (plain aspirin); **pipette/pour** (FeCl₃) |
+| 13 | `record-observations` | DataSheet | Record every colour and odour on the data sheet | 2,5,6,8,12 | Data Sheet | quiz tablet (+ results board) |
+
+**Apparatus roll-up for the whole module:** 15 × test tube + racks · beaker · **water bath** (⚠ unlisted by the manual, needed 3×) · **porcelain spatula** (3 solid weigh-outs) · stirring rod · aspirator *or* funnel+filter paper · test tube holder · test tube brush (between tests → Sanitation). **No distillation train, no condenser, no thermometer** — this module never distils.
 
 **par time** 900 s · **tracked skills** Measuring, Heating, Filtration, TestInterpretation · **all 20 reagents already exist as `ChemicalData`**.
 
 **Still to author:** `Layout_ChemicalCompounding` (stations/vessels/bindings), the reaction rules + `expectedObservation` per test, and the odour cue (see VR-adaptation notes).
+
+### VR adaptation — design decisions (discussion 2026-07-15, CONTINUING next session)
+
+**The problem in numbers.** Done literally, Exp 2 is **~64 discrete pours across ~19 tubes** (A.I 15 · A.II ~28 for the two runs · B 5 · C 8 · D 8) — 30-40 min of pipetting, which is the least educational part of the lab.
+
+**The governing principle (agreed):**
+> **Preserve every SAMPLE, every OBSERVATION and every COMPARISON. Compress only the MANIPULATION.**
+
+**The atomic action = ONE POUR PER TUBE** (not per drop). "5 drops of FeCl₃" is one threshold-checked pour; the *label still reads the real recipe* so the student learns the true quantities. Takes ~64 → **~30 actions** (a 15-20 min session).
+
+**The pre-set rule (agreed — this is the key one):**
+> **Pre-set the CONSTANT (identical in every tube = bulk prep, carries no information).
+> The student does the VARIABLE (what differs between tubes = the experiment).**
+
+| Part | Pre-set (constant) | Student does (variable) |
+|---|---|---|
+| A.I Enol | the **10 ml distilled water** in all 5 tubes | pours **1 ml of each of the 5 samples** into its labelled tube, then applies **FeCl₃** per tube |
+| A.II Oxidation | the **KMnO₄ + base/acid medium** in all 4 tubes (rack labelled ALKALINE / ACIDIC) | adds the **3 butyl alcohols** and **deliberately leaves the 4th** as the control |
+
+Rationale: the student must personally place each SAMPLE (so "my phenol went violet" is their result) and apply each TEST REAGENT. Only the informationless bulk solvent/medium is pre-staged. `Measuring` is still exercised (1 ml of each sample).
+⬜ **User was still weighing this** — the fallback is "student pours the water too" (+5 pours per rack). Not yet final.
+
+**Other agreed adaptations**
+- **Odour → on-screen cue** ✅ **client-approved**: the two ester tests show e.g. *"Sweet, fruity odour - ethyl acetate formed"* / *"Wintergreen - methyl salicylate"*. The one genuine sensory loss.
+- **Time compression:** the 5-min water bath / 3-5 min boil → **~15 s** with `ProcessReadout` counting. No learning in real-time waiting.
+- **BUT keep the decolorisation TIMER.** The manual explicitly says *"note the time of decolorization"* — that is a **measurement**, so each tube gets a live per-tube timer. Compress the wait; never hide the number.
+- **Both oxidation racks side by side** (alkaline + acidic simultaneously). The manual runs them sequentially, so the student compares from memory — VR can show both at once. This is **better than the manual**, not a compromise.
+- **Results board:** a rack-side panel auto-filling the manual's own data-sheet table as each result lands, so `record-observations` is a real review rather than recall.
+
+**⛔ UNTOUCHABLE — these ARE the experiment (never trim to save actions)**
+- all **5 enol samples** (phenol-vs-the-rest is the lesson)
+- all **3 butyl alcohols + the negative control** (the 1°/2°/3° rate difference, and the control teaches experimental design)
+- **acetone vs acetaldehyde** (the contrast IS the test)
+- **hydrolysed vs unhydrolysed aspirin** (same)
+
+**⬜ OPEN — resume here next session**
+1. **Confirm the pre-set water** (above) or switch to "student pours the water too".
+2. **Episode picker: period → MODULE.** User wants choosing **Prelim** to list its **two modules** (Compounding, Ethyl Alcohol) with the second **locked until the first is passed** — same for Midterm (4) and Final (4). Today `GatekeeperModel.EpisodeOptions` only lists the **four periods** and `ChooseEpisode` silently auto-starts `FirstPlayableInPeriod`, so the player never sees the modules. The 11-module chain **already locks in sequence** — only the picker's second level is missing. **Exp 2 stays ONE module** (13 tasks); this is a picker change, not a content split.
+3. **Should a PASSED module stay replayable in that list, or grey out?**
+4. Then author `Layout_ChemicalCompounding` + reaction rules + `expectedObservation` per test.
+5. ⚠ **Fix `StirController` before wiring the "shake/stir" steps** — it tracks the rod's transform ORIGIN (`_rod.position`), the same latent bug that made the grind silently never complete. Give it tip-tracking + a `StirAnchor`, exactly as `GrindController` got (`PestleTip` closest-point + `BowlAnchor`). See §Apparatus → anchor candidates.
 
 ### Stage layout
 

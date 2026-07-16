@@ -1445,14 +1445,17 @@ public static class PharmaSelfTests
             }
             if (bank == null) { coverage = false; continue; }
             qBanks++; qTotal += bank.Count;
-            if (!bank.AllValid() || bank.Count != 3) allValid = false;
+            // ≥3 questions per bank. (Was "== 3": Chemical Compounding carries 5 since
+            // its rebuild to manuscript Exp 2, which has five distinct tests — 2026-07-15.)
+            if (!bank.AllValid() || bank.Count < 3) allValid = false;
             // all-correct answers → perfect score
             var ans = new List<int>();
             foreach (var q in bank.questions) ans.Add(q.correctIndex);
             if (!Near(bank.Score(ans), 1f)) scoreOk = false;
         }
         A("roster: quiz bank per experiment (11)", coverage && qBanks == 11);
-        A("roster: 33 quiz questions total, all valid (4 opts, in-range answer)", qTotal == 33 && allValid);
+        // 33 → 35: compounding's rebuild took its bank from 3 to 5 questions (2026-07-15).
+        A("roster: 35 quiz questions total, all valid (4 opts, in-range answer)", qTotal == 35 && allValid);
         A("roster: quiz scoring (all-correct = 100%)", scoreOk);
     }
 
@@ -1821,6 +1824,32 @@ public static class PharmaSelfTests
         A("grind: empty mortar can't grind", !GrindController.CanGrind(true, 0f));
         A("grind: loaded mortar grinds", GrindController.CanGrind(true, 2f));
         A("grind: cosmetic mortar always grinds", GrindController.CanGrind(false, 0f));
+        // Powder must NOT take its size from a POSITION-ONLY anchor. A BowlAnchor has
+        // scale 1, so sizing from it produced a 1-unit beach-ball in the mortar (user
+        // 2026-07-15). Only an anchor that declares previewsScale supplies the size.
+        {
+            var powderHost = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            try
+            {
+                var chem = AssetDatabase.LoadAssetAtPath<ChemicalData>(
+                    "Assets/PharmaSynth/ScriptableObjects/Chemicals/Chem_SodiumAcetate.asset");
+                var bowl = new GameObject("BowlAnchor");
+                bowl.transform.SetParent(powderHost.transform, false);
+                bowl.AddComponent<PlacementAnchor>().previewsScale = false;   // position-only
+                ExperimentSceneBuilder.EnsurePowderVisual(powderHost, chem, 1f);
+                Transform heap = powderHost.transform.Find("Powder");
+                A("powder: position-only anchor does NOT set size",
+                  heap != null && heap.localScale.x < 0.5f && heap.localScale.y < 0.5f);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(powderHost); }
+        }
+
+        // HUD dropdown re-fits to however many items are visible — the demo verbs
+        // live in it and are hidden outside a demo session (user 2026-07-15).
+        A("hudmenu: 3 items (no demo)", Near(HudMenuDropdown.HeightFor(3, 56f, 6f, 16f), 200f));
+        A("hudmenu: 6 items (demo session)", Near(HudMenuDropdown.HeightFor(6, 56f, 6f, 16f), 382f));
+        A("hudmenu: empty list collapses to padding", Near(HudMenuDropdown.HeightFor(0, 56f, 6f, 16f), 16f));
+
         // Quiz is NEVER score-gated (client rule) — the score is just shown plainly.
         A("quiz: score line reads correct/total", PostLabController.ScoreLine(2, 3) == "Quiz: 2 / 3 (67%)");
         A("quiz: perfect score line", PostLabController.ScoreLine(3, 3) == "Quiz: 3 / 3 (100%)");
@@ -2359,10 +2388,18 @@ public static class PharmaSelfTests
         }
         A("m4: iodoform tests stage their KI", kiBindings == 2);
 
-        // M5a: the chemistry-misfit quiz question is gone.
+        // M5a: the compounding quiz matches the REBUILT manuscript battery (2026-07-15) —
+        // it must probe the manual's own tests, never the retired sodium/bromine ones.
         var quiz = AssetDatabase.LoadAssetAtPath<QuizBank>("Assets/PharmaSynth/ScriptableObjects/Quizzes/Quiz_ChemicalCompounding.asset");
-        A("m5: compounding quiz Q3 manuscript-aligned", quiz != null && quiz.questions.Count >= 3
-            && !quiz.questions[2].prompt.Contains("unsaturation") && quiz.questions[2].prompt.Contains("OXIDISED"));
+        bool noRetired = true;
+        if (quiz != null)
+            foreach (var q in quiz.questions)
+                if (q.prompt.Contains("sodium metal") || q.prompt.Contains("unsaturation")) noRetired = false;
+        A("m5: compounding quiz drops the retired sodium/bromine battery", quiz != null && noRetired);
+        A("m5: compounding quiz covers the manuscript tests", quiz != null && quiz.questions.Count == 5
+            && quiz.questions[0].prompt.Contains("enol") && quiz.questions[1].prompt.Contains("oxidation")
+            && quiz.questions[2].prompt.Contains("fourth") && quiz.questions[3].prompt.Contains("Tollen")
+            && quiz.questions[4].prompt.Contains("aspirin"));
     }
 
     static void SceneBuilderSuite()
@@ -3072,7 +3109,8 @@ public static class PharmaSelfTests
     {
         string dir = "Assets/PharmaSynth/ScriptableObjects/Experiments/";
         foreach (var (file, tasks) in new[] {
-            ("Tutorial_Methane", 5), ("Prelim_ChemicalCompounding", 6), ("Prelim_EthylAlcohol", 7),
+            // Compounding: 6 → 13 when it was rebuilt to manuscript Exp 2 (2026-07-15).
+            ("Tutorial_Methane", 5), ("Prelim_ChemicalCompounding", 13), ("Prelim_EthylAlcohol", 7),
             ("Midterm_BenzoicAcid", 9), ("Final_Aspirin", 7),
             ("Midterm_Acetanilide", 10), ("Midterm_Acetone", 10), ("Midterm_Chloroform", 11),   // W5.9: +test-oxidation
             ("Final_Benzamide", 9), ("Final_Caffeine", 9), ("Final_WineMaking", 8) })

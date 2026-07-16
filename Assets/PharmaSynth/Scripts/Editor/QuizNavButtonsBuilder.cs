@@ -27,8 +27,16 @@ public static class QuizNavButtonsBuilder
         if (submit == null) { Debug.LogError("[QuizNav] submitButton not wired — nothing to clone for styling."); return; }
 
         var parent = submit.transform.parent;
-        var prev = MakeButton(parent, submit, "QuizPrevButton", "< Back", -0.16f);
-        var next = MakeButton(parent, submit, "QuizNextButton", "Next >", 0.16f);
+        // Offset by the button's own WIDTH, in CANVAS units — a hardcoded 0.16 was
+        // ~zero on a canvas whose buttons are hundreds of units wide, so Back and
+        // Next landed exactly on top of each other (user 2026-07-15).
+        var prev = MakeButton(parent, submit, "QuizPrevButton", "< Back", -1f);
+        var next = MakeButton(parent, submit, "QuizNextButton", "Next >", +1f);
+
+        // The tablet is the quiz — say so (user 2026-07-15).
+        foreach (var t in post.GetComponentsInChildren<TMP_Text>(true))
+            if (t != null && t.text != null && t.text.Contains("Data Sheet & Documentation"))
+            { t.text = "Quiz"; EditorUtility.SetDirty(t); }
 
         Wire(prev, post.PreviousQuestion);
         Wire(next, post.NextQuestion);
@@ -50,20 +58,36 @@ public static class QuizNavButtonsBuilder
                   + "questions to review answers before submitting. Your picked option is highlighted.</color>");
     }
 
-    /// Clone the Submit button for consistent styling, offset sideways from it.
-    static Button MakeButton(Transform parent, Button template, string name, string label, float xOffset)
+    /// Clone the Submit button for consistent styling and sit it beside Submit.
+    /// `dir` is -1 (left) or +1 (right); the step is the button's own width, so the
+    /// three never overlap regardless of the canvas's unit scale. Re-running ALWAYS
+    /// re-lays them out — an earlier build left them stacked, so a "respect the
+    /// existing position" rule would preserve that bug forever.
+    static Button MakeButton(Transform parent, Button template, string name, string label, float dir)
     {
         var existing = parent != null ? parent.Find(name) : null;
         GameObject go = existing != null ? existing.gameObject
                                          : Object.Instantiate(template.gameObject, parent);
         go.name = name;
-        if (existing == null)
+
+        var trt = template.GetComponent<RectTransform>();
+        var rt = go.GetComponent<RectTransform>();
+        if (trt != null && rt != null)
         {
-            // Sit beside Submit, on the same plane.
+            rt.anchorMin = trt.anchorMin;
+            rt.anchorMax = trt.anchorMax;
+            rt.pivot = trt.pivot;
+            rt.sizeDelta = trt.sizeDelta;
+            rt.localRotation = trt.localRotation;
+            rt.localScale = trt.localScale;
+            float step = Mathf.Max(1f, trt.rect.width) * 1.12f;   // clear of Submit, in canvas units
+            rt.anchoredPosition = trt.anchoredPosition + new Vector2(dir * step, 0f);
+        }
+        else if (existing == null)   // non-RectTransform fallback
+        {
             go.transform.localRotation = template.transform.localRotation;
             go.transform.localScale = template.transform.localScale;
-            var p = template.transform.localPosition;
-            go.transform.localPosition = new Vector3(p.x + xOffset, p.y, p.z);
+            go.transform.localPosition = template.transform.localPosition;
         }
         go.SetActive(true);
         var tmp = go.GetComponentInChildren<TMP_Text>(true);

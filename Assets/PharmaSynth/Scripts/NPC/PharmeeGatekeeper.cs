@@ -400,7 +400,9 @@ public class PharmeeGatekeeper : MonoBehaviour
                 After(lineSeconds * 0.9f, () =>
                 {
                     if (Model.State != GateState.QuizIntro) return;
-                    DoFaded(() => TeleportTo(reviewCornerSpawn));
+                    // Stage Jimenez INSIDE the same fade as the teleport, so he is
+                    // always back at his review spot facing the player when it lifts.
+                    DoFaded(() => { TeleportTo(reviewCornerSpawn); StageExaminerForReview(); });
                     After(0.9f, () => SpeakJimenezBrief(0));
                 });
                 break;
@@ -541,6 +543,20 @@ public class PharmeeGatekeeper : MonoBehaviour
             ScreenFader.Instance.FadeAround(Relaunch);
         else
             Relaunch();
+    }
+
+    /// Put Dr. Jimenez back at his authored review position, facing the player, and
+    /// stop him roaming (user 2026-07-15: he was "positioned elsewhere, and not
+    /// facing"). The quiz begins while the run is STILL live — Finish only lands on
+    /// submit — so ProctorRoamer's own come-home-on-finish hook fires far too late.
+    private void StageExaminerForReview()
+    {
+        var roamer = examiner != null ? examiner.GetComponent<ProctorRoamer>() : null;
+        if (roamer == null)
+            roamer = UnityEngine.Object.FindFirstObjectByType<ProctorRoamer>(FindObjectsInactive.Include);
+        if (roamer == null) return;
+        var cam = cameraOverride != null ? cameraOverride : Camera.main;
+        roamer.ReturnHomeAndHold(cam != null ? cam.transform : playerRig);
     }
 
     /// Jimenez's two-beat quiz briefing at the review corner, then the quiz opens.

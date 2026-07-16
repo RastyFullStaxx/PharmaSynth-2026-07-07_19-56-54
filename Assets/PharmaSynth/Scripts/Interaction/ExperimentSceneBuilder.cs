@@ -761,17 +761,21 @@ public class ExperimentSceneBuilder : MonoBehaviour
         float h = Mathf.Min(lb.size[ax] * 0.22f, bore * 0.6f) * Mathf.Lerp(0.4f, 1f, fill01);
         h = Mathf.Max(lb.size[ax] * 0.03f, h);                                      // always a little visible
 
-        // A hand-placed anchor wins for BOTH placement and SIZE (user 2026-07-15:
-        // "add the anchor to the powder in the glass tube so I can set its size
-        // manually"). Drag it where the powder should sit and SCALE it to the size
-        // you want at full — the fill fraction shrinks it from there.
-        // "PowderAnchor" = any vessel; "BowlAnchor" = the mortar (also drives grind).
+        // A hand-placed anchor wins for placement — and, ONLY if it is a size-setting
+        // anchor, for size too (user 2026-07-15: "set its size manually").
+        // "PowderAnchor" = position + SIZE; "BowlAnchor" (mortar) = position ONLY.
+        // A position-only anchor has scale 1, so taking its scale produced a 1-unit
+        // beach-ball of powder — never size from an anchor unless it says it sizes.
         var anchor = inst.transform.Find("PowderAnchor") ?? inst.transform.Find("BowlAnchor");
         if (anchor != null)
         {
+            var pa = anchor.GetComponent<PlacementAnchor>();
+            bool anchorSetsSize = pa != null && pa.previewsScale;
             heap.transform.localPosition = anchor.localPosition;
             heap.transform.localRotation = anchor.localRotation;
-            heap.transform.localScale = anchor.localScale * Mathf.Lerp(0.55f, 1f, fill01);
+            heap.transform.localScale = anchorSetsSize
+                ? anchor.localScale * Mathf.Lerp(0.55f, 1f, fill01)   // hand-set size
+                : new Vector3(w, h, w);                                // computed fraction of the bore
         }
         else
         {

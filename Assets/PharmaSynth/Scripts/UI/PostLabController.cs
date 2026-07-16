@@ -36,9 +36,11 @@ public class PostLabController : MonoBehaviour
     [Tooltip("Step back/forward through the questions to review answers before submitting.")]
     [SerializeField] private Button prevButton;
     [SerializeField] private Button nextButton;
-    /// Tint of the option you already picked vs the rest, while reviewing.
-    private static readonly Color SelectedTint = new Color(0.35f, 0.78f, 1f);
-    private static readonly Color NormalTint = Color.white;
+    /// Tint of the option you already picked. Unpicked options are restored to their
+    /// AUTHORED colour — never hard-set to white, which erased the dark panel styling
+    /// and made the white label text unreadable (user 2026-07-15).
+    private static readonly Color SelectedTint = new Color(0.24f, 0.62f, 0.92f);
+    private Color[] _optionBaseColors;
 
     [Tooltip("Optional label for the score / prompt feedback on the tablet.")]
     [SerializeField] private TMP_Text feedbackText;
@@ -240,6 +242,18 @@ public class PostLabController : MonoBehaviour
         return runner != null ? runner.Finish(ScoreFraction()) : default;
     }
 
+    /// Snapshot each option button's authored colour ONCE, before anything tints it.
+    private void CaptureOptionColors()
+    {
+        if (_optionBaseColors != null) return;
+        _optionBaseColors = new Color[optionButtons.Length];
+        for (int i = 0; i < optionButtons.Length; i++)
+        {
+            var im = optionButtons[i] != null ? optionButtons[i].GetComponent<Image>() : null;
+            _optionBaseColors[i] = im != null ? im.color : Color.white;
+        }
+    }
+
     private void Render()
     {
         if (_bank == null || _bank.Count == 0)
@@ -261,11 +275,17 @@ public class PostLabController : MonoBehaviour
             if (optionButtons[i] != null) optionButtons[i].gameObject.SetActive(on);
             if (i < optionLabels.Length && optionLabels[i] != null && on) optionLabels[i].text = q.options[i];
             // Show the answer already chosen for THIS question, so stepping back to
-            // review makes your previous pick obvious (user 2026-07-15).
+            // review makes your previous pick obvious (user 2026-07-15). Unpicked
+            // options go back to their AUTHORED colour, captured once.
             if (on && optionButtons[i] != null)
             {
                 var img = optionButtons[i].GetComponent<Image>();
-                if (img != null) img.color = (_answers != null && _answers[_current] == i) ? SelectedTint : NormalTint;
+                if (img != null)
+                {
+                    CaptureOptionColors();
+                    bool picked = _answers != null && _answers[_current] == i;
+                    img.color = picked ? SelectedTint : _optionBaseColors[i];
+                }
             }
         }
         // Re-show the explanation of an answered question while reviewing it.

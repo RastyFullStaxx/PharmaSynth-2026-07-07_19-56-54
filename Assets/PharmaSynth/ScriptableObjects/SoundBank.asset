@@ -157,3 +157,11 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: 8dbe9656aaa005b4cb5fe9aedabcf1a5, type: 3}
     category: 0
     volume: 0.5
+  - key: scoop
+    clip: {fileID: 8300000, guid: 69793f40ba9349c4ca506d1ae8b3cab7, type: 3}
+    category: 0
+    volume: 0.55
+  - key: powder-pour
+    clip: {fileID: 8300000, guid: 0947cd1a6a6eaae4e99d1eefc38f926b, type: 3}
+    category: 0
+    volume: 0.7

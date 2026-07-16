@@ -33,9 +33,13 @@ public static class CompactHudBuilder
     static readonly Vector2 MenuBtnPos  = new Vector2(-24f, -8f);      // top-right icon
     static readonly Vector2 MenuBtnSize = new Vector2(64f, 64f);
     static readonly Vector2 MenuListPos = new Vector2(-24f, -80f);     // dropdown, just below the icon
-    static readonly Vector2 MenuListSize = new Vector2(240f, 196f);
     static readonly Vector2 MenuItemSize = new Vector2(224f, 56f);
     const float MenuItemGap = 6f;
+    const float MenuListPad = 16f;                                     // top+bottom padding inside the list
+    // The list is SIZED FROM its item count (3 normally, 6 in a demo session) so
+    // the demo verbs can live inside the same dropdown (user 2026-07-15).
+    static Vector2 MenuListSizeFor(int items)
+        => new Vector2(240f, MenuListPad + items * MenuItemSize.y + (items - 1) * MenuItemGap);
 
     const float DialogueY = 361f;          // raised to keep the (now-good) dialogue put as HalfAngleV lowers the bottom edge
 
@@ -97,13 +101,18 @@ public static class CompactHudBuilder
         var timerPill = FindDeep(hud, "TimerPill");
         if (timerPill != null) timerPill.gameObject.SetActive(false);
 
-        // 2. Collapse Settings/Restart/Quit behind a single hamburger icon + dropdown.
+        // 2. Collapse Settings/Restart/Quit behind a single hamburger icon + dropdown —
+        //    plus the DEMO verbs, which now live in the same dropdown instead of a
+        //    separate floating cluster (user 2026-07-15). DemoHudController keeps
+        //    showing/hiding each demo item, so they only appear in a demo session.
         var list = FindDeep(hud, "HudMenuList");
         if (list == null) list = MakePanel(hud, "HudMenuList", PanelBg);
-        SetRect(list, new Vector2(1, 1), new Vector2(1, 1), MenuListPos, MenuListSize);
 
-        string[] items = { "SettingsBtn", "RestartBtn", "QuitBtn" };
-        for (int i = 0; i < items.Length; i++)
+        var items = new System.Collections.Generic.List<string> { "SettingsBtn", "RestartBtn", "QuitBtn" };
+        items.AddRange(FoldDemoButtonsIn(hud));      // appends any demo buttons found
+
+        SetRect(list, new Vector2(1, 1), new Vector2(1, 1), MenuListPos, MenuListSizeFor(items.Count));
+        for (int i = 0; i < items.Count; i++)
         {
             var b = FindDeep(hud, items[i]);
             if (b == null) continue;
@@ -150,6 +159,39 @@ public static class CompactHudBuilder
     }
 
     // ---- helpers -------------------------------------------------------------
+
+    /// Pull the demo verbs (Skip Step / Finish Experiment / Auto-Answer Quiz) out of
+    /// their floating row and hand their names back so they get laid out INSIDE the
+    /// hamburger dropdown (user 2026-07-15). Returns the names found, in order.
+    /// The old empty row root is retired and DemoHudController's `cluster` reference
+    /// cleared, or it would keep toggling an empty pill back on every frame.
+    static System.Collections.Generic.List<string> FoldDemoButtonsIn(RectTransform hud)
+    {
+        var found = new System.Collections.Generic.List<string>();
+        var demo = Object.FindFirstObjectByType<DemoHudController>(FindObjectsInactive.Include);
+        if (demo == null) return found;
+
+        var so = new SerializedObject(demo);
+        foreach (var field in new[] { "skipButton", "finishButton", "quizButton" })
+        {
+            var go = so.FindProperty(field)?.objectReferenceValue as GameObject;
+            if (go == null) continue;
+            go.SetActive(true);            // DemoHudController re-gates it per frame
+            found.Add(go.name);
+        }
+
+        // Retire the now-empty cluster row + stop the controller re-showing it.
+        var clusterProp = so.FindProperty("cluster");
+        var cluster = clusterProp?.objectReferenceValue as GameObject;
+        if (cluster != null && !found.Contains(cluster.name))
+        {
+            cluster.SetActive(false);
+            clusterProp.objectReferenceValue = null;
+        }
+        so.ApplyModifiedPropertiesWithoutUndo();
+        EditorUtility.SetDirty(demo);
+        return found;
+    }
 
     static void AddCloseOnce(UnityEngine.Events.UnityEvent evt, HudMenuDropdown d)
     {

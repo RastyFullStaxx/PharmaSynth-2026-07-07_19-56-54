@@ -27,9 +27,10 @@ Boot → **cube spawn room** (MainMenu scene: Laboratory / Settings / Quit; ambe
 | 6 | midterm-acetone | Midterm | Exp 6 | Acetone | WEIGH, dry-distill, 4 tests |
 | 7 | midterm-chloroform | Midterm | Exp 7 | Chloroform | haloform, decant, dichromate oxidation |
 | 8 | final-benzamide | Final | Exp 8 | Benzamide | ice bath, STIR, nitrous (nitrite!) |
-| 9 | final-aspirin | Final | game-authored | Aspirin | WEIGH on scale, crystallise, FeCl₃ |
-| 10 | final-caffeine | Final | game-authored | Caffeine | grind (edu), extract, sublime, murexide |
-| 11 | final-winemaking | Final | Exp 9 (NON-grape) | Wine | ferment Mixed Fruit Juice, CO₂/limewater |
+| 9 | final-winemaking | Final | Exp 9 (NON-grape) | Wine | ferment Mixed Fruit Juice, CO₂/limewater |
+| — | ~~final-aspirin~~ · ~~final-caffeine~~ | — | **game-authored, NOT in the manuscript** | Aspirin · Caffeine | ⚠ **NOT in the client's 2026-07-16 grouping — pending "drop?" decision; assets still present** |
+
+**⭐ CLIENT PERIOD GROUPING (2026-07-16) = exactly the manuscript's 8 bench labs (Exp 2–9):** **Prelim** = chemical reactions (2) + ethyl (3) · **Midterm** = benzoic (4) + acetanilide (5) + acetone (6) + chloroform (7) · **Finals** = benzamide (8) + wine making (9). **Tutorial (methane) = client-CONFIRMED (2026-07-16) to REMAIN as the tutorial-only experiment**, outside the graded periods — game-authored is NOT grounds to remove it (do not lump it with aspirin/caffeine). NOTE manuscript **Exp 1 = STOICHIOMETRY**, a pen-and-paper calc exercise (balance/MW/%yield) — not a bench lab, which is why methane appears there only as a worked example. ⚠ **Aspirin + Caffeine are absent from the grouping → confirm removal before deleting anything** (would take the chain 11 → 9 and touch ExperimentCatalog, the roster suite counts, the 9-end-product demo rule).
 
 ## Architecture map (mechanics detail → `Docs/systems-reference.md`)
 All under `Assets/PharmaSynth/Scripts/`, **thin MonoBehaviours over pure suite-tested cores** (mandatory pattern; every component has a `Bind()` seam — edit-mode AddComponent fires no Awake/OnEnable).
@@ -50,6 +51,7 @@ All under `Assets/PharmaSynth/Scripts/`, **thin MonoBehaviours over pure suite-t
 | Working on… | Open |
 |---|---|
 | An experiment's chemistry/steps/reagents/tests/quiz/layout | `Docs/experiments-reference.md` |
+| **Which apparatus a step uses** (the manual never names tools in a step) + per-step apparatus, status flags, anchors | `Docs/experiments-reference.md` §**Apparatus** — **stage from the PROCEDURE, never the list** (the lists are defective) |
 | **Perfecting the NEXT experiment (⭐ current work)** — polish status, the methane template flow, the REUSABLE systems (watch-panel hints, `ProcessReadout` temp texts, granular SFX, anchors, quiz→grade, reset) + the hard-won gotchas | `Docs/experiments-reference.md` §**POLISH STATUS** (read BEFORE touching any module) |
 | Flow, gate states, review, grading, restarts, demo mode | `Docs/gameplay-flow.md` |
 | Any mechanic (liquids/verbs/breakage/feedback/NPC), **builder menus + rebuild orders**, adding content | `Docs/systems-reference.md` |
@@ -90,10 +92,9 @@ All under `Assets/PharmaSynth/Scripts/`, **thin MonoBehaviours over pure suite-t
 - Every change: suite green + zero-error console + DevCapture for visual work. Quest 3 not delivered — test in-editor (or headset via Link); a human play-tests by pressing Play (MCP play mode is unreliable). Escalate to client if no headset by W5 (Aug 4–10).
 - Experiments are DATA; confirm game-design changes with the user; builders/menus for scene edits (idempotent, re-runnable); match inherited code style.
 
-## ⭐ CURRENT WORK — perfecting the 11 experiments ONE BY ONE (user directive 2026-07-15)
-Each module goes from "data exists" → "actually playable end-to-end in VR", finished, then the next. **Read `Docs/experiments-reference.md` §POLISH STATUS first** — it holds the polish table, the methane template flow, the reusable systems (don't rebuild them) and the gotchas that cost days. **Cross-check the module against the manuscript BEFORE building.**
-- ✅ **tutorial-methane DONE (2026-07-15)** — scoop → grind → load tube → heat → collect → match test → quiz → grade.
-- ⬜ **NOW: Prelim.** `prelim-chemical-compounding` is next but **opens on a client decision** (its battery diverges from manuscript Exp 2 — see experiments-reference Deviations); `prelim-ethyl-alcohol` is the only module the manuscript gives a bent/delivery tube + cotton swab + CO₂→limewater test.
+## ⭐ CURRENT WORK — perfecting the experiments ONE BY ONE (user directive 2026-07-15)
+Each module goes from "data exists" → "actually playable end-to-end in VR", finished, then the next. **Read `Docs/experiments-reference.md` §POLISH STATUS first** — polish table, methane template flow, reusable systems (don't rebuild them), gotchas that cost days. **Cross-check against the manuscript BEFORE building.** ✅ **tutorial-methane DONE (2026-07-15)** — scoop → grind → load tube → heat → collect → match test → quiz → grade.
+- 🔨 **NOW: Prelim → `prelim-chemical-compounding`.** Client chose **rebuild to manuscript Exp 2**; the 13-task graph + ILOs + quiz are authored. **The VR-adaptation design is mid-discussion — resume from the OPEN list in `experiments-reference.md` §prelim-chemical-compounding → VR adaptation** (pre-set water?, period→module picker, replay rule) BEFORE authoring `Layout_ChemicalCompounding`. Then `prelim-ethyl-alcohol` (the only module the manuscript gives a bent/delivery tube + cotton swab + CO₂→limewater test).
 
 ## Current state (2026-07-12, end of W5.12 — suite 1023/1023)
 Engine, all 11 experiments, the full client-confirmed loop, the W5.8–W5.10 overhauls, and the **W5.12 §13 playtest batch** (floor-only respawn + bottle refills, 7.0 break leniency + nature audit + display names, pour sphere-assist + P overlay, scoop verb, 2-row workspace shelf + apparatus kits, ApparatusSnap assemblies, brush cleaning, holo wrap/scroll, dialogue queue/dwell, watch-gesture suppression) are DONE and regression-locked. **Pending: joint headset pour session (§13e — dev key P) + a W5.12 feel pass** (snap/detach, kit reachability, break feel), then §10–§12 residue. Unity MCP approval is **LIVE again** (verified 2026-07-15 — `Unity_ManageEditor GetState` responds; `Unity_AssetGeneration_*` works: `scoop`/`powder-pour` SFX generated via `elevenlabs-sound-effects-v2`, model id REQUIRED or the call errors). Request-file/headless fallbacks still work if it drops. Blocked buckets: on-device week (no headset), client sign-offs, **NPC voice** generation (needs ELEVENLABS_API_KEY — note SFX do NOT need the key; they go through Unity credits).

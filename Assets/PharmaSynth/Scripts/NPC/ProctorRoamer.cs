@@ -89,6 +89,20 @@ public class ProctorRoamer : MonoBehaviour
     /// Quiz/grade time — come home and stay put until the next run.
     private void OnFinished(ExperimentResult _) => _allowRoam = false;
 
+    /// Park him back at his authored spot NOW and stop roaming — optionally turned
+    /// to face someone. The review flow calls this: the quiz starts while the run is
+    /// still live (Finish only lands on submit), so he was still mid-roam and the
+    /// player got teleported to a corner he wasn't standing in (user 2026-07-15).
+    public void ReturnHomeAndHold(Transform faceTarget = null)
+    {
+        _allowRoam = false;
+        transform.SetPositionAndRotation(_home, _homeRot);
+        if (faceTarget == null) return;
+        Vector3 d = faceTarget.position - transform.position;
+        d.y = 0f;                                   // stay upright — never tip toward the head
+        if (d.sqrMagnitude > 1e-4f) transform.rotation = Quaternion.LookRotation(d.normalized, Vector3.up);
+    }
+
     private static bool HasBool(Animator a, string param)
     {
         if (a == null || a.runtimeAnimatorController == null) return false;
