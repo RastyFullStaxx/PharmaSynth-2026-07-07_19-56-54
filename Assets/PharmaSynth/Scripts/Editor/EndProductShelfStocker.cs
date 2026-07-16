@@ -5,18 +5,26 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using XRGrab = UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable;
 
-/// Stocks the finished experiment PRODUCTS onto the west-wall ReagentShelf so
-/// EndProductVisibility can hide them in regular lab mode and reveal them in a
-/// demo session (user 2026-07-12: every end-game reagent lives on the shelf,
-/// never as a floating vial by the door). Idempotent: products already on the
-/// shelf are left exactly where they are (manual placement preserved); only the
-/// missing ones are added, greedily into the roomiest free cubby slots.
+/// ⛔ STOCKS NOTHING as of 2026-07-16 — kept only to mint Chem_Wine and to hold
+/// this reasoning where the next session will look for it.
 ///
-/// Product set = the manuscript's bottleable syntheses (Appendix C §1). Methane
-/// is a gas and Chemical Compounding is an identification lab, so neither has a
-/// shelf product; Sodium Acetate and Grape Juice are FEEDSTOCKS (not products)
-/// and stay always-visible. The Wine Making product is Wine (Grape Juice is only
-/// its feedstock), so this also mints Chem_Wine if it doesn't exist yet.
+/// User 2026-07-16: "those that are the END products which is the goal of the
+/// experiments must not exist as we'll lose the very meaning of the experiment —
+/// the player will manually craft them." A ready-made bottle of the thing you are
+/// there to synthesise destroys the experiment, so products are no longer stocked
+/// at all.
+///
+/// Acetanilide · Benzamide · Chloroform · Wine are named as a reagent by NO
+/// manuscript procedure — their own chemical tests consume the product the player
+/// just made (Exp 5's "place 1 gram of acetanilide in a test tube" is testing YOUR
+/// synthesis). They are never inputs to anything, so they are simply absent rather
+/// than gated. Caffeine went with its dropped module.
+///
+/// Ethanol · Acetone · Benzoic Acid are the exception: each is some module's goal
+/// AND a manuscript-listed reagent for others (Ethanol → Exp 2, 6; Acetone →
+/// Exp 2, 7; Benzoic Acid → Exp 4). They stock as ordinary RAW reagents via
+/// RawReagentCatalog / ReagentCabinetBuilder, and EndProductVisibility hides each
+/// ONLY while its own module is running — see that class.
 ///
 /// Run order after this: Generate Reagent Labels → Wire End-Product Gate →
 /// Wire Shelf Pourers → Re-Home Scene Items (Adopt Current).
@@ -26,15 +34,8 @@ public static class EndProductShelfStocker
     const string RegPath = "Assets/PharmaSynth/ScriptableObjects/Reactions/MasterReactionRegistry.asset";
     const string ChemDir = "Assets/PharmaSynth/ScriptableObjects/Chemicals/";
 
-    /// The seven finished products with a bottleable chemical. Matches
-    /// DemoMode.IsEndProduct exactly (kept in sync by the self-tests).
-    /// (Aspirin + Caffeine dropped 2026-07-16 with their modules; Aspirin is now a
-    /// raw reagent — Exp 2 §D hydrolyses it — so it stocks from RawReagentCatalog.)
-    static readonly string[] Products =
-    {
-        "Ethanol", "Benzoic Acid", "Acetanilide", "Acetone", "Chloroform",
-        "Benzamide", "Wine",
-    };
+    /// EMPTY BY DESIGN — see the class note. Products are crafted, never stocked.
+    static readonly string[] Products = { };
 
     /// Vial-centre heights of the four ledges inside the Environment/3x4 cubby
     /// (read off the existing shelf bottles: 0.861 / 1.252 / 1.643 / 2.034).

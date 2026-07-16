@@ -16,11 +16,10 @@ public static class ChemicalStateAudit
     static readonly string[] SolidHints =
     {
         "Sodium Acetate", "Calcium Acetate", "Soda Lime", "Salicylic",
-        "Benzoic Acid", "Acetanilide", "Benzamide", "Caffeine", "Aspirin",
+        "Benzoic Acid", "Acetanilide", "Benzamide", "Aspirin",
         "Sodium Nitrite", "Urea",   // NOT KMnO4: the manuscript only ever uses the 0.1% SOLUTION
         "Iodine Crystals", "Yeast",
-        // NOT hinted: Murexide / Murexide Reagent — kept Liquid by design (the
-        // pourable is a reagent SOLUTION; the result shows in a wet test tube).
+        // (Murexide + Caffeine purged 2026-07-16 with the dropped Caffeine module.)
     };
 
     [MenuItem("Tools/PharmaSynth/Audit Chemical States")]

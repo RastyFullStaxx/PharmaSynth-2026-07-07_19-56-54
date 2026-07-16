@@ -20,7 +20,13 @@ public static class ReagentCabinetBuilder
     const float UnitW = 1.16f, UnitH = 1.95f, UnitD = 0.6f;   // depth matches the counters (user 2026-07-11)
     const float RootY = 0.3f;            // lifted off the floor (user 2026-07-11: base overlapped it)
     const int SlotsPerShelf = 7;
-    static readonly float[] ShelfY = { 0.5f, 0.9f, 1.3f, 1.65f };
+    /// Stocking heights. 0.11 = the top face of the Base panel (which spans y 0–0.1):
+    /// BuildUnit always made that surface and nothing ever used it, so every unit had
+    /// a whole empty bottom row — 7 wasted slots each (user 2026-07-16: "there is a
+    /// row that still isn't complete, and two more rows top and bottom").
+    /// 5 shelves x 7 slots x 2 units = 70, comfortably over the catalog's 57 rows
+    /// (Acids 22 → 4 rows; Organics+Tests+Consumables 35 → exactly 5).
+    static readonly float[] ShelfY = { 0.11f, 0.5f, 0.9f, 1.3f, 1.65f };
     const string TripoBucketPath = "Assets/PharmaSynth/Art/Generated/Refs/IceBucket.prefab";
     static readonly Color Body = new Color(0.78f, 0.8f, 0.82f);
     static readonly Color Board = new Color(0.3f, 0.33f, 0.4f);
@@ -112,7 +118,7 @@ public static class ReagentCabinetBuilder
             var unit = BuildUnit(root.transform, unitName, unitPos, unitRot, bodyMat, boardMat);
             var rows = new List<RawReagentCatalog.Row>();
             foreach (var row in RawReagentCatalog.Rows)
-                if (groups[u].Contains(row.group)) rows.Add(row);
+                if (groups[u].Contains(row.group) && !IsHandPlacedConsumable(row)) rows.Add(row);
 
             int slot = 0;
             foreach (var row in rows)
@@ -184,6 +190,20 @@ public static class ReagentCabinetBuilder
         return null;
     }
 
+    /// ⛔ NEVER re-stock these: the ice bucket and the paper/stick consumable boxes
+    /// are HAND-PLACED (user 2026-07-16: "don't include the ice bucket, filter paper,
+    /// cotton, litmus and match sets — return them to their previous positions").
+    ///
+    /// They are not bottles and don't belong in a slotted shelf grid: the bucket sits
+    /// on the floor, the boxes sit where the player can grab a match or a strip. A
+    /// rebuild here destroys and recreates everything it stocks, so including them
+    /// silently wiped positions that had been placed by hand (the bucket even carried
+    /// a hand-set -88° rotation). The builder only preserves UNIT transforms, never
+    /// the items inside — so anything hand-placed must be excluded, not stocked.
+    static bool IsHandPlacedConsumable(RawReagentCatalog.Row row)
+        => row.labware == RawReagentCatalog.LabwareKind.SmallBox
+        || row.labware == RawReagentCatalog.LabwareKind.IceBucket;
+
     static GameObject BuildUnit(Transform parent, string name, Vector3 pos, Quaternion rot, Material body, Material board)
     {
         var unit = new GameObject(name);
@@ -196,8 +216,13 @@ public static class ReagentCabinetBuilder
         MakePanel(unit.transform, "SideR", new Vector3(0f, UnitH * 0.5f, UnitW * 0.5f), new Vector3(UnitD, UnitH, 0.04f), body);
         MakePanel(unit.transform, "Top", new Vector3(0f, UnitH, 0f), new Vector3(UnitD, 0.05f, UnitW), board);
         MakePanel(unit.transform, "Base", new Vector3(0f, 0.05f, 0f), new Vector3(UnitD, 0.1f, UnitW), board);
+        // The lowest stocking height (0.11) IS the Base's top face — don't build a
+        // redundant shelf panel on top of it.
         foreach (float y in ShelfY)
+        {
+            if (y < 0.15f) continue;
             MakePanel(unit.transform, "Shelf_" + y, new Vector3(0f, y, 0f), new Vector3(UnitD - 0.06f, 0.03f, UnitW - 0.08f), board);
+        }
         return unit;
     }
 

@@ -171,7 +171,6 @@ public static class LabInfoDatabase
         AddReagent("Sodium Acetate", "The sodium salt of acetic acid. Heated with soda lime it loses CO2 and gives off methane — the feedstock pair for the tutorial synthesis. Low hazard, but keep it dry.");
         AddReagent("Soda Lime", "A mix of sodium and calcium hydroxide. Ground with sodium acetate and heated strongly, it drives off methane gas. A caustic base — avoid skin contact.");
         AddReagent("Glacial Acetic Acid", "Nearly pure acetic acid (>99%) — 'glacial' because it freezes just below room temperature. It's the acid solvent/catalyst in the acetanilide prep. Pungent and corrosive; use in the hood.");
-        AddReagent("Acetic Anhydride", "A powerful acetylating agent — it swaps an acetyl group onto salicylic acid to make aspirin. Reacts sharply with water and irritates eyes and lungs; work in the fume hood.");
         AddReagent("Potassium Permanganate 0.1%", "Deep-purple strong oxidiser. It oxidises benzaldehyde all the way to benzoic acid; as it reacts the purple fades and brown manganese solid appears. Stains skin — handle with gloves.");
         AddReagent("Benzaldehyde", "Oily liquid with an almond smell. Potassium permanganate oxidises it to benzoic acid in the midterm. Volatile and an irritant — keep it in the hood and capped.");
         AddReagent("Acetyl Chloride", "A fiercely reactive acetylating agent that fumes in moist air (releasing HCl). It converts aniline into acetanilide. Corrosive; add it carefully in the fume hood.");
@@ -186,8 +185,6 @@ public static class LabInfoDatabase
         AddReagent("Bromine Water", "Orange bromine solution. It's decolourised (loses its colour) by unsaturated or easily-oxidised compounds, so fading confirms them. Toxic and irritating — hood only.");
         AddReagent("Sodium Hypochlorite", "Household-strength bleach — an oxidiser and chlorinating agent used in iodoform-type tests and to make chloroform. Never mix it with acid (releases toxic chlorine gas).");
         AddReagent("Schiff's Reagent", "A colourless dye reagent that turns magenta with ALDEHYDES but stays clear with ketones — so it's the test that tells acetone (a ketone, negative) from an aldehyde.");
-        AddReagent("Murexide", "Ammonium purpurate. Forming a purple murexide colour is the positive result that confirms caffeine.");
-        AddReagent("Murexide Reagent", "The reagent set for the murexide test: evaporate the sample with oxidiser, then add ammonia — a purple colour confirms caffeine.");
         AddReagent("Limewater", "Clear calcium hydroxide solution. Bubbling carbon dioxide through it turns it milky white — the classic confirmatory test for CO2 from fermentation or a carbonate.");
         AddReagent("Yeast", "Living fungus that ferments sugars into ethanol and carbon dioxide. It's the biological engine of the wine-making module — keep it warm, not hot, or you kill it.");
         AddReagent("Mixed Fruit Juice", "Mixed non-grape fruit juice (the manuscript excludes grapes) - the sugar source yeast ferments into wine (ethanol). Its dissolved sugars are the 'food' that drives the reaction.");
@@ -207,7 +204,6 @@ public static class LabInfoDatabase
         AddReagent("Chloroform", "Dense, sweet-smelling solvent (CHCl3), made here by reacting acetone with bleaching powder. A suspected carcinogen and NON-flammable — a lit splint goes out over it. Use only in the fume hood.");
         AddReagent("Benzamide", "The simplest aromatic amide — the final-period product from benzoyl chloride and ammonia. Boil it with alkali and it hydrolyses, releasing ammonia that blues damp litmus (its confirmatory test).");
         AddReagent("Aspirin", "Acetylsalicylic acid, a common pain reliever — made by acetylating salicylic acid with acetic anhydride and an acid catalyst. Unlike its starting material it gives NO violet with ferric chloride, which confirms the reaction worked.");
-        AddReagent("Caffeine", "Bitter alkaloid extracted from tea and coffee. It's confirmed by the purple murexide test — evaporate with an oxidiser, add ammonia, and watch for purple.");
         AddReagent("Wine", "The fermented product of the wine-making module — grape sugar turned to ethanol by yeast, with CO2 bubbling off through the fermentation lock.");
     }
 }

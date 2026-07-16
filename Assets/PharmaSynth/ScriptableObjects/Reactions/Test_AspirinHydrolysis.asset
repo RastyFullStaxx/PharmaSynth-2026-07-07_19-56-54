@@ -20,4 +20,4 @@ MonoBehaviour:
   minTemperatureC: 90
   outcome: 1
   evolvesGas: 0
-  expectedObservation: Boiling in acid hydrolyses the aspirin, freeing salicylic acid into the filtrate.
+  expectedObservation: 'Boiling in acid hydrolyses the aspirin, freeing salicylic acid into the filtrate.'

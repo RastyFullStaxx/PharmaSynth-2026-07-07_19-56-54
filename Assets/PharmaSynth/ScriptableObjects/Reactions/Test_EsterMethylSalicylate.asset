@@ -20,4 +20,4 @@ MonoBehaviour:
   minTemperatureC: 50
   outcome: 4
   evolvesGas: 0
-  expectedObservation: Sharp wintergreen odour - methyl salicylate has formed. (Odour shown on screen.)
+  expectedObservation: 'Sharp wintergreen odour - methyl salicylate has formed. (Odour shown on screen.)'

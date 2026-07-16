@@ -20,4 +20,4 @@ MonoBehaviour:
   minTemperatureC: 0
   outcome: 1
   evolvesGas: 0
-  expectedObservation: Deep violet at once - ferric chloride finds the enolic phenol. The four other alcohols stay unchanged: that contrast IS the test.
+  expectedObservation: 'Deep violet at once - ferric chloride finds the enolic phenol. The four other alcohols stay unchanged: that contrast IS the test.'

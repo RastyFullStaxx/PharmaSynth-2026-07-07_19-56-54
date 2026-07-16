@@ -40,9 +40,14 @@ public static class LabelForge
         // stocked bottle/jar; boxes and the ice bucket (not tubular) get a FLAT
         // label plate on their open face instead of a curved band. Tiny singles
         // (matchsticks, litmus strips) stay label-free — the hover card names them.
-        var cabinets = GameObject.Find("ReagentCabinets");
-        if (cabinets != null)
+        // BOTH roots: the cabinets hold the bottles, and LabConsumables holds the
+        // hand-placed ice bucket + paper/stick boxes, which are NOT reagents and were
+        // moved out of the cabinet (user 2026-07-16). Scanning only "ReagentCabinets"
+        // silently left every consumable card-less the moment they moved.
+        foreach (var rootName in new[] { "ReagentCabinets", "LabConsumables" })
         {
+            var cabinets = GameObject.Find(rootName);
+            if (cabinets == null) continue;
             foreach (var lp in cabinets.GetComponentsInChildren<LiquidPhysics>(true))
             {
                 string chem = lp.currentChemical != null ? lp.currentChemical.chemicalName : null;

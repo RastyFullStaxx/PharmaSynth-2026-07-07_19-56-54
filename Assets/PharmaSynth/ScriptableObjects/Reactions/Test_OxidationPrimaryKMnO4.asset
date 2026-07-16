@@ -20,4 +20,4 @@ MonoBehaviour:
   minTemperatureC: 0
   outcome: 1
   evolvesGas: 0
-  expectedObservation: Purple fades fastest - the primary alcohol oxidises readily, leaving brown manganese dioxide. Note the decolorisation time.
+  expectedObservation: 'Purple fades fastest - the primary alcohol oxidises readily, leaving brown manganese dioxide. Note the decolorisation time.'

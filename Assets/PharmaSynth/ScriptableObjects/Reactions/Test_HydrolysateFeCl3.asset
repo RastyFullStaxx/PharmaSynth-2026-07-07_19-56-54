@@ -20,4 +20,4 @@ MonoBehaviour:
   minTemperatureC: 0
   outcome: 1
   evolvesGas: 0
-  expectedObservation: Violet - free salicylic acid is present, so the ester was hydrolysed. Plain unboiled aspirin gives NO violet: that is the control.
+  expectedObservation: 'Violet - free salicylic acid is present, so the ester was hydrolysed. Plain unboiled aspirin gives NO violet: that is the control.'

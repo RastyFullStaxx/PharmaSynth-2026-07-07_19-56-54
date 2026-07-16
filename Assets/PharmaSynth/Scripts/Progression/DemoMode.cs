@@ -72,7 +72,11 @@ public static class DemoMode
         switch (moduleId)
         {
             case "tutorial-methane": return "Sodium Acetate";        // gas product — show the feedstock
-            case "prelim-chemical-compounding": return "Ethanol";
+            // Exp 2 is an IDENTIFICATION lab — it synthesises nothing. ("Ethanol" here
+            // was a leftover from the retired single-substrate battery, and it would
+            // have hidden ethanol during the very experiment that needs it as a
+            // sample.) 2026-07-16.
+            case "prelim-chemical-compounding": return null;
             case "prelim-ethyl-alcohol": return "Ethanol";
             case "midterm-benzoic-acid": return "Benzoic Acid";
             case "midterm-acetanilide": return "Acetanilide";
@@ -84,27 +88,34 @@ public static class DemoMode
         }
     }
 
-    /// Chemicals that are an experiment's END PRODUCT (user 2026-07-11: in the
-    /// regular laboratory these must NOT sit ready-made on the shelves — the
-    /// player synthesises them; each experiment's own stage still spawns what
-    /// its manuscript reagent list requires). Demo sessions show them.
-    /// (Sodium Acetate and Mixed Fruit Juice are excluded — they are FEEDSTOCKS, not
-    /// products: Sodium Acetate feeds Methane, the fruit juice ferments into Wine.
-    /// Aspirin was delisted 2026-07-16 with the Aspirin module: Exp 2 §D hydrolyses
-    /// it, so it is now a RAW REAGENT and must stay on the shelf outside demo too.
-    /// Both stay always-visible on the shelf; the fermented product Wine is the
-    /// gated end product of the Wine Making experiment.)
+    /// Chemicals that are SOME module's end product AND still exist on the bench,
+    /// so `EndProductVisibility` can hide each one WHILE ITS OWN MODULE RUNS
+    /// (user 2026-07-11: the player must synthesise them, not find them ready-made;
+    /// user 2026-07-16: a ready-made goal "loses the very meaning of the experiment").
+    ///
+    /// Only THREE remain, and only because each is also a manuscript-listed REAGENT
+    /// for other experiments, so it cannot simply be deleted:
+    ///     Ethanol      — goal of Exp 3, but a reagent in Exp 2 and Exp 6
+    ///     Acetone      — goal of Exp 6, but a reagent in Exp 2 and Exp 7
+    ///     Benzoic Acid — goal of Exp 4, and its own reference sample
+    /// Exp 2 runs BEFORE Exp 3 and Exp 6, so hiding these globally (what happened
+    /// until 2026-07-16) stripped Exp 2 of reagents it cannot proceed without.
+    ///
+    /// The four PURE products — Acetanilide, Benzamide, Chloroform, Wine — are named
+    /// as a reagent by no procedure (their own tests consume the player's synthesis),
+    /// so they were DELETED from the shelf rather than gated, along with Caffeine's
+    /// orphan. Aspirin was delisted with its module: Exp 2 §D hydrolyses it, so it is
+    /// a plain raw reagent. Sodium Acetate and Mixed Fruit Juice are FEEDSTOCKS.
+    ///
+    /// NOTE this is no longer "hide whenever not in demo" — see EndProductVisibility,
+    /// which gates on the RUNNING module's own product via ProductFor().
     public static bool IsEndProduct(string chemicalName)
     {
         switch (chemicalName)
         {
             case "Ethanol":
             case "Benzoic Acid":
-            case "Acetanilide":
             case "Acetone":
-            case "Chloroform":
-            case "Benzamide":
-            case "Wine":
                 return true;
             default:
                 return false;

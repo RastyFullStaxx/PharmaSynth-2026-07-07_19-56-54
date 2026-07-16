@@ -1999,6 +1999,24 @@ public static class PharmaSelfTests
         }
     }
 
+    const string LayoutDir = "Assets/PharmaSynth/ScriptableObjects/Layouts";
+
+    /// itemIds of the PERMANENT bench — the Eq_*/Kit_*/Raw_* apparatus that lives in
+    /// the SCENE, not in any layout, because the hard client rule keeps every general
+    /// tool out at all times. A station may point at any of these instead of staging
+    /// its own copy. Scanned from the open scene so it can never drift from reality.
+    static HashSet<string> BenchItemIds
+    {
+        get
+        {
+            var ids = new HashSet<string>();
+            foreach (var li in UnityEngine.Object.FindObjectsByType<LabItem>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (li != null && !string.IsNullOrEmpty(li.itemId)) ids.Add(li.itemId);
+            return ids;
+        }
+    }
+
     /// EVERY layout's taskIds must exist in its module's graph, and every task the
     /// graph declares must have some way to be completed.
     ///
@@ -2513,8 +2531,6 @@ public static class PharmaSelfTests
         // violet. "Nothing happens" IS each test's answer and the contrast is the
         // lesson — authoring a rule there would invent chemistry the manuscript denies.
         {
-            var reg = AssetDatabase.LoadAssetAtPath<ReactionRegistry>(
-                "Assets/PharmaSynth/ScriptableObjects/Reactions/MasterReactionRegistry.asset");
             ReactionRule Rule(string n) => AssetDatabase.LoadAssetAtPath<ReactionRule>(
                 "Assets/PharmaSynth/ScriptableObjects/Reactions/" + n + ".asset");
             var positives = new[] { "Test_EnolPhenolFeCl3", "Test_OxidationPrimaryKMnO4",
@@ -2701,13 +2717,47 @@ public static class PharmaSelfTests
                 foreach (var bnd in v.bindings)
                     if (lib.GetChemical(bnd.reagentChemical) == null) resolveMisses++;
             }
-            // Every station must be completable by a prop that exists in the same layout.
-            var ids = new HashSet<string>();
+            // Every station must be completable by an item that EXISTS — either a prop
+            // the layout stages, or one of the permanent bench items.
+            //
+            // This used to demand the item be in the SAME LAYOUT, which quietly encoded
+            // the opposite of the hard client rule ("ALL general tools are ALWAYS on the
+            // bench") and pushed layouts into staging their own funnel/burner/dropper —
+            // 46 duplicates of apparatus that was already there (user 2026-07-16). A
+            // station's ZoneItemSensor matches a LabItem.itemId wherever it lives, so
+            // pointing at the bench (kit-bunsenburner, kit-funnel) is the correct shape.
+            var ids = new HashSet<string>(BenchItemIds);
             foreach (var p in l.props) ids.Add(p.itemId);
             foreach (var s in l.stations)
                 if (!string.IsNullOrEmpty(s.requiredItemId) && !ids.Contains(s.requiredItemId)) resolveMisses++;
         }
         A("builder: every layout resolves all prefab/chemical/station names", resolveMisses == 0);
+
+        // ⛔ A LAYOUT MUST NOT RE-STAGE THE PERMANENT BENCH (user 2026-07-16).
+        // Every general tool and raw reagent is ALWAYS out (the hard client rule), so
+        // staging a dropper/funnel/burner/spatula or a pourable reagent bottle spawns a
+        // DUPLICATE of something already on the bench. Exp 2's first draft shipped 46 of
+        // them — 21 bottles, 2 droppers, a spatula, a funnel, a burner, 20 tubes — beside
+        // the Eq_*/Kit_*/Raw_* originals. Stations point at bench itemIds instead.
+        {
+            var bench = BenchItemIds;
+            bool noToolDupes = true, noReagentDupes = true;
+            string dupeNote = "";
+            foreach (var g in AssetDatabase.FindAssets("t:ExperimentLayout", new[] { LayoutDir }))
+            {
+                var l = AssetDatabase.LoadAssetAtPath<ExperimentLayout>(AssetDatabase.GUIDToAssetPath(g));
+                if (l == null || l.moduleId != "prelim-chemical-compounding") continue;   // the rebuilt module
+                foreach (var p in l.props)
+                {
+                    if (bench.Contains(p.itemId)) { noToolDupes = false; dupeNote = l.name + " -> " + p.itemId; }
+                    // A pourable bottle IS shelf stock — the shelf already holds all 21.
+                    if (p.pourable && !string.IsNullOrEmpty(p.fillChemical))
+                    { noReagentDupes = false; dupeNote = l.name + " -> bottle of " + p.fillChemical; }
+                }
+            }
+            A("bench: compounding stages no tool the bench already has" + (noToolDupes ? "" : "  [" + dupeNote + "]"), noToolDupes);
+            A("bench: compounding stages no reagent bottle (the shelf holds them)" + (noReagentDupes ? "" : "  [" + dupeNote + "]"), noReagentDupes);
+        }
 
         var allBgo = new GameObject("sb_all");
         try
@@ -3581,17 +3631,41 @@ public static class PharmaSelfTests
         A("demo: pass state stays honest", !demoFlow.IsPassed("tutorial-methane") && demoFlow.PassedCount() == 0);
         A("demo: normal flow unaffected", !normalFlow.IsPeriodUnlocked(ExperimentPeriod.Final));
 
-        // End products hide outside demo sessions (user 2026-07-11).
-        A("endproduct: ethanol is a product", DemoMode.IsEndProduct("Ethanol"));
-        A("endproduct: acetone is a product", DemoMode.IsEndProduct("Acetone"));
-        // Aspirin flipped product -> RAW 2026-07-16: Exp 2 §D hydrolyses it, so it
-        // must stay on the bench in normal play (its module was dropped).
-        A("endproduct: aspirin is now RAW, not a product", !DemoMode.IsEndProduct("Aspirin"));
-        A("endproduct: wine is the winemaking product", DemoMode.IsEndProduct("Wine"));
+        // A ready-made GOAL destroys the experiment (user 2026-07-16), so a product
+        // is hidden while ITS OWN module runs — and the four PURE products, which no
+        // procedure ever names as a reagent, were deleted from the shelf outright.
+        // Only the dual-role three survive: each is also a manuscript reagent.
+        A("endproduct: ethanol is dual-role (goal of Exp 3, reagent in Exp 2/6)",
+            DemoMode.IsEndProduct("Ethanol"));
+        A("endproduct: acetone is dual-role (goal of Exp 6, reagent in Exp 2/7)",
+            DemoMode.IsEndProduct("Acetone"));
+        A("endproduct: benzoic acid is dual-role (goal of Exp 4, its own reference)",
+            DemoMode.IsEndProduct("Benzoic Acid"));
+        // Deleted, not gated — their own tests consume the player's synthesis, so
+        // they are never an input and no bottle should exist to hide.
+        A("endproduct: the 4 pure products are GONE, not gated",
+            !DemoMode.IsEndProduct("Acetanilide") && !DemoMode.IsEndProduct("Benzamide")
+            && !DemoMode.IsEndProduct("Chloroform") && !DemoMode.IsEndProduct("Wine"));
+        A("endproduct: aspirin is RAW (Exp 2 §D hydrolyses it)", !DemoMode.IsEndProduct("Aspirin"));
         A("endproduct: sulfuric acid is raw", !DemoMode.IsEndProduct("Sulfuric Acid"));
         A("endproduct: sodium acetate is feedstock", !DemoMode.IsEndProduct("Sodium Acetate"));
         A("endproduct: fruit juice is feedstock, not product", !DemoMode.IsEndProduct("Mixed Fruit Juice") && !DemoMode.IsEndProduct("Grape Juice"));
         A("endproduct: null safe", !DemoMode.IsEndProduct(null));
+
+        // THE rule: hide only the RUNNING module's own product.
+        A("gate: ethanol hides while Exp 3 synthesises it",
+            EndProductVisibility.HiddenProductFor("prelim-ethyl-alcohol", false) == "Ethanol");
+        A("gate: acetone hides while Exp 6 synthesises it",
+            EndProductVisibility.HiddenProductFor("midterm-acetone", false) == "Acetone");
+        // The bug this whole design exists to prevent: Exp 2 runs BEFORE Exp 3/6 and
+        // needs ethanol (enol sample, ester) + acetone (Tollen's contrast). A global
+        // per-chemical hide stripped them and made Exp 2 unplayable outside demo.
+        A("gate: Exp 2 hides NOTHING — it is an ID lab and needs ethanol + acetone",
+            EndProductVisibility.HiddenProductFor("prelim-chemical-compounding", false) == null);
+        A("gate: a demo session hides nothing",
+            EndProductVisibility.HiddenProductFor("prelim-ethyl-alcohol", true) == null);
+        A("gate: nothing running hides nothing",
+            EndProductVisibility.HiddenProductFor(null, false) == null);
     }
 
     // Consumable dispenser (user 2026-07-11: grab the box → pull a single piece;
@@ -3872,13 +3946,19 @@ public static class PharmaSelfTests
         A("match: lit/spent never re-ignite", !Matchstick.ShouldIgnite(0.1f, 120f, true, false)
             && !Matchstick.ShouldIgnite(0.1f, 120f, false, true));
 
-        // Demo ready-made product per module.
-        string[] ids = { "tutorial-methane", "prelim-chemical-compounding", "prelim-ethyl-alcohol",
+        // Product per module — the chemical each one exists to make, which is what
+        // EndProductVisibility hides while that module runs.
+        // Chemical Compounding is EXCLUDED: it is an identification lab and
+        // synthesises nothing. (It returned "Ethanol" until 2026-07-16 — a leftover
+        // from the retired single-substrate battery — which would have hidden
+        // ethanol during the very experiment that needs it as a sample.)
+        string[] ids = { "tutorial-methane", "prelim-ethyl-alcohol",
                          "midterm-benzoic-acid", "midterm-acetanilide", "midterm-acetone", "midterm-chloroform",
                          "final-benzamide", "final-winemaking" };
         bool products = true;
         foreach (var id in ids) if (string.IsNullOrEmpty(DemoMode.ProductFor(id))) products = false;
-        A("demo: ready-made product for all 9 modules", products);
+        A("demo: a product for each of the 8 synthesising modules", products);
+        A("demo: the ID lab synthesises nothing", DemoMode.ProductFor("prelim-chemical-compounding") == null);
         A("demo: winemaking product is Wine (not the grape-juice feedstock)", DemoMode.ProductFor("final-winemaking") == "Wine");
         A("demo: unknown module has none", DemoMode.ProductFor("nope") == null);
     }

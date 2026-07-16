@@ -20,11 +20,36 @@ public class PlacementAnchor : MonoBehaviour
              "which would draw a useless 1-metre sphere over the whole bench.")]
     public bool previewsScale = false;
 
+    [Tooltip("Rack SLOT anchors (Slot_0…): draws a GHOST TEST TUBE at real size (0.13 m) along the " +
+             "anchor's +Y, so the seated tube can be eyeballed while dragging — a bare dot can't show " +
+             "whether a tube will sit in the hole, lean, or float.")]
+    public bool previewsTube = false;
+
+    /// Real test-tube height (RealSizes "TestTube"). Kept here so the ghost matches
+    /// what actually gets seated.
+    public const float TubeHeight = 0.13f;
+    public const float TubeRadius = 0.008f;
+
     void OnDrawGizmos()
     {
         // A dot marks the spot.
         Gizmos.color = gizmoColor;
         Gizmos.DrawSphere(transform.position, gizmoRadius);
+
+        if (previewsTube)
+        {
+            // Ghost tube: a wire box the size of a real tube, standing on the anchor
+            // along its +Y — drag/rotate the anchor until this sits in the hole.
+            Gizmos.color = new Color(gizmoColor.r, gizmoColor.g, gizmoColor.b, 0.75f);
+            Gizmos.matrix = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
+            Gizmos.DrawWireCube(new Vector3(0f, TubeHeight * 0.5f, 0f),
+                                new Vector3(TubeRadius * 2f, TubeHeight, TubeRadius * 2f));
+            // Rim ring = the tube's mouth, the part that must clear the rack.
+            Gizmos.color = new Color(gizmoColor.r, gizmoColor.g, gizmoColor.b, 0.4f);
+            Gizmos.DrawWireSphere(new Vector3(0f, TubeHeight, 0f), TubeRadius);
+            Gizmos.matrix = Matrix4x4.identity;
+            return;
+        }
 
         if (!previewsScale)
         {

@@ -199,11 +199,6 @@ public static class RawReagentCatalog
               "Light-sensitive AgNO3 — stains skin black; stored in amber glass for a reason.", "Exp 2, 6"),
             R("Alcoholic Silver Nitrate", PhysicalState.Liquid, C(0.9f,0.9f,0.88f, 0.7f), 6f, HazardType.None, false, LabwareKind.AmberBottle, GroupTests,
               "AgNO3 in alcohol — chloroform gives no precipitate with it: the negative halide test.", "Exp 7"),
-            // ORPHANED 2026-07-16 (its only consumer, the Caffeine module, was dropped).
-            // Kept on the bench deliberately: the hard client rule is that raw reagents are
-            // never removed — a real lab keeps spares out, and the player must choose.
-            R("Murexide Reagent", PhysicalState.Liquid, C(0.85f,0.6f,0.7f, 0.75f), 7f, HazardType.None, false, LabwareKind.DropperBottle, GroupTests,
-              "The purpurate reagent — caffeine answers it with the rose-purple murexide colour.", "(unused)"),
 
             // ---- Consumables & Cold ---------------------------------------------
             R("Litmus Paper", PhysicalState.Solid, C(0.75f,0.55f,0.75f), 7f, HazardType.None, false, LabwareKind.SmallBox, GroupConsumables,

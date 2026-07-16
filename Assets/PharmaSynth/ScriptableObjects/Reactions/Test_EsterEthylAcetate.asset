@@ -20,4 +20,4 @@ MonoBehaviour:
   minTemperatureC: 50
   outcome: 4
   evolvesGas: 0
-  expectedObservation: Sweet, fruity odour - ethyl acetate has formed. (Odour shown on screen: the one sense VR cannot give you.)
+  expectedObservation: 'Sweet, fruity odour - ethyl acetate has formed. (Odour shown on screen: the one sense VR cannot give you.)'

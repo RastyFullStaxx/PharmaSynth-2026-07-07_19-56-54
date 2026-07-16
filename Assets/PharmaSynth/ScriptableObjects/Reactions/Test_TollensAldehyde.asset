@@ -20,4 +20,4 @@ MonoBehaviour:
   minTemperatureC: 50
   outcome: 3
   evolvesGas: 0
-  expectedObservation: A bright silver mirror plates the glass - Tollen's reagent is reduced by the aldehyde. Acetone, a ketone, leaves it clear.
+  expectedObservation: 'A bright silver mirror plates the glass - Tollen''s reagent is reduced by the aldehyde. Acetone, a ketone, leaves it clear.'

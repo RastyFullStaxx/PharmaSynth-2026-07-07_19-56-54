@@ -387,10 +387,23 @@ likewise complete on their reagents; their graded evidence is the **odour cue**,
 *Known consequence of the same constraint:* boiling an empty tube completes `prep-hydrolysis`, exactly as
 in every shipped Heat module. Worth revisiting engine-wide, not per-module.
 
-**Tools staged:** 2 × Dropper · Porcelain Spatula · Funnel · Bunsen (the bath's heat source, `itemId =
-prep-hydrolysis` — a Heat station is driven by the prop whose itemId is its taskId, and the W5.8 ignition
-gate means it only heats once LIT). **21 pourable reagent bottles**, auto-supply (2.5× the summed need →
-~2 spare pours, so a miscount costs something and can starve into a restart).
+**⛔ Tools staged: NONE — and no reagent bottles either.** The bench already holds every
+general tool (`Eq_Dropper`, `Eq_PorcelainSpatula`, `Eq_Funnel`/`Funnel_2`, `Kit_BunsenBurner_0_9`,
+`Kit_TestTube_0-5`, `Kit_Hard-GlassTestTube_0-3`, `Eq_TestTubeBrush`, `Eq_GlassRod`, `Eq_WashBottle`,
+cylinders, beakers, watch glass…) and **all 21 of this module's reagents** as shelf bottles
+(`Reagent_*` west cubby + `Raw_*` east cabinets — Ethanol, Acetone, Ferric Chloride 10%, KMnO₄ 0.1%,
+Salicylic Acid and Aspirin included). The first draft of this layout staged **46 duplicates** of that
+bench. Stations point at bench itemIds instead (`kit-bunsenburner`, `kit-funnel`) — a `ZoneItemSensor`
+matches a `LabItem.itemId` wherever it already lives. Suite-pinned (`bench:` assertions).
+**Only the task-bound VESSELS are staged.**
+
+⚠ **Tube budget:** Exp 2 needs **19 regular tubes simultaneously** — the worst case in the whole game
+(every other module needs ≤4; Exp 6 has 4 tests, Exp 7/8 three each). The bench has 6, so **13 more
+regular tubes** are needed. **Hard-glass: 4 on the bench is plenty** — the only naked-flame tube in any
+experiment is Exp 6's dry distillation; everything else (including Exp 2's boil) heats in a water bath
+at ≤100 °C. Methane's hard-glass is its own staged prop. (19 assumes the alkaline + acidic racks sit
+side by side, which the design deliberately prefers over the manual's sequential reuse; reusing would
+make it 15.)
 
 ### Reactions & expected observations (authored 2026-07-16 — 8 rules)
 

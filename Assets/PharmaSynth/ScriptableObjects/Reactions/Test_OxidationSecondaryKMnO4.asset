@@ -20,4 +20,4 @@ MonoBehaviour:
   minTemperatureC: 0
   outcome: 1
   evolvesGas: 0
-  expectedObservation: Purple fades, but noticeably slower than the primary - a secondary alcohol resists more. Note the time and compare.
+  expectedObservation: 'Purple fades, but noticeably slower than the primary - a secondary alcohol resists more. Note the time and compare.'

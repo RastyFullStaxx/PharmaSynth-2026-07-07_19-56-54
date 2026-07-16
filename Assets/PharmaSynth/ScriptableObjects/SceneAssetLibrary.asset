@@ -66,7 +66,6 @@ MonoBehaviour:
   - {fileID: 773818284801471335, guid: 994cfd24522696e45b40188c06197d45, type: 3}
   chemicals:
   - {fileID: 11400000, guid: 681a555f71cface45bc96fcbcd4b3d7f, type: 2}
-  - {fileID: 11400000, guid: d175ccce662faf04a960239d2e5c9060, type: 2}
   - {fileID: 11400000, guid: be67e44da1618454384faac17d3a2d78, type: 2}
   - {fileID: 11400000, guid: 3b239248d99c16b4e9618a1c2ff0bdd3, type: 2}
   - {fileID: 11400000, guid: b10554ba868be9f4ea22cbca292f97fd, type: 2}
@@ -105,9 +104,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 15ddfe811c70f044181309258c0f8812, type: 2}
   - {fileID: 11400000, guid: 08f891f1b3fd0a24699ad3e1ca27be5b, type: 2}
   - {fileID: 11400000, guid: 5c8f1a2b3c4d4e5f6a7b8c9d0e1f2a30, type: 2}
-  - {fileID: 11400000, guid: 5c8f1a2b3c4d4e5f6a7b8c9d0e1f2a31, type: 2}
-  - {fileID: 11400000, guid: 5c8f1a2b3c4d4e5f6a7b8c9d0e1f2a32, type: 2}
-  - {fileID: 11400000, guid: 5c8f1a2b3c4d4e5f6a7b8c9d0e1f2a35, type: 2}
   - {fileID: 11400000, guid: 3e9556be32acf064eb85d1263b222717, type: 2}
   - {fileID: 11400000, guid: 037b33534ad0b014ea6d0896048f8259, type: 2}
   - {fileID: 11400000, guid: 2b00e6a8cefa2bd4fbaecfaa0864324f, type: 2}
