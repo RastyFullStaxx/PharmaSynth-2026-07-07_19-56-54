@@ -14,75 +14,577 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ExperimentLayout
   moduleId: prelim-chemical-compounding
   stations:
-  - taskId: test-combustion
-    label: 2. Combustion test
-    requiredItemId: test-combustion
-    pos: {x: -1.8, y: 0.91, z: -3.78}
-    sim: 0
-    simTargetC: 85
-  - taskId: test-sodium
-    label: 3. Sodium metal test
-    requiredItemId: test-sodium
-    pos: {x: -1.3, y: 0.91, z: -3.78}
-    sim: 0
+  - taskId: prep-hydrolysis
+    label: 9. Boil the aspirin mixture
+    requiredItemId: prep-hydrolysis
+    pos: {x: -1.55, y: 0.91, z: -3.36}
+    sim: 1
+    simTargetC: 95
+  - taskId: filter-hydrolysate
+    label: 10. Filter the hydrolysate
+    requiredItemId: filter-hydrolysate
+    pos: {x: -0.55, y: 0.91, z: -3.36}
+    sim: 3
     simTargetC: 85
   props:
+  - prefabName: Dropper
+    itemId: dropper-1
+    displayName: Dropper
+    pos: {x: 0.4, y: 0.91, z: -3.64}
+    targetHeight: 0.14
+    pourable: 0
+    fillChemical: 
+    supplyMl: 0
+  - prefabName: Dropper
+    itemId: dropper-2
+    displayName: Dropper
+    pos: {x: 0.58, y: 0.91, z: -3.64}
+    targetHeight: 0.14
+    pourable: 0
+    fillChemical: 
+    supplyMl: 0
+  - prefabName: Spatula
+    itemId: spatula
+    displayName: Porcelain Spatula
+    pos: {x: 0.76, y: 0.91, z: -3.64}
+    targetHeight: 0.14
+    pourable: 0
+    fillChemical: 
+    supplyMl: 0
+  - prefabName: Funnel
+    itemId: filter-hydrolysate
+    displayName: Funnel
+    pos: {x: -0.38, y: 0.91, z: -3.36}
+    targetHeight: 0.14
+    pourable: 0
+    fillChemical: 
+    supplyMl: 0
+  - prefabName: BunsenBurner
+    itemId: prep-hydrolysis
+    displayName: Water Bath Burner
+    pos: {x: -1.72, y: 0.91, z: -3.36}
+    targetHeight: 0.22
+    pourable: 0
+    fillChemical: 
+    supplyMl: 0
   - prefabName: Vial_Brown
-    itemId: gather-ethanol
+    itemId: reagent-0
     displayName: Ethanol
-    pos: {x: 1.33, y: 0.91, z: -3.52}
+    pos: {x: -1.8, y: 0.91, z: -3.1}
     targetHeight: 0.16
     pourable: 1
     fillChemical: Ethanol
     supplyMl: 0
   - prefabName: Vial_Brown
-    itemId: test-bromine
-    displayName: Bromine Water
-    pos: {x: 1.33, y: 0.91, z: -3.33}
+    itemId: reagent-1
+    displayName: n-Butyl Alcohol
+    pos: {x: -1.51, y: 0.91, z: -3.1}
     targetHeight: 0.16
     pourable: 1
-    fillChemical: Bromine Water
+    fillChemical: n-Butyl Alcohol
     supplyMl: 0
   - prefabName: Vial_Brown
-    itemId: test-kmno4
-    displayName: KMnO4 Solution
-    pos: {x: 1.33, y: 0.91, z: -3.1399999}
+    itemId: reagent-2
+    displayName: sec-Butyl Alcohol
+    pos: {x: -1.22, y: 0.91, z: -3.1}
     targetHeight: 0.16
     pourable: 1
-    fillChemical: Potassium Permanganate
+    fillChemical: sec-Butyl Alcohol
     supplyMl: 0
-  - prefabName: GlassRod
-    itemId: test-combustion
-    displayName: Lit Splint
-    pos: {x: -1.7, y: 0.91, z: -3.44}
-    targetHeight: 0.18
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
-  - prefabName: Spatula
-    itemId: test-sodium
-    displayName: Sodium Scoop
-    pos: {x: -1.7, y: 0.91, z: -3.25}
+  - prefabName: Vial_Brown
+    itemId: reagent-3
+    displayName: tert-Butyl Alcohol
+    pos: {x: -0.93, y: 0.91, z: -3.1}
     targetHeight: 0.16
-    pourable: 0
-    fillChemical: 
+    pourable: 1
+    fillChemical: tert-Butyl Alcohol
+    supplyMl: 0
+  - prefabName: Vial_Brown
+    itemId: reagent-4
+    displayName: Benzyl Alcohol
+    pos: {x: -0.64, y: 0.91, z: -3.1}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Benzyl Alcohol
+    supplyMl: 0
+  - prefabName: Vial_Brown
+    itemId: reagent-5
+    displayName: Phenol
+    pos: {x: -0.35, y: 0.91, z: -3.1}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Phenol
+    supplyMl: 0
+  - prefabName: Vial_Brown
+    itemId: reagent-6
+    displayName: Glycerol
+    pos: {x: -0.06, y: 0.91, z: -3.1}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Glycerol
+    supplyMl: 0
+  - prefabName: Vial_Brown
+    itemId: reagent-7
+    displayName: Methanol
+    pos: {x: 0.23, y: 0.91, z: -3.1}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Methanol
+    supplyMl: 0
+  - prefabName: Vial_Brown
+    itemId: reagent-8
+    displayName: Acetone
+    pos: {x: 0.52, y: 0.91, z: -3.1}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Acetone
+    supplyMl: 0
+  - prefabName: Vial_Brown
+    itemId: reagent-9
+    displayName: Acetaldehyde
+    pos: {x: 0.81, y: 0.91, z: -3.1}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Acetaldehyde
+    supplyMl: 0
+  - prefabName: Vial_Brown
+    itemId: reagent-10
+    displayName: Distilled Water
+    pos: {x: 1.1, y: 0.91, z: -3.1}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Purified Water
+    supplyMl: 0
+  - prefabName: Vial_Brown
+    itemId: reagent-11
+    displayName: Ferric Chloride 10%
+    pos: {x: -1.8, y: 0.91, z: -2.92}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Ferric Chloride 10%
+    supplyMl: 0
+  - prefabName: Vial_Brown
+    itemId: reagent-12
+    displayName: KMnO4 0.1%
+    pos: {x: -1.51, y: 0.91, z: -2.92}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Potassium Permanganate 0.1%
+    supplyMl: 0
+  - prefabName: Vial_Brown
+    itemId: reagent-13
+    displayName: Sodium Hydroxide 6N
+    pos: {x: -1.22, y: 0.91, z: -2.92}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Sodium Hydroxide 6N
+    supplyMl: 0
+  - prefabName: Vial_Brown
+    itemId: reagent-14
+    displayName: Sulfuric Acid 6N
+    pos: {x: -0.93, y: 0.91, z: -2.92}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Sulfuric Acid 6N
+    supplyMl: 0
+  - prefabName: Vial_Brown
+    itemId: reagent-15
+    displayName: Conc. Sulfuric Acid
+    pos: {x: -0.64, y: 0.91, z: -2.92}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Sulfuric Acid
+    supplyMl: 0
+  - prefabName: Vial_Brown
+    itemId: reagent-16
+    displayName: Conc. Hydrochloric Acid
+    pos: {x: -0.35, y: 0.91, z: -2.92}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Concentrated Hydrochloric Acid
+    supplyMl: 0
+  - prefabName: Vial_Brown
+    itemId: reagent-17
+    displayName: Diluted Acetic Acid
+    pos: {x: -0.06, y: 0.91, z: -2.92}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Diluted Acetic Acid
+    supplyMl: 0
+  - prefabName: Vial_Brown
+    itemId: reagent-18
+    displayName: Tollen's Reagent
+    pos: {x: 0.23, y: 0.91, z: -2.92}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Tollen's Reagent
+    supplyMl: 0
+  - prefabName: Vial_Brown
+    itemId: reagent-19
+    displayName: Salicylic Acid
+    pos: {x: 0.52, y: 0.91, z: -2.92}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Salicylic Acid
+    supplyMl: 0
+  - prefabName: Vial_Brown
+    itemId: reagent-20
+    displayName: Aspirin
+    pos: {x: 0.81, y: 0.91, z: -2.92}
+    targetHeight: 0.16
+    pourable: 1
+    fillChemical: Aspirin
     supplyMl: 0
   vessels:
-  - prefabName: Beaker_100mL
-    displayName: Test Beaker
-    pos: {x: -0.25, y: 0.91, z: -3.18}
-    targetHeight: 0.16
+  - prefabName: TestTube
+    displayName: EnolTube_1
+    pos: {x: -1.8, y: 0.91, z: -3.88}
+    targetHeight: 0.15
     startChemical: 
     bindings:
     - reagentChemical: Ethanol
-      taskId: gather-ethanol
-      requiredMl: 50
+      taskId: prep-enol-tubes
+      requiredMl: 1
+      completesTask: 0
+    - reagentChemical: Purified Water
+      taskId: prep-enol-tubes
+      requiredMl: 10
+      completesTask: 0
+    - reagentChemical: Ferric Chloride 10%
+      taskId: test-enol-fecl3
+      requiredMl: 5
+      completesTask: 0
+    rackGroup: enol
+  - prefabName: TestTube
+    displayName: EnolTube_2
+    pos: {x: -1.65, y: 0.91, z: -3.88}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: n-Butyl Alcohol
+      taskId: prep-enol-tubes
+      requiredMl: 1
+      completesTask: 0
+    - reagentChemical: Purified Water
+      taskId: prep-enol-tubes
+      requiredMl: 10
+      completesTask: 0
+    - reagentChemical: Ferric Chloride 10%
+      taskId: test-enol-fecl3
+      requiredMl: 5
+      completesTask: 0
+    rackGroup: enol
+  - prefabName: TestTube
+    displayName: EnolTube_3
+    pos: {x: -1.5, y: 0.91, z: -3.88}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Benzyl Alcohol
+      taskId: prep-enol-tubes
+      requiredMl: 1
+      completesTask: 0
+    - reagentChemical: Purified Water
+      taskId: prep-enol-tubes
+      requiredMl: 10
+      completesTask: 0
+    - reagentChemical: Ferric Chloride 10%
+      taskId: test-enol-fecl3
+      requiredMl: 5
+      completesTask: 0
+    rackGroup: enol
+  - prefabName: TestTube
+    displayName: EnolTube_4
+    pos: {x: -1.35, y: 0.91, z: -3.88}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Phenol
+      taskId: prep-enol-tubes
+      requiredMl: 1
+      completesTask: 0
+    - reagentChemical: Purified Water
+      taskId: prep-enol-tubes
+      requiredMl: 10
+      completesTask: 0
+    - reagentChemical: Ferric Chloride 10%
+      taskId: test-enol-fecl3
+      requiredMl: 5
+      completesTask: 0
+    rackGroup: enol
+  - prefabName: TestTube
+    displayName: EnolTube_5
+    pos: {x: -1.2, y: 0.91, z: -3.88}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Glycerol
+      taskId: prep-enol-tubes
+      requiredMl: 1
+      completesTask: 0
+    - reagentChemical: Purified Water
+      taskId: prep-enol-tubes
+      requiredMl: 10
+      completesTask: 0
+    - reagentChemical: Ferric Chloride 10%
+      taskId: test-enol-fecl3
+      requiredMl: 5
+      completesTask: 0
+    rackGroup: enol
+  - prefabName: TestTube
+    displayName: OxAlkTube_1
+    pos: {x: -0.95, y: 0.91, z: -3.88}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Potassium Permanganate 0.1%
+      taskId: prep-oxidation-tubes
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: Sodium Hydroxide 6N
+      taskId: prep-oxidation-tubes
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: n-Butyl Alcohol
+      taskId: test-oxidation-alkaline
+      requiredMl: 5
+      completesTask: 0
+    rackGroup: oxalk
+  - prefabName: TestTube
+    displayName: OxAlkTube_2
+    pos: {x: -0.8, y: 0.91, z: -3.88}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Potassium Permanganate 0.1%
+      taskId: prep-oxidation-tubes
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: Sodium Hydroxide 6N
+      taskId: prep-oxidation-tubes
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: sec-Butyl Alcohol
+      taskId: test-oxidation-alkaline
+      requiredMl: 5
+      completesTask: 0
+    rackGroup: oxalk
+  - prefabName: TestTube
+    displayName: OxAlkTube_3
+    pos: {x: -0.65, y: 0.91, z: -3.88}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Potassium Permanganate 0.1%
+      taskId: prep-oxidation-tubes
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: Sodium Hydroxide 6N
+      taskId: prep-oxidation-tubes
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: tert-Butyl Alcohol
+      taskId: test-oxidation-alkaline
+      requiredMl: 5
+      completesTask: 0
+    rackGroup: oxalk
+  - prefabName: TestTube
+    displayName: OxAlkTube_4
+    pos: {x: -0.5, y: 0.91, z: -3.88}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Potassium Permanganate 0.1%
+      taskId: prep-oxidation-tubes
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: Sodium Hydroxide 6N
+      taskId: prep-oxidation-tubes
+      requiredMl: 2
+      completesTask: 0
+    rackGroup: oxalk
+  - prefabName: TestTube
+    displayName: OxAcidTube_1
+    pos: {x: -0.25, y: 0.91, z: -3.88}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Potassium Permanganate 0.1%
+      taskId: test-oxidation-acidic
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: Sulfuric Acid 6N
+      taskId: test-oxidation-acidic
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: n-Butyl Alcohol
+      taskId: test-oxidation-acidic
+      requiredMl: 5
+      completesTask: 0
+    rackGroup: oxacid
+  - prefabName: TestTube
+    displayName: OxAcidTube_2
+    pos: {x: -0.1, y: 0.91, z: -3.88}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Potassium Permanganate 0.1%
+      taskId: test-oxidation-acidic
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: Sulfuric Acid 6N
+      taskId: test-oxidation-acidic
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: sec-Butyl Alcohol
+      taskId: test-oxidation-acidic
+      requiredMl: 5
+      completesTask: 0
+    rackGroup: oxacid
+  - prefabName: TestTube
+    displayName: OxAcidTube_3
+    pos: {x: 0.05, y: 0.91, z: -3.88}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Potassium Permanganate 0.1%
+      taskId: test-oxidation-acidic
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: Sulfuric Acid 6N
+      taskId: test-oxidation-acidic
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: tert-Butyl Alcohol
+      taskId: test-oxidation-acidic
+      requiredMl: 5
+      completesTask: 0
+    rackGroup: oxacid
+  - prefabName: TestTube
+    displayName: OxAcidTube_4
+    pos: {x: 0.2, y: 0.91, z: -3.88}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Potassium Permanganate 0.1%
+      taskId: test-oxidation-acidic
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: Sulfuric Acid 6N
+      taskId: test-oxidation-acidic
+      requiredMl: 2
+      completesTask: 0
+    rackGroup: oxacid
+  - prefabName: TestTube
+    displayName: TollensTube_1
+    pos: {x: -1.8, y: 0.91, z: -3.64}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Acetone
+      taskId: test-tollens
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: Tollen's Reagent
+      taskId: test-tollens
+      requiredMl: 2
+      completesTask: 0
+    rackGroup: tollens
+  - prefabName: TestTube
+    displayName: TollensTube_2
+    pos: {x: -1.65, y: 0.91, z: -3.64}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Acetaldehyde
+      taskId: test-tollens
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: Tollen's Reagent
+      taskId: test-tollens
+      requiredMl: 2
+      completesTask: 0
+    rackGroup: tollens
+  - prefabName: TestTube
+    displayName: EsterAcetateTube
+    pos: {x: -1.4, y: 0.91, z: -3.64}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Ethanol
+      taskId: test-ester-acetate
+      requiredMl: 10
       completesTask: 1
-    - reagentChemical: Bromine Water
-      taskId: test-bromine
-      requiredMl: 50
+    - reagentChemical: Diluted Acetic Acid
+      taskId: test-ester-acetate
+      requiredMl: 4
       completesTask: 1
-    - reagentChemical: Potassium Permanganate
-      taskId: test-kmno4
-      requiredMl: 50
+    - reagentChemical: Sulfuric Acid
+      taskId: test-ester-acetate
+      requiredMl: 1
       completesTask: 1
+    rackGroup: 
+  - prefabName: TestTube
+    displayName: EsterSalicylateTube
+    pos: {x: -1.2, y: 0.91, z: -3.64}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Methanol
+      taskId: test-ester-salicylate
+      requiredMl: 10
+      completesTask: 1
+    - reagentChemical: Salicylic Acid
+      taskId: test-ester-salicylate
+      requiredMl: 0.1
+      completesTask: 1
+    - reagentChemical: Sulfuric Acid
+      taskId: test-ester-salicylate
+      requiredMl: 1
+      completesTask: 1
+    rackGroup: 
+  - prefabName: TestTube
+    displayName: HydrolysisTube
+    pos: {x: -0.95, y: 0.91, z: -3.64}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Aspirin
+      taskId: prep-hydrolysis
+      requiredMl: 0.5
+      completesTask: 0
+    - reagentChemical: Purified Water
+      taskId: prep-hydrolysis
+      requiredMl: 10
+      completesTask: 0
+    - reagentChemical: Concentrated Hydrochloric Acid
+      taskId: prep-hydrolysis
+      requiredMl: 1
+      completesTask: 0
+    rackGroup: 
+  - prefabName: Beaker_100mL
+    displayName: FiltrateBeaker
+    pos: {x: -0.55, y: 0.91, z: -3.64}
+    targetHeight: 0.16
+    startChemical: 
+    bindings:
+    - reagentChemical: Ferric Chloride 10%
+      taskId: test-hydrolysis-fecl3
+      requiredMl: 2
+      completesTask: 1
+    rackGroup: 
+  - prefabName: TestTube
+    displayName: HydrolysisControlTube
+    pos: {x: -0.75, y: 0.91, z: -3.64}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Aspirin
+      taskId: test-hydrolysis-control
+      requiredMl: 0.5
+      completesTask: 1
+    - reagentChemical: Ferric Chloride 10%
+      taskId: test-hydrolysis-control
+      requiredMl: 2
+      completesTask: 1
+    rackGroup: 

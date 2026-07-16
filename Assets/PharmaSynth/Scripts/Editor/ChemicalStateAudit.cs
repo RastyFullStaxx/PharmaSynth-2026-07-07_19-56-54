@@ -17,7 +17,7 @@ public static class ChemicalStateAudit
     {
         "Sodium Acetate", "Calcium Acetate", "Soda Lime", "Salicylic",
         "Benzoic Acid", "Acetanilide", "Benzamide", "Caffeine", "Aspirin",
-        "Potassium Permanganate", "Sodium Nitrite", "Urea",
+        "Sodium Nitrite", "Urea",   // NOT KMnO4: the manuscript only ever uses the 0.1% SOLUTION
         "Iodine Crystals", "Yeast",
         // NOT hinted: Murexide / Murexide Reagent — kept Liquid by design (the
         // pourable is a reagent SOLUTION; the result shows in a wet test tube).

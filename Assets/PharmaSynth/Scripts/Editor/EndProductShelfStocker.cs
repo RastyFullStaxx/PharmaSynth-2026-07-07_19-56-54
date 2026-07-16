@@ -26,12 +26,14 @@ public static class EndProductShelfStocker
     const string RegPath = "Assets/PharmaSynth/ScriptableObjects/Reactions/MasterReactionRegistry.asset";
     const string ChemDir = "Assets/PharmaSynth/ScriptableObjects/Chemicals/";
 
-    /// The nine finished products with a bottleable chemical. Matches
+    /// The seven finished products with a bottleable chemical. Matches
     /// DemoMode.IsEndProduct exactly (kept in sync by the self-tests).
+    /// (Aspirin + Caffeine dropped 2026-07-16 with their modules; Aspirin is now a
+    /// raw reagent — Exp 2 §D hydrolyses it — so it stocks from RawReagentCatalog.)
     static readonly string[] Products =
     {
         "Ethanol", "Benzoic Acid", "Acetanilide", "Acetone", "Chloroform",
-        "Benzamide", "Aspirin", "Caffeine", "Wine",
+        "Benzamide", "Wine",
     };
 
     /// Vial-centre heights of the four ledges inside the Environment/3x4 cubby

@@ -21,8 +21,6 @@ public static class IloBeatInjector
         ("midterm-acetone", "Acetone"),
         ("midterm-chloroform", "Chloroform"),
         ("final-benzamide", "Benzamide"),
-        ("final-aspirin", "Aspirin"),
-        ("final-caffeine", "Caffeine"),
         ("final-winemaking", "WineMaking"),
     };
 

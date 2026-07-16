@@ -28,9 +28,7 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 0
     required: 1
-    hint: 'Place 1 ml each of Ethanol, n-Butyl Alcohol, Benzyl Alcohol, Phenol and
-      Glycerol into five separate test tubes, then dilute each with 10 ml of distilled
-      water.'
+    hint: "Place 1 ml each of Ethanol, n-Butyl Alcohol, Benzyl Alcohol, Phenol and Glycerol into five separate test tubes, then dilute each with 10 ml of distilled water.\n→ Dropper = 1 squeeze per ml: one squeeze of its OWN sample into each labelled tube, then tilt-pour distilled water to the 10 ml mark. All five tubes."
   - taskId: test-enol-fecl3
     label: Enol test - add ferric chloride to each tube
     phase: 2
@@ -40,8 +38,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: 'Add 5 drops of 10% Ferric Chloride to each of the five tubes and compare
-      the colours. Only an enol gives the violet complex - watch the Phenol.'
+    hint: "Add 5 drops of 10% Ferric Chloride to each of the five tubes and compare the colours.\n→ 5 squeezes of the dropper over EVERY tube. Watch which one flashes violet - that is the enol."
   - taskId: prep-oxidation-tubes
     label: Set up the rate-of-oxidation tubes (4 tubes)
     phase: 0
@@ -50,8 +47,7 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 0
     required: 1
-    hint: 'Place 2 ml of 0.1% Potassium Permanganate plus 2 drops of 6N Sodium Hydroxide
-      into four separate test tubes.'
+    hint: "Place 2 ml of 0.1% Potassium Permanganate and 2 drops of 6N Sodium Hydroxide in each of four test tubes.\n→ 2 squeezes of KMnO4, then 2 of Sodium Hydroxide, into all four tubes. This rack is the ALKALINE run."
   - taskId: test-oxidation-alkaline
     label: Rate of oxidation in ALKALINE conditions
     phase: 2
@@ -61,9 +57,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: 'Add 5 drops of n-Butyl, sec-Butyl and tert-Butyl Alcohol to three of the
-      tubes - leave the FOURTH untouched as the negative control. Shake, then time
-      how long each takes to decolourise.'
+    hint: "Add 5 drops of n-Butyl, sec-Butyl and tert-Butyl Alcohol to three of the tubes. Leave the fourth alone as a control. Note the time each takes to decolorise.\n→ 5 squeezes into tubes 1-3, one alcohol each. Do NOT pour into tube 4 - the untouched control is part of the experiment."
   - taskId: test-oxidation-acidic
     label: Rate of oxidation in ACIDIC conditions
     phase: 2
@@ -73,8 +67,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: 'Repeat the test using 2 drops of 6N Sulfuric Acid in place of the Sodium
-      Hydroxide, and compare the decolourisation times with the alkaline run.'
+    hint: "Repeat using 2 ml of 0.1% Potassium Permanganate and 2 drops of 6N Sulfuric Acid, then the same three alcohols.\n→ Same build on the second rack, acid instead of base: 2 squeezes of KMnO4, 2 of Sulfuric Acid, then 5 of each alcohol into tubes 1-3. Leave tube 4 alone again. Then compare both racks side by side."
   - taskId: test-tollens
     label: Aldehyde vs ketone - Tollen's test
     phase: 2
@@ -84,9 +77,7 @@ MonoBehaviour:
     skill: 1
     rubricCategory: 1
     required: 1
-    hint: 'Put 2 drops of Acetone and 2 drops of Acetaldehyde into separate tubes,
-      add 2 ml of Tollen''s Reagent to both, then heat them in the water bath for 5
-      minutes. Only the aldehyde gives the silver mirror.'
+    hint: "Place 2 drops of Acetone and 2 drops of Acetaldehyde in separate test tubes, then add 2 ml of Tollen's reagent to both.\n→ 2 squeezes of the sample, then 2 of Tollen's, in BOTH tubes. Only the aldehyde plates a silver mirror."
   - taskId: test-ester-acetate
     label: Ester formation - ethyl acetate
     phase: 2
@@ -96,9 +87,7 @@ MonoBehaviour:
     skill: 1
     rubricCategory: 1
     required: 1
-    hint: 'Place 10 drops of Ethanol, 4 drops of Diluted Acetic Acid and 1 drop of
-      Concentrated Sulfuric Acid in a test tube, warm it in the water bath, then note
-      the odour.'
+    hint: "Place 10 drops of Ethanol, 4 drops of Diluted Acetic Acid and 1 drop of Concentrated Sulfuric Acid in a dry test tube, then warm it.\n→ 10 squeezes, then 4, then 1 - all three are needed; the acid is the catalyst. Then read the odour cue."
   - taskId: test-ester-salicylate
     label: Ester formation - methyl salicylate
     phase: 2
@@ -108,8 +97,7 @@ MonoBehaviour:
     skill: 1
     rubricCategory: 1
     required: 1
-    hint: 'Repeat using Methanol, 0.1 g of Salicylic Acid and Concentrated Sulfuric
-      Acid. Pour into 1 ml of distilled water and note the odour (oil of wintergreen).'
+    hint: "Repeat using Methanol, 0.1 g of Salicylic Acid and Concentrated Sulfuric Acid.\n→ 10 squeezes of Methanol, ONE spatula dip of Salicylic Acid (a dip = 0.1 g), 1 squeeze of acid."
   - taskId: prep-hydrolysis
     label: Hydrolyse the aspirin (boil in the water bath)
     phase: 2
@@ -119,9 +107,7 @@ MonoBehaviour:
     skill: 1
     rubricCategory: 1
     required: 1
-    hint: 'Place 0.5 g of Aspirin in a test tube, add 10 ml of distilled water and
-      1 drop of Concentrated Hydrochloric Acid, then boil gently in the water bath
-      for 3-5 minutes.'
+    hint: "Place 0.5 g of Aspirin in a test tube, add 10 ml of distilled water and 1 drop of Concentrated Hydrochloric Acid, then boil it in the water bath.\n→ 5 spatula dips of Aspirin (0.1 g each), tilt-pour water to 10 ml, 1 squeeze of acid - then strike a match, light the burner and let it boil."
   - taskId: filter-hydrolysate
     label: Filter off the undissolved crystals
     phase: 2
@@ -131,7 +117,7 @@ MonoBehaviour:
     skill: 2
     rubricCategory: 1
     required: 1
-    hint: Filter the boiled mixture and keep the filtrate.
+    hint: "Filter the boiled mixture and keep the filtrate.\n→ Rest the funnel on the beaker and pour the boiled mixture through it."
   - taskId: test-hydrolysis-fecl3
     label: Test the filtrate with ferric chloride
     phase: 2
@@ -141,8 +127,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: 'Add 2 drops of 10% Ferric Chloride to the filtrate. Violet means free
-      Salicylic Acid - the ester has been hydrolysed.'
+    hint: "Add 2 drops of 10% Ferric Chloride to the filtrate. Violet means free Salicylic Acid - the ester has been hydrolysed.\n→ 2 squeezes into the filtrate beaker."
   - taskId: test-hydrolysis-control
     label: Compare against UNhydrolysed aspirin
     phase: 2
@@ -152,8 +137,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: 'Repeat the ferric chloride test on plain, unboiled Aspirin and compare -
-      the intact ester should NOT give the violet colour.'
+    hint: "Repeat the ferric chloride test on plain, unboiled Aspirin and compare - no violet means the ester is still intact.\n→ 5 spatula dips of Aspirin into the control tube, then 2 squeezes of Ferric Chloride. The DIFFERENCE between the two tubes is the result."
   - taskId: record-observations
     label: Record every colour and odour on the data sheet
     phase: 3
@@ -167,7 +151,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 5
     required: 1
-    hint: Write up each test, the reaction involved and the colour/odour you observed.
+    hint: "Write up each test, the reaction involved and the colour or odour you observed.\n→ The results board filled itself in as you worked - read it back, then answer on the tablet."
   masteryThreshold: 0.9
   bkt:
     pL0: 0.25

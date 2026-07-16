@@ -1,9 +1,9 @@
 /// Intended Learning Outcomes per experiment (user 2026-07-10: Pharmee states
 /// the session's objectives in the opening dialogue). The 8 manuscript modules
 /// use the VERBATIM Appendix C "Objectives" text (transcribed in
-/// Docs/manuscript-reconciliation.md §2 — the chemistry authority); Methane,
-/// Aspirin and Caffeine are game-authored in the same voice and are PENDING
-/// CLIENT CONFIRMATION (queued in Docs/client-signoff-request.md).
+/// Docs/manuscript-reconciliation.md §2 — the chemistry authority); Methane is
+/// game-authored in the same voice and is client-CONFIRMED (2026-07-16) as the
+/// tutorial. (Aspirin + Caffeine were dropped 2026-07-16 with their modules.)
 public static class IloCopy
 {
     /// Pharmee's lead-in beat — also the injector's idempotence marker.
@@ -59,18 +59,6 @@ public static class IloCopy
                 return new[]
                 {
                     "Objective 1: Synthesize benzamide.",
-                    "Objective 2: Determine its identity through chemical tests.",
-                };
-            case "final-aspirin":                    // game-authored — PENDING CLIENT CONFIRM
-                return new[]
-                {
-                    "Objective 1: Synthesize aspirin — acetylsalicylic acid — from salicylic acid.",
-                    "Objective 2: Determine its identity through chemical tests.",
-                };
-            case "final-caffeine":                   // game-authored — PENDING CLIENT CONFIRM
-                return new[]
-                {
-                    "Objective 1: Extract and purify caffeine.",
                     "Objective 2: Determine its identity through chemical tests.",
                 };
             case "final-winemaking":                 // Appendix C Exp 9

@@ -26,7 +26,12 @@ public class CatalogEntry
     { this.moduleId = id; this.assetName = asset; this.title = title; this.period = period; this.prerequisiteModuleId = prereq; this.tier = tier; }
 }
 
-/// The ordered 11-experiment roster (plan §3.3). Linear mastery chain: each experiment
+/// The ordered 9-experiment roster — the client's 2026-07-16 period grouping, which is
+/// exactly the manuscript's 8 bench labs (Exp 2-9) plus the methane tutorial. (Manuscript
+/// Exp 1, Stoichiometry, is a pen-and-paper calc exercise, so it has no bench module.)
+/// Aspirin + Caffeine were game-authored, are absent from the grouping, and were dropped
+/// 2026-07-16 — Aspirin survives as a RAW REAGENT because Exp 2 §D hydrolyses it.
+/// Linear mastery chain: each experiment
 /// unlocks the next once its two-part 90% gate is cleared. Kept as plain data so the
 /// menu/hub/experiment-select and ProgressionFlow can drive off one source of truth,
 /// and so it is unit-testable without a scene.
@@ -42,9 +47,7 @@ public static class ExperimentCatalog
         new CatalogEntry("midterm-acetone",            "Midterm_Acetone",             "Midterm: Acetone",              ExperimentPeriod.Midterm,  "midterm-acetanilide",         2),
         new CatalogEntry("midterm-chloroform",         "Midterm_Chloroform",          "Midterm: Chloroform",           ExperimentPeriod.Midterm,  "midterm-acetone",             2),
         new CatalogEntry("final-benzamide",            "Final_Benzamide",             "Final: Benzamide",              ExperimentPeriod.Final,    "midterm-chloroform",          2),
-        new CatalogEntry("final-aspirin",              "Final_Aspirin",               "Final: Aspirin",                ExperimentPeriod.Final,    "final-benzamide",             1),
-        new CatalogEntry("final-caffeine",             "Final_Caffeine",              "Final: Caffeine",               ExperimentPeriod.Final,    "final-aspirin",               3),
-        new CatalogEntry("final-winemaking",           "Final_WineMaking",            "Final: Wine Making",            ExperimentPeriod.Final,    "final-caffeine",              2),
+        new CatalogEntry("final-winemaking",           "Final_WineMaking",            "Final: Wine Making",            ExperimentPeriod.Final,    "final-benzamide",             2),
     };
 
     public static CatalogEntry Get(string moduleId)

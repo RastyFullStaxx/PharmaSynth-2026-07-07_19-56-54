@@ -172,7 +172,7 @@ public static class LabInfoDatabase
         AddReagent("Soda Lime", "A mix of sodium and calcium hydroxide. Ground with sodium acetate and heated strongly, it drives off methane gas. A caustic base — avoid skin contact.");
         AddReagent("Glacial Acetic Acid", "Nearly pure acetic acid (>99%) — 'glacial' because it freezes just below room temperature. It's the acid solvent/catalyst in the acetanilide prep. Pungent and corrosive; use in the hood.");
         AddReagent("Acetic Anhydride", "A powerful acetylating agent — it swaps an acetyl group onto salicylic acid to make aspirin. Reacts sharply with water and irritates eyes and lungs; work in the fume hood.");
-        AddReagent("Potassium Permanganate", "Deep-purple strong oxidiser. It oxidises benzaldehyde all the way to benzoic acid; as it reacts the purple fades and brown manganese solid appears. Stains skin — handle with gloves.");
+        AddReagent("Potassium Permanganate 0.1%", "Deep-purple strong oxidiser. It oxidises benzaldehyde all the way to benzoic acid; as it reacts the purple fades and brown manganese solid appears. Stains skin — handle with gloves.");
         AddReagent("Benzaldehyde", "Oily liquid with an almond smell. Potassium permanganate oxidises it to benzoic acid in the midterm. Volatile and an irritant — keep it in the hood and capped.");
         AddReagent("Acetyl Chloride", "A fiercely reactive acetylating agent that fumes in moist air (releasing HCl). It converts aniline into acetanilide. Corrosive; add it carefully in the fume hood.");
         AddReagent("Aniline", "Oily aromatic amine, toxic and readily absorbed through skin. Acetylation 'caps' it as the safer solid acetanilide. Always glove up and work in the hood.");

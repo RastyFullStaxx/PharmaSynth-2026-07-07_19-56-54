@@ -15,10 +15,8 @@ MonoBehaviour:
   banks:
   - {fileID: 11400000, guid: b3fa4784b97d1864aa00dec71dd19960, type: 2}
   - {fileID: 11400000, guid: 887531a9678d05d42840abaa6bf2362e, type: 2}
-  - {fileID: 11400000, guid: 83915147efe0489459b7cb6b10cb955a, type: 2}
   - {fileID: 11400000, guid: 9001aecb4c2f91145a9340b432bdad08, type: 2}
   - {fileID: 11400000, guid: 8d44f07b3eabdbe4dbdc57205ac6c879, type: 2}
-  - {fileID: 11400000, guid: 0a501100b2929c24d8d156a35b2e24aa, type: 2}
   - {fileID: 11400000, guid: bcf8193d1e924fc4aadcdacd65ecad23, type: 2}
   - {fileID: 11400000, guid: 64747fb35f760bd41a78a1cc53baf15e, type: 2}
   - {fileID: 11400000, guid: 14149a9f59410c44bb0f859efd6d5d75, type: 2}

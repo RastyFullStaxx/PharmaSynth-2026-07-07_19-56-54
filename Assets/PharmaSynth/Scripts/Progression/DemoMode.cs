@@ -79,8 +79,6 @@ public static class DemoMode
             case "midterm-acetone": return "Acetone";
             case "midterm-chloroform": return "Chloroform";
             case "final-benzamide": return "Benzamide";
-            case "final-aspirin": return "Aspirin";
-            case "final-caffeine": return "Caffeine";
             case "final-winemaking": return "Wine";
             default: return null;
         }
@@ -92,6 +90,8 @@ public static class DemoMode
     /// its manuscript reagent list requires). Demo sessions show them.
     /// (Sodium Acetate and Mixed Fruit Juice are excluded — they are FEEDSTOCKS, not
     /// products: Sodium Acetate feeds Methane, the fruit juice ferments into Wine.
+    /// Aspirin was delisted 2026-07-16 with the Aspirin module: Exp 2 §D hydrolyses
+    /// it, so it is now a RAW REAGENT and must stay on the shelf outside demo too.
     /// Both stay always-visible on the shelf; the fermented product Wine is the
     /// gated end product of the Wine Making experiment.)
     public static bool IsEndProduct(string chemicalName)
@@ -104,8 +104,6 @@ public static class DemoMode
             case "Acetone":
             case "Chloroform":
             case "Benzamide":
-            case "Aspirin":
-            case "Caffeine":
             case "Wine":
                 return true;
             default:

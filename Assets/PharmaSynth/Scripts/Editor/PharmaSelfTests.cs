@@ -41,6 +41,7 @@ public static class PharmaSelfTests
         PourGuardSuite();
         FeedbackSuite();
         VerbSuite();
+        LayoutGraphCoverageSuite();
         VerbWiringSuite();
         LayoutSpacingSuite();
         WorkspaceShelfSuite();
@@ -934,7 +935,6 @@ public static class PharmaSelfTests
             // W5.9 manuscript fidelity: benzoic ester = PROPYL ALCOHOL (was the
             // inert sulfuric-acid pairing); benzamide acid test + ethanol ester
             // use the DILUTED acids; chloroform gains the dichromate oxidation.
-            ("Layout_Aspirin",      "Salicylic Acid", new[] { "Ferric Chloride 10%" }),
             ("Layout_BenzoicAcid",  "Benzoic Acid",   new[] { "Ferric Chloride 10%", "Propyl Alcohol" }),
             ("Layout_Acetanilide",  "Acetanilide",    new[] { "Bromine Water" }),
             ("Layout_Benzamide",    "Benzamide",      new[] { "Sodium Hydroxide", "Sodium Nitrite", "Diluted Hydrochloric Acid" }),
@@ -942,7 +942,6 @@ public static class PharmaSelfTests
             ("Layout_Acetone",      "Acetone",        new[] { "Silver Nitrate", "Sodium Hypochlorite", "Schiff's Reagent" }),
             ("Layout_EthylAlcohol", "Ethanol",        new[] { "Sodium Hypochlorite", "Diluted Acetic Acid" }),
             ("Layout_WineMaking",   "Carbon Dioxide", new[] { "Limewater" }),
-            ("Layout_Caffeine",     "Caffeine",       new[] { "Murexide Reagent" }),
         };
         foreach (var c in cases)
         {
@@ -1421,7 +1420,7 @@ public static class PharmaSelfTests
     {
         // Cutscenes: every experiment has all 4 kinds, each with beats.
         string[] keys = { "Methane","ChemicalCompounding","EthylAlcohol","BenzoicAcid","Acetanilide",
-            "Acetone","Chloroform","Benzamide","Aspirin","Caffeine","WineMaking" };
+            "Acetone","Chloroform","Benzamide","WineMaking" };
         string cdir = "Assets/PharmaSynth/ScriptableObjects/Cutscenes/";
         int csOk = 0;
         foreach (var k in keys)
@@ -1430,7 +1429,8 @@ public static class PharmaSelfTests
                 var cs = AssetDatabase.LoadAssetAtPath<CutsceneData>(cdir + k + "_" + kind + ".asset");
                 if (cs != null && cs.beats.Count > 0 && cs.TotalDuration() > 0f) csOk++;
             }
-        A("roster: 44 cutscenes present with beats", csOk == 44);
+        // 44 → 36: Aspirin + Caffeine dropped 2026-07-16 (9 modules × 4 kinds).
+        A("roster: 36 cutscenes present with beats", csOk == 36);
 
         // Quiz banks: one per catalog module, all valid, 3 questions, scoring works.
         string qdir = "Assets/PharmaSynth/ScriptableObjects/Quizzes/";
@@ -1453,9 +1453,10 @@ public static class PharmaSelfTests
             foreach (var q in bank.questions) ans.Add(q.correctIndex);
             if (!Near(bank.Score(ans), 1f)) scoreOk = false;
         }
-        A("roster: quiz bank per experiment (11)", coverage && qBanks == 11);
+        A("roster: quiz bank per experiment (9)", coverage && qBanks == 9);
         // 33 → 35: compounding's rebuild took its bank from 3 to 5 questions (2026-07-15).
-        A("roster: 35 quiz questions total, all valid (4 opts, in-range answer)", qTotal == 35 && allValid);
+        // 35 → 29: Aspirin + Caffeine (3 each) dropped 2026-07-16.
+        A("roster: 29 quiz questions total, all valid (4 opts, in-range answer)", qTotal == 29 && allValid);
         A("roster: quiz scoring (all-correct = 100%)", scoreOk);
     }
 
@@ -1789,6 +1790,51 @@ public static class PharmaSelfTests
             ScoopMath.CanDeposit(true, false) && !ScoopMath.CanDeposit(true, true) && !ScoopMath.CanDeposit(false, false));
         A("scoop: deposit label shows the running total",
             ScoopMath.DepositLabel("Salicylic Acid", 2f, 8f) == "+2 g Salicylic Acid  (8 g total)");
+        // The porcelain spatula (2026-07-16): Exp 2 weighs 0.1 g salicylic and 0.5 g
+        // aspirin — BOTH smaller than one 2 g scoopful, so the scoop cannot express
+        // them at all. At 0.1 g/dip they become 1 and 5 dips.
+        A("spatula: finer than the scoopula", ScoopMath.GramsPerSpatula < ScoopMath.GramsPerScoop);
+        A("spatula: 0.1 g salicylic = one dip",
+            Near(ScoopMath.ScoopCharge(50f, ScoopMath.GramsPerSpatula), 0.1f));
+        A("spatula: 0.5 g aspirin = five dips",
+            Near(ScoopMath.ScoopCharge(50f, ScoopMath.GramsPerSpatula) * 5f, 0.5f));
+
+        // DropperMath (2026-07-16): the liquid twin of the scoop. THE contract —
+        // the number in the manuscript instruction IS the squeeze count, whatever
+        // its unit ("5 drops" -> 5 squeezes; "2 ml of Tollen's" -> 2 squeezes).
+        A("dropper: draws only from liquids",
+            DropperMath.CanFill(0f, PhysicalState.Liquid, 50f)
+            && !DropperMath.CanFill(0f, PhysicalState.Powder, 50f)
+            && !DropperMath.CanFill(0f, PhysicalState.Solid, 50f));
+        A("dropper: no top-up while loaded (an ambiguous count)",
+            !DropperMath.CanFill(4f, PhysicalState.Liquid, 50f));
+        A("dropper: empty bottle gives nothing", !DropperMath.CanFill(0f, PhysicalState.Liquid, 0f));
+        A("dropper: a draw fills it, last draw takes the rest",
+            Near(DropperMath.FillCharge(50f), DropperMath.Capacity) && Near(DropperMath.FillCharge(3f), 3f));
+        A("dropper: squeezes only when loaded, over another vessel",
+            DropperMath.CanSqueeze(5f, true, false)
+            && !DropperMath.CanSqueeze(0f, true, false)
+            && !DropperMath.CanSqueeze(5f, false, false)
+            && !DropperMath.CanSqueeze(5f, true, true));
+        A("dropper: one squeeze = one unit, last squeeze takes the rest",
+            Near(DropperMath.SqueezeCharge(5f), 1f) && Near(DropperMath.SqueezeCharge(0.4f), 0.4f));
+        // A full dropper covers the largest single Exp 2 instruction (10 drops of ethanol).
+        A("dropper: a full charge is ten squeezes", DropperMath.SqueezesLeft(DropperMath.Capacity) == 10);
+        A("dropper: count drains with each squeeze",
+            DropperMath.SqueezesLeft(3f) == 3 && DropperMath.SqueezesLeft(0f) == 0);
+        // The popup shows the COUNT, because the count is the measurement.
+        A("dropper: squeeze label counts drops",
+            DropperMath.SqueezeLabel("Ferric Chloride 10%", 3) == "drop 3  ·  Ferric Chloride 10%");
+        A("dropper: fill label shows squeezes loaded",
+            DropperMath.FillLabel("Tollen's Reagent", 10f) == "Tollen's Reagent  ·  10 drops loaded");
+
+        // RackMath (2026-07-16): a step shared by a SET of tubes is done only when
+        // every member tube has had its reagent. Exp 2's five enol samples, its
+        // butyl alcohols, acetone-vs-acetaldehyde: the comparison IS the lesson, so
+        // one tube must never stand in for the set.
+        A("rack: not ready until every tube is", !RackMath.AllReady(4, 5) && RackMath.AllReady(5, 5));
+        A("rack: an empty group never auto-completes", !RackMath.AllReady(0, 0));
+        A("rack: progress counts the set", RackMath.ProgressLabel(3, 5) == "tube 3 of 5");
 
         // CleanupMath (W5.12): residue on empty, five swipes clean, rinse helps.
         A("clean: emptying a used vessel leaves residue", CleanupMath.BecomesDirty(60f, true)
@@ -1838,15 +1884,20 @@ public static class PharmaSelfTests
                 bowl.AddComponent<PlacementAnchor>().previewsScale = false;   // position-only
                 ExperimentSceneBuilder.EnsurePowderVisual(powderHost, chem, 1f);
                 Transform heap = powderHost.transform.Find("Powder");
+                // Guard is "not a 1-unit beach-ball", not a tight bound: a Cylinder
+                // primitive's bounds are (1,2,1) → bore 1 → w = bore*0.5 = 0.5 EXACTLY,
+                // so "< 0.5f" failed on the boundary it was never aiming at.
                 A("powder: position-only anchor does NOT set size",
-                  heap != null && heap.localScale.x < 0.5f && heap.localScale.y < 0.5f);
+                  heap != null && heap.localScale.x < 0.6f && heap.localScale.y < 0.6f);
             }
             finally { UnityEngine.Object.DestroyImmediate(powderHost); }
         }
 
         // HUD dropdown re-fits to however many items are visible — the demo verbs
         // live in it and are hidden outside a demo session (user 2026-07-15).
-        A("hudmenu: 3 items (no demo)", Near(HudMenuDropdown.HeightFor(3, 56f, 6f, 16f), 200f));
+        // pad + items*h + (items-1)*gap = 16 + 168 + 12 = 196 (the 6-item and empty
+        // cases below pin the same formula; the old 200 was an arithmetic slip).
+        A("hudmenu: 3 items (no demo)", Near(HudMenuDropdown.HeightFor(3, 56f, 6f, 16f), 196f));
         A("hudmenu: 6 items (demo session)", Near(HudMenuDropdown.HeightFor(6, 56f, 6f, 16f), 382f));
         A("hudmenu: empty list collapses to padding", Near(HudMenuDropdown.HeightFor(0, 56f, 6f, 16f), 16f));
 
@@ -1948,6 +1999,63 @@ public static class PharmaSelfTests
         }
     }
 
+    /// EVERY layout's taskIds must exist in its module's graph, and every task the
+    /// graph declares must have some way to be completed.
+    ///
+    /// This exists because Layout_ChemicalCompounding sat STALE for a session: its
+    /// stations still completed the retired battery (test-combustion / test-sodium /
+    /// gather-ethanol / test-bromine / test-kmno4) after the module was rebuilt to
+    /// the 13 manuscript tasks — ZERO overlap. The stage built, nothing errored, and
+    /// not one task could ever complete. Nothing caught it because no test compared
+    /// the two halves. (2026-07-16)
+    static void LayoutGraphCoverageSuite()
+    {
+        const string LDir = "Assets/PharmaSynth/ScriptableObjects/Layouts";
+        var lib = AssetDatabase.LoadAssetAtPath<ExperimentLibrary>(
+            "Assets/PharmaSynth/ScriptableObjects/ExperimentLibrary.asset");
+        A("cover: library loads", lib != null);
+        if (lib == null) return;
+
+        bool allKnown = true, allReachable = true;
+        var orphanNote = ""; var deadNote = "";
+        foreach (var g in AssetDatabase.FindAssets("t:ExperimentLayout", new[] { LDir }))
+        {
+            var layout = AssetDatabase.LoadAssetAtPath<ExperimentLayout>(AssetDatabase.GUIDToAssetPath(g));
+            if (layout == null || string.IsNullOrEmpty(layout.moduleId)) continue;
+            var module = lib.Get(layout.moduleId);
+            if (module == null) continue;
+
+            var graphIds = new HashSet<string>();
+            foreach (var t in module.graphTasks) graphIds.Add(t.taskId);
+
+            // (a) Nothing in the layout may name a task the graph doesn't have.
+            var layoutIds = new HashSet<string>();
+            foreach (var s in layout.stations) if (!string.IsNullOrEmpty(s.taskId)) layoutIds.Add(s.taskId);
+            foreach (var v in layout.vessels) foreach (var b in v.bindings)
+                if (!string.IsNullOrEmpty(b.taskId)) layoutIds.Add(b.taskId);
+            foreach (var id in layoutIds)
+                if (!graphIds.Contains(id))
+                { allKnown = false; orphanNote = layout.name + " -> " + id; }
+
+            // (b) Every graph task needs an owner: a station, a completing binding,
+            //     or a rack group (deferred bindings whose members share a rackGroup).
+            foreach (var t in module.graphTasks)
+            {
+                bool owned = false;
+                foreach (var s in layout.stations) if (s.taskId == t.taskId) owned = true;
+                foreach (var v in layout.vessels)
+                    foreach (var b in v.bindings)
+                        if (b.taskId == t.taskId && (b.completesTask || !string.IsNullOrEmpty(v.rackGroup)))
+                            owned = true;
+                // DataSheet steps may be closed by the quiz/tablet rather than the stage.
+                if (!owned && t.phase != TaskPhase.DataSheet)
+                { allReachable = false; deadNote = layout.name + " -> " + t.taskId; }
+            }
+        }
+        A("cover: no layout names a task its graph lacks" + (allKnown ? "" : "  [" + orphanNote + "]"), allKnown);
+        A("cover: every graph task has a completion owner" + (allReachable ? "" : "  [" + deadNote + "]"), allReachable);
+    }
+
     // W5.8 builder wiring for the verb stations (pins the applied layout data).
     static void VerbWiringSuite()
     {
@@ -1959,36 +2067,20 @@ public static class PharmaSelfTests
         if (lib == null || layouts.Count == 0) { A("verbwire: assets available", false); return; }
 
         // Layout data applied (menu Tools ▸ PharmaSynth ▸ Apply W5.8 Verb Data).
-        ExperimentLayout aspirin = null, acetone = null, benzamide = null, caffeine = null;
+        // (Aspirin's weigh station + Caffeine's mortar were pinned here until both
+        // modules were dropped 2026-07-16; Acetone still covers the Weigh verb.)
+        ExperimentLayout acetone = null, benzamide = null;
         foreach (var l in layouts)
         {
-            if (l.moduleId == "final-aspirin") aspirin = l;
             if (l.moduleId == "midterm-acetone") acetone = l;
             if (l.moduleId == "final-benzamide") benzamide = l;
-            if (l.moduleId == "final-caffeine") caffeine = l;
         }
-        bool aspStation = false, aspFlagged = false;
-        if (aspirin != null)
-        {
-            foreach (var s in aspirin.stations) if (s.taskId == "weigh-salicylic" && s.sim == StationSim.Weigh) aspStation = true;
-            foreach (var v in aspirin.vessels) foreach (var b in v.bindings)
-                if (b.taskId == "weigh-salicylic" && !b.completesTask) aspFlagged = true;
-        }
-        A("verbwire: aspirin weigh station authored", aspStation);
-        A("verbwire: aspirin pour binding defers to the scale", aspFlagged);
         bool acetoneWeigh = false;
         if (acetone != null) foreach (var s in acetone.stations) if (s.taskId == "weigh-acetates" && s.sim == StationSim.Weigh) acetoneWeigh = true;
         A("verbwire: acetone weigh authored", acetoneWeigh);
         bool benzStir = false;
         if (benzamide != null) foreach (var s in benzamide.stations) if (s.taskId == "stand" && s.sim == StationSim.Stir) benzStir = true;
         A("verbwire: benzamide stir authored", benzStir);
-        bool cafMortar = false, cafPestle = false;
-        if (caffeine != null) foreach (var p in caffeine.props)
-        {
-            if (p.prefabName == "Motar") cafMortar = true;
-            if (p.prefabName == "Pestle") cafPestle = true;
-        }
-        A("verbwire: caffeine mortar+pestle staged", cafMortar && cafPestle);
 
         // Builder wires the controllers (fresh runner, no graph — Register no-ops).
         var rgo = new GameObject("vw_runner"); var bgo = new GameObject("vw_builder");
@@ -2001,18 +2093,12 @@ public static class PharmaSelfTests
             builder.Build("final-benzamide");
             A("verbwire: benzamide rod stirs the vessel", bgo.GetComponentInChildren<StirController>() != null);
 
-            builder.Build("final-aspirin");
-            A("verbwire: aspirin balance built", bgo.GetComponentInChildren<WeighStation>() != null);
-
             builder.Build("midterm-acetone");
             A("verbwire: acetone balance built", bgo.GetComponentInChildren<WeighStation>() != null);
             var heatProp = FindChildByName(bgo.transform, "Prop_heat-glow");
             A("verbwire: acetone burner is ignitable + a striker", heatProp != null
                 && heatProp.GetComponent<BurnerController>() != null
                 && heatProp.GetComponent<MatchStrikerSurface>() != null);
-
-            builder.Build("final-caffeine");
-            A("verbwire: caffeine mortar grinds (educational)", bgo.GetComponentInChildren<GrindController>() != null);
         }
         finally { UnityEngine.Object.DestroyImmediate(rgo); UnityEngine.Object.DestroyImmediate(bgo); }
     }
@@ -2396,6 +2482,68 @@ public static class PharmaSelfTests
             foreach (var q in quiz.questions)
                 if (q.prompt.Contains("sodium metal") || q.prompt.Contains("unsaturation")) noRetired = false;
         A("m5: compounding quiz drops the retired sodium/bromine battery", quiz != null && noRetired);
+        // Watch-panel contract (user 2026-07-16): every Exp 2 step prints the
+        // manuscript's REAL quantity for learning, then the achievable action under
+        // it — "Add 2 ml of Tollen's reagent" / "-> 2 squeezes". ChecklistPager shows
+        // t.hint under the current step, so this copy IS the in-game instruction.
+        {
+            var m = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>(
+                "Assets/PharmaSynth/ScriptableObjects/Experiments/Prelim_ChemicalCompounding.asset");
+            bool twoLine = m != null, saysHow = m != null;
+            if (m != null)
+                foreach (var t in m.graphTasks)
+                {
+                    if (string.IsNullOrWhiteSpace(t.hint) || !t.hint.Contains("\n")) twoLine = false;
+                    else
+                    {
+                        // The action line must name a COUNTABLE verb — the count is
+                        // the measurement, and an un-actionable hint is the whole
+                        // reason the old copy failed the player.
+                        string how = t.hint.Substring(t.hint.IndexOf('\n')).ToLowerInvariant();
+                        if (!(how.Contains("squeeze") || how.Contains("dip") || how.Contains("tilt-pour")
+                              || how.Contains("funnel") || how.Contains("burner") || how.Contains("board")))
+                            saysHow = false;
+                    }
+                }
+            A("m5: every step's hint is two lines (fact + action)", twoLine);
+            A("m5: every action line names a countable verb", saysHow);
+        }
+        // Exp 2's reactions. The NEGATIVES are deliberately unauthored: tert-butyl
+        // resisting KMnO4, acetone leaving Tollen's clear, unboiled aspirin giving no
+        // violet. "Nothing happens" IS each test's answer and the contrast is the
+        // lesson — authoring a rule there would invent chemistry the manuscript denies.
+        {
+            var reg = AssetDatabase.LoadAssetAtPath<ReactionRegistry>(
+                "Assets/PharmaSynth/ScriptableObjects/Reactions/MasterReactionRegistry.asset");
+            ReactionRule Rule(string n) => AssetDatabase.LoadAssetAtPath<ReactionRule>(
+                "Assets/PharmaSynth/ScriptableObjects/Reactions/" + n + ".asset");
+            var positives = new[] { "Test_EnolPhenolFeCl3", "Test_OxidationPrimaryKMnO4",
+                "Test_OxidationSecondaryKMnO4", "Test_TollensAldehyde", "Test_EsterEthylAcetate",
+                "Test_EsterMethylSalicylate", "Test_AspirinHydrolysis", "Test_HydrolysateFeCl3" };
+            bool authored = true, observed = true;
+            foreach (var n in positives)
+            {
+                var r = Rule(n);
+                if (r == null || r.inputChemicalA == null || r.inputChemicalB == null) { authored = false; continue; }
+                if (string.IsNullOrWhiteSpace(r.expectedObservation)) observed = false;
+            }
+            A("m5: the 8 positive tests are authored", authored);
+            A("m5: every test states its expected observation", observed);
+            // The odour cue is the ONE sensory loss VR can't reproduce (client-approved
+            // on-screen substitute), so both esters must actually carry it.
+            var ea = Rule("Test_EsterEthylAcetate"); var ms = Rule("Test_EsterMethylSalicylate");
+            A("m5: both esters report their odour on screen",
+                ea != null && ms != null && ea.outcome == ReactionOutcome.Odor && ms.outcome == ReactionOutcome.Odor
+                && ea.expectedObservation.Contains("fruity") && ms.expectedObservation.Contains("wintergreen"));
+            // Hydrolysis only happens on a real boil — that's why the step has a bath.
+            var hy = Rule("Test_AspirinHydrolysis");
+            A("m5: aspirin only hydrolyses when boiled", hy != null && hy.minTemperatureC >= 90f);
+            // The negatives must STAY unauthored.
+            A("m5: tert-butyl has no KMnO4 rule (it cannot oxidise)",
+                Rule("Test_OxidationTertiaryKMnO4") == null);
+            A("m5: acetone has no Tollen's rule (a ketone gives no mirror)",
+                Rule("Test_TollensAcetone") == null);
+        }
         A("m5: compounding quiz covers the manuscript tests", quiz != null && quiz.questions.Count == 5
             && quiz.questions[0].prompt.Contains("enol") && quiz.questions[1].prompt.Contains("oxidation")
             && quiz.questions[2].prompt.Contains("fourth") && quiz.questions[3].prompt.Contains("Tollen")
@@ -2535,7 +2683,7 @@ public static class PharmaSelfTests
         var allLayouts = new List<ExperimentLayout>();
         foreach (var g in AssetDatabase.FindAssets("t:ExperimentLayout", new[] { "Assets/PharmaSynth/ScriptableObjects/Layouts" }))
             allLayouts.Add(AssetDatabase.LoadAssetAtPath<ExperimentLayout>(AssetDatabase.GUIDToAssetPath(g)));
-        A("builder: 10 experiment layouts authored", allLayouts.Count >= 10);
+        A("builder: 8 experiment layouts authored", allLayouts.Count >= 8);
 
         int resolveMisses = 0;
         foreach (var l in allLayouts)
@@ -2572,7 +2720,7 @@ public static class PharmaSelfTests
                 if (l == null || l.moduleId == "tutorial-methane") continue;
                 if (b2.Build(l.moduleId) > 0) builtAll++;
             }
-            A("builder: all 10 data-driven experiments spawn > 0 roots", builtAll >= 10);
+            A("builder: all 8 data-driven experiments spawn > 0 roots", builtAll >= 8);
         }
         finally { UnityEngine.Object.DestroyImmediate(allBgo); }
     }
@@ -2581,7 +2729,7 @@ public static class PharmaSelfTests
     {
         var svc = new ProgressionService();
         var rows0 = ResultsExport.BuildRows(svc);
-        A("results: one row per experiment", rows0.Count == ExperimentCatalog.Count && rows0.Count == 11);
+        A("results: one row per experiment", rows0.Count == ExperimentCatalog.Count && rows0.Count == 9);
         A("results: all unattempted at start", rows0.TrueForAll(r => !r.attempted && !r.passed));
         A("results: zero passed at start", ResultsExport.PassedCount(svc) == 0);
 
@@ -2595,16 +2743,16 @@ public static class PharmaSelfTests
         var csv = ResultsExport.BuildCsv(svc);
         A("results: csv has header", csv.StartsWith("Experiment,Period,"));
         A("results: csv lists the tutorial row", csv.Contains("Tutorial: Methane Synthesis"));
-        A("results: csv total line", csv.Contains("TOTAL,,,1/11"));
+        A("results: csv total line", csv.Contains("TOTAL,,,1/9"));
         int lines = csv.TrimEnd('\n').Split('\n').Length;
-        A("results: csv = header + 11 rows + total", lines == 13);
+        A("results: csv = header + 9 rows + total", lines == 11);
 
         // Results/History screen text.
         var empty = new ProgressionService();
         var txt0 = ResultsHistoryController.BuildDisplayText(empty);
-        A("results: screen shows 0/11 before any pass", txt0.Contains("0 / 11 passed"));
+        A("results: screen shows 0/9 before any pass", txt0.Contains("0 / 9 passed"));
         var txt1 = ResultsHistoryController.BuildDisplayText(svc);
-        A("results: screen marks a pass + 1/11", txt1.Contains("PASS") && txt1.Contains("1 / 11 passed"));
+        A("results: screen marks a pass + 1/9", txt1.Contains("PASS") && txt1.Contains("1 / 9 passed"));
     }
 
     static void SettingsSuite()
@@ -2807,7 +2955,7 @@ public static class PharmaSelfTests
         var flow = new ProgressionFlow(service);
 
         var model = HubSelectController.BuildModel(flow);
-        A("hub: model has all 11 experiments", model.Count == ExperimentCatalog.Count && model.Count == 11);
+        A("hub: model has all 9 experiments", model.Count == ExperimentCatalog.Count && model.Count == 9);
 
         HubSelectController.Row Find(string id) { foreach (var r in model) if (r.moduleId == id) return r; return null; }
         A("hub: tutorial available at start",
@@ -2816,7 +2964,7 @@ public static class PharmaSelfTests
             HubSelectController.StateOf(Find("prelim-chemical-compounding")) == HubSelectController.RowState.Locked);
         A("hub: midterm period closed at start", !flow.IsPeriodUnlocked(ExperimentPeriod.Midterm));
         A("hub: CanSelect tutorial", HubSelectController.CanSelect(flow, "tutorial-methane"));
-        A("hub: cannot select a locked experiment", !HubSelectController.CanSelect(flow, "final-aspirin"));
+        A("hub: cannot select a locked experiment", !HubSelectController.CanSelect(flow, "final-winemaking"));
 
         // Pass the tutorial (in-memory only) → the first prelim unlocks.
         service.RecordResult("tutorial-methane", new ExperimentResult { passed = true }, false);
@@ -2834,8 +2982,10 @@ public static class PharmaSelfTests
     {
         var lib = AssetDatabase.LoadAssetAtPath<SceneAssetLibrary>("Assets/PharmaSynth/ScriptableObjects/SceneAssetLibrary.asset");
         var reg = AssetDatabase.LoadAssetAtPath<ReactionRegistry>("Assets/PharmaSynth/ScriptableObjects/Reactions/MasterReactionRegistry.asset");
-        var module = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>("Assets/PharmaSynth/ScriptableObjects/Experiments/Final_Aspirin.asset");
-        A("simrig: library + aspirin module load", lib != null && module != null);
+        // Re-homed from Aspirin to Acetanilide 2026-07-16 when the Aspirin module was
+        // dropped: `heat-bath` is the same 85 °C water-bath rig `warm-waterbath` was.
+        var module = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>("Assets/PharmaSynth/ScriptableObjects/Experiments/Midterm_Acetanilide.asset");
+        A("simrig: library + acetanilide module load", lib != null && module != null);
         if (lib == null || module == null) return;
         var layouts = new List<ExperimentLayout>();
         foreach (var g in AssetDatabase.FindAssets("t:ExperimentLayout", new[] { "Assets/PharmaSynth/ScriptableObjects/Layouts" }))
@@ -2848,11 +2998,11 @@ public static class PharmaSelfTests
             runner.SetModule(module); runner.StartExperiment();
             var builder = bgo.AddComponent<ExperimentSceneBuilder>();
             builder.SetRefs(runner, lib, reg, layouts);
-            builder.Build("final-aspirin");
+            builder.Build("midterm-acetanilide");
 
             ZoneSimStation heatRig = null;
             foreach (var z in bgo.GetComponentsInChildren<ZoneSimStation>(true))
-                if (z.gameObject.name == "Station_warm-waterbath") { heatRig = z; break; }
+                if (z.gameObject.name == "Station_heat-bath") { heatRig = z; break; }
             A("simrig: heat station built with a ZoneSimStation", heatRig != null);
             if (heatRig == null) return;
             var temp = heatRig.GetComponent<TemperatureSim>();
@@ -2860,14 +3010,16 @@ public static class PharmaSelfTests
             A("simrig: heat station carries TemperatureSim + sensor", temp != null && sensor != null);
 
             // Reach the step, then confirm it does NOT complete without the sustained heat verb.
-            runner.CompleteTask("weigh-salicylic");
-            runner.CompleteTask("add-anhydride");
+            runner.CompleteTask("prep-hcl");
+            runner.CompleteTask("measure-aniline");
+            runner.CompleteTask("add-acetic");
+            runner.CompleteTask("add-acylating");
             runner.Graph.Tick();
-            A("simrig: warm-waterbath pending before heating", !runner.Graph.IsComplete("warm-waterbath"));
+            A("simrig: heat-bath pending before heating", !runner.Graph.IsComplete("heat-bath"));
 
             // W5.8 ignition gate: the station's prop is a BunsenBurner, so heat
             // only advances once the burner is LIT (light it with a match).
-            var burnerProp = FindChildByName(bgo.transform, "Prop_warm-waterbath");
+            var burnerProp = FindChildByName(bgo.transform, "Prop_heat-bath");
             var burner = burnerProp != null ? burnerProp.GetComponent<BurnerController>() : null;
             A("simrig: waterbath burner is ignitable (W5.8)", burner != null);
             sensor.ForceOccupied(true);
@@ -2881,7 +3033,7 @@ public static class PharmaSelfTests
             for (int i = 0; i < 4; i++) temp.Tick(1f);
             A("simrig: temperature reached target", temp.AtLeast(85f));
             runner.Graph.Tick();
-            A("simrig: heat verb auto-completes warm-waterbath", runner.Graph.IsComplete("warm-waterbath"));
+            A("simrig: heat verb auto-completes heat-bath", runner.Graph.IsComplete("heat-bath"));
         }
         finally { UnityEngine.Object.DestroyImmediate(rgo); UnityEngine.Object.DestroyImmediate(bgo); }
     }
@@ -2891,7 +3043,7 @@ public static class PharmaSelfTests
         var lib = AssetDatabase.LoadAssetAtPath<CutsceneLibrary>("Assets/PharmaSynth/ScriptableObjects/CutsceneLibrary.asset");
         A("cutscene: library loads", lib != null);
         if (lib == null) return;
-        A("cutscene: 11 module sets", lib.entries.Count >= 11);
+        A("cutscene: 9 module sets", lib.entries.Count >= 9);
 
         int bad = 0;
         foreach (var e in lib.entries)
@@ -2910,10 +3062,10 @@ public static class PharmaSelfTests
         {
             var dir = go.AddComponent<CutsceneDirector>();
             dir.SetLibrary(lib);
-            var asp = lib.GetSet("final-aspirin");
-            A("cutscene: aspirin set exists", asp != null);
-            A("cutscene: LoadForModule(aspirin) returns complete", dir.LoadForModule("final-aspirin"));
-            A("cutscene: director intro swapped to aspirin", dir.Intro == asp.intro && dir.Success == asp.success);
+            var asp = lib.GetSet("final-benzamide");
+            A("cutscene: benzamide set exists", asp != null);
+            A("cutscene: LoadForModule(benzamide) returns complete", dir.LoadForModule("final-benzamide"));
+            A("cutscene: director intro swapped to benzamide", dir.Intro == asp.intro && dir.Success == asp.success);
             dir.LoadForModule("tutorial-methane");
             var meth = lib.GetSet("tutorial-methane");
             A("cutscene: director intro swapped to methane", dir.Intro == meth.intro);
@@ -2932,7 +3084,7 @@ public static class PharmaSelfTests
         if (lib == null || module == null) return;
         var bank = lib.GetBank("prelim-ethyl-alcohol");
         A("postlab: bank found + 3 questions", bank != null && bank.Count == 3);
-        A("postlab: all 11 banks registered", lib.banks.Count >= 11);
+        A("postlab: all 9 banks registered", lib.banks.Count >= 9);
         if (bank == null) return;
 
         var rgo = new GameObject("pl_runner"); var cgo = new GameObject("pl_ctrl");
@@ -3040,7 +3192,7 @@ public static class PharmaSelfTests
 
     static void ProgressionFlowSuite()
     {
-        A("catalog: 11 entries", ExperimentCatalog.Count == 11);
+        A("catalog: 9 entries", ExperimentCatalog.Count == 9);
         int tut = 0, pre = 0, mid = 0, fin = 0;
         foreach (var e in ExperimentCatalog.Entries)
         {
@@ -3049,7 +3201,9 @@ public static class PharmaSelfTests
             else if (e.period == ExperimentPeriod.Midterm) mid++;
             else fin++;
         }
-        A("catalog: period split 1/2/4/4", tut == 1 && pre == 2 && mid == 4 && fin == 4);
+        // Client's 2026-07-16 grouping: tutorial + Exp 2-9. (Was 1/2/4/4 before
+        // Aspirin + Caffeine were dropped from the Final period.)
+        A("catalog: period split 1/2/4/2", tut == 1 && pre == 2 && mid == 4 && fin == 2);
 
         // Every prerequisite must reference an experiment earlier in the roster.
         bool chainOk = true; var seen = new List<string>();
@@ -3081,7 +3235,7 @@ public static class PharmaSelfTests
         var lib = AssetDatabase.LoadAssetAtPath<ExperimentLibrary>("Assets/PharmaSynth/ScriptableObjects/ExperimentLibrary.asset");
         A("library: loads", lib != null);
         if (lib == null) return;
-        A("library: 11 modules", lib.Count == 11);
+        A("library: 9 modules", lib.Count == 9);
 
         bool allResolve = true;
         foreach (var e in ExperimentCatalog.Entries) if (!lib.Has(e.moduleId)) allResolve = false;
@@ -3098,8 +3252,8 @@ public static class PharmaSelfTests
             var runner = rgo.AddComponent<ExperimentRunner>();
             var launcher = lgo.AddComponent<ExperimentLauncher>();
             launcher.SetLibrary(lib); launcher.SetRunner(runner);
-            var loaded = launcher.Launch("final-aspirin");
-            A("launcher: loads the requested module", loaded != null && runner.Module != null && runner.Module.moduleId == "final-aspirin");
+            var loaded = launcher.Launch("final-benzamide");
+            A("launcher: loads the requested module", loaded != null && runner.Module != null && runner.Module.moduleId == "final-benzamide");
             A("launcher: unknown id returns null", launcher.Launch("does-not-exist") == null);
         }
         finally { UnityEngine.Object.DestroyImmediate(rgo); UnityEngine.Object.DestroyImmediate(lgo); }
@@ -3111,9 +3265,9 @@ public static class PharmaSelfTests
         foreach (var (file, tasks) in new[] {
             // Compounding: 6 → 13 when it was rebuilt to manuscript Exp 2 (2026-07-15).
             ("Tutorial_Methane", 5), ("Prelim_ChemicalCompounding", 13), ("Prelim_EthylAlcohol", 7),
-            ("Midterm_BenzoicAcid", 9), ("Final_Aspirin", 7),
+            ("Midterm_BenzoicAcid", 9),
             ("Midterm_Acetanilide", 10), ("Midterm_Acetone", 10), ("Midterm_Chloroform", 11),   // W5.9: +test-oxidation
-            ("Final_Benzamide", 9), ("Final_Caffeine", 9), ("Final_WineMaking", 8) })
+            ("Final_Benzamide", 9), ("Final_WineMaking", 8) })
         {
             var m = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>(dir + file + ".asset");
             A("content: " + file + " loads", m != null);
@@ -3422,7 +3576,7 @@ public static class PharmaSelfTests
         var demoFlow = new ProgressionFlow(svc, true);
         var normalFlow = new ProgressionFlow(svc);
         A("demo: finals period pickable", demoFlow.IsPeriodUnlocked(ExperimentPeriod.Final));
-        A("demo: any module pickable", demoFlow.IsUnlocked("final-caffeine"));
+        A("demo: any module pickable", demoFlow.IsUnlocked("final-winemaking"));
         A("demo: unknown module still rejected", !demoFlow.IsUnlocked("does-not-exist"));
         A("demo: pass state stays honest", !demoFlow.IsPassed("tutorial-methane") && demoFlow.PassedCount() == 0);
         A("demo: normal flow unaffected", !normalFlow.IsPeriodUnlocked(ExperimentPeriod.Final));
@@ -3430,7 +3584,9 @@ public static class PharmaSelfTests
         // End products hide outside demo sessions (user 2026-07-11).
         A("endproduct: ethanol is a product", DemoMode.IsEndProduct("Ethanol"));
         A("endproduct: acetone is a product", DemoMode.IsEndProduct("Acetone"));
-        A("endproduct: aspirin is a product", DemoMode.IsEndProduct("Aspirin"));
+        // Aspirin flipped product -> RAW 2026-07-16: Exp 2 §D hydrolyses it, so it
+        // must stay on the bench in normal play (its module was dropped).
+        A("endproduct: aspirin is now RAW, not a product", !DemoMode.IsEndProduct("Aspirin"));
         A("endproduct: wine is the winemaking product", DemoMode.IsEndProduct("Wine"));
         A("endproduct: sulfuric acid is raw", !DemoMode.IsEndProduct("Sulfuric Acid"));
         A("endproduct: sodium acetate is feedstock", !DemoMode.IsEndProduct("Sodium Acetate"));
@@ -3667,6 +3823,26 @@ public static class PharmaSelfTests
             RawReagentCatalog.Find("Litmus Paper") != null && RawReagentCatalog.Find("Matchsticks") != null
             && RawReagentCatalog.Find("Cotton Swabs") != null && RawReagentCatalog.Find("Filter Paper") != null
             && RawReagentCatalog.Find("Ice") != null && RawReagentCatalog.Find("Anhydrous Calcium Chloride") != null);
+        // Exp 2 §D hydrolyses aspirin, so it MUST be a bench reagent, not a demo-only
+        // end product — the pairing that made Exp 2 unplayable outside demo (2026-07-16).
+        A("raw: aspirin is a bench reagent for Exp 2 §D",
+            RawReagentCatalog.Find("Aspirin") != null
+            && RawReagentCatalog.Find("Aspirin").state == PhysicalState.Powder
+            && !DemoMode.IsEndProduct("Aspirin"));
+        // KMnO4 is POURED as "2 ml of 0.1% solution" (Exp 2 A.II) — it was marked Solid,
+        // which LiquidPourer cannot pour, so Exp 2's oxidation tubes were unbuildable.
+        // The manuscript never uses it solid at the bench (2026-07-16).
+        {
+            var kmno4 = RawReagentCatalog.Find("Potassium Permanganate 0.1%");
+            var kchem = AssetDatabase.LoadAssetAtPath<ChemicalData>(
+                "Assets/PharmaSynth/ScriptableObjects/Chemicals/Chem_PotassiumPermanganate.asset");
+            A("raw: KMnO4 is the 0.1% SOLUTION, pourable", kmno4 != null && kmno4.state == PhysicalState.Liquid);
+            A("raw: KMnO4 chemical asset agrees with its catalog row",
+                kchem != null && kchem.state == PhysicalState.Liquid
+                && kchem.chemicalName == "Potassium Permanganate 0.1%");
+            A("raw: renaming KMnO4 kept its oxidizer flag",
+                HazardFlags.IsOxidizer("Potassium Permanganate 0.1%"));
+        }
         A("raw: blurb lookup + uses folded in",
             RawReagentCatalog.BlurbFor("Aniline") != null && RawReagentCatalog.BlurbFor("Aniline").Contains("Exp 5"));
         A("raw: unknown blurb null", RawReagentCatalog.BlurbFor("Unobtainium") == null);
@@ -3699,10 +3875,10 @@ public static class PharmaSelfTests
         // Demo ready-made product per module.
         string[] ids = { "tutorial-methane", "prelim-chemical-compounding", "prelim-ethyl-alcohol",
                          "midterm-benzoic-acid", "midterm-acetanilide", "midterm-acetone", "midterm-chloroform",
-                         "final-benzamide", "final-aspirin", "final-caffeine", "final-winemaking" };
+                         "final-benzamide", "final-winemaking" };
         bool products = true;
         foreach (var id in ids) if (string.IsNullOrEmpty(DemoMode.ProductFor(id))) products = false;
-        A("demo: ready-made product for all 11 modules", products);
+        A("demo: ready-made product for all 9 modules", products);
         A("demo: winemaking product is Wine (not the grape-juice feedstock)", DemoMode.ProductFor("final-winemaking") == "Wine");
         A("demo: unknown module has none", DemoMode.ProductFor("nope") == null);
     }
@@ -3785,7 +3961,7 @@ public static class PharmaSelfTests
         string[] ids = {
             "tutorial-methane", "prelim-chemical-compounding", "prelim-ethyl-alcohol",
             "midterm-benzoic-acid", "midterm-acetanilide", "midterm-acetone", "midterm-chloroform",
-            "final-benzamide", "final-aspirin", "final-caffeine", "final-winemaking",
+            "final-benzamide", "final-winemaking",
         };
         bool allPresent = true, allSized = true;
         foreach (var id in ids)

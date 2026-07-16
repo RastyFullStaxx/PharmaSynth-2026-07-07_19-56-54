@@ -14,8 +14,8 @@
 | Chemical Compounding battery | Multi-substrate ID lab: FeCl₃ enol, KMnO₄ rate-of-oxidation (3 butyl alcohols + control), Tollen's, ester formation ×2, aspirin hydrolysis | ~~Single-substrate ethanol (combustion/sodium/bromine/KMnO₄)~~ → **REBUILT to the manuscript 2026-07-15** (13-task graph, ILOs restored verbatim, quiz realigned) | ✅ **client chose "rebuild to manuscript"** — the old battery failed its own ILO ("differentiate tests for *different* compounds") and used sodium/bromine, which the manuscript never lists. Layout/bindings still to author. |
 | Wine fruit | Grapes EXCLUDED (L3830-31) | Ferments **Mixed Fruit Juice** (renamed from Grape Juice, W5.9) | ✅ fixed |
 | Chloroform oxidation test | Dichromate + conc H₂SO₄ (procedure + results sheet) | Added W5.9: `test-oxidation` + rule | ✅ fixed |
-| **Methane** | Not in Appendix C — appears only as a molecular-weight worked example in Exp 1 (Stoichiometry) | Game-authored tutorial | ✅ **CLIENT-CONFIRMED 2026-07-16: methane REMAINS, as the tutorial-only experiment.** Being game-authored is NOT grounds to remove it — do not flag it alongside aspirin/caffeine. |
-| **Aspirin / Caffeine** | Not in Appendix C (Aspirin named in intro prose only; Caffeine absent entirely) | Game-authored modules + ILOs | ⚠ **NOT in the client's 2026-07-16 period grouping → pending "drop?" decision.** Nothing deleted yet. |
+| **Methane** | Not in Appendix C — appears only as a molecular-weight worked example in Exp 1 (Stoichiometry) | Game-authored tutorial | ✅ **CLIENT-CONFIRMED 2026-07-16: methane REMAINS, as the tutorial-only experiment.** Being game-authored is NOT grounds to remove it — do not lump it with the dropped aspirin/caffeine modules. |
+| **Aspirin / Caffeine** | Not in Appendix C (Aspirin named in intro prose only; Caffeine absent entirely) | ~~Game-authored modules~~ → **DROPPED 2026-07-16** | ✅ **Absent from the client's grouping → both removed; chain 11 → 9.** Aspirin survives as a **raw reagent** (Exp 2 §D hydrolyses it). |
 | **Apparatus lists vs procedures** | Exp 3–8 repeat ONE identical boilerplate list; **Exp 2's list omits the water bath** it uses 3×; **no list mentions the bent/delivery tube** Exp 3 requires | Stage from the PROCEDURE, not the list | ⚠ list defects — see §Apparatus; harmless in-game (all tools are always present) but do NOT infer steps from the lists |
 | Wine rubric | Bespoke tasting/presentation rubric (group activity) | Standard 6-category rubric | ✅ client-resolved 2026-07-09 |
 | Yield | Data-sheet records yield | Record-only, never graded (±5 stepper on the quiz tablet) | ✅ client-resolved |
@@ -143,10 +143,16 @@ The client's grouping maps **exactly** onto the manuscript's 8 bench labs:
 
 **Manuscript Exp 1 = STOICHIOMETRY** — a pen-and-paper exercise (balance equations, molecular weight, dimensional analysis, % yield), NOT a bench lab (`:1899`, `:2055`). That is why "methane" appears in the manuscript only as a molecular-weight worked example (`:1995`) — the game's methane tutorial is entirely game-authored.
 
-### ⚠ OPEN — Aspirin + Caffeine are NOT in the client's grouping
-`final-aspirin` and `final-caffeine` are **game-authored** (Aspirin is named only in the manuscript's intro prose; Caffeine appears nowhere) and were already flagged "pending client confirmation". The client's Finals list is **benzamide + wine making only**, which reads as **both are dropped** → the chain goes **11 → 9** (tutorial + 8).
+### ✅ RESOLVED — Aspirin + Caffeine DROPPED (user 2026-07-16)
+Both were **game-authored** (Aspirin is named only in the manuscript's intro prose; Caffeine appears nowhere) and are absent from the client's grouping. **Both dropped — the chain is now 9** (tutorial + the 8 bench labs).
 
-**Nothing has been deleted.** Confirm with the client first. If dropped, the change touches: `ExperimentCatalog` (11-chain), the two module/quiz/layout assets, `ProgressionFlow` ordering, the roster suite pins (11 banks / 35 questions), CLAUDE.md's table, and the **9-end-product** demo rule (`DemoMode.IsEndProduct` — Aspirin + Caffeine are two of the nine).
+**Deleted:** the two module defs, layouts, quizzes, 8 cutscene assets, `AspirinSynthesis`, `Test_CaffeineMurexide` — plus their entries in `ExperimentLibrary` / `QuizBankLibrary` / `CutsceneLibrary` / `MasterReactionRegistry` and the SampleScene builder's layout list. Suite pins moved in the same change (catalog 9, period split 1/2/4/2, 36 cutscenes, 9 banks / 29 questions, 8 layouts, results 9 rows).
+
+**⚠ Aspirin is now a RAW REAGENT, not an end product.** Exp 2 §D hydrolyses aspirin (`0.5 g` in a test tube) and tests unhydrolysed aspirin as the control — but Aspirin existed ONLY as a demo-only end product, so dropping the module naively would have **hidden the reagent Exp 2 needs and made it unplayable outside demo**. It is now in `RawReagentCatalog` (Powder, `GroupOrganics`, "Exp 2") and out of `DemoMode.IsEndProduct`; **end products 9 → 7**.
+
+**Orphaned but deliberately KEPT** (the hard client rule: never remove bench reagents/apparatus): `Chem_Caffeine`, the `Murexide Reagent` catalog row (marked `"(unused)"`), `Label_Aspirin` / `Label_Caffeine`, `Art/UI/Icons/aspirin.png`. `Salicylic Acid` stays — Exp 2's ester test uses it (its `usedIn` dropped "Aspirin" → "Exp 2").
+
+**The Appendix-C TOC does NOT contradict this grouping.** Its Term column is a **vertically-centred merged cell** (labels land beside Exp 2 / 5 / 8), which reads as 3/3/3 but fits 3/4/2 just as well — a 4-row span centres between rows, which is exactly the extraction artifact seen. The narrative chapter independently confirms the client's grouping. Don't "re-derive" a chloroform conflict from it.
 
 ---
 
@@ -157,7 +163,7 @@ The client's grouping maps **exactly** onto the manuscript's 8 bench labs:
 | Module | Period | Polish status |
 |---|---|---|
 | **tutorial-methane** | Tutorial | ✅ **DONE (2026-07-15)** — playable end-to-end: scoop → grind → load tube → heat → collect → match test → quiz → grade |
-| **prelim-chemical-compounding** | Prelim | 🔨 **IN PROGRESS** — client chose **rebuild to manuscript** (2026-07-15). ✅ 13-task graph + ILOs + quiz authored. 🗣 **VR-adaptation design is MID-DISCUSSION — read §VR adaptation in this module's section and resume from its OPEN list** (pre-set water?, period→module picker, replay rule) **before** authoring `Layout_ChemicalCompounding`. |
+| **prelim-chemical-compounding** | Prelim | 🔨 **PLAYABLE, awaiting headset playtest (2026-07-16)** — rebuilt to manuscript Exp 2. ✅ 13-task graph + ILOs + quiz. ✅ VR design SETTLED + BUILT: **dropper = counted squeezes**, **spatula 0.1 g/dip**, KMnO₄→liquid 0.1%, **RackTaskGroup** (a step waits for EVERY tube), layout rebuilt (20 vessels / 4 racks), 8 reactions, 13 two-line hints. ⬜ Left: two-step picker, `StirController` tip-tracking fix, headset pass. |
 | **prelim-ethyl-alcohol** | Prelim | ⬜ then this — the ONLY module the manuscript gives a **bent (delivery) tube + stopper + cotton swab + CO₂→limewater** test (`manuscript.txt:2430-2434`). Those delivery tubes on the bench are real Exp 3 equipment. |
 | midterm-* / final-* | — | ⬜ not started |
 
@@ -248,15 +254,15 @@ The client's grouping maps **exactly** onto the manuscript's 8 bench labs:
 ### Task graph (play order) — REBUILT to manuscript Exp 2 (2026-07-15)
 
 Structure follows the manual's own sections **A → B → C → D**. Preps are free-order; each section gates the next.
-**Apparatus column = what the step ACTUALLY needs, inferred from the procedure verbs** (the manual names almost no tool — see §Apparatus). **[pre-set]** = staged for the player per the constant/variable rule (§VR adaptation).
+**Apparatus column = what the step ACTUALLY needs, inferred from the procedure verbs** (the manual names almost no tool — see §Apparatus). **Nothing is pre-set** — the student prepares every tube; volumes are played as **dropper squeezes** (drops/small ml), **tilt-pour into a tolerance band** (bulk ml), or **spatula dips** (grams). See §VR adaptation.
 
 | # | task | phase | label | prereq | manual ref | apparatus the step needs |
 |---|------|-------|-------|--------|-----------|--------------------------|
-| 1 | `prep-enol-tubes` | ReagentPrep | Set up the enol-test tubes (5 alcohols) | - | A.I.a | **5 × test tube + rack**; *pour* (stands in for **pipette**) for the 5 samples; **beaker** of distilled water **[pre-set: the 10 ml water]** |
+| 1 | `prep-enol-tubes` | ReagentPrep | Set up the enol-test tubes (5 alcohols) | - | A.I.a | **5 × test tube + rack**; *pour* (stands in for **pipette**) for the 5 samples; **dropper** for the 1 ml samples; **tilt-pour** the 10 ml water |
 | 2 | `test-enol-fecl3` | ChemicalTests | Enol test - add ferric chloride to each tube | 1 | A.I.b-c | **pipette/pour** (FeCl₃ ×5 tubes); the 5 tubes |
-| 3 | `prep-oxidation-tubes` | ReagentPrep | Set up the rate-of-oxidation tubes (4 tubes) | - | A.II.a | **4 × test tube + rack** **[pre-set: KMnO₄ + NaOH medium]** |
+| 3 | `prep-oxidation-tubes` | ReagentPrep | Set up the rate-of-oxidation tubes (4 tubes) | - | A.II.a | **4 × test tube + rack**; student builds the **KMnO₄ + NaOH medium** (2 squeezes each) |
 | 4 | `test-oxidation-alkaline` | ChemicalTests | Rate of oxidation in ALKALINE conditions (+ negative control) | 3 | A.II.b-c | **pipette/pour** (3 butyl alcohols); **stirring rod** (shake); **per-tube decolorisation TIMER** (`ProcessReadout`) |
-| 5 | `test-oxidation-acidic` | ChemicalTests | Rate of oxidation in ACIDIC conditions | 4 | A.II.d-e | as #4, second rack **[pre-set: KMnO₄ + H₂SO₄ medium]**; both racks side-by-side |
+| 5 | `test-oxidation-acidic` | ChemicalTests | Rate of oxidation in ACIDIC conditions | 4 | A.II.d-e | as #4, second rack; student builds the **KMnO₄ + H₂SO₄ medium**; both racks side-by-side |
 | 6 | `test-tollens` | ChemicalTests | Aldehyde vs ketone - Tollen's test (water bath 5 min) | 5 | B.I | **2 × test tube**; **pipette/pour** (acetone, acetaldehyde, Tollen's); ⚠ **WATER BATH** (*absent from Exp 2's own apparatus list*); **test tube holder** (hot tube) |
 | 7 | `test-ester-acetate` | ChemicalTests | Ester formation - ethyl acetate | 6 | C.I.a-b | **test tube**; **pipette/pour** (ethanol, acetic acid, conc H₂SO₄); ⚠ **WATER BATH**; **odour cue** (on-screen) |
 | 8 | `test-ester-salicylate` | ChemicalTests | Ester formation - methyl salicylate | 7 | C.I.c-d | **test tube**; **PORCELAIN SPATULA** (0.1 g salicylic acid = **solid → scoop**); **pipette/pour** (methanol, conc H₂SO₄); ⚠ **WATER BATH**; **beaker** (1 ml water); **odour cue** |
@@ -272,26 +278,43 @@ Structure follows the manual's own sections **A → B → C → D**. Preps are f
 
 **Still to author:** `Layout_ChemicalCompounding` (stations/vessels/bindings), the reaction rules + `expectedObservation` per test, and the odour cue (see VR-adaptation notes).
 
-### VR adaptation — design decisions (discussion 2026-07-15, CONTINUING next session)
+### VR adaptation — design decisions (SETTLED + BUILT 2026-07-16)
 
 **The problem in numbers.** Done literally, Exp 2 is **~64 discrete pours across ~19 tubes** (A.I 15 · A.II ~28 for the two runs · B 5 · C 8 · D 8) — 30-40 min of pipetting, which is the least educational part of the lab.
 
 **The governing principle (agreed):**
 > **Preserve every SAMPLE, every OBSERVATION and every COMPARISON. Compress only the MANIPULATION.**
 
-**The atomic action = ONE POUR PER TUBE** (not per drop). "5 drops of FeCl₃" is one threshold-checked pour; the *label still reads the real recipe* so the student learns the true quantities. Takes ~64 → **~30 actions** (a 15-20 min session).
+**The accuracy rule — NO pre-setting: the student prepares EVERY tube.**
+An earlier draft pre-set the "constant" (the bulk water/medium) to save pours. **That was dropped 2026-07-16.** The real problem was never the pour COUNT — it is that **VR cannot hit an accurate volume**. Discretise the action and the accuracy problem vanishes, so there is no reason to pre-stage anything.
 
-**The pre-set rule (agreed — this is the key one):**
-> **Pre-set the CONSTANT (identical in every tube = bulk prep, carries no information).
-> The student does the VARIABLE (what differs between tubes = the experiment).**
+> **The watch panel prints the manuscript's REAL quantity (for facts), then the achievable action beneath it.**
+> manual: *"In both test tubes, add 2 ml of Tollen's reagent."*
+> panel: **"Add 2 ml of Tollen's reagent"** · *"2 squeezes of the sample, then 2 of Tollen's, in BOTH tubes."*
 
-| Part | Pre-set (constant) | Student does (variable) |
+**THE CONTRACT: the number in the instruction IS the action count, whatever its unit.** The manuscript
+measures Exp 2 in **three** units and all three become countable actions:
+
+| Unit | Exp 2 examples | Verb |
 |---|---|---|
-| A.I Enol | the **10 ml distilled water** in all 5 tubes | pours **1 ml of each of the 5 samples** into its labelled tube, then applies **FeCl₃** per tube |
-| A.II Oxidation | the **KMnO₄ + base/acid medium** in all 4 tubes (rack labelled ALKALINE / ACIDIC) | adds the **3 butyl alcohols** and **deliberately leaves the 4th** as the control |
+| **drops** (dominant) | 5 drops FeCl₃ · 2 drops NaOH · 2 drops acetone · 10 drops ethanol · 1 drop conc H₂SO₄ | **Dropper** — 1 squeeze = 1 drop (physically honest) |
+| **ml** | 1 ml sample · 2 ml KMnO₄ · 2 ml Tollen's | **Dropper** — 1 squeeze = 1 ml (the deliberate abstraction) |
+| **ml, bulk** | the 10 ml of water | **Tilt-pour** — existing `LiquidPourer`, generous `requiredMl` band + live readout |
+| **grams** | 0.1 g salicylic · 0.5 g aspirin | **Porcelain spatula** — 0.1 g/dip = 1 and 5 dips |
 
-Rationale: the student must personally place each SAMPLE (so "my phenol went violet" is their result) and apply each TEST REAGENT. Only the informationless bulk solvent/medium is pre-staged. `Measuring` is still exercised (1 ml of each sample).
-⬜ **User was still weighing this** — the fallback is "student pours the water too" (+5 pours per rack). Not yet final.
+⚠ Do NOT collapse drops and ml into one rule: "1 squeeze = 1 ml" would turn "5 drops" into 5 ml. The
+manuscript distinguishes them and so must the copy; the SQUEEZE COUNT is what unifies them.
+
+**This is the same trick the project already uses for solids.** `ScoopMath.GramsPerScoop = 2f` plays
+"weigh 4 g" as two countable dips — `DropperMath.MlPerSqueeze` is its liquid twin (pure static math +
+thin controller + `Bind()` seam). `RawReagentCatalog.LabwareKind.DropperBottle` already existed,
+already documented as "test reagents added by drops".
+
+**⚠ The scoop could not express Exp 2's solids at all**: `GramsPerScoop = 2f`, but Exp 2 weighs 0.1 g and
+0.5 g — BOTH smaller than one dip. Hence `ScoopMath.GramsPerSpatula = 0.1f` + `ScoopController.gramsPerDip`.
+
+Errors stay real: wrong count, wrong tube and wrong reagent all still grade, animate, and can starve the
+supply into a restart. Only the analog precision is gone.
 
 **Other agreed adaptations**
 - **Odour → on-screen cue** ✅ **client-approved**: the two ester tests show e.g. *"Sweet, fruity odour - ethyl acetate formed"* / *"Wintergreen - methyl salicylate"*. The one genuine sensory loss.
@@ -306,29 +329,114 @@ Rationale: the student must personally place each SAMPLE (so "my phenol went vio
 - **acetone vs acetaldehyde** (the contrast IS the test)
 - **hydrolysed vs unhydrolysed aspirin** (same)
 
-**⬜ OPEN — resume here next session**
-1. **Confirm the pre-set water** (above) or switch to "student pours the water too".
-2. **Episode picker: period → MODULE.** User wants choosing **Prelim** to list its **two modules** (Compounding, Ethyl Alcohol) with the second **locked until the first is passed** — same for Midterm (4) and Final (4). Today `GatekeeperModel.EpisodeOptions` only lists the **four periods** and `ChooseEpisode` silently auto-starts `FirstPlayableInPeriod`, so the player never sees the modules. The 11-module chain **already locks in sequence** — only the picker's second level is missing. **Exp 2 stays ONE module** (13 tasks); this is a picker change, not a content split.
-3. **Should a PASSED module stay replayable in that list, or grey out?**
-4. Then author `Layout_ChemicalCompounding` + reaction rules + `expectedObservation` per test.
-5. ⚠ **Fix `StirController` before wiring the "shake/stir" steps** — it tracks the rod's transform ORIGIN (`_rod.position`), the same latent bug that made the grind silently never complete. Give it tip-tracking + a `StirAnchor`, exactly as `GrindController` got (`PestleTip` closest-point + `BowlAnchor`). See §Apparatus → anchor candidates.
+**✅ DECIDED 2026-07-16**
+1. **No pre-set** — the student prepares everything; accuracy is solved by the dropper / tilt-pour / spatula split above.
+2. **Episode picker: period → MODULE (two-step).** Choosing **Prelim** lists its **two modules** (Compounding, Ethyl Alcohol), the second dimmed until the first passes — same for Midterm (4) and Final (2). Today `GatekeeperModel.EpisodeOptions` lists only the **four periods** and `ChooseEpisode` silently auto-starts `FirstPlayableInPeriod`, so the player never sees module names. Needs: a `ModuleOptions(flow, period)` beside `EpisodeOptions`, one new gate state between `EpisodePick` and the confirm, and a row-index handler in `PharmeeGatekeeper` (~line 229). The 9-module chain **already locks in sequence** — only the picker's second level is missing. **Exp 2 stays ONE module** (13 tasks); a picker change, not a content split.
+3. **A PASSED module stays REPLAYABLE**, marked ✓ PASSED with its previous grade; best score kept. Note `FirstPlayableInPeriod` already falls back to "first unlocked" once a period is fully passed — replay exists today only as an accident of that fallback; the module picker makes it intentional.
 
-### Stage layout
+**✅ BUILT 2026-07-16** — Exp 2 is playable end-to-end; suite 1055/1055.
+1. `DropperMath` + `DropperController` (the contract above; a full dropper = 10 squeezes, the largest single Exp 2 instruction). Each squeeze deposits through the normal `AddLiquid` path, so `LiquidTaskBinding.requiredMl` counts it for free — no new task plumbing.
+2. `ScoopMath.GramsPerSpatula = 0.1f` + `ScoopController.gramsPerDip`.
+3. **KMnO₄ → Liquid, renamed `Potassium Permanganate 0.1%`** — it was **Solid**, which `LiquidPourer` cannot pour, so A.II's "2 ml of 0.1% KMnO₄" was unbuildable. The manuscript only ever uses the 0.1% SOLUTION at the bench.
+4. **`RackMath` + `RackTaskGroup`** — see §Stage layout.
+5. **`Layout_ChemicalCompounding` REBUILT** from the retired battery.
+6. **8 reaction rules + `expectedObservation`**; **13 hints** rewritten.
+7. **`LiquidTaskBinding` multi-reagent fix** — `_accumulated` was keyed by taskId alone, so a task naming SEVERAL reagents pooled them and **whichever landed first completed the step with half the chemistry missing**. It is now per-STEP and a task waits for all its reagents. This also silently fixed three SHIPPED modules (Acetone + EthylAlcohol `test-iodoform` needed KI *and* hypochlorite; BenzoicAcid `test-ester` needed the alcohol *and* its acid catalyst).
 
-**Stations:** `test-combustion` (zone-touch) ; `test-sodium` (zone-touch)
+**⬜ STILL TO DO**
+1. **Two-step episode picker** (per §2) — not started.
+2. ⚠ **Fix `StirController` before wiring any "shake/stir" step** — it tracks the rod's transform ORIGIN (`_rod.position`), the same latent bug that made the grind silently never complete. Give it tip-tracking + a `StirAnchor`, exactly as `GrindController` got (`PestleTip` closest-point + `BowlAnchor`). See §Apparatus → anchor candidates.
+3. **Headset playtest** — the 19-tube reach, dropper feel and rack pacing are unvalidated in VR.
 
-**Reagents staged (pourable):** Ethanol (Vial_Brown, auto-supply) ; Bromine Water (Vial_Brown, auto-supply) ; Potassium Permanganate (Vial_Brown, auto-supply)
+### Stage layout (rebuilt 2026-07-16 — the old file was the RETIRED battery)
 
-**Tools staged:** Lit Splint ; Sodium Scoop
+⚠ The previous `Layout_ChemicalCompounding` still staged `test-combustion` / `test-sodium` /
+`gather-ethanol` / `test-bromine` / `test-kmno4` — **zero overlap** with the 13 manuscript tasks. The
+stage built, nothing errored, and **not one task could ever complete**. `LayoutGraphCoverageSuite` now
+pins layout↔graph coverage both ways so this cannot recur.
 
-**Vessel Beaker_100mL** (Test Beaker) - starts EMPTY
-  - pour **Ethanol** >= 50 ml -> completes `gather-ethanol`
-  - pour **Bromine Water** >= 50 ml -> completes `test-bromine`
-  - pour **Potassium Permanganate** >= 50 ml -> completes `test-kmno4`
+**Rack groups** (`rackGroup` + `completesTask:0` → the step waits for EVERY tube):
+- `enol` (5 tubes) — Ethanol · n-Butyl · Benzyl · **Phenol** · Glycerol. 1 ml sample + 10 ml water each, then 5 drops FeCl₃.
+- `oxalk` (4) — 2 ml KMnO₄ 0.1% + 2 drops NaOH 6N in all four; the 3 butyl alcohols into tubes 1–3.
+- `oxacid` (4) — the same with H₂SO₄ 6N. **Both racks side by side** (the manual runs them sequentially so the student compares from memory — VR shows both at once: better than the manual, not a compromise).
+- `tollens` (2) — Acetone vs Acetaldehyde, 2 drops each + 2 ml Tollen's.
 
-### Reactions & expected observations
+**Why RackTaskGroup exists:** `LiquidTaskBinding` is per-VESSEL, so five tubes bound to one task meant
+**the first tube to hit its threshold completed the step** and the other four became optional — silently
+throwing away the comparison that IS the lesson (the doc's four UNTOUCHABLES). Members defer completion;
+the group calls the step in once every member is ready, and floats `"tube 3 of 5"` while it fills.
 
-- **Draft_EthanolOxidation**: Ethanol + Potassium Permanganate -> Ethanol - "Purple KMnO4 is decolorised as the alcohol is oxidised (manual"
+**The negative control is the 4th oxidation tube.** It takes the medium but **declares no binding for the
+alcohol step**, so it is not a member of that group — leaving it alone is correct play, and pouring into
+it is a genuine wrong-reagent mistake. That is how the control teaches experimental design.
+
+**Standalone vessels:** `EsterAcetateTube` (10 drops ethanol + 4 acetic + 1 conc H₂SO₄) ·
+`EsterSalicylateTube` (methanol + 1 spatula dip salicylic + acid) · `HydrolysisTube` (5 dips aspirin +
+10 ml water + 1 drop conc HCl) · `HydrolysisControlTube` (plain aspirin + FeCl₃) · `FiltrateBeaker`.
+
+**Stations:** `prep-hydrolysis` (Heat 95 °C — the bath OWNS this step) · `filter-hydrolysate` (Filter,
+Funnel prop). **No station for `record-observations`** — DataSheet steps close via the quiz/tablet (the
+shipped Acetanilide layout stages none either).
+
+⚠ **ENGINE CONSTRAINT (carry forward):** a task completes by **EITHER its pours OR a station, never
+"pour THEN heat"** — each heated step must pick one owner. So `prep-hydrolysis` is owned by the BATH (its
+label *is* "boil in the water bath"; its reagents are `completesTask:0`, same shape as Acetanilide's
+`heat-bath`), while `test-tollens` is owned by its RACK and gets **no** station — a station there would
+race the rack and complete the step the moment the tubes were warm, reagent or not. The ester warmings
+likewise complete on their reagents; their graded evidence is the **odour cue**, not the heat.
+*Known consequence of the same constraint:* boiling an empty tube completes `prep-hydrolysis`, exactly as
+in every shipped Heat module. Worth revisiting engine-wide, not per-module.
+
+**Tools staged:** 2 × Dropper · Porcelain Spatula · Funnel · Bunsen (the bath's heat source, `itemId =
+prep-hydrolysis` — a Heat station is driven by the prop whose itemId is its taskId, and the W5.8 ignition
+gate means it only heats once LIT). **21 pourable reagent bottles**, auto-supply (2.5× the summed need →
+~2 spare pours, so a miscount costs something and can starve into a restart).
+
+### Reactions & expected observations (authored 2026-07-16 — 8 rules)
+
+**Colours are OURS.** The manuscript's `"10% - violet - 0"`-style annotations are a previous developer's
+notes of unknown meaning and are **explicitly disregarded (user 2026-07-16)**. These come from the real
+chemistry.
+
+| Rule | Pair | Outcome | Observation |
+|---|---|---|---|
+| `Test_EnolPhenolFeCl3` | Phenol + FeCl₃ 10% | ColorChange | Deep violet at once — the four other alcohols stay unchanged: **that contrast IS the test** |
+| `Test_OxidationPrimaryKMnO4` | n-Butyl + KMnO₄ | ColorChange | Purple fades **fastest**; brown MnO₂ left. Note the decolorisation time |
+| `Test_OxidationSecondaryKMnO4` | sec-Butyl + KMnO₄ | ColorChange | Fades **noticeably slower** — a 2° alcohol resists more |
+| `Test_TollensAldehyde` | Acetaldehyde + Tollen's | Precipitate (≥50 °C) | Bright **silver mirror**; acetone leaves it clear |
+| `Test_EsterEthylAcetate` | Ethanol + Diluted Acetic | **Odor** (≥50 °C) | *Sweet, fruity — ethyl acetate formed* |
+| `Test_EsterMethylSalicylate` | Methanol + Salicylic Acid | **Odor** (≥50 °C) | *Sharp wintergreen — methyl salicylate formed* |
+| `Test_AspirinHydrolysis` | Aspirin + conc HCl | ColorChange (**≥90 °C**) | Boiling in acid frees salicylic acid into the filtrate |
+| `Test_HydrolysateFeCl3` | Salicylic Acid + FeCl₃ | ColorChange | Violet — the ester **was** hydrolysed; plain aspirin gives none |
+
+**⛔ The NEGATIVES are deliberately UNAUTHORED — do not "fix" this.** tert-Butyl resisting KMnO₄ (no
+α-hydrogen), acetone leaving Tollen's clear (a ketone cannot reduce it), and unboiled aspirin giving no
+violet are **not missing rules**: "nothing happens" IS each test's answer, and the contrast is the whole
+lesson. A rule there would invent chemistry the manuscript denies. Suite-pinned as absent.
+
+**Odour → on-screen cue** ✅ client-approved: the one genuine sensory loss, so both esters carry it in
+`expectedObservation` and fire `ReactionOutcome.Odor`.
+
+### Watch-panel instructions — the 13 hints (rewritten 2026-07-16)
+
+**The contract:** every step prints the manuscript's **REAL quantity** (so the student learns the true
+recipe), then the **achievable action** underneath.
+
+> *"Add 2 ml of Tollen's reagent"*
+> `→ 2 squeezes of the sample, then 2 of Tollen's, in BOTH tubes. Only the aldehyde plates a silver mirror.`
+
+**The machinery was already built and is generic — the instruction quality is pure DATA** (the `hint`
+field). `ChecklistPager.BuildFocusedText` renders the CURRENT step's hint under it (`•` done · `»` current
+· `□` pending) and `WristWatchController` rebuilds that text **every frame** while the board is up, so it
+can never go stale. Suite-pinned: every hint is two lines, and every action line names a **countable
+verb** (squeeze / dip / tilt-pour / funnel / burner / board) — that test caught two real copy failures,
+including an action line that said only "compare" and never named a thing to touch.
+
+**Step-completion alerts are generic too — nothing to build per module:**
+- **HUD toast** `"Step complete: <label> ✓"` (`ExperimentHudController:82`)
+- **success chime** `grade-pass` (`:84`)
+- **Pharmee praises + speaks the NEXT step** (`PharmeeBrain:126`)
+- **Rack progress** floats `"tube 3 of 5"` so a finished tube never reads as a finished step.
 
 ### Quiz (Documentation score)
 
@@ -781,135 +889,9 @@ Rationale: the student must personally place each SAMPLE (so "my phenol went vio
 
 ---
 
-## final-aspirin
-
-**moduleId** `final-aspirin` | **period** Final | **prerequisite** `final-benzamide` | **manuscript** (game-authored; named in manuscript intro only) | **end product** Aspirin
-
-**Official ILOs:** (1) (game-authored - pending client confirmation)
-
-
-### Task graph (play order)
-
-| # | task | phase | label | prerequisites | hint |
-|---|------|-------|-------|---------------|------|
-| 1 | `weigh-salicylic` | ReagentPrep | Weigh salicylic acid (10 g) | - | Weigh 10 g of salicylic acid into a dry conical flask. |
-| 2 | `add-anhydride` | ReagentPrep | Add acetic anhydride + a few drops conc. H2SO4 (fume hood) | weigh-salicylic | In the fume hood, add 25 mL acetic anhydride and 5 drops conc. sulfuric acid. |
-| 3 | `warm-waterbath` | Synthesis | Warm gently in a water bath (do NOT overheat) | add-anhydride | Warm in a water bath ~10 min. Overheating chars the product and forces a redo. |
-| 4 | `crystallise-ice` | Synthesis | Add cold water and crystallise in an ice bath | warm-waterbath | Pour into cold water to destroy excess anhydride; chill on ice to crystallise. |
-| 5 | `buchner-filter` | Synthesis | Collect crystals by Buchner (vacuum) filtration | crystallise-ice | Filter under vacuum and wash with a little cold water. |
-| 6 | `test-fecl3` | ChemicalTests | FeCl3 test: no violet colour = acetylation complete | buchner-filter | Add FeCl3 to a sample; a violet colour means unreacted salicylic acid remains. |
-| 7 | `record-yield` | DataSheet | Record % yield and observations on the data sheet | test-fecl3 | Enter the aspirin mass and calculate % yield from 10 g salicylic acid. |
-
-### Stage layout
-
-**Stations:** `weigh-salicylic` (Weigh) ; `warm-waterbath` (Heat to 85 C) ; `crystallise-ice` (Crystallise) ; `buchner-filter` (Filter)
-
-**Reagents staged (pourable):** Salicylic Acid (Vial_Brown, auto-supply) ; Acetic Anhydride (Vial_Brown, auto-supply) ; Ferric Chloride 10% (Vial_Brown, auto-supply)
-
-**Tools staged:** Bunsen Burner ; Watch Glass ; Buchner Funnel
-
-**Vessel ErlenmeyerFlask_400mL** (Synthesis Flask) - starts EMPTY
-  - pour **Salicylic Acid** >= 50 ml -> completes `weigh-salicylic` *(pour expected; the WEIGH station completes it)*
-  - pour **Acetic Anhydride** >= 50 ml -> completes `add-anhydride`
-
-**Vessel TestTube_WithLiquid** (Product Test Tube (FeCl3)) - starts with Salicylic Acid
-  - pour **Ferric Chloride 10%** >= 50 ml -> completes `test-fecl3`
-
-### Reactions & expected observations
-
-- **AspirinSynthesis**: Salicylic Acid + Acetic Anhydride -> Aspirin - "White aspirin crystals on cooling"
-- **FeCl3_Salicylate**: Ferric Chloride 10% + Salicylic Acid -> Ferric Chloride 10% - "Violet colour (free phenol present)"
-
-### Quiz (Documentation score)
-
-1. **Aspirin is made by acetylating salicylic acid with:**
-   - Acetone
-   - Acetic anhydride [CORRECT]
-   - Ethanol
-   - Sodium hydroxide
-   - *why:* Acetic anhydride acetylates the phenol group.
-2. **A purple colour with ferric chloride means the aspirin is:**
-   - Pure
-   - Overheated only
-   - Impure (salicylic acid remains) [CORRECT]
-   - Perfectly acetylated
-   - *why:* Purple indicates unreacted salicylic acid (free phenol) \u2014
-3. **Overheating the water bath during synthesis causes:**
-   - Decomposition of the product [CORRECT]
-   - A higher yield
-   - Faster crystallisation
-   - A purer product
-   - *why:* Excess heat chars/decomposes the product \u2014 a failed batch.
-
----
-
-## final-caffeine
-
-**moduleId** `final-caffeine` | **period** Final | **prerequisite** `final-aspirin` | **manuscript** (game-authored) | **end product** Caffeine
-
-**Official ILOs:** (1) (game-authored - pending client confirmation)
-
-
-### Task graph (play order)
-
-| # | task | phase | label | prerequisites | hint |
-|---|------|-------|-------|---------------|------|
-| 1 | `brew-tea` | ReagentPrep | Boil tea leaves with sodium carbonate | - | Sodium carbonate frees caffeine from tannins during boiling. |
-| 2 | `filter-brew` | Synthesis | Filter the hot tea liquor | brew-tea | Filter off the leaves while hot. |
-| 3 | `extract-dcm` | Synthesis | Extract with dichloromethane in a separatory funnel (fume hood) | filter-brew | Shake with DCM; caffeine partitions into the organic layer. Work in the fume hood. |
-| 4 | `dry-na2so4` | Synthesis | Dry the DCM extract over anhydrous Na2SO4 | extract-dcm | Dry the solvent with sodium sulfate, then decant. |
-| 5 | `evaporate` | Synthesis | Evaporate the solvent to crude caffeine | dry-na2so4 | Evaporate the DCM to leave crude caffeine. |
-| 6 | `sublime` | Synthesis | Purify crystals by sublimation | evaporate | Gently sublime to obtain pure white caffeine needles. |
-| 7 | `test-murexide` | ChemicalTests | Murexide test (purple residue) | sublime | Evaporate with HCl + H2O2, then expose to ammonia; a purple colour confirms caffeine. |
-| 8 | `test-meltingpoint` | ChemicalTests | Melting point (~234\u2013236 \xB0C) | sublime | A sharp melting point near 235 \xB0C confirms purity. |
-| 9 | `record-yield` | DataSheet | Record % yield and observations | test-murexide, test-meltingpoint | Enter caffeine mass, % yield and test results. |
-
-### Stage layout
-
-**Stations:** `filter-brew` (Filter) ; `evaporate` (zone-touch) ; `sublime` (zone-touch) ; `test-murexide` (zone-touch) ; `test-meltingpoint` (zone-touch)
-
-**Reagents staged (pourable):** Sodium Carbonate (Vial_Brown, auto-supply) ; Dichloromethane (Vial_Brown, auto-supply) ; Sodium Sulfate (Vial_Brown, auto-supply) ; Murexide Reagent (Vial_Brown, auto-supply)
-
-**Tools staged:** Funnel ; Evaporating Dish ; Sublimation Glass ; MP Capillary ; Mortar ; Pestle
-
-**Vessel Beaker_500mL** (Boiling Beaker) - starts EMPTY
-  - pour **Sodium Carbonate** >= 50 ml -> completes `brew-tea`
-  - pour **Dichloromethane** >= 50 ml -> completes `extract-dcm`
-  - pour **Sodium Sulfate** >= 50 ml -> completes `dry-na2so4`
-
-**Vessel TestTube_WithLiquid** (Product Test Tube) - starts with Caffeine
-  - pour **Murexide Reagent** >= 50 ml -> completes `test-murexide`
-
-### Reactions & expected observations
-
-- **Test_CaffeineMurexide**: Caffeine + Murexide Reagent -> Murexide - "Purple/murexide colour on adding ammonia — caffeine confirmed"
-
-### Quiz (Documentation score)
-
-1. **Caffeine is extracted from tea using sodium carbonate and:**
-   - Water only
-   - An organic solvent [CORRECT]
-   - Sulfuric acid
-   - Sodium metal
-   - *why:* An organic solvent (dichloromethane) extracts the caffeine.
-2. **Caffeine is purified in this experiment by:**
-   - Distillation
-   - Filtration only
-   - Sublimation [CORRECT]
-   - Fermentation
-   - *why:* It sublimes cleanly to needle crystals.
-3. **The murexide test for caffeine produces a colour that is:**
-   - Purple [CORRECT]
-   - Green
-   - Colourless
-   - Black
-   - *why:* Murexide gives a characteristic purple.
-
----
-
 ## final-winemaking
 
-**moduleId** `final-winemaking` | **period** Final | **prerequisite** `final-caffeine` | **manuscript** Exp 9 (real-world group activity; grapes EXCLUDED) | **end product** Wine
+**moduleId** `final-winemaking` | **period** Final | **prerequisite** `final-benzamide` | **manuscript** Exp 9 (real-world group activity; grapes EXCLUDED) | **end product** Wine
 
 **Official ILOs:** (1) Learn the basic methodology in preparation and synthesis of alcohol using the fermentation technique with basic household ingredients.
 

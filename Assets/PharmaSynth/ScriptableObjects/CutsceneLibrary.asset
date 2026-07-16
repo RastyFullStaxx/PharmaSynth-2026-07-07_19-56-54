@@ -13,21 +13,11 @@ MonoBehaviour:
   m_Name: CutsceneLibrary
   m_EditorClassIdentifier: Assembly-CSharp::CutsceneLibrary
   entries:
-  - moduleId: final-aspirin
-    intro: {fileID: 11400000, guid: cabf708be3a9c1b4dabbf2a575674871, type: 2}
-    reagentPrep: {fileID: 11400000, guid: 52923196ff500df408e1769c2494b78f, type: 2}
-    success: {fileID: 11400000, guid: 893696c2166385c4ea3fd268c427810e, type: 2}
-    failure: {fileID: 11400000, guid: baed6e79b4908aa4bac95bd719fbc904, type: 2}
   - moduleId: final-benzamide
     intro: {fileID: 11400000, guid: 8a05e28d95fdca648937d6f2e0851bf7, type: 2}
     reagentPrep: {fileID: 11400000, guid: 1aebb7ac925fcf34b916353d2e00b00f, type: 2}
     success: {fileID: 11400000, guid: 01a9d8472f23c7740941db87042a7601, type: 2}
     failure: {fileID: 11400000, guid: 5258774cee9bb6e4f949838881612031, type: 2}
-  - moduleId: final-caffeine
-    intro: {fileID: 11400000, guid: b3a70337b4d3f1343a6ad43c88144625, type: 2}
-    reagentPrep: {fileID: 11400000, guid: c40af965459d8eb42bf75a43b8e6131f, type: 2}
-    success: {fileID: 11400000, guid: 9206e02ee1b018844b572c4c69cf9d50, type: 2}
-    failure: {fileID: 11400000, guid: 677229c00a61830458153e36e8ae95c5, type: 2}
   - moduleId: final-winemaking
     intro: {fileID: 11400000, guid: 7fbe89fef34233648bceaf4baf1ac10c, type: 2}
     reagentPrep: {fileID: 11400000, guid: 14087a26a80c648449f76d0a76886640, type: 2}

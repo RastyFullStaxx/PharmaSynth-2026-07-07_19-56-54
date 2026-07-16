@@ -86,7 +86,9 @@ public class ExperimentSceneBuilder : MonoBehaviour
         _currentLayout = layout;
         foreach (var s in layout.stations) { BuildStation(stage, s); n++; }
         foreach (var p in layout.props)    { BuildProp(stage, p); n++; }
+        _rackBindings.Clear();
         foreach (var v in layout.vessels)  { BuildVessel(stage, v); n++; }
+        WireRackGroups(stage, layout);        // "all five tubes" steps (2026-07-16) — needs vessels spawned
         WireVerbControllers(stage, layout);   // stir/grind/burner-gate (W5.8) — needs props+vessels spawned
         SpawnRackKit(stage);                  // test-tube rack, pre-filled (W5.8)
         SpawnSpares(stage);                   // spare beakers/flask (W5.8: duplicates of vital glass)
@@ -578,6 +580,49 @@ public class ExperimentSceneBuilder : MonoBehaviour
         return assets.GetPrefab(prefabName);
     }
 
+    /// Vessels of one rackGroup, collected during BuildVessel.
+    private readonly Dictionary<string, List<LiquidTaskBinding>> _rackBindings
+        = new Dictionary<string, List<LiquidTaskBinding>>();
+
+    /// One RackTaskGroup per (rackGroup, shared task): the step completes only
+    /// once EVERY member tube that names the task has had its reagent. Members
+    /// that don't name the task — Exp 2's negative control — are not counted, so
+    /// leaving the control alone is correct play, and pouring into it is a
+    /// wrong-reagent mistake. (2026-07-16)
+    private void WireRackGroups(Transform stage, ExperimentLayout layout)
+    {
+        foreach (var kv in _rackBindings)
+        {
+            // Tasks these tubes share, in authoring order.
+            var tasks = new List<string>();
+            foreach (var v in layout.vessels)
+            {
+                if (v.rackGroup != kv.Key) continue;
+                foreach (var b in v.bindings)
+                    if (!b.completesTask && !tasks.Contains(b.taskId)) tasks.Add(b.taskId);
+            }
+            foreach (var taskId in tasks)
+            {
+                // Only the tubes that actually name this task are members.
+                var members = new List<LiquidTaskBinding>();
+                int i = 0;
+                foreach (var v in layout.vessels)
+                {
+                    if (v.rackGroup != kv.Key) continue;
+                    bool names = false;
+                    foreach (var b in v.bindings) if (b.taskId == taskId) names = true;
+                    if (names && i < kv.Value.Count) members.Add(kv.Value[i]);
+                    i++;
+                }
+                if (members.Count == 0) continue;
+                var go = new GameObject("Rack_" + kv.Key + "_" + taskId);
+                go.transform.SetParent(stage, false);
+                go.transform.position = members[0].transform.position;
+                go.AddComponent<RackTaskGroup>().Bind(runner, taskId, members);
+            }
+        }
+    }
+
     private void BuildVessel(Transform stage, ExperimentLayout.Vessel v)
     {
         var prefab = VesselPrefabFor(v.prefabName);
@@ -602,6 +647,12 @@ public class ExperimentSceneBuilder : MonoBehaviour
         {
             var reagent = assets.GetChemical(b.reagentChemical);
             if (reagent != null) bind.AddExpected(reagent, b.taskId, b.requiredMl, b.completesTask);
+        }
+        if (!string.IsNullOrEmpty(v.rackGroup))
+        {
+            if (!_rackBindings.TryGetValue(v.rackGroup, out var list))
+                _rackBindings[v.rackGroup] = list = new List<LiquidTaskBinding>();
+            list.Add(bind);
         }
         inst.AddComponent<HazardousMixReactor>().Bind(lp, runner);   // bad-mix consequences
         var pl = inst.AddComponent<ProximityLabel>(); pl.SetLabel(v.displayName, 1.6f);

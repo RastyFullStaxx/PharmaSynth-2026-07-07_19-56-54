@@ -10,6 +10,13 @@ public static class ScoopMath
     /// convention, so the balance display and VesselStatus read consistently).
     public const float GramsPerScoop = 2f;
 
+    /// The manuscript's PORCELAIN SPATULA charge. Exp 2 weighs 0.1 g of salicylic
+    /// acid and 0.5 g of aspirin — both SMALLER than one 2 g scoopful, so the
+    /// scoop simply cannot express them. A spatula dip is 0.1 g, making those
+    /// 1 and 5 dips: the same "the number in the instruction is the action count"
+    /// contract the dropper uses for drops (user 2026-07-16).
+    public const float GramsPerSpatula = 0.1f;
+
     /// A dip picks up ONLY from a solid/powder store with something left, and
     /// only while the scoop is empty (no double-dipping a full scoop).
     public static bool CanPickUp(bool carrying, PhysicalState state, float availableMl)
@@ -40,6 +47,8 @@ public class ScoopController : MonoBehaviour
 {
     [SerializeField] private float probeRadius = 0.055f;
     [SerializeField] private float actionCooldown = 0.5f;
+    [Tooltip("Grams per dip. ScoopMath.GramsPerScoop (2 g) for the scoopula; ScoopMath.GramsPerSpatula (0.1 g) for the porcelain spatula, which is the only tool that can express Exp 2's 0.1 g / 0.5 g weighings.")]
+    [SerializeField] private float gramsPerDip = ScoopMath.GramsPerScoop;
     [Tooltip("The scooping BLADE/BOWL is at the NEGATIVE end of the tool's longest axis (user 2026-07-14: the heap was riding the handle butt). Flip if the heap rides the handle.")]
     [SerializeField] private bool bladeAtPositiveEnd = false;
 
@@ -56,6 +65,9 @@ public class ScoopController : MonoBehaviour
 
     /// Edit-mode / builder seam.
     public void Bind(XRGrab grab) => _grab = grab;
+
+    /// Builder seam for the finer porcelain-spatula charge (ScoopMath.GramsPerSpatula).
+    public void SetGramsPerDip(float grams) { if (grams > 0f) gramsPerDip = grams; }
 
     void Update()
     {
@@ -75,7 +87,7 @@ public class ScoopController : MonoBehaviour
             {
                 if (lp.currentChemical == null
                     || !ScoopMath.CanPickUp(false, lp.currentChemical.state, lp.currentLiquidVolume)) continue;
-                float charge = ScoopMath.ScoopCharge(lp.currentLiquidVolume);
+                float charge = ScoopMath.ScoopCharge(lp.currentLiquidVolume, gramsPerDip);
                 var chem = lp.PourOut(charge);
                 if (chem == null) continue;
                 _carrying = chem; _carryingG = charge; _lastSource = lp;

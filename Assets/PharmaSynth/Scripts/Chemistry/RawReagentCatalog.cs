@@ -125,7 +125,12 @@ public static class RawReagentCatalog
               "5-6% hypochlorite (laboratory bleach). Keep it far from every acid — chlorine gas.", "Exp 3, 6"),
             R("Ferric Chloride 10%", PhysicalState.Liquid, C(0.85f,0.65f,0.25f), 2f, HazardType.None, false, LabwareKind.ReagentBottle, GroupTests,
               "Yellow-brown FeCl3 — phenols flash violet on contact: the classic enol test.", "Exp 2"),
-            R("Potassium Permanganate", PhysicalState.Liquid, C(0.45f,0.1f,0.5f), 7f, HazardType.None, false, LabwareKind.ReagentBottle, GroupAcids,
+            // Renamed from bare "Potassium Permanganate" + Chem asset flipped Solid -> Liquid
+            // (2026-07-16). The manuscript ONLY ever uses the 0.1% SOLUTION at the bench —
+            // its single solid mention is the prep step ("dissolve 0.1 g in 100 ml"), which
+            // the game doesn't simulate. Solid broke Exp 2's "2 ml of 0.1% KMnO4" pour, and
+            // it was the one solution on the shelf without its strength in the name.
+            R("Potassium Permanganate 0.1%", PhysicalState.Liquid, C(0.45f,0.1f,0.5f), 7f, HazardType.None, false, LabwareKind.ReagentBottle, GroupAcids,
               "0.1% deep-purple oxidizer; decolourising it is positive evidence of oxidation. Keep away from flammables.", "Exp 2, 4"),
             R("Sodium Bisulfite", PhysicalState.Liquid, C(0.94f,0.94f,0.9f), 4.5f, HazardType.None, false, LabwareKind.ReagentBottle, GroupTests,
               "Saturated bisulfite forms a crystalline adduct with acetone — the bisulfite test.", "Exp 6"),
@@ -160,7 +165,12 @@ public static class RawReagentCatalog
             R("Yeast", PhysicalState.Powder, C(0.85f,0.78f,0.6f), 6f, HazardType.None, false, LabwareKind.PowderJar, GroupOrganics,
               "Dry baker's yeast — the living catalyst that turns sugar into ethanol and CO2.", "Exp 3, 9"),
             R("Salicylic Acid", PhysicalState.Powder, C(0.95f,0.95f,0.93f), 2.4f, HazardType.None, false, LabwareKind.PowderJar, GroupOrganics,
-              "White crystalline phenol-acid — aspirin's parent compound; FeCl3 turns it violet.", "Exp 2, Aspirin"),
+              "White crystalline phenol-acid — aspirin's parent compound; FeCl3 turns it violet.", "Exp 2"),
+            // Aspirin became a RAW reagent 2026-07-16 when the game-authored Aspirin
+            // module was dropped: Exp 2 §D hydrolyses it back to salicylic acid, so it
+            // must sit on the bench in normal play, not just in demo.
+            R("Aspirin", PhysicalState.Powder, C(0.97f,0.97f,0.95f), 2.5f, HazardType.None, false, LabwareKind.PowderJar, GroupOrganics,
+              "Acetylsalicylic acid tablets — boiling in acid hydrolyses it back to salicylic acid.", "Exp 2"),
             R("Benzoic Acid", PhysicalState.Powder, C(0.96f,0.96f,0.94f), 2.9f, HazardType.None, false, LabwareKind.PowderJar, GroupOrganics,
               "Reference sample of the white aromatic acid you synthesise in the midterm.", "Exp 4"),
             R("Aniline", PhysicalState.Liquid, C(0.6f,0.5f,0.35f, 0.8f), 8.8f, HazardType.Toxic, true, LabwareKind.AmberBottle, GroupOrganics,
@@ -189,8 +199,11 @@ public static class RawReagentCatalog
               "Light-sensitive AgNO3 — stains skin black; stored in amber glass for a reason.", "Exp 2, 6"),
             R("Alcoholic Silver Nitrate", PhysicalState.Liquid, C(0.9f,0.9f,0.88f, 0.7f), 6f, HazardType.None, false, LabwareKind.AmberBottle, GroupTests,
               "AgNO3 in alcohol — chloroform gives no precipitate with it: the negative halide test.", "Exp 7"),
+            // ORPHANED 2026-07-16 (its only consumer, the Caffeine module, was dropped).
+            // Kept on the bench deliberately: the hard client rule is that raw reagents are
+            // never removed — a real lab keeps spares out, and the player must choose.
             R("Murexide Reagent", PhysicalState.Liquid, C(0.85f,0.6f,0.7f, 0.75f), 7f, HazardType.None, false, LabwareKind.DropperBottle, GroupTests,
-              "The purpurate reagent — caffeine answers it with the rose-purple murexide colour.", "Caffeine"),
+              "The purpurate reagent — caffeine answers it with the rose-purple murexide colour.", "(unused)"),
 
             // ---- Consumables & Cold ---------------------------------------------
             R("Litmus Paper", PhysicalState.Solid, C(0.75f,0.55f,0.75f), 7f, HazardType.None, false, LabwareKind.SmallBox, GroupConsumables,

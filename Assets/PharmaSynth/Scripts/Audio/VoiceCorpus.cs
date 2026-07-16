@@ -91,7 +91,7 @@ public static class VoiceCorpus
     {
         "tutorial-methane", "prelim-chemical-compounding", "prelim-ethyl-alcohol",
         "midterm-benzoic-acid", "midterm-acetanilide", "midterm-acetone", "midterm-chloroform",
-        "final-benzamide", "final-aspirin", "final-caffeine", "final-winemaking",
+        "final-benzamide", "final-winemaking",
     };
 
     private static void AddPool(List<Line> into, VoiceSpeaker s, string[] pool)

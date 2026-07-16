@@ -25,7 +25,14 @@ public class LiquidTaskBinding : MonoBehaviour
     [SerializeField] private List<ReagentStep> expectedReagents = new List<ReagentStep>();
     [SerializeField] private FumeHoodZone fumeHood;   // toxic reagents must be handled here
 
-    private readonly Dictionary<string, float> _accumulated = new Dictionary<string, float>();
+    // Accumulate per STEP, not per task: a task may name SEVERAL reagents (the
+    // iodoform test needs KI *and* hypochlorite; Exp 2's tube prep needs the
+    // sample *and* its water), and a task-keyed total pooled them — so whichever
+    // reagent landed first met the threshold alone and completed the step with
+    // half the chemistry missing. Steps are satisfied individually and the task
+    // waits for all of them (2026-07-16).
+    private readonly Dictionary<ReagentStep, float> _accumulated = new Dictionary<ReagentStep, float>();
+    private readonly HashSet<ReagentStep> _satisfied = new HashSet<ReagentStep>();
 
     public IReadOnlyList<ReagentStep> ExpectedSteps => expectedReagents;
 
@@ -82,16 +89,22 @@ public class LiquidTaskBinding : MonoBehaviour
 
         if (!fullDelivery && step.requiredMl > 0f)
         {
-            _accumulated.TryGetValue(step.taskId, out float have);
+            _accumulated.TryGetValue(step, out float have);
             have += Mathf.Max(0f, amountMl);
-            _accumulated[step.taskId] = have;
+            _accumulated[step] = have;
             if (have < step.requiredMl) return;    // keep pouring — not enough yet
         }
+        _satisfied.Add(step);
 
-        // Threshold met. Steps owned by another verb (W5.8: the weigh station
-        // completes weigh-* tasks) only flag readiness — no wrong-reagent
-        // mistake was recorded (the pour IS expected), but completion is theirs.
-        if (!step.completesTask) { _ready.Add(step.taskId); return; }
+        // A task that names several reagents in this vessel needs them ALL before
+        // it can be called done — half a recipe is not the step.
+        if (!AllStepsSatisfied(step.taskId)) return;
+
+        // Every step satisfied. Tasks owned by another verb (W5.8: the weigh
+        // station; 2026-07-16: a RackTaskGroup that waits for every tube) only
+        // flag readiness — no wrong-reagent mistake was recorded (the pour IS
+        // expected), but completion is theirs.
+        if (!CompletesHere(step.taskId)) { _ready.Add(step.taskId); return; }
 
         // Enough reagent delivered. CompleteTask enforces order and will
         // auto-record a WrongStep mistake if prerequisites aren't met yet.
@@ -100,12 +113,63 @@ public class LiquidTaskBinding : MonoBehaviour
 
     private readonly HashSet<string> _ready = new HashSet<string>();
 
-    /// A completesTask=false step whose pour threshold has been met (W5.8).
+    /// Every reagent this task names in THIS vessel has met its own threshold.
+    private bool AllStepsSatisfied(string taskId)
+    {
+        bool any = false;
+        for (int i = 0; i < expectedReagents.Count; i++)
+        {
+            var s = expectedReagents[i];
+            if (s == null || s.taskId != taskId) continue;
+            any = true;
+            if (!_satisfied.Contains(s)) return false;
+        }
+        return any;
+    }
+
+    /// False when ANY of the task's steps defers completion to another verb.
+    private bool CompletesHere(string taskId)
+    {
+        for (int i = 0; i < expectedReagents.Count; i++)
+        {
+            var s = expectedReagents[i];
+            if (s != null && s.taskId == taskId && !s.completesTask) return false;
+        }
+        return true;
+    }
+
+    /// This vessel has everything the task asked of it (the rack group's poll).
     public bool ReadyFor(string taskId) => _ready.Contains(taskId);
 
-    /// Delivered-so-far toward a step (the supply monitor reads this).
+    /// Delivered-so-far toward a step — SUMMED across the task's reagents, which
+    /// is what the supply monitor wants (how much has gone in for this step).
     public float AccumulatedFor(string taskId)
-        => _accumulated.TryGetValue(taskId, out float v) ? v : 0f;
+    {
+        float total = 0f;
+        foreach (var kv in _accumulated)
+            if (kv.Key != null && kv.Key.taskId == taskId) total += kv.Value;
+        return total;
+    }
+
+    /// Delivered-so-far of ONE reagent toward a step.
+    public float AccumulatedFor(string taskId, ChemicalData reagent)
+    {
+        foreach (var kv in _accumulated)
+            if (kv.Key != null && kv.Key.taskId == taskId && kv.Key.reagent == reagent) return kv.Value;
+        return 0f;
+    }
+
+    /// Reagents this task still expects in this vessel (watch-panel / debug).
+    public int StepsRemaining(string taskId)
+    {
+        int n = 0;
+        for (int i = 0; i < expectedReagents.Count; i++)
+        {
+            var s = expectedReagents[i];
+            if (s != null && s.taskId == taskId && !_satisfied.Contains(s)) n++;
+        }
+        return n;
+    }
 
     public ReagentStep StepForReagent(ChemicalData chem)
     {

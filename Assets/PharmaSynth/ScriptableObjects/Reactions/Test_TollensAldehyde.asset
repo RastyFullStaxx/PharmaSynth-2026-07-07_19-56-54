@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d4ee08956b0bd944979aca8e60416a0, type: 3}
+  m_Name: Test_TollensAldehyde
+  m_EditorClassIdentifier: Assembly-CSharp::ReactionRule
+  inputChemicalA: {fileID: 11400000, guid: 51a79c21eff22404abb5d9a2562016c0, type: 2}
+  inputChemicalB: {fileID: 11400000, guid: cedd081fc1f93d042a8f862e7e56db0b, type: 2}
+  resultLiquid: {fileID: 0}
+  resultPrecipitate: {fileID: 0}
+  hasPrecipitate: 0
+  minTemperatureC: 50
+  outcome: 3
+  evolvesGas: 0
+  expectedObservation: A bright silver mirror plates the glass - Tollen's reagent is reduced by the aldehyde. Acetone, a ketone, leaves it clear.

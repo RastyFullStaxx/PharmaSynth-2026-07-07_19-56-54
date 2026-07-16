@@ -39,7 +39,7 @@ MonoBehaviour:
     pos: {x: 1.33, y: 0.91, z: -3.52}
     targetHeight: 0.16
     pourable: 1
-    fillChemical: Potassium Permanganate
+    fillChemical: Potassium Permanganate 0.1%
     supplyMl: 0
   - prefabName: Vial_Brown
     itemId: oxidise-benzaldehyde
@@ -112,7 +112,7 @@ MonoBehaviour:
     targetHeight: 0.24
     startChemical: 
     bindings:
-    - reagentChemical: Potassium Permanganate
+    - reagentChemical: Potassium Permanganate 0.1%
       taskId: prepare-permanganate
       requiredMl: 50
       completesTask: 1
