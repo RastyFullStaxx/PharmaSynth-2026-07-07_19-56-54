@@ -412,9 +412,38 @@ public static class PharmaSelfTests
 
             Func<string, bool> canSel = id => HubSelectController.CanSelect(flow, id);
             Func<ExperimentPeriod, string> firstOf = p => GatekeeperModel.FirstPlayableInPeriod(flow, p);
+            Func<ExperimentPeriod, int> Count = p =>
+            { GatekeeperModel.ModuleOptions(flow, p, out var l, out _, out _); return l.Count; };
             A("gate: locked episode refused", !m.ChooseEpisode(ExperimentPeriod.Midterm, canSel, firstOf) && m.State == GateState.EpisodePick);
-            A("gate: tutorial episode chosen", m.ChooseEpisode(ExperimentPeriod.Tutorial, canSel, firstOf)
+
+            // TWO-STEP picker (user 2026-07-16: "on prelims campaign mode, there is no
+            // selection of choices! … I thought we have 2 experiments inside prelims?").
+            // A period now OPENS ITS MODULE LIST instead of auto-starting the first one.
+            A("gate: a period opens its module list, it does NOT auto-start",
+                m.ChooseEpisode(ExperimentPeriod.Tutorial, canSel, firstOf)
+                && m.State == GateState.ModulePick && string.IsNullOrEmpty(m.SelectedModuleId));
+            A("gate: the picked period is remembered", m.PickedPeriod == ExperimentPeriod.Tutorial);
+            A("gate: back returns to the period list",
+                m.Fire(GateEvent.Dismiss) && m.State == GateState.EpisodePick);
+            m.ChooseEpisode(ExperimentPeriod.Tutorial, canSel, firstOf);
+            A("gate: choosing the module advances to PPE",
+                m.ChooseModule("tutorial-methane", canSel)
                 && m.State == GateState.CoatPrompt && m.SelectedModuleId == "tutorial-methane");
+
+            // The module rows themselves. PRELIM HAS TWO — that is the whole bug report.
+            {
+                GatekeeperModel.ModuleOptions(flow, ExperimentPeriod.Prelim,
+                    out var mLabels, out var mSel, out var mIds);
+                A("gate: prelim lists BOTH its experiments", mLabels.Count == 2 && mIds.Count == 2
+                    && mIds[0] == "prelim-chemical-compounding" && mIds[1] == "prelim-ethyl-alcohol");
+                A("gate: prelim modules locked on a fresh save", !mSel[0] && !mSel[1]
+                    && mLabels[0].Contains("(locked)"));
+                GatekeeperModel.ModuleOptions(flow, ExperimentPeriod.Midterm, out var midL, out _, out _);
+                A("gate: midterm lists 4, final lists 2", midL.Count == 4
+                    && Count(ExperimentPeriod.Final) == 2);
+                // The period heading already says "Prelim", so the row must not repeat it.
+                A("gate: module rows drop the redundant period prefix", !mLabels[0].StartsWith("Prelim:"));
+            }
 
             // 2026-07-11: the PPE locker moved just inside the lab → the door is
             // open through the gear-up steps (the run still gates on PPE + walk-in).
@@ -446,6 +475,7 @@ public static class PharmaSelfTests
             var mr = new GatekeeperModel();
             mr.Fire(GateEvent.Approach); mr.Fire(GateEvent.PickCampaign); mr.Fire(GateEvent.ExplainDone);
             mr.ChooseEpisode(ExperimentPeriod.Tutorial, _ => true, _ => "tutorial-methane");
+            mr.ChooseModule("tutorial-methane", _ => true);   // picker is two-step now
             mr.Fire(GateEvent.Coated); mr.Fire(GateEvent.Ready); mr.Fire(GateEvent.Loaded);
             mr.Fire(GateEvent.ProceedConfirmed); mr.Fire(GateEvent.CrossedThreshold);
             mr.Fire(GateEvent.TestsDone); mr.Fire(GateEvent.QuizBegin); mr.Fire(GateEvent.Graded);
@@ -454,6 +484,7 @@ public static class PharmaSelfTests
             var mq = new GatekeeperModel();
             mq.Fire(GateEvent.Approach); mq.Fire(GateEvent.PickCampaign); mq.Fire(GateEvent.ExplainDone);
             mq.ChooseEpisode(ExperimentPeriod.Tutorial, _ => true, _ => "tutorial-methane");
+            mq.ChooseModule("tutorial-methane", _ => true);   // picker is two-step now
             mq.Fire(GateEvent.Coated); mq.Fire(GateEvent.Ready); mq.Fire(GateEvent.Loaded);
             mq.Fire(GateEvent.ProceedConfirmed); mq.Fire(GateEvent.CrossedThreshold); mq.Fire(GateEvent.TestsDone);
             mq.ResetToBlocked();
@@ -471,6 +502,7 @@ public static class PharmaSelfTests
             var m3 = new GatekeeperModel();
             m3.Fire(GateEvent.Approach); m3.Fire(GateEvent.PickCampaign); m3.Fire(GateEvent.ExplainDone);
             m3.ChooseEpisode(ExperimentPeriod.Tutorial, _ => true, _ => "tutorial-methane");
+            m3.ChooseModule("tutorial-methane", _ => true);   // picker is two-step now
             m3.Fire(GateEvent.Coated); m3.Fire(GateEvent.Ready); m3.Fire(GateEvent.Loaded);
             m3.Fire(GateEvent.ProceedConfirmed); m3.Fire(GateEvent.CrossedThreshold);
             A("gate: supply prompt", m3.Fire(GateEvent.SupplyExhausted) && m3.State == GateState.SupplyPrompt && GatekeeperModel.DoorOpen(m3.State));
@@ -483,6 +515,7 @@ public static class PharmaSelfTests
             var m4 = new GatekeeperModel();
             m4.Fire(GateEvent.Approach); m4.Fire(GateEvent.PickCampaign); m4.Fire(GateEvent.ExplainDone);
             m4.ChooseEpisode(ExperimentPeriod.Tutorial, _ => true, _ => "tutorial-methane");
+            m4.ChooseModule("tutorial-methane", _ => true);   // picker is two-step now
             bool m4Blocked = false;
             m4.Transition += (a, b) => { if (b == GateState.Blocked) m4Blocked = true; };
             m4.ResetToBlocked();
@@ -550,6 +583,7 @@ public static class PharmaSelfTests
                     A("gk: at episode pick", gk.Model.State == GateState.EpisodePick);
                     // deterministic pick (the panel path reads the real save file)
                     gk.Model.ChooseEpisode(ExperimentPeriod.Tutorial, _ => true, _ => "tutorial-methane");
+                    gk.Model.ChooseModule("tutorial-methane", _ => true);   // picker is two-step now
                     gk.Model.Fire(GateEvent.Coated);  // simulated PPE
                     gk.OnPanelOption(0);              // I'm ready -> Loading -> armed -> ThresholdWarn
                     A("gk: armed after load", runner.IsArmed && gk.Model.State == GateState.ThresholdWarn);
@@ -632,6 +666,7 @@ public static class PharmaSelfTests
                     gk.OnApproachTriggerEntered();
                     gk.OnPanelOption(1); gk.OnPanelOption(0);
                     gk.Model.ChooseEpisode(ExperimentPeriod.Tutorial, _ => true, _ => "tutorial-methane");
+                    gk.Model.ChooseModule("tutorial-methane", _ => true);   // picker is two-step now
                     gk.Model.Fire(GateEvent.Coated);
                     gk.OnPanelOption(0);      // ready -> armed
                     gk.OnPanelOption(0);      // proceed
@@ -2757,6 +2792,30 @@ public static class PharmaSelfTests
             }
             A("bench: compounding stages no tool the bench already has" + (noToolDupes ? "" : "  [" + dupeNote + "]"), noToolDupes);
             A("bench: compounding stages no reagent bottle (the shelf holds them)" + (noReagentDupes ? "" : "  [" + dupeNote + "]"), noReagentDupes);
+
+            // Vessels must BIND to the bench, not spawn twins beside it — Exp 2 shipped
+            // 20 Vessel_TestTube clones next to the real Kit_TestTube_0-18. And every
+            // benchItem must EXIST: a name typo means the step can never complete, the
+            // same silent class of bug as the stale layout nothing caught.
+            var sceneNames = new HashSet<string>();
+            foreach (var t in UnityEngine.Object.FindObjectsByType<Transform>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+                sceneNames.Add(t.name);
+
+            bool allBound = true, allExist = true;
+            string missNote = "";
+            foreach (var g in AssetDatabase.FindAssets("t:ExperimentLayout", new[] { LayoutDir }))
+            {
+                var l = AssetDatabase.LoadAssetAtPath<ExperimentLayout>(AssetDatabase.GUIDToAssetPath(g));
+                if (l == null || l.moduleId != "prelim-chemical-compounding") continue;
+                foreach (var v in l.vessels)
+                {
+                    if (string.IsNullOrEmpty(v.benchItem)) { allBound = false; missNote = l.name + " spawns " + v.displayName; continue; }
+                    if (!sceneNames.Contains(v.benchItem)) { allExist = false; missNote = v.benchItem + " (for " + v.displayName + ")"; }
+                }
+            }
+            A("bench: every compounding vessel BINDS to a bench object" + (allBound ? "" : "  [" + missNote + "]"), allBound);
+            A("bench: every benchItem a layout names actually EXISTS" + (allExist ? "" : "  [MISSING " + missNote + "]"), allExist);
         }
 
         var allBgo = new GameObject("sb_all");
@@ -3945,6 +4004,31 @@ public static class PharmaSelfTests
         A("match: too cold stays out", !Matchstick.ShouldIgnite(0.1f, 40f, false, false));
         A("match: lit/spent never re-ignite", !Matchstick.ShouldIgnite(0.1f, 120f, true, false)
             && !Matchstick.ShouldIgnite(0.1f, 120f, false, true));
+
+        // ⛔ THE SCENE WIRING, not just the math (2026-07-16). A "Build Reagent Cabinets"
+        // run destroyed + recreated Raw_Matchsticks and took its MatchStrikerSurface with
+        // it (git HEAD had 5, the scene had 4). Striking the box then did NOTHING — the
+        // methane splint test and every burner light were dead — and it went unnoticed for
+        // hours because the pure ShouldStrike/ShouldIgnite tests above still passed.
+        // Pure math cannot see a missing component; pin the actual objects.
+        {
+            var matches = UnityEngine.Object.FindObjectsByType<Matchstick>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+            bool anchored = matches.Length > 0;
+            foreach (var m in matches)
+                if (m.transform.Find("FlameAnchor") == null) anchored = false;
+            A("match: every matchstick has a FlameAnchor", anchored);
+
+            // Matchstick.OnCollisionEnter reads GetComponentInParent<MatchStrikerSurface>()
+            // off the collider it hits, so the box needs BOTH the component and a collider.
+            MatchStrikerSurface box = null;
+            foreach (var s in UnityEngine.Object.FindObjectsByType<MatchStrikerSurface>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (s.name.StartsWith("Raw_Matchsticks")) box = s;
+            A("match: the matchbox IS the striker (strike it to light)", box != null);
+            A("match: the striker box has a collider to strike against",
+                box != null && box.GetComponentInChildren<Collider>() != null);
+        }
 
         // Product per module — the chemical each one exists to make, which is what
         // EndProductVisibility hides while that module runs.

@@ -16,12 +16,19 @@ public enum GateState
     Blocked, ModeChoice, CampaignExplain, EpisodePick, CoatPrompt,
     ReadyPrompt, Loading, ThresholdWarn, DoorArmed, Running,
     SupplyPrompt, Debrief, Returning, UnlockAnnounce, LabTour,
-    QuizIntro, ScoreReview, QuizTime
+    QuizIntro, ScoreReview, QuizTime,
+    /// Second level of the door picker: the chosen PERIOD's modules (user 2026-07-16:
+    /// "on prelims campaign mode, there is no selection of choices! … I thought we have
+    /// 2 experiments inside prelims?"). EpisodePick used to resolve a period straight
+    /// to FirstPlayableInPeriod and auto-start, so module names were never shown.
+    /// APPENDED deliberately — serialized ints of the states above stay valid.
+    ModulePick
 }
 
 public enum GateEvent
 {
     Approach, PickLabTour, PickCampaign, ExplainDone, EpisodeChosen,
+    PeriodChosen,   // a period opens its module list (2026-07-16) — append-only
     Coated, Ready, Loaded, ProceedConfirmed, CrossedThreshold,
     ContinueAfterPass, DebriefDone, TeleportDone, AnnounceDone,
     SupplyExhausted, RestartConfirmed, Dismiss,
@@ -95,8 +102,13 @@ public class GatekeeperModel
                 if (e == GateEvent.Dismiss) return GateState.ModeChoice;
                 break;
             case GateState.EpisodePick:
-                if (e == GateEvent.EpisodeChosen) return GateState.CoatPrompt;
+                // A period now opens its MODULE list instead of auto-starting one.
+                if (e == GateEvent.PeriodChosen) return GateState.ModulePick;
                 if (e == GateEvent.Dismiss) return GateState.ModeChoice;
+                break;
+            case GateState.ModulePick:
+                if (e == GateEvent.EpisodeChosen) return GateState.CoatPrompt;
+                if (e == GateEvent.Dismiss) return GateState.EpisodePick;   // back to the periods
                 break;
             case GateState.CoatPrompt:
                 if (e == GateEvent.Coated) return GateState.ReadyPrompt;
@@ -178,13 +190,31 @@ public class GatekeeperModel
         => s == GateState.QuizIntro || s == GateState.QuizTime || s == GateState.ScoreReview
         || s == GateState.Returning || s == GateState.Debrief || s == GateState.UnlockAnnounce;
 
-    /// Pick the episode (period): resolves the first playable module in it, checks
-    /// selectability, stores the module and advances. False = locked/empty, no move.
+    /// The period whose module list is open (set by ChooseEpisode).
+    public ExperimentPeriod PickedPeriod { get; private set; }
+
+    /// Pick the PERIOD → open its module list. Does NOT start anything any more.
+    ///
+    /// This used to resolve the period through FirstPlayableInPeriod and jump straight
+    /// to CoatPrompt, so choosing Prelim silently auto-started Exp 2 and the player
+    /// never saw that the period HAS two experiments (user 2026-07-16). It still
+    /// refuses a period with nothing playable in it.
     public bool ChooseEpisode(ExperimentPeriod period, Func<string, bool> canSelect,
                               Func<ExperimentPeriod, string> firstPlayable)
     {
         if (State != GateState.EpisodePick) return false;
-        string moduleId = firstPlayable != null ? firstPlayable(period) : null;
+        string anyPlayable = firstPlayable != null ? firstPlayable(period) : null;
+        if (string.IsNullOrEmpty(anyPlayable)) return false;        // fully locked period
+        if (canSelect != null && !canSelect(anyPlayable)) return false;
+        PickedPeriod = period;
+        return Fire(GateEvent.PeriodChosen);
+    }
+
+    /// Pick the MODULE from the open period's list, then advance to the PPE prompt.
+    /// False = locked/unknown, no move.
+    public bool ChooseModule(string moduleId, Func<string, bool> canSelect)
+    {
+        if (State != GateState.ModulePick) return false;
         if (string.IsNullOrEmpty(moduleId)) return false;
         if (canSelect != null && !canSelect(moduleId)) return false;
         SelectedModuleId = moduleId;
@@ -220,6 +250,32 @@ public class GatekeeperModel
             bool ok = periodOpen && !string.IsNullOrEmpty(first);
             labels.Add(p + (ok ? "" : "  (locked)"));
             selectable.Add(ok);
+        }
+    }
+
+    /// MODULE rows for a chosen period — the picker's second level (2026-07-16).
+    /// Same shape as EpisodeOptions, one level down: catalog order, locked modules
+    /// dimmed, PASSED ones marked but still selectable (a passed lab stays replayable
+    /// for revision; the rubric/BKT already handle re-attempts and keep the best score).
+    /// Pure for tests.
+    public static void ModuleOptions(ProgressionFlow flow, ExperimentPeriod period,
+        out List<string> labels, out List<bool> selectable, out List<string> moduleIds)
+    {
+        labels = new List<string>();
+        selectable = new List<bool>();
+        moduleIds = new List<string>();
+        foreach (var e in ExperimentCatalog.InPeriod(period))
+        {
+            bool unlocked = flow != null && flow.IsUnlocked(e.moduleId);
+            bool passed = unlocked && flow.IsPassed(e.moduleId);
+            // Strip the redundant "Prelim: " etc. — the period is already the heading.
+            string title = e.title;
+            int colon = title.IndexOf(':');
+            if (colon >= 0 && colon + 2 <= title.Length) title = title.Substring(colon + 1).Trim();
+
+            labels.Add(title + (!unlocked ? "  (locked)" : passed ? "  ✓ PASSED" : ""));
+            selectable.Add(unlocked);
+            moduleIds.Add(e.moduleId);
         }
     }
 }

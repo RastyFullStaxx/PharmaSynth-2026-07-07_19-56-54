@@ -228,6 +228,9 @@ public class PharmeeGatekeeper : MonoBehaviour
             case GateState.EpisodePick:
                 if (index >= 0 && index < EpisodeRows.Length) ChooseEpisode(EpisodeRows[index]);
                 break;
+            case GateState.ModulePick:
+                ChooseModule(index);
+                break;
             case GateState.CoatPrompt:
                 Model.Fire(GateEvent.Dismiss);
                 break;
@@ -274,6 +277,19 @@ public class PharmeeGatekeeper : MonoBehaviour
         bool ok = Model.ChooseEpisode(period,
             id => HubSelectController.CanSelect(flow, id),
             p => GatekeeperModel.FirstPlayableInPeriod(flow, p));
+        if (!ok) Say(lines.lockedEpisode);
+    }
+
+    /// Row click on the picker's SECOND level. The last row is always "Back".
+    private void ChooseModule(int index)
+    {
+        var svc = new ProgressionService();
+        svc.Load();
+        var flow = ProgressionFlow.Create(svc);
+        GatekeeperModel.ModuleOptions(flow, Model.PickedPeriod, out _, out _, out var ids);
+        if (index < 0) return;
+        if (index >= ids.Count) { Model.Fire(GateEvent.Dismiss); return; }   // Back → periods
+        bool ok = Model.ChooseModule(ids[index], id => HubSelectController.CanSelect(flow, id));
         if (!ok) Say(lines.lockedEpisode);
     }
 
@@ -337,6 +353,10 @@ public class PharmeeGatekeeper : MonoBehaviour
 
             case GateState.EpisodePick:
                 ShowEpisodePicker();
+                break;
+
+            case GateState.ModulePick:
+                ShowModulePicker();
                 break;
 
             case GateState.CoatPrompt:
@@ -711,6 +731,21 @@ public class PharmeeGatekeeper : MonoBehaviour
         GatekeeperModel.EpisodeOptions(flow, out var labels, out var selectable);
         Say(lines.episodePrompt);
         panel?.Show("Choose your episode", labels, selectable);
+    }
+
+    /// The picker's SECOND level: the chosen period's experiments (user 2026-07-16 —
+    /// picking Prelim used to auto-start Exp 2, so its two modules were never shown).
+    /// A trailing "Back" row returns to the period list.
+    private void ShowModulePicker()
+    {
+        var svc = new ProgressionService();
+        svc.Load();
+        var flow = ProgressionFlow.Create(svc);
+        GatekeeperModel.ModuleOptions(flow, Model.PickedPeriod, out var labels, out var selectable, out _);
+        labels.Add("< Back");
+        selectable.Add(true);
+        Say(lines.episodePrompt);
+        panel?.Show(Model.PickedPeriod + " — choose your experiment", labels, selectable);
     }
 
     private void LoadSelected()

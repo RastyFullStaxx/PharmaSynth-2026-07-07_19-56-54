@@ -35,14 +35,32 @@ public class ExperimentSceneBuilder : MonoBehaviour
     /// Hook for ExperimentLauncher.onModuleLoaded.
     public void OnModuleLoaded(ExperimentModuleDefinition m) { if (m != null) Build(m.moduleId); }
 
+    /// The stage root. ADOPTS an existing "DynamicStage" child before making one:
+    /// `_stage` is a plain field, so it is null after every domain reload — and this
+    /// used to answer that by creating a SECOND DynamicStage, leaving the first
+    /// orphaned with the previous build's objects still in it. Build() then cleared
+    /// only the new one, so nothing ever tidied the old stage and its contents stayed
+    /// on the bench forever. (Found 2026-07-16: two DynamicStage siblings, one with 46
+    /// leftover objects.) Duplicates are collapsed here rather than left to rot.
     private Transform Stage()
     {
-        if (_stage == null)
+        if (_stage != null) return _stage;
+
+        Transform found = null;
+        for (int i = transform.childCount - 1; i >= 0; i--)
+        {
+            var c = transform.GetChild(i);
+            if (c.name != "DynamicStage") continue;
+            if (found == null) found = c;
+            else Kill(c.gameObject);        // collapse an earlier orphaned stage
+        }
+        if (found == null)
         {
             var go = new GameObject("DynamicStage");
             go.transform.SetParent(transform, false);
-            _stage = go.transform;
+            found = go.transform;
         }
+        _stage = found;
         return _stage;
     }
 
@@ -62,6 +80,10 @@ public class ExperimentSceneBuilder : MonoBehaviour
     {
         var stage = Stage();
         for (int i = stage.childCount - 1; i >= 0; i--) Kill(stage.GetChild(i).gameObject);
+        // Bench-bound vessels wire task logic onto PERMANENT objects, which the line
+        // above cannot reach — strip it or the last module's bindings complete this
+        // one's steps. Must run every build, before anything is wired.
+        ClearBenchBindings();
         // Clear the dynamic labels we spawned last time.
         if (labelsRoot != null)
         {
@@ -625,14 +647,32 @@ public class ExperimentSceneBuilder : MonoBehaviour
 
     private void BuildVessel(Transform stage, ExperimentLayout.Vessel v)
     {
-        var prefab = VesselPrefabFor(v.prefabName);
-        if (prefab == null) { Debug.LogWarning("[SceneBuilder] missing vessel prefab " + v.prefabName); return; }
-        var inst = Instantiate(prefab, stage);
-        inst.name = "Vessel_" + v.prefabName;   // keep the AUTHORED name (RealSizes/Mishandling lookups)
-        Normalise(inst, v.prefabName, v.targetHeight);
-        Seat(inst.transform, v.pos);
-        PhysicsProfiles.EnsurePhysics(inst, v.prefabName);   // vessels stay kinematic (no release policy)
-        GrabTuning.Apply(inst.GetComponent<XRGrab>());       // collide while held; re-freezes on release
+        // BENCH-BOUND vessel: the object already exists and is placed by hand, so
+        // adopt it instead of spawning a twin beside it (the hard client rule keeps
+        // every tool permanently out). Only the task wiring is attached; its
+        // transform, physics and grab setup are the scene's, not ours.
+        GameObject inst;
+        if (!string.IsNullOrEmpty(v.benchItem))
+        {
+            inst = FindBenchItem(v.benchItem);
+            if (inst == null)
+            {
+                Debug.LogWarning("[SceneBuilder] layout wants bench item '" + v.benchItem
+                                 + "' but it is not in the scene — step cannot complete.");
+                return;
+            }
+        }
+        else
+        {
+            var prefab = VesselPrefabFor(v.prefabName);
+            if (prefab == null) { Debug.LogWarning("[SceneBuilder] missing vessel prefab " + v.prefabName); return; }
+            inst = Instantiate(prefab, stage);
+            inst.name = "Vessel_" + v.prefabName;   // keep the AUTHORED name (RealSizes/Mishandling lookups)
+            Normalise(inst, v.prefabName, v.targetHeight);
+            Seat(inst.transform, v.pos);
+            PhysicsProfiles.EnsurePhysics(inst, v.prefabName);   // vessels stay kinematic (no release policy)
+            GrabTuning.Apply(inst.GetComponent<XRGrab>());       // collide while held; re-freezes on release
+        }
         var lp = inst.GetComponent<LiquidPhysics>() ?? inst.AddComponent<LiquidPhysics>();
         lp.registry = registry;
         // ALWAYS set contents explicitly: the _WithLiquid twin serializes a
@@ -654,10 +694,45 @@ public class ExperimentSceneBuilder : MonoBehaviour
                 _rackBindings[v.rackGroup] = list = new List<LiquidTaskBinding>();
             list.Add(bind);
         }
-        inst.AddComponent<HazardousMixReactor>().Bind(lp, runner);   // bad-mix consequences
-        var pl = inst.AddComponent<ProximityLabel>(); pl.SetLabel(v.displayName, 1.6f);
-        inst.AddComponent<VesselStatus>().Bind(lp, pl, v.displayName, 1.6f);   // live "120 ml Ethanol" tag (W5.8)
-        inst.AddComponent<MixFeedback>().Bind(lp);                             // reaction/mix/overflow popups (W5.8)
+        // GetComponent-or-Add: a SPAWNED vessel is fresh, but a BENCH item survives
+        // every rebuild — blind AddComponent would stack a new copy of each of these
+        // on it per module load.
+        (inst.GetComponent<HazardousMixReactor>() ?? inst.AddComponent<HazardousMixReactor>()).Bind(lp, runner);
+        var pl = inst.GetComponent<ProximityLabel>() ?? inst.AddComponent<ProximityLabel>();
+        pl.SetLabel(v.displayName, 1.6f);
+        (inst.GetComponent<VesselStatus>() ?? inst.AddComponent<VesselStatus>()).Bind(lp, pl, v.displayName, 1.6f);
+        (inst.GetComponent<MixFeedback>() ?? inst.AddComponent<MixFeedback>()).Bind(lp);
+    }
+
+    /// A permanent bench object by name (Kit_TestTube_3, Eq_Beaker_100mL…). Searched
+    /// scene-wide because the bench lives OUTSIDE the stage — that is the whole point.
+    private GameObject FindBenchItem(string name)
+    {
+        foreach (var li in FindObjectsByType<LabItem>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (li != null && li.name == name) return li.gameObject;
+        foreach (var t in FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (t.name == name) return t.gameObject;
+        return null;
+    }
+
+    /// Strip the task wiring off every bench item before a build.
+    ///
+    /// Build() clears only the STAGE's children, so bindings attached to bench objects
+    /// (which live outside it) would survive into the next module and silently complete
+    /// its steps with the previous experiment's reagents. Bench-bound vessels only work
+    /// if their wiring is torn down first. (2026-07-16)
+    private void ClearBenchBindings()
+    {
+        foreach (var b in FindObjectsByType<LiquidTaskBinding>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (b == null || (_stage != null && b.transform.IsChildOf(_stage))) continue;   // stage ones die with the stage
+            Kill(b);
+        }
+        foreach (var g in FindObjectsByType<RackTaskGroup>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (g == null || (_stage != null && g.transform.IsChildOf(_stage))) continue;
+            Kill(g);
+        }
     }
 
     /// Guarantee the vessel/prop can RENDER its liquid: if LiquidPhysics has no

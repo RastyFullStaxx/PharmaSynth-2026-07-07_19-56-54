@@ -55,6 +55,13 @@ public class ExperimentLayout : ScriptableObject
             [Tooltip("False = pouring only ACCUMULATES (expected, never a wrong-reagent mistake); something else — e.g. the weigh station — completes the task. (W5.8)")]
             public bool completesTask = true;
         }
+        [Tooltip("BIND to an existing bench object by NAME (e.g. Kit_TestTube_0) instead of spawning a twin. " +
+                 "The hard client rule keeps every tool permanently on the bench, so a layout that spawns its own " +
+                 "tubes/beakers just duplicates it — Exp 2 shipped 20 Vessel_TestTube clones beside the real " +
+                 "Kit_TestTube_0-18. When set, prefabName/pos/targetHeight are IGNORED (the object already exists " +
+                 "and is placed by hand); only the bindings + rackGroup are attached. Leave empty to spawn.")]
+        public string benchItem = "";
+
         public string prefabName;
         public string displayName;
         public Vector3 pos;

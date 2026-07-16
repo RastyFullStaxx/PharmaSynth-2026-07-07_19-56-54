@@ -140,6 +140,7 @@ MonoBehaviour:
       taskId: add-benzoyl
       requiredMl: 50
       completesTask: 1
+    rackGroup: 
   - prefabName: TestTube_WithLiquid
     displayName: Product Test Tube
     pos: {x: 0.19999999, y: 0.91, z: -3.18}
@@ -158,3 +159,4 @@ MonoBehaviour:
       taskId: test-nitrous
       requiredMl: 50
       completesTask: 1
+    rackGroup: 

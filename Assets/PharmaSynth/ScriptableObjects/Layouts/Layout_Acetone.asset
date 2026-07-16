@@ -144,6 +144,7 @@ MonoBehaviour:
     targetHeight: 0.22
     startChemical: 
     bindings: []
+    rackGroup: 
   - prefabName: TestTube_WithLiquid
     displayName: Product Test Tube
     pos: {x: 0.19999999, y: 0.91, z: -3.18}
@@ -166,3 +167,4 @@ MonoBehaviour:
       taskId: test-iodoform
       requiredMl: 50
       completesTask: 1
+    rackGroup: 
