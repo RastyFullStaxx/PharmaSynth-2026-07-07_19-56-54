@@ -112,9 +112,14 @@ public class ExperimentSceneBuilder : MonoBehaviour
         foreach (var v in layout.vessels)  { BuildVessel(stage, v); n++; }
         WireRackGroups(stage, layout);        // "all five tubes" steps (2026-07-16) — needs vessels spawned
         WireVerbControllers(stage, layout);   // stir/grind/burner-gate (W5.8) — needs props+vessels spawned
-        SpawnRackKit(stage);                  // test-tube rack, pre-filled (W5.8)
-        SpawnSpares(stage);                   // spare beakers/flask (W5.8: duplicates of vital glass)
-        StageConsumables(stage, layout);      // matches + striker at Heat experiments (W5.8)
+        // ⛔ SpawnRackKit / SpawnSpares / StageConsumables REMOVED 2026-07-16.
+        // They date from before the permanent bench and duplicated it on EVERY module:
+        // another test-tube rack + 6 tubes, 2 spare beakers + a flask, and a "MatchStriker"
+        // cube that is redundant because the matchbox itself has been the striker since
+        // W5.8. The bench already carries all of it (Kit_TestTube_0-18, Eq_Beaker_100mL/
+        // 500mL, ErlenmeyerFlask, racks, Raw_Matchsticks). The user deleted the clones by
+        // hand — re-spawning them here would silently undo that on the next module load.
+        // (user 2026-07-16: "we'll be using the existing tools already laid out")
         return n;
     }
 
@@ -675,6 +680,12 @@ public class ExperimentSceneBuilder : MonoBehaviour
         }
         var lp = inst.GetComponent<LiquidPhysics>() ?? inst.AddComponent<LiquidPhysics>();
         lp.registry = registry;
+        // Bench glass keeps LiquidPhysics' serialized default of 1000 ml — a "test
+        // tube" the size of a bucket. Fill renders as volume/maxVolume, so 5 counted
+        // drops was 0.5%: invisible, and the playtest read it as "no drop landed"
+        // (2026-07-17). Adopting a bench vessel gives it its REAL capacity.
+        if (!string.IsNullOrEmpty(v.benchItem))
+            lp.maxVolume = BenchMaxVolumeFor(v.prefabName, lp.maxVolume);
         // ALWAYS set contents explicitly: the _WithLiquid twin serializes a
         // phantom half-fill, and a blank start must arm the wake-from-empty
         // branch (chem null + 0 ml) so the first pour adopts its chemical.
@@ -702,6 +713,20 @@ public class ExperimentSceneBuilder : MonoBehaviour
         pl.SetLabel(v.displayName, 1.6f);
         (inst.GetComponent<VesselStatus>() ?? inst.AddComponent<VesselStatus>()).Bind(lp, pl, v.displayName, 1.6f);
         (inst.GetComponent<MixFeedback>() ?? inst.AddComponent<MixFeedback>()).Bind(lp);
+    }
+
+    /// Real capacity for an adopted bench vessel, keyed off the layout's prefab kind.
+    /// Pure so the suite pins the table. A 25 ml tube makes 5 drops a visible 20%
+    /// fill and puts Exp 2's "to the 10 ml mark" pour at a readable 40%.
+    public static float BenchMaxVolumeFor(string prefabName, float current)
+    {
+        if (string.IsNullOrEmpty(prefabName)) return current;
+        if (prefabName.Contains("TestTube")) return 25f;
+        if (prefabName.Contains("Beaker_100")) return 100f;
+        if (prefabName.Contains("Beaker_500")) return 500f;
+        if (prefabName.Contains("GraduatedCylinder_50")) return 50f;
+        if (prefabName.Contains("ErlenmeyerFlask")) return 400f;
+        return current;
     }
 
     /// A permanent bench object by name (Kit_TestTube_3, Eq_Beaker_100mL…). Searched

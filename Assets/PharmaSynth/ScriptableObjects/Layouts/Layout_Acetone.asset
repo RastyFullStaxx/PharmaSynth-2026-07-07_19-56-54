@@ -138,14 +138,16 @@ MonoBehaviour:
     fillChemical: Potassium Iodide 10%
     supplyMl: 0
   vessels:
-  - prefabName: ErlenmeyerFlask_400mL
+  - benchItem: 
+    prefabName: ErlenmeyerFlask_400mL
     displayName: Distillation Flask
     pos: {x: -0.25, y: 0.91, z: -3.18}
     targetHeight: 0.22
     startChemical: 
     bindings: []
     rackGroup: 
-  - prefabName: TestTube_WithLiquid
+  - benchItem: 
+    prefabName: TestTube_WithLiquid
     displayName: Product Test Tube
     pos: {x: 0.19999999, y: 0.91, z: -3.18}
     targetHeight: 0.13

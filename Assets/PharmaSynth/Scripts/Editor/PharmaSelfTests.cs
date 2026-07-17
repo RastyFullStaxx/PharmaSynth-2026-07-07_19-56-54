@@ -1844,6 +1844,20 @@ public static class PharmaSelfTests
         A("dropper: no top-up while loaded (an ambiguous count)",
             !DropperMath.CanFill(4f, PhysicalState.Liquid, 50f));
         A("dropper: empty bottle gives nothing", !DropperMath.CanFill(0f, PhysicalState.Liquid, 0f));
+        // 2026-07-17 playtest: after the last squeeze, the empty dropper hovering
+        // over the tube SUCKED THE DELIVERED REAGENT BACK OUT. Task vessels are
+        // destinations, never sources.
+        A("dropper: never draws back out of a task vessel",
+            !DropperMath.CanFill(0f, PhysicalState.Liquid, 50f, isTaskVessel: true));
+        // Squeezing over nothing wastes the drop — that is how a dropper is emptied.
+        A("dropper: a loaded squeeze over nothing wastes the drop",
+            DropperMath.CanWaste(5f, overTarget: false)
+            && !DropperMath.CanWaste(5f, overTarget: true)
+            && !DropperMath.CanWaste(0f, overTarget: false));
+        // The tool's own hover label carries the capacity readout.
+        A("dropper: label reads chem and drops left",
+            DropperMath.HoldingLabel("Tollen's Reagent", 7f) == "Tollen's Reagent · 7/10 drops"
+            && DropperMath.HoldingLabel("", 0f) == "Dropper (empty)");
         A("dropper: a draw fills it, last draw takes the rest",
             Near(DropperMath.FillCharge(50f), DropperMath.Capacity) && Near(DropperMath.FillCharge(3f), 3f));
         A("dropper: squeezes only when loaded, over another vessel",
@@ -1862,6 +1876,70 @@ public static class PharmaSelfTests
             DropperMath.SqueezeLabel("Ferric Chloride 10%", 3) == "drop 3  ·  Ferric Chloride 10%");
         A("dropper: fill label shows squeezes loaded",
             DropperMath.FillLabel("Tollen's Reagent", 10f) == "Tollen's Reagent  ·  10 drops loaded");
+
+        // TubeSlotMath (2026-07-16): release a tube near a workspace holder and it
+        // seats in the nearest FREE green slot. Held or already-frozen tubes are not
+        // candidates (a seated tube must not be stolen by a neighbouring slot).
+        {
+            var slots = new[] { new Vector3(0, 0, 0), new Vector3(0.15f, 0, 0), new Vector3(0.30f, 0, 0) };
+            var none = new[] { false, false, false };
+            A("tubeslot: released tube takes the nearest free slot",
+                TubeSlotMath.NearestFreeSlot(new Vector3(0.17f, 0.05f, 0f), slots, none) == 1);
+            A("tubeslot: occupied slot passed over",
+                TubeSlotMath.NearestFreeSlot(new Vector3(0.17f, 0.05f, 0f), slots, new[] { false, true, false }) == 2);
+            A("tubeslot: out of reach snaps nothing",
+                TubeSlotMath.NearestFreeSlot(new Vector3(2f, 0f, 0f), slots, none) == -1);
+            A("tubeslot: held or frozen tubes are not candidates",
+                !TubeSlotMath.CanSnap(held: true, kinematic: false)
+                && !TubeSlotMath.CanSnap(held: false, kinematic: true)
+                && TubeSlotMath.CanSnap(held: false, kinematic: false));
+            // Seat by the mesh BOTTOM, never the pivot: these tube meshes carry the
+            // pivot at the TOP, so pivot-to-slot sank the 13 cm body under the table —
+            // the seat sound played and the tube "disappeared" (2026-07-17 playtest).
+            A("tubeslot: seating lifts a top-pivot tube onto the slot",
+                Near(TubeSlotMath.BottomAlignDelta(0.917f, 0.787f), 0.13f)
+                && Near(TubeSlotMath.BottomAlignDelta(1f, 1f), 0f));
+
+            // Bench glass adopted by a layout gets its REAL capacity — the serialized
+            // default of 1000 ml made 5 counted drops a 0.5% (invisible) fill, which
+            // the playtest read as "no drop landed".
+            A("bench: adopted tubes hold 25 ml, not a bucket",
+                Near(ExperimentSceneBuilder.BenchMaxVolumeFor("TestTube", 1000f), 25f)
+                && Near(ExperimentSceneBuilder.BenchMaxVolumeFor("Beaker_100mL", 1000f), 100f)
+                && Near(ExperimentSceneBuilder.BenchMaxVolumeFor("SomethingElse", 321f), 321f));
+        }
+        // The SCENE wiring — the dropper bug's exact shape was "verb authored, never
+        // ATTACHED" (DropperController existed in code, 0 in the scene, and the player
+        // squeezed a dead prop). Pin the components onto the actual objects.
+        {
+            int droppers = 0, wired = 0;
+            foreach (var t in UnityEngine.Object.FindObjectsByType<Transform>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (!t.name.StartsWith("Eq_Dropper")) continue;
+                droppers++;
+                if (t.GetComponent<DropperController>() != null) wired++;
+            }
+            A("wired: every Eq_Dropper has the DropperController verb (found " + droppers + ")",
+                droppers > 0 && wired == droppers);
+
+            var spat = GameObject.Find("Eq_PorcelainSpatula");
+            A("wired: the porcelain spatula dips fine (0.1 g)",
+                spat != null && spat.GetComponent<ScoopController>() != null
+                && Near(spat.GetComponent<ScoopController>().GramsPerDip, ScoopMath.GramsPerSpatula));
+
+            int holders = 0, snapping = 0;
+            foreach (var t in UnityEngine.Object.FindObjectsByType<Transform>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (!t.name.StartsWith("Experiment_Tube_Table_Kit_Holder")) continue;
+                holders++;
+                var rs = t.GetComponent<TubeRackSlots>();
+                if (rs != null && rs.SlotCount > 0) snapping++;
+            }
+            A("wired: every workspace holder snaps tubes (found " + holders + ")",
+                holders > 0 && snapping == holders);
+        }
 
         // RackMath (2026-07-16): a step shared by a SET of tubes is done only when
         // every member tube has had its reagent. Exp 2's five enol samples, its
@@ -2672,12 +2750,19 @@ public static class PharmaSelfTests
                 if (li2.name.StartsWith("Prop_")) propItems++;
             A("builder: props carry LabItem ids", propItems == 7);   // W5.9: +KI vial
 
-            // W5.8 kits: rack pre-filled with 6 tubes, 3 spare vessels, pads hidden.
-            A("builder: rack kit spawns with 6 tubes", FindChildByName(bgo.transform, "RackKit") != null
-                && FindChildByName(bgo.transform, "RackTube_5") != null);
-            A("builder: 3 spare vessels staged", FindChildByName(bgo.transform, "Spare_Beaker_100mL_0") != null
-                && FindChildByName(bgo.transform, "Spare_Beaker_100mL_1") != null
-                && FindChildByName(bgo.transform, "Spare_ErlenmeyerFlask_400mL_2") != null);
+            // ⛔ INVERTED 2026-07-16. These used to REQUIRE the builder to stage a rack +
+            // 6 tubes, 2 spare beakers, a flask and a MatchStriker cube on every module —
+            // enforcing duplicates of a bench that now permanently carries all of it, and
+            // silently re-spawning the clones the user had deleted by hand. The bench IS
+            // the kit; the layout only binds to it.
+            A("builder: no rack kit — the bench has racks",
+                FindChildByName(bgo.transform, "RackKit") == null
+                && FindChildByName(bgo.transform, "RackTube_5") == null);
+            A("builder: no spare glass — the bench has Eq_Beaker/Flask",
+                FindChildByName(bgo.transform, "Spare_Beaker_100mL_0") == null
+                && FindChildByName(bgo.transform, "Spare_ErlenmeyerFlask_400mL_2") == null);
+            A("builder: no MatchStriker cube — the matchbox IS the striker (W5.8)",
+                FindChildByName(bgo.transform, "MatchStriker") == null);
             bool padsHidden = true;
             foreach (var st2 in bgo.GetComponentsInChildren<ExperimentTaskStation>())
             {

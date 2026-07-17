@@ -69,6 +69,9 @@ public class ScoopController : MonoBehaviour
     /// Builder seam for the finer porcelain-spatula charge (ScoopMath.GramsPerSpatula).
     public void SetGramsPerDip(float grams) { if (grams > 0f) gramsPerDip = grams; }
 
+    /// Read seam (suite): which charge this tool actually dips.
+    public float GramsPerDip => gramsPerDip;
+
     void Update()
     {
         if (!Application.isPlaying) return;

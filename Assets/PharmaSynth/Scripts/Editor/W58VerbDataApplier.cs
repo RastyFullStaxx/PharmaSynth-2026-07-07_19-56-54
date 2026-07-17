@@ -74,6 +74,35 @@ public static class W58VerbDataApplier
             sceneChanges++;
         }
 
+        // Dropper verb (2026-07-16): DropperController was authored for Exp 2 but
+        // never ATTACHED to anything — the user grabbed Eq_Dropper in the headset and
+        // nothing responded, because no component was listening (0 in the scene).
+        // Every Eq_Dropper* gets the verb: grip to hold, touch a bottle to draw,
+        // TRIGGER to release exactly one counted drop.
+        foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (!t.name.StartsWith("Eq_Dropper")) continue;
+            if (t.GetComponent<DropperController>() == null)
+            {
+                var d = t.gameObject.AddComponent<DropperController>();
+                d.Bind(t.GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable>());
+                sceneChanges++;
+            }
+        }
+
+        // The porcelain spatula is the FINE solids tool: Exp 2 weighs 0.1 g salicylic
+        // and 0.5 g aspirin, both smaller than the scoopula's 2 g dip. Its charge is
+        // ScoopMath.GramsPerSpatula; the scoopula keeps the coarse 2 g.
+        var spatula = GameObject.Find("Eq_PorcelainSpatula");
+        var spatScoop = spatula != null ? spatula.GetComponent<ScoopController>() : null;
+        if (spatScoop != null)
+        {
+            spatScoop.SetGramsPerDip(ScoopMath.GramsPerSpatula);
+            EditorUtility.SetDirty(spatScoop);
+            sceneChanges++;
+        }
+        else Debug.LogWarning("[W58VerbData] Eq_PorcelainSpatula/ScoopController not found — Exp 2's 0.1 g dips not wired.");
+
         if (sceneChanges > 0)
         {
             EditorSceneManager.MarkAllScenesDirty();

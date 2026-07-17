@@ -130,6 +130,13 @@ public static class TubeRackSlotBuilder
                 pa.gizmoColor = new Color(0.45f, 1f, 0.55f, 0.9f);   // green = drag me
                 EditorUtility.SetDirty(slot.gameObject);
             }
+            // Runtime half (2026-07-16): without this the anchors were editor ghosts
+            // only — "it doesn't automatically get and rack the tubes". Release any
+            // tube near a free slot and TubeRackSlots seats it.
+            var rackSlots = h.GetComponent<TubeRackSlots>();
+            if (rackSlots == null) rackSlots = h.gameObject.AddComponent<TubeRackSlots>();
+            rackSlots.Bind();
+            EditorUtility.SetDirty(h.gameObject);
         }
 
         EditorSceneManager.MarkAllScenesDirty();

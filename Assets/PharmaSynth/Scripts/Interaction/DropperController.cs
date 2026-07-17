@@ -29,10 +29,18 @@ public static class DropperMath
     /// steps ("5 drops into each of five tubes") pace into natural refills.
     public const float Capacity = 10f;
 
-    /// Draw only from a LIQUID store with something left, and only into an empty
+    /// Draw only from a LIQUID SUPPLY with something left, and only into an empty
     /// dropper (no topping up a partial charge — the count would be ambiguous).
-    public static bool CanFill(float loadedMl, PhysicalState state, float availableMl)
-        => loadedMl <= 0.001f && state == PhysicalState.Liquid && availableMl > 0.01f;
+    ///
+    /// isTaskVessel guards the 2026-07-17 playtest bug: after the last squeeze the
+    /// now-empty dropper was still hovering over the test tube, and the very next
+    /// frame the draw branch SUCKED THE DELIVERED REAGENT BACK OUT of it. A task
+    /// vessel (anything carrying a LiquidTaskBinding) is a destination, never a
+    /// source — draws come from the shelf bottles only.
+    public static bool CanFill(float loadedMl, PhysicalState state, float availableMl,
+                               bool isTaskVessel = false)
+        => !isTaskVessel && loadedMl <= 0.001f
+           && state == PhysicalState.Liquid && availableMl > 0.01f;
 
     /// A draw takes a full dropper, or whatever the bottle has left.
     public static float FillCharge(float availableMl, float capacity = Capacity)
@@ -41,6 +49,18 @@ public static class DropperMath
     /// Squeeze only a loaded dropper held over some OTHER container.
     public static bool CanSqueeze(float loadedMl, bool overTarget, bool sameAsSource)
         => loadedMl > 0.001f && overTarget && !sameAsSource;
+
+    /// A loaded squeeze over NOTHING wastes the drop onto the floor. Deliberate:
+    /// it is how the student empties a dropper (user 2026-07-17: "I can't waste
+    /// droplets to the ground, it appears it only activates when a container is
+    /// nearby"). The wasted reagent is simply gone — that is its own small lesson.
+    public static bool CanWaste(float loadedMl, bool overTarget)
+        => loadedMl > 0.001f && !overTarget;
+
+    /// The dropper's own hover label: what it holds and how many squeezes remain.
+    public static string HoldingLabel(string chem, float loadedMl)
+        => loadedMl > 0.001f ? chem + " · " + SqueezesLeft(loadedMl) + "/" + (int)Capacity + " drops"
+                             : "Dropper (empty)";
 
     /// The last squeeze gives whatever remains rather than overdrawing.
     public static float SqueezeCharge(float loadedMl, float perSqueeze = MlPerSqueeze)
@@ -105,11 +125,13 @@ public class DropperController : MonoBehaviour
     void OnDestroy()
     {
         if (_grab != null) _grab.activated.RemoveListener(OnActivated);
+        if (_fill != null) Destroy(_fill);   // unparented — would otherwise outlive the tool
     }
 
     void Update()
     {
         if (!Application.isPlaying) return;
+        FollowFill();                            // the charge bead rides the tip
         bool held = _grab != null && _grab.isSelected;
         if (!held || Loaded || Time.time < _readyAt) return;
 
@@ -121,13 +143,16 @@ public class DropperController : MonoBehaviour
             if (col == null || col.transform.IsChildOf(transform)) continue;
             var lp = col.GetComponentInParent<LiquidPhysics>();
             if (lp == null || lp.currentChemical == null) continue;
-            if (!DropperMath.CanFill(_loadedMl, lp.currentChemical.state, lp.currentLiquidVolume)) continue;
+            // Task vessels (test tubes etc.) are destinations, never sources — see CanFill.
+            bool isTaskVessel = lp.GetComponent<LiquidTaskBinding>() != null;
+            if (!DropperMath.CanFill(_loadedMl, lp.currentChemical.state, lp.currentLiquidVolume, isTaskVessel)) continue;
 
             float charge = DropperMath.FillCharge(lp.currentLiquidVolume);
             var chem = lp.PourOut(charge);
             if (chem == null) continue;
             _loaded = chem; _loadedMl = charge; _dropCount = 0; _lastSource = lp;
             _readyAt = Time.time + fillCooldown;
+            RefreshFill();                       // the charge must be SEEN, not just read
             AudioService.TryPlayFirstAt(probe, 0.5f, "pour");
             FloatingText.Show(DropperMath.FillLabel(chem.chemicalName, charge),
                               probe + Vector3.up * 0.05f, new Color(0.7f, 0.9f, 1f), 0.9f);
@@ -148,10 +173,25 @@ public class DropperController : MonoBehaviour
             if (lp == null || lp == _lastSource) continue;
             target = lp; break;
         }
+        // A loaded squeeze over nothing WASTES the drop to the floor — that is how
+        // the student deliberately empties a dropper (2026-07-17).
+        if (DropperMath.CanWaste(_loadedMl, target != null))
+        {
+            float wasted = DropperMath.SqueezeCharge(_loadedMl);
+            SpawnDroplet(probe, _loaded);
+            _loadedMl -= wasted;
+            _readyAt = Time.time + squeezeCooldown;
+            AudioService.TryPlayFirstAt(probe, 0.35f, "drip", "pour");
+            FloatingText.Show("drop wasted · " + DropperMath.SqueezesLeft(_loadedMl) + " left",
+                              probe + Vector3.up * 0.05f, new Color(1f, 0.8f, 0.5f), 0.7f);
+            if (_loadedMl <= 0.001f) { _loaded = null; _loadedMl = 0f; _lastSource = null; }
+            RefreshFill();
+            return;
+        }
         if (!DropperMath.CanSqueeze(_loadedMl, target != null, false))
         {
-            // Squeezing an empty dropper, or over nothing, is a no-op the player
-            // should SEE — silence here reads as a broken trigger.
+            // Squeezing an empty dropper is a no-op the player should SEE —
+            // silence here reads as a broken trigger.
             if (!Loaded)
                 FloatingText.Show("dropper is empty", probe + Vector3.up * 0.05f,
                                   new Color(1f, 0.8f, 0.5f), 0.7f);
@@ -159,6 +199,7 @@ public class DropperController : MonoBehaviour
         }
 
         float drop = DropperMath.SqueezeCharge(_loadedMl);
+        SpawnDroplet(probe, _loaded);            // a visible bead falls from the tip
         target.AddLiquid(_loaded, drop);
         _loadedMl -= drop;
         _dropCount++;
@@ -167,6 +208,104 @@ public class DropperController : MonoBehaviour
         FloatingText.Show(DropperMath.SqueezeLabel(_loaded.chemicalName, _dropCount),
                           probe + Vector3.up * 0.05f, new Color(0.6f, 1f, 0.7f), 0.7f);
         if (_loadedMl <= 0.001f) { _loaded = null; _loadedMl = 0f; _lastSource = null; }
+        RefreshFill();                           // the bead inside shrinks with each drop
+    }
+
+    // ---- charge visuals -------------------------------------------------------
+    // 2026-07-17, take two. The first attempt sized a capsule from the skinned
+    // mesh's bounds and juggled it through SetParent — against the dropper's
+    // import scale that exploded into a solid blob LARGER than the tool itself.
+    // New design, no parenting and no bounds-derived scale:
+    //   • a small PENDANT BEAD hangs at the tip while loaded, tinted by the
+    //     chemical and growing slightly with the charge — unparented, fixed
+    //     world size, following the tip every frame (FollowFill).
+    //   • the dropper's own hover label reads the capacity — "Ferric Chloride
+    //     10% · 7/10 drops" (user: "have text capacity to the dropper").
+
+    private GameObject _fill;
+
+    private void RefreshFill()
+    {
+        // Label first — it exists whether or not the bead shows.
+        var label = GetComponent<ProximityLabel>();
+        if (label != null)
+            label.SetLabel(DropperMath.HoldingLabel(_loaded != null ? _loaded.chemicalName : "", _loadedMl), 1.4f);
+
+        TintBarrel();
+
+        if (!Loaded) { if (_fill != null) Destroy(_fill); _fill = null; return; }
+
+        if (_fill == null)
+        {
+            _fill = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            _fill.name = "DropperFill";
+            var col = _fill.GetComponent<Collider>();
+            if (col != null) Destroy(col);
+            var fr = _fill.GetComponent<Renderer>();
+            var shader = Shader.Find("Universal Render Pipeline/Lit");
+            fr.sharedMaterial = new Material(shader != null ? shader : Shader.Find("Standard"))
+                { name = "DropperFill_Runtime" };
+            fr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        }
+        var rend = _fill.GetComponent<Renderer>();
+        var c = _loaded.liquidColor; c.a = 1f;
+        if (rend.sharedMaterial.HasProperty("_BaseColor")) rend.sharedMaterial.SetColor("_BaseColor", c);
+        else rend.sharedMaterial.color = c;
+        FollowFill();
+    }
+
+    /// Tint the glass barrel itself with the loaded chemical (user 2026-07-17:
+    /// "add the barrel tint too"). Via MaterialPropertyBlock, NEVER the material:
+    /// all four droppers (and other glassware) share GlassMat, so touching
+    /// sharedMaterial would tint the whole set — and renderer.material would
+    /// leak an instance. The MPB blends the chemical colour over the glass base
+    /// while keeping its alpha (still reads as glass), and clears to the original
+    /// look when the dropper empties.
+    private void TintBarrel()
+    {
+        var r = GetComponent<Renderer>();
+        if (r == null || r.sharedMaterial == null) return;
+        var mpb = new MaterialPropertyBlock();
+        if (!Loaded) { r.SetPropertyBlock(mpb); return; }   // empty block = back to GlassMat
+
+        string prop = r.sharedMaterial.HasProperty("_BaseColor") ? "_BaseColor" : "_Color";
+        Color glass = r.sharedMaterial.HasProperty(prop) ? r.sharedMaterial.GetColor(prop) : Color.white;
+        Color c = Color.Lerp(glass, _loaded.liquidColor, 0.65f);
+        c.a = glass.a;                                      // keep the glass's transparency
+        mpb.SetColor(prop, c);
+        r.SetPropertyBlock(mpb);
+    }
+
+    /// Keep the bead pinned to the tip (fixed WORLD size — never parented, so the
+    /// tool's import scale can't distort it). Called every frame from Update.
+    private void FollowFill()
+    {
+        if (_fill == null) return;
+        float frac = Mathf.Clamp01(_loadedMl / DropperMath.Capacity);
+        _fill.transform.position = ProbeCenter();
+        _fill.transform.localScale = Vector3.one * Mathf.Lerp(0.007f, 0.013f, frac);
+    }
+
+    /// A tiny falling bead of the chemical, gone in a second — purely visual;
+    /// the real transfer went through AddLiquid above.
+    private static void SpawnDroplet(Vector3 tip, ChemicalData chem)
+    {
+        var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        go.name = "Droplet";
+        var col = go.GetComponent<Collider>();
+        if (col != null) Destroy(col);           // never knocks the tube over
+        go.transform.position = tip;
+        go.transform.localScale = Vector3.one * 0.011f;
+        var r = go.GetComponent<Renderer>();
+        var shader = Shader.Find("Universal Render Pipeline/Lit");
+        r.sharedMaterial = new Material(shader != null ? shader : Shader.Find("Standard"));
+        var c = chem != null ? chem.liquidColor : Color.cyan; c.a = 1f;
+        if (r.sharedMaterial.HasProperty("_BaseColor")) r.sharedMaterial.SetColor("_BaseColor", c);
+        else r.sharedMaterial.color = c;
+        r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        var rb = go.AddComponent<Rigidbody>();
+        rb.useGravity = true;
+        Destroy(go, 0.8f);
     }
 
     /// The dropper TIP — a hand-placed "DropperTip" child wins, else the far end
