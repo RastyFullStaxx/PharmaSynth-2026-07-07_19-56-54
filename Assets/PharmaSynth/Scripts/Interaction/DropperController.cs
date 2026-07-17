@@ -212,29 +212,75 @@ public class DropperController : MonoBehaviour
     }
 
     // ---- charge visuals -------------------------------------------------------
-    // 2026-07-17, take two. The first attempt sized a capsule from the skinned
-    // mesh's bounds and juggled it through SetParent — against the dropper's
-    // import scale that exploded into a solid blob LARGER than the tool itself.
-    // New design, no parenting and no bounds-derived scale:
-    //   • a small PENDANT BEAD hangs at the tip while loaded, tinted by the
-    //     chemical and growing slightly with the charge — unparented, fixed
-    //     world size, following the tip every frame (FollowFill).
-    //   • the dropper's own hover label reads the capacity — "Ferric Chloride
-    //     10% · 7/10 drops" (user: "have text capacity to the dropper").
+    // 2026-07-17, take three. Take one sized a capsule off the mesh bounds → a
+    // blob bigger than the tool. Take two hung a pendant bead at ProbeCenter() —
+    // but the dropper is a SKINNED mesh, and SkinnedMeshRenderer.bounds come from
+    // the bind pose, so the "tip" landed nowhere near the visible glass and the
+    // bead floated in mid-air ("it's a small blob of circle outside").
+    //
+    // The fix is the house pattern, not more bounds math: HAND-FITTED children,
+    // exactly like FlameAnchor on the match head and the ghost-tube slots.
+    //   • "DropperLiquid" — a capsule the user scales INSIDE the stem once, in
+    //     the editor. Runtime only toggles it, tints it, and shortens it toward
+    //     the bulb as the charge drains. Created by Add Placement Anchors.
+    //   • "DropperTip"   — dragged onto the real tip; ProbeCenter() already
+    //     prefers it, which also fixes the draw probe + droplet origin.
+    // The pendant bead survives ONLY as a fallback for a dropper that has no
+    // hand-fitted liquid yet.
 
-    private GameObject _fill;
+    private GameObject _fill;            // fallback bead (no DropperLiquid child)
+    private Transform _liquid;           // the hand-fitted interior capsule
+    private Vector3 _liquidScale;        // its authored full-charge scale
+    private bool _liquidCached;
+
+    private void CacheLiquid()
+    {
+        if (_liquidCached) return;
+        _liquid = transform.Find("DropperLiquid");
+        if (_liquid != null)
+        {
+            _liquidScale = _liquid.localScale;
+            if (Application.isPlaying && !Loaded) _liquid.gameObject.SetActive(false);
+        }
+        _liquidCached = true;
+    }
 
     private void RefreshFill()
     {
-        // Label first — it exists whether or not the bead shows.
+        // Label first — it exists whether or not any visual shows.
         var label = GetComponent<ProximityLabel>();
         if (label != null)
             label.SetLabel(DropperMath.HoldingLabel(_loaded != null ? _loaded.chemicalName : "", _loadedMl), 1.4f);
 
         TintBarrel();
+        CacheLiquid();
 
+        if (_liquid != null)
+        {
+            if (!Loaded) { _liquid.gameObject.SetActive(false); return; }
+            _liquid.gameObject.SetActive(true);
+            // Drain along the capsule's own length (its local Y): the authored
+            // scale IS full charge, and it recedes as squeezes go out. Never
+            // fully vanishes while loaded — a sliver of charge stays readable.
+            float frac = Mathf.Clamp01(_loadedMl / DropperMath.Capacity);
+            var s = _liquidScale;
+            s.y = _liquidScale.y * Mathf.Lerp(0.2f, 1f, frac);
+            _liquid.localScale = s;
+            var lr = _liquid.GetComponent<Renderer>();
+            if (lr != null)
+            {
+                var mpb = new MaterialPropertyBlock();
+                var lc = _loaded.liquidColor; lc.a = 1f;
+                mpb.SetColor(lr.sharedMaterial != null && lr.sharedMaterial.HasProperty("_BaseColor")
+                             ? "_BaseColor" : "_Color", lc);
+                lr.SetPropertyBlock(mpb);
+            }
+            if (_fill != null) { Destroy(_fill); _fill = null; }   // no double visual
+            return;
+        }
+
+        // ---- fallback bead (dropper not yet hand-fitted) ----
         if (!Loaded) { if (_fill != null) Destroy(_fill); _fill = null; return; }
-
         if (_fill == null)
         {
             _fill = GameObject.CreatePrimitive(PrimitiveType.Sphere);

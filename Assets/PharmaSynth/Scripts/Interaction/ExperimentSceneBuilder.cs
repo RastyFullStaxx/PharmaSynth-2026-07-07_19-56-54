@@ -709,9 +709,15 @@ public class ExperimentSceneBuilder : MonoBehaviour
         // every rebuild — blind AddComponent would stack a new copy of each of these
         // on it per module load.
         (inst.GetComponent<HazardousMixReactor>() ?? inst.AddComponent<HazardousMixReactor>()).Bind(lp, runner);
+        // A BENCH item is shared apparatus, so its floating label must stay NEUTRAL
+        // ("Test Tube 3"), never the layout's internal role name ("TollensTube_1") —
+        // that read as "this tube is only for Tollens" and would go stale the moment
+        // another module adopts the same tube (user 2026-07-17).
+        string labelName = !string.IsNullOrEmpty(v.benchItem)
+            ? BenchDisplayNameFor(v.benchItem) : v.displayName;
         var pl = inst.GetComponent<ProximityLabel>() ?? inst.AddComponent<ProximityLabel>();
-        pl.SetLabel(v.displayName, 1.6f);
-        (inst.GetComponent<VesselStatus>() ?? inst.AddComponent<VesselStatus>()).Bind(lp, pl, v.displayName, 1.6f);
+        pl.SetLabel(labelName, 1.6f);
+        (inst.GetComponent<VesselStatus>() ?? inst.AddComponent<VesselStatus>()).Bind(lp, pl, labelName, 1.6f);
         (inst.GetComponent<MixFeedback>() ?? inst.AddComponent<MixFeedback>()).Bind(lp);
     }
 
@@ -727,6 +733,24 @@ public class ExperimentSceneBuilder : MonoBehaviour
         if (prefabName.Contains("GraduatedCylinder_50")) return 50f;
         if (prefabName.Contains("ErlenmeyerFlask")) return 400f;
         return current;
+    }
+
+    /// Neutral player-facing label for a bench item, derived from its scene name —
+    /// "Kit_TestTube_3" → "Test Tube 3", "Eq_Beaker_100mL" → "Beaker 100 mL". Pure
+    /// so the suite pins it: shared apparatus must never carry a reagent-role name.
+    public static string BenchDisplayNameFor(string benchItem)
+    {
+        if (string.IsNullOrEmpty(benchItem)) return benchItem;
+        string n = benchItem;
+        foreach (var p in new[] { "Kit_", "Eq_", "Raw_" })
+            if (n.StartsWith(p)) { n = n.Substring(p.Length); break; }
+        return n.Replace("Hard-GlassTestTube", "Hard-Glass Test Tube")
+                .Replace("TestTube", "Test Tube")
+                .Replace("GraduatedCylinder", "Graduated Cylinder")
+                .Replace("mL", " mL")
+                .Replace('_', ' ')
+                .Replace("  ", " ")
+                .Trim();
     }
 
     /// A permanent bench object by name (Kit_TestTube_3, Eq_Beaker_100mL…). Searched

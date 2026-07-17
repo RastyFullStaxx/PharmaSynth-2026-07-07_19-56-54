@@ -45,13 +45,51 @@ public static class MethaneAnchors
                 powders++;
         }
 
+        // Droppers (2026-07-17): the dropper is a SKINNED mesh, and
+        // SkinnedMeshRenderer.bounds come from the bind pose — every bounds-derived
+        // "tip" landed in mid-air, so the charge bead floated OUTSIDE the tool.
+        // Hand-fitted children end that for good:
+        //   DropperTip    — drag onto the real tip (probe + droplet origin; the
+        //                   controller already prefers it over bounds).
+        //   DropperLiquid — a capsule; MOVE + SCALE it to sit INSIDE the stem.
+        //                   Its authored size = a FULL charge; runtime tints it
+        //                   with the loaded chemical and drains it per squeeze.
+        int tips = 0, liquids = 0;
+        foreach (var d in Object.FindObjectsByType<DropperController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (EnsureAnchor(d.gameObject, "DropperTip", TipGuess(d.gameObject, positiveEnd: false))) tips++;
+            if (d.transform.Find("DropperLiquid") == null)
+            {
+                var cap = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                cap.name = "DropperLiquid";
+                Object.DestroyImmediate(cap.GetComponent<Collider>());
+                cap.transform.SetParent(d.transform, false);
+                cap.transform.localPosition = Vector3.zero;
+                // World-size the first guess (~1 cm x 5 cm sliver) against the parent's
+                // import scale, so it starts visible instead of microscopic or huge.
+                var ls = d.transform.lossyScale;
+                cap.transform.localScale = new Vector3(
+                    0.005f / Mathf.Max(ls.x, 1e-4f),
+                    0.025f / Mathf.Max(ls.y, 1e-4f),
+                    0.005f / Mathf.Max(ls.z, 1e-4f));
+                var r = cap.GetComponent<Renderer>();
+                var shader = Shader.Find("Universal Render Pipeline/Lit");
+                r.sharedMaterial = new Material(shader != null ? shader : Shader.Find("Standard"))
+                    { name = "DropperLiquid_" + d.name, color = new Color(0.65f, 0.85f, 1f, 1f) };
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                liquids++;
+            }
+        }
+
         EditorSceneManager.MarkAllScenesDirty();
         EditorSceneManager.SaveOpenScenes();
         Debug.Log($"<color=#4CD07D>[Anchors] {flames} FlameAnchor + {scoops} ScoopAnchor + {bowls} BowlAnchor + "
-                  + $"{powders} PowderAnchor placed. Select each in the Hierarchy and drag the orange marker onto the "
-                  + "exact part (match head / burner mouth / scoop bowl / inside the mortar bowl). "
+                  + $"{powders} PowderAnchor + {tips} DropperTip + {liquids} DropperLiquid placed. "
+                  + "Select each in the Hierarchy and drag the marker onto the exact part (match head / burner "
+                  + "mouth / scoop bowl / inside the mortar bowl / dropper tip). "
                   + "The PowderAnchor on the hard-glass tube also takes its SCALE — set it to the powder size you "
-                  + "want. Then run Lock My Layout.</color>");
+                  + "want. Fit each pale-blue DropperLiquid capsule INSIDE its dropper's stem (move + scale; its "
+                  + "size = a full charge). Then run Lock My Layout.</color>");
     }
 
     /// Add a named anchor child at a guess position/scale — but leave any existing

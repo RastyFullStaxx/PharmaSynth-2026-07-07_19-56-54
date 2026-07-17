@@ -74,4 +74,7 @@ public class ExperimentTask
 
     [TextArea(1, 3), Tooltip("Shown by Pharmee / tablet when the player is stuck on this step.")]
     public string hint = "";
+
+    [Tooltip("WRAP-UP step: auto-completes (via Graph.Tick) once every other task is done. For closing beats like 'record your observations' that have no physical verb of their own — without this the checklist can never finish (SimulatedRun caught Exp 2 deadlocked here, 2026-07-17).")]
+    public bool autoCompleteWhenOthersDone = false;
 }

@@ -31,6 +31,10 @@ public class ZoneSimStation : MonoBehaviour
     private SimLoopAudio _loop;
     private StationVfx _vfx;
 
+    /// Which task this station's verb completes (read by the simulated-run harness).
+    public string TaskId => _taskId;
+    public StationSim Kind => _kind;
+
     /// Optional looping apparatus audio, driven by occupancy (set by the builder).
     public void SetLoopAudio(SimLoopAudio loop) => _loop = loop;
 

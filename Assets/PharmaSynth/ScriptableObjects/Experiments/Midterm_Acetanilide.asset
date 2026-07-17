@@ -18,6 +18,18 @@ MonoBehaviour:
   - Acetylate aniline to acetanilide in the fume hood
   - Isolate crystals by ice crystallisation and washing
   - Confirm the amide by hydrolysis and bromination tests
+  materialReagents:
+  - "Hydrochloric Acid 0.1N \u2014 50 ml"
+  - "Aniline \u2014 50 ml"
+  - "Glacial Acetic Acid \u2014 50 ml"
+  - "Acetyl Chloride \u2014 50 ml"
+  - "Bromine Water \u2014 50 ml"
+  materialApparatus:
+  - Beaker 100 mL
+  - Evaporating dish
+  - Funnel + filter paper
+  - "Test tubes \xD7 2"
+  - Burner (heat bath)
   tasks: []
   graphTasks:
   - taskId: prep-hcl
@@ -121,6 +133,7 @@ MonoBehaviour:
     rubricCategory: 5
     required: 1
     hint: Enter crystal mass, % yield and test results.
+  assessmentMode: 0
   masteryThreshold: 0.9
   bkt:
     pL0: 0.25

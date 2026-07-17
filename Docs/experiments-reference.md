@@ -188,6 +188,8 @@ Both were **game-authored** (Aspirin is named only in the manuscript's intro pro
 | Quiz → grade | `PostLabController` | **NEVER score-gated** (client rule). Back/Next review nav, picked answer highlighted; score shown plainly on the grade screen (`ExperimentResult.quizScore01`); Retry re-runs the experiment, **Complete Experiment** exits. |
 | Full reset | `DropRespawn.ResetAllHome()` | Re-homes every item + restores contents, disassembles rigs, **extinguishes all burners/matches**, destroys used consumables so dispensers restock. |
 | Methane-only props | `MethaneStageVisibility` | Gates ONLY the 4 methane staged props. **All general apparatus/reagents stay permanent** — see the ⛔ rule in CLAUDE.md. |
+| **Play the module WITHOUT a headset** | `Tools ▸ PharmaSynth ▸ Simulate Run ▸ <module>` (`SimulatedRun.Run`) | Drives the REAL wiring end-to-end in edit mode — builder, bindings (VERB-CONTRACT action counts), rack groups, station sims (lights burners, vacates zones) — then audits supplies (every consumed chemical needs a sufficient bench source) and fill visibility. Transcript → `Logs/simrun-<module>.txt`. **Run this BEFORE every headset pass**; the suite pins Exp 2's run CLEAN (`simrun:`). It cannot feel grabs, gestures, or visual placement — those stay on the headset checklist. On its FIRST run it caught: Exp 2's final task had no completion mechanism (deadlock), and 4 phantom FumeHoodViolations on a perfect run. |
+| Closing beat with no physical verb | `ExperimentTask.autoCompleteWhenOthersDone` (wrap-up flag) | "Record your observations"-type steps auto-complete via `Graph.Tick()` once every other task is done. Exp 2's `record-observations` uses it. |
 
 ### ⚠ Hard-won gotchas — CHECK THESE FIRST on the next module
 - **`LiquidPhysics` on an opaque vessel makes the vessel VANISH in play.** `Start()` adopts the host's own renderer when `mainRenderer` is null, then disables it while empty (this hid the mortar for days). `ShouldAdoptHostRenderer` now only adopts a real `_Fill` surface — never point `mainRenderer` at a vessel's own mesh.
@@ -431,6 +433,16 @@ lesson. A rule there would invent chemistry the manuscript denies. Suite-pinned 
 `expectedObservation` and fire `ReactionOutcome.Odor`.
 
 ### Watch-panel instructions — the 13 hints (rewritten 2026-07-16)
+
+**MATERIALS header (2026-07-17, ALL 9 modules):** the holo board opens with a gather-first guide —
+reagents **with totals derived from the layout bindings** (`Tools ▸ PharmaSynth ▸ Generate Materials
+Guides`; liquids "N ml" / solids "N g" in the game's own 1-squeeze-=-1-ml system, so it can never
+drift from what the tasks consume) and **apparatus authored from the PROCEDURE** (never the
+manuscript's defective lists). Stored as `materialReagents`/`materialApparatus` on the module,
+rendered by `ChecklistPager.BuildMaterialsHeader` above the checklist. NOT a checklist item — it
+completes nothing, stays fully visible, and the board **keeps its scroll position between opens**
+(the W5.12 snap-to-top is gone; re-run the generator after any layout change).
+
 
 **The contract:** every step prints the manuscript's **REAL quantity** (so the student learns the true
 recipe), then the **achievable action** underneath.

@@ -43,6 +43,8 @@ public class ExperimentTaskStation : MonoBehaviour
     private XRBaseInteractable _hookedInteractable;
 
     public string TaskId => taskId;
+    /// Read by the simulated-run harness to verify the required prop exists on the bench.
+    public string RequiredItemId => requiredItemId;
     public void SetRunner(ExperimentRunner r) => runner = r;
     public void SetTaskId(string id) => taskId = id;
     public void SetRequiredItemId(string id) => requiredItemId = id;

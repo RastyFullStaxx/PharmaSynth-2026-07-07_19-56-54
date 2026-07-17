@@ -89,8 +89,14 @@ public static class RawReagentCatalog
               "6N sulfuric acid working solution for acidifying test mixtures.", "Exp 2"),
             R("Hydrochloric Acid 6N", PhysicalState.Liquid, C(0.95f,0.95f,0.88f), 0.5f, HazardType.Corrosive, false, LabwareKind.ReagentBottle, GroupAcids,
               "6N hydrochloric acid — strong mineral acid for hydrolysis and acidification.", "Exp 2, 4"),
-            R("Concentrated Hydrochloric Acid", PhysicalState.Liquid, C(0.96f,0.96f,0.9f), 0.1f, HazardType.Corrosive, true, LabwareKind.ReagentBottle, GroupAcids,
-              "Fuming concentrated HCl. Open only in the fume hood; the vapour alone corrodes.", "Exp 2, 5"),
+            // ⭐ FUME-HOOD RULE (manuscript audit 2026-07-17): the manuscript demands the
+            // hood in exactly ONE place — Exp 5 §A a-c, aniline + acetyl chloride into the
+            // flask "in the fume hood". ONLY those two carry hood=true. Every other flag
+            // was over-authored realism that made CORRECT bench play (Exp 2's phenol /
+            // acetaldehyde / conc-HCl pours, Exp 5's own §B conc-HCl + bromine-water
+            // tests) log FumeHoodViolation mistakes — SimulatedRun caught 4 per run.
+            R("Concentrated Hydrochloric Acid", PhysicalState.Liquid, C(0.96f,0.96f,0.9f), 0.1f, HazardType.Corrosive, false, LabwareKind.ReagentBottle, GroupAcids,
+              "Fuming concentrated HCl — corrosive vapour; keep it capped and at arm's length.", "Exp 2, 5"),
             R("Hydrochloric Acid 0.1N", PhysicalState.Liquid, C(0.97f,0.97f,0.94f), 1.3f, HazardType.None, false, LabwareKind.ReagentBottle, GroupAcids,
               "Dilute 0.1N HCl for gentle acidification.", "Exp 5"),
             R("Diluted Hydrochloric Acid", PhysicalState.Liquid, C(0.97f,0.97f,0.94f), 1f, HazardType.None, false, LabwareKind.ReagentBottle, GroupAcids,
@@ -103,8 +109,8 @@ public static class RawReagentCatalog
               "10% caustic potash, the alkali for the acetone tests.", "Exp 6"),
             R("Sodium Bicarbonate 10%", PhysicalState.Liquid, C(0.95f,0.95f,0.95f), 8.3f, HazardType.None, false, LabwareKind.ReagentBottle, GroupAcids,
               "Mild 10% bicarbonate solution — fizzes with acids, releasing CO2.", "Exp 2"),
-            R("Ammonia Solution", PhysicalState.Liquid, C(0.93f,0.96f,0.98f), 11.6f, HazardType.Toxic, true, LabwareKind.ReagentBottle, GroupAcids,
-              "Concentrated ammonia — sharp choking vapour; handle it in the fume hood.", "Exp 8"),
+            R("Ammonia Solution", PhysicalState.Liquid, C(0.93f,0.96f,0.98f), 11.6f, HazardType.Toxic, false, LabwareKind.ReagentBottle, GroupAcids,
+              "Concentrated ammonia — sharp choking vapour; keep the bottle closed when not pouring.", "Exp 8"),
             R("Ammonium Phosphate", PhysicalState.Powder, C(0.9f,0.9f,0.85f), 8f, HazardType.None, false, LabwareKind.PowderJar, GroupAcids,
               "A pinch feeds the yeast — the nitrogen source for fermentation.", "Exp 3"),
             R("Limewater", PhysicalState.Liquid, C(0.94f,0.95f,0.93f), 12.4f, HazardType.None, false, LabwareKind.ReagentBottle, GroupAcids,
@@ -134,16 +140,20 @@ public static class RawReagentCatalog
               "0.1% deep-purple oxidizer; decolourising it is positive evidence of oxidation. Keep away from flammables.", "Exp 2, 4"),
             R("Sodium Bisulfite", PhysicalState.Liquid, C(0.94f,0.94f,0.9f), 4.5f, HazardType.None, false, LabwareKind.ReagentBottle, GroupTests,
               "Saturated bisulfite forms a crystalline adduct with acetone — the bisulfite test.", "Exp 6"),
-            R("Purified Water", PhysicalState.Liquid, C(0.85f,0.92f,0.98f, 0.6f), 7f, HazardType.None, false, LabwareKind.ReagentBottle, GroupAcids,
-              "Distilled water — the universal solvent for dilutions and washes.", "all experiments"),
+            // Named to MATCH the procedures verbatim ("add 10 ml of distilled water" —
+            // it was "Purified Water", so the hover on this bottle AND the wash bottle
+            // both read "distilled water" and the player couldn't tell which one a
+            // step meant; user 2026-07-17). The wash bottle is rinse-only.
+            R("Distilled Water", PhysicalState.Liquid, C(0.85f,0.92f,0.98f, 0.6f), 7f, HazardType.None, false, LabwareKind.ReagentBottle, GroupAcids,
+              "The universal solvent. Every 'add distilled water' step in the procedures pours from THIS bottle — the wash bottle is only for rinsing glassware.", "all experiments"),
 
             // ---- Organics (samples, precursors) --------------------------------
             R("Ethanol", PhysicalState.Liquid, C(0.9f,0.93f,0.96f, 0.6f), 7f, HazardType.Flammable, false, LabwareKind.ReagentBottle, GroupOrganics,
               "Ethyl alcohol — flammable; keep clear of open flames and oxidizers.", "Exp 2, 3, 6"),
             R("Methanol", PhysicalState.Liquid, C(0.9f,0.93f,0.96f, 0.6f), 7f, HazardType.Flammable, false, LabwareKind.ReagentBottle, GroupOrganics,
               "Methyl alcohol — toxic cousin of ethanol; never taste, burns with an almost invisible flame.", "Exp 2, 4"),
-            R("Acetaldehyde", PhysicalState.Liquid, C(0.92f,0.94f,0.9f, 0.6f), 7f, HazardType.Volatile, true, LabwareKind.AmberBottle, GroupOrganics,
-              "Volatile aldehyde sample — boils near room temperature; open in the hood.", "Exp 2"),
+            R("Acetaldehyde", PhysicalState.Liquid, C(0.92f,0.94f,0.9f, 0.6f), 7f, HazardType.Volatile, false, LabwareKind.AmberBottle, GroupOrganics,
+              "Volatile aldehyde sample — boils near room temperature; recap it quickly.", "Exp 2"),
             R("n-Butyl Alcohol", PhysicalState.Liquid, C(0.92f,0.92f,0.9f, 0.6f), 7f, HazardType.Flammable, false, LabwareKind.ReagentBottle, GroupOrganics,
               "A primary alcohol sample for the classification tests.", "Exp 2"),
             R("sec-Butyl Alcohol", PhysicalState.Liquid, C(0.92f,0.92f,0.9f, 0.6f), 7f, HazardType.Flammable, false, LabwareKind.ReagentBottle, GroupOrganics,
@@ -156,8 +166,8 @@ public static class RawReagentCatalog
               "Aromatic alcohol sample with a faint almond note.", "Exp 2"),
             R("Glycerol", PhysicalState.Liquid, C(0.94f,0.94f,0.9f, 0.7f), 7f, HazardType.None, false, LabwareKind.ReagentBottle, GroupOrganics,
               "Thick, syrupy triol — pours slowly; the viscosity is the point.", "Exp 2"),
-            R("Phenol", PhysicalState.Liquid, C(0.95f,0.9f,0.85f, 0.7f), 5.5f, HazardType.Toxic, true, LabwareKind.AmberBottle, GroupOrganics,
-              "Carbolic acid — burns skin on contact and darkens in light. Hood and gloves.", "Exp 2"),
+            R("Phenol", PhysicalState.Liquid, C(0.95f,0.9f,0.85f, 0.7f), 5.5f, HazardType.Toxic, false, LabwareKind.AmberBottle, GroupOrganics,
+              "Carbolic acid — burns skin on contact and darkens in light. Gloves on.", "Exp 2"),
             R("Diluted Acetic Acid", PhysicalState.Liquid, C(0.96f,0.96f,0.92f, 0.6f), 2.9f, HazardType.None, false, LabwareKind.ReagentBottle, GroupOrganics,
               "Vinegar-strength acetic acid for gentle acidification.", "Exp 2, 3"),
             R("Brown Sugar", PhysicalState.Powder, C(0.55f,0.35f,0.18f), 7f, HazardType.None, false, LabwareKind.PowderJar, GroupOrganics,
@@ -175,12 +185,12 @@ public static class RawReagentCatalog
               "Reference sample of the white aromatic acid you synthesise in the midterm.", "Exp 4"),
             R("Aniline", PhysicalState.Liquid, C(0.6f,0.5f,0.35f, 0.8f), 8.8f, HazardType.Toxic, true, LabwareKind.AmberBottle, GroupOrganics,
               "Oily aromatic amine that darkens in light — toxic through skin; fume hood MANDATORY.", "Exp 5"),
-            R("Benzaldehyde", PhysicalState.Liquid, C(0.9f,0.88f,0.8f, 0.7f), 7f, HazardType.Volatile, true, LabwareKind.AmberBottle, GroupOrganics,
+            R("Benzaldehyde", PhysicalState.Liquid, C(0.9f,0.88f,0.8f, 0.7f), 7f, HazardType.Volatile, false, LabwareKind.AmberBottle, GroupOrganics,
               "Smells of almonds; air slowly oxidises it to benzoic acid — which is exactly the midterm synthesis.", "Exp 4"),
             R("Acetyl Chloride", PhysicalState.Liquid, C(0.94f,0.92f,0.85f, 0.7f), 1f, HazardType.Corrosive, true, LabwareKind.AmberBottle, GroupOrganics,
               "The acylating agent — fumes violently with water. Hood, gloves, and slow additions.", "Exp 5"),
-            R("Benzoyl Chloride", PhysicalState.Liquid, C(0.93f,0.91f,0.84f, 0.7f), 1f, HazardType.Corrosive, true, LabwareKind.AmberBottle, GroupOrganics,
-              "Lachrymator acyl chloride — benzamide's precursor. Fume hood, always.", "Exp 8"),
+            R("Benzoyl Chloride", PhysicalState.Liquid, C(0.93f,0.91f,0.84f, 0.7f), 1f, HazardType.Corrosive, false, LabwareKind.AmberBottle, GroupOrganics,
+              "Lachrymator acyl chloride — benzamide's precursor. Eyes water; pour and recap fast.", "Exp 8"),
             R("Glacial Acetic Acid", PhysicalState.Liquid, C(0.95f,0.95f,0.9f, 0.6f), 2.4f, HazardType.Corrosive, false, LabwareKind.ReagentBottle, GroupOrganics,
               "Water-free acetic acid — freezes at 17 °C, hence 'glacial'. Sharp vinegar bite.", "Exp 5"),
             R("Acetone", PhysicalState.Liquid, C(0.92f,0.94f,0.95f, 0.55f), 7f, HazardType.Flammable, false, LabwareKind.ReagentBottle, GroupOrganics,
@@ -193,7 +203,7 @@ public static class RawReagentCatalog
               "Ammoniacal silver nitrate — aldehydes plate a mirror of silver onto the glass. Prepared fresh.", "Exp 2, 6"),
             R("Schiff's Reagent", PhysicalState.Liquid, C(0.9f,0.85f,0.88f, 0.7f), 7f, HazardType.None, false, LabwareKind.DropperBottle, GroupTests,
               "Colourless until an aldehyde restores its magenta — ketones like acetone leave it unchanged.", "Exp 6"),
-            R("Bromine Water", PhysicalState.Liquid, C(0.8f,0.45f,0.15f, 0.8f), 4f, HazardType.Toxic, true, LabwareKind.AmberBottle, GroupTests,
+            R("Bromine Water", PhysicalState.Liquid, C(0.8f,0.45f,0.15f, 0.8f), 4f, HazardType.Toxic, false, LabwareKind.AmberBottle, GroupTests,
               "Orange bromine solution — decolourised by unsaturation, and it brominates acetanilide.", "Exp 5"),
             R("Silver Nitrate", PhysicalState.Liquid, C(0.9f,0.9f,0.9f, 0.7f), 6f, HazardType.None, false, LabwareKind.AmberBottle, GroupTests,
               "Light-sensitive AgNO3 — stains skin black; stored in amber glass for a reason.", "Exp 2, 6"),

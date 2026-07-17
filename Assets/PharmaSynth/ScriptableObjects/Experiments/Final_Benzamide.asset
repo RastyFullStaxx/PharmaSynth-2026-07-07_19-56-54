@@ -18,6 +18,18 @@ MonoBehaviour:
   - Prepare benzamide from benzoyl chloride and ammonia in an ice bath
   - Isolate and oven-dry the crystals
   - Confirm the amide by alkaline, acid and nitrous-acid tests
+  materialReagents:
+  - "Ammonia Solution \u2014 50 ml"
+  - "Benzoyl Chloride \u2014 50 ml"
+  - "Diluted Hydrochloric Acid \u2014 50 ml"
+  - "Sodium Hydroxide \u2014 50 ml"
+  - "Sodium Nitrite \u2014 50 g"
+  materialApparatus:
+  - Ice bucket
+  - Glass (stirring) rod
+  - "Test tubes \xD7 3"
+  - Beaker 100 mL
+  - Burner
   tasks: []
   graphTasks:
   - taskId: measure-ammonia
@@ -112,6 +124,7 @@ MonoBehaviour:
     rubricCategory: 5
     required: 1
     hint: Enter crystal mass, % yield and test results.
+  assessmentMode: 0
   masteryThreshold: 0.9
   bkt:
     pL0: 0.25

@@ -39,7 +39,7 @@ MonoBehaviour:
       taskId: prep-enol-tubes
       requiredMl: 1
       completesTask: 0
-    - reagentChemical: Purified Water
+    - reagentChemical: Distilled Water
       taskId: prep-enol-tubes
       requiredMl: 10
       completesTask: 0
@@ -59,7 +59,7 @@ MonoBehaviour:
       taskId: prep-enol-tubes
       requiredMl: 1
       completesTask: 0
-    - reagentChemical: Purified Water
+    - reagentChemical: Distilled Water
       taskId: prep-enol-tubes
       requiredMl: 10
       completesTask: 0
@@ -79,7 +79,7 @@ MonoBehaviour:
       taskId: prep-enol-tubes
       requiredMl: 1
       completesTask: 0
-    - reagentChemical: Purified Water
+    - reagentChemical: Distilled Water
       taskId: prep-enol-tubes
       requiredMl: 10
       completesTask: 0
@@ -99,7 +99,7 @@ MonoBehaviour:
       taskId: prep-enol-tubes
       requiredMl: 1
       completesTask: 0
-    - reagentChemical: Purified Water
+    - reagentChemical: Distilled Water
       taskId: prep-enol-tubes
       requiredMl: 10
       completesTask: 0
@@ -119,7 +119,7 @@ MonoBehaviour:
       taskId: prep-enol-tubes
       requiredMl: 1
       completesTask: 0
-    - reagentChemical: Purified Water
+    - reagentChemical: Distilled Water
       taskId: prep-enol-tubes
       requiredMl: 10
       completesTask: 0
@@ -363,7 +363,7 @@ MonoBehaviour:
       taskId: prep-hydrolysis
       requiredMl: 0.5
       completesTask: 0
-    - reagentChemical: Purified Water
+    - reagentChemical: Distilled Water
       taskId: prep-hydrolysis
       requiredMl: 10
       completesTask: 0

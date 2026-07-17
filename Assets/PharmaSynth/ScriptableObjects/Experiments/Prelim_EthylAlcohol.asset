@@ -19,6 +19,22 @@ MonoBehaviour:
   - Confirm CO2 evolution with limewater
   - "Distil and collect the 70\u201380\xB0C fraction"
   - Confirm ethanol by combustion, iodoform and ester tests
+  materialReagents:
+  - "Brown Sugar \u2014 50 g"
+  - "Yeast \u2014 50 g"
+  - "Potassium Iodide 10% \u2014 50 ml"
+  - "Sodium Hypochlorite \u2014 50 ml"
+  - "Diluted Acetic Acid \u2014 50 ml"
+  materialApparatus:
+  - Fermentation flask
+  - Delivery (bent) tube + stopper
+  - Cotton swab
+  - "Test tubes \xD7 3"
+  - Distilling flask
+  - Burner
+  - Watch glass
+  - Graduated cylinder 50 mL
+  - Litmus paper
   tasks: []
   graphTasks:
   - taskId: prepare-must
@@ -92,6 +108,7 @@ MonoBehaviour:
     rubricCategory: 5
     required: 1
     hint: Enter the distillate volume and test results.
+  assessmentMode: 0
   masteryThreshold: 0.9
   bkt:
     pL0: 0.25

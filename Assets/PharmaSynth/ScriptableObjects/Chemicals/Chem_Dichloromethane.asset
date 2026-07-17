@@ -23,5 +23,5 @@ MonoBehaviour:
   pH: 7
   evolvesGas: 0
   hazard: 4
-  requiresFumeHood: 1
+  requiresFumeHood: 0
   isDangerous: 1

@@ -110,10 +110,13 @@ public class WristWatchController : MonoBehaviour
         if (show && !_lastShow)
         {
             PlaceHolo();
-            // Fresh summon reads from the top of the checklist (W5.12 scroll).
+            // The board keeps its SCROLL POSITION between opens (user 2026-07-17:
+            // "have it stay on where it is scrolled everytime we reopen it") —
+            // re-finding your place after every glance was the real cost of the old
+            // W5.12 snap-to-top. A fresh experiment still starts at the top because
+            // the text itself is rebuilt.
             if (_scroller == null && holoPanel != null)
                 _scroller = holoPanel.GetComponentInChildren<HoloScroller>(true);
-            if (_scroller != null) _scroller.SnapToTop();
         }
         _lastShow = show;
         if (holoPanel != null && holoPanel.activeSelf != show) holoPanel.SetActive(show);
@@ -122,7 +125,8 @@ public class WristWatchController : MonoBehaviour
             if (holoTitle != null) holoTitle.text = runner.Module != null ? runner.Module.moduleTitle : "Procedures";
             if (holoSummary != null) holoSummary.text = ChecklistPager.BuildHeader(runner);
             if (holoBody != null && runner.Graph != null)
-                holoBody.text = ChecklistPager.BuildFocusedText(runner.Graph);
+                holoBody.text = ChecklistPager.BuildMaterialsHeader(runner.Module)
+                              + ChecklistPager.BuildFocusedText(runner.Graph);
             if (holoReaction != null) holoReaction.text = GlyphSafe.Sanitize(balancedReaction);
         }
     }

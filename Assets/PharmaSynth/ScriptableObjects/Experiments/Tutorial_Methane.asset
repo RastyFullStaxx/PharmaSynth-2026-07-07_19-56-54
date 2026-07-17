@@ -19,6 +19,16 @@ MonoBehaviour:
   - Perform the decarboxylation of sodium acetate with soda lime
   - Collect a gas over water and confirm it by combustion
   - Follow lab safety and PPE throughout
+  materialReagents:
+  - "Sodium Acetate \u2014 4 g"
+  - "Soda Lime \u2014 4 g"
+  materialApparatus:
+  - Scoopula
+  - Mortar & pestle
+  - Hard-glass tube
+  - Burner
+  - Collection tube
+  - Matchsticks + striker box
   tasks: []
   graphTasks:
   - taskId: prepare-mixture
@@ -29,9 +39,9 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 0
     required: 1
-    hint: 'Scoop the sodium acetate + soda lime into the mortar, then GRAB THE PESTLE
+    hint: "Scoop the sodium acetate + soda lime into the mortar, then GRAB THE PESTLE
       and grind in the bowl until it is a fine powder. (You do not move the powder
-      into the tube — grinding is all this step needs.)'
+      into the tube \u2014 grinding is all this step needs.)"
   - taskId: setup-apparatus
     label: Load the mixture into the hard-glass tube
     phase: 1
@@ -41,8 +51,9 @@ MonoBehaviour:
     skill: 3
     rubricCategory: 0
     required: 1
-    hint: 'Scoop the ground mixture from the mortar into the "Hard-glass tube" — this
-      is the tube you will heat. (Ignore the bent delivery tubes; they are not used.)'
+    hint: "Scoop the ground mixture from the mortar into the \"Hard-glass tube\"
+      \u2014 this is the tube you will heat. (Ignore the bent delivery tubes; they
+      are not used.)"
   - taskId: heat-mixture
     label: Heat the hard-glass tube
     phase: 1
@@ -52,9 +63,9 @@ MonoBehaviour:
     skill: 1
     rubricCategory: 0
     required: 1
-    hint: 'Grab a match and strike it on the matchbox, touch it to the burner to light
-      it, then hold the lit burner under the "Hard-glass tube". Heating it makes the
-      methane gas.'
+    hint: Grab a match and strike it on the matchbox, touch it to the burner to light
+      it, then hold the lit burner under the "Hard-glass tube". Heating it makes
+      the methane gas.
   - taskId: collect-gas
     label: Collect the gas in the collection tube
     phase: 1
@@ -64,8 +75,8 @@ MonoBehaviour:
     skill: 3
     rubricCategory: 0
     required: 1
-    hint: Keep the "Gas collection tube" held against the heated "Hard-glass tube" —
-      methane collects until the tube is full (a few seconds).
+    hint: "Keep the \"Gas collection tube\" held against the heated \"Hard-glass
+      tube\" \u2014 methane collects until the tube is full (a few seconds)."
   - taskId: test-gas
     label: Test the gas with a lit match
     phase: 2
@@ -75,8 +86,9 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: Light a match and bring it to the mouth of the full "Gas collection tube" —
-      methane pops and burns with a pale blue flame. Test complete!
+    hint: "Light a match and bring it to the mouth of the full \"Gas collection tube\"
+      \u2014 methane pops and burns with a pale blue flame. Test complete!"
+  assessmentMode: 0
   masteryThreshold: 0.9
   bkt:
     pL0: 0.25

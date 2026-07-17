@@ -18,6 +18,17 @@ MonoBehaviour:
   - Prepare acetone by dry distillation of acetate salts
   - "Collect the 56 \xB0C fraction"
   - Confirm the ketone by Tollen's, Schiff's, iodoform and bisulfite tests
+  materialReagents:
+  - "Silver Nitrate \u2014 50 ml"
+  - "Sodium Hypochlorite \u2014 50 ml"
+  - "Schiff's Reagent \u2014 50 ml"
+  - "Potassium Iodide 10% \u2014 50 ml"
+  materialApparatus:
+  - Weighing balance
+  - Hard-glass tube (dry distillation)
+  - Delivery tube
+  - "Test tubes \xD7 4"
+  - Burner
   tasks: []
   graphTasks:
   - taskId: prep-koh
@@ -122,6 +133,7 @@ MonoBehaviour:
     rubricCategory: 5
     required: 1
     hint: Enter distillate mass, % yield and test results.
+  assessmentMode: 0
   masteryThreshold: 0.9
   bkt:
     pL0: 0.25

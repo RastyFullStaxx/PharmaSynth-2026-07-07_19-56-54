@@ -23,7 +23,7 @@ MonoBehaviour:
   pH: 4
   evolvesGas: 0
   hazard: 1
-  requiresFumeHood: 1
+  requiresFumeHood: 0
   isDangerous: 1
   isOxidizer: 1
   isConcentratedAcid: 0

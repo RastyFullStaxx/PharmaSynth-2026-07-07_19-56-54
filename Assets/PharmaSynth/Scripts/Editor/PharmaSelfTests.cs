@@ -1907,6 +1907,15 @@ public static class PharmaSelfTests
                 Near(ExperimentSceneBuilder.BenchMaxVolumeFor("TestTube", 1000f), 25f)
                 && Near(ExperimentSceneBuilder.BenchMaxVolumeFor("Beaker_100mL", 1000f), 100f)
                 && Near(ExperimentSceneBuilder.BenchMaxVolumeFor("SomethingElse", 321f), 321f));
+
+            // Shared apparatus keeps a NEUTRAL label — a bench-bound vessel's floating
+            // tag must come from the bench item ("Test Tube 3"), never the layout's
+            // internal role name ("TollensTube_1" read as reagent-dedicated glassware
+            // and would go stale under the next module — user 2026-07-17).
+            A("bench: bound vessels are labelled by the bench item, not the layout role",
+                ExperimentSceneBuilder.BenchDisplayNameFor("Kit_TestTube_3") == "Test Tube 3"
+                && ExperimentSceneBuilder.BenchDisplayNameFor("Kit_Hard-GlassTestTube_2") == "Hard-Glass Test Tube 2"
+                && ExperimentSceneBuilder.BenchDisplayNameFor("Eq_Beaker_100mL") == "Beaker 100 mL");
         }
         // The SCENE wiring — the dropper bug's exact shape was "verb authored, never
         // ATTACHED" (DropperController existed in code, 0 in the scene, and the player
@@ -1922,6 +1931,19 @@ public static class PharmaSelfTests
             }
             A("wired: every Eq_Dropper has the DropperController verb (found " + droppers + ")",
                 droppers > 0 && wired == droppers);
+            // The charge visuals are HAND-FITTED children (skinned-mesh bounds lie —
+            // a bounds-derived tip floated the bead in mid-air, 2026-07-17): a
+            // DropperTip anchor and a DropperLiquid capsule inside the stem.
+            int tips2 = 0, liquids2 = 0, allDrop = 0;
+            foreach (var t in UnityEngine.Object.FindObjectsByType<DropperController>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                allDrop++;
+                if (t.transform.Find("DropperTip") != null) tips2++;
+                if (t.transform.Find("DropperLiquid") != null) liquids2++;
+            }
+            A("wired: every dropper has a hand-fit DropperTip", allDrop > 0 && tips2 == allDrop);
+            A("wired: every dropper has a hand-fit DropperLiquid", allDrop > 0 && liquids2 == allDrop);
 
             var spat = GameObject.Find("Eq_PorcelainSpatula");
             A("wired: the porcelain spatula dips fine (0.1 g)",
@@ -1939,6 +1961,105 @@ public static class PharmaSelfTests
             }
             A("wired: every workspace holder snaps tubes (found " + holders + ")",
                 holders > 0 && snapping == holders);
+        }
+
+        // MATERIALS guide (user 2026-07-17): every module's watch panel opens with the
+        // full gather-first list — reagents WITH totals derived from the layout
+        // bindings, apparatus authored from the procedures. Not a checklist item;
+        // always visible; the board keeps its scroll position between opens.
+        {
+            var lib5 = AssetDatabase.LoadAssetAtPath<ExperimentLibrary>(
+                "Assets/PharmaSynth/ScriptableObjects/ExperimentLibrary.asset");
+            bool allHave = lib5 != null && lib5.Count > 0;
+            if (lib5 != null)
+                foreach (var mod in lib5.modules)
+                    if (mod == null || mod.materialReagents.Count == 0 || mod.materialApparatus.Count == 0)
+                    { allHave = false; break; }
+            A("materials: every module has a gather-first guide", allHave);
+
+            var m5b = lib5 != null ? lib5.Get("prelim-chemical-compounding") : null;
+            A("materials: Exp 2's reagents carry totals",
+                m5b != null && m5b.materialReagents.Exists(r => r.Contains("Ferric Chloride 10%") && r.Contains("—")));
+            A("materials: Exp 2 lists its 19 tubes and 4 droppers",
+                m5b != null && m5b.materialApparatus.Exists(a => a.Contains("19"))
+                && m5b.materialApparatus.Exists(a => a.Contains("Dropper")));
+            string hdr = ChecklistPager.BuildMaterialsHeader(m5b);
+            A("materials: header renders both sections",
+                hdr.Contains("MATERIALS") && hdr.Contains("Reagents:") && hdr.Contains("Apparatus:"));
+            // One bullet ROW per item (user 2026-07-17) — the dot-joined line wrapped
+            // mid-name; every listed material now starts its own "• " line.
+            A("materials: every item is its own bullet row",
+                m5b == null || hdr.Split('•').Length - 1
+                    >= m5b.materialReagents.Count + m5b.materialApparatus.Count);
+            A("materials: empty guide renders nothing",
+                ChecklistPager.BuildMaterialsHeader(null) == "");
+            // The procedures say "add distilled water" — the reagent bottle must carry
+            // that exact name, or its hover and the wash bottle's both read "distilled
+            // water" and the player can't tell which the step means (user 2026-07-17).
+            A("water: the procedure's 'distilled water' IS the reagent bottle's name",
+                m5b != null && m5b.materialReagents.Exists(r => r.StartsWith("Distilled Water"))
+                && !m5b.materialReagents.Exists(r => r.Contains("Purified")));
+        }
+
+        // FUME-HOOD RULE (manuscript audit 2026-07-17): the manuscript demands the
+        // hood in exactly ONE place — Exp 5 §A, aniline + acetyl chloride. Any other
+        // chem carrying the flag makes CORRECT bench play log FumeHoodViolations
+        // (SimulatedRun found 4 per perfect Exp 2 run before the audit).
+        {
+            var flagged = new List<string>();
+            foreach (var g in AssetDatabase.FindAssets("t:ChemicalData",
+                         new[] { "Assets/PharmaSynth/ScriptableObjects/Chemicals" }))
+            {
+                var c = AssetDatabase.LoadAssetAtPath<ChemicalData>(AssetDatabase.GUIDToAssetPath(g));
+                if (c != null && c.requiresFumeHood) flagged.Add(c.chemicalName);
+            }
+            flagged.Sort();
+            A("fumehood: ONLY the manuscript's two chems require the hood"
+              + (flagged.Count == 2 ? "" : "  [" + string.Join(", ", flagged) + "]"),
+                flagged.Count == 2 && flagged[0] == "Acetyl Chloride" && flagged[1] == "Aniline");
+        }
+
+        // WRAP-UP tasks (2026-07-17): a closing beat with no physical verb
+        // ("record your observations") auto-completes once every other task is
+        // done — without this the checklist could never finish (SimulatedRun
+        // caught Exp 2 deadlocked on its final step).
+        {
+            var wrapTasks = new List<ExperimentTask>
+            {
+                new ExperimentTask { taskId = "a", label = "A" },
+                new ExperimentTask { taskId = "b", label = "B" },
+                new ExperimentTask { taskId = "w", label = "Wrap", autoCompleteWhenOthersDone = true },
+            };
+            var wg = new TaskGraph(wrapTasks);
+            wg.Tick();
+            A("wrapup: not before the real work is done", !wg.IsComplete("w"));
+            wg.TryComplete("a"); wg.Tick();
+            A("wrapup: one remaining real task still holds it", !wg.IsComplete("w"));
+            wg.TryComplete("b"); wg.Tick();
+            A("wrapup: completes itself once every other task is done", wg.IsComplete("w"));
+
+            var lib6 = AssetDatabase.LoadAssetAtPath<ExperimentLibrary>(
+                "Assets/PharmaSynth/ScriptableObjects/ExperimentLibrary.asset");
+            var m6 = lib6 != null ? lib6.Get("prelim-chemical-compounding") : null;
+            bool authored = false;
+            if (m6 != null)
+                foreach (var t in m6.graphTasks)
+                    if (t.taskId == "record-observations" && t.autoCompleteWhenOthersDone) authored = true;
+            A("wrapup: Exp 2's record-observations is authored as a wrap-up", authored);
+        }
+
+        // SIMULATED RUN (2026-07-17, user: "I want you to see the bugs yourselves
+        // before I test manually"): every suite run PLAYS Exp 2 end-to-end through
+        // the real wiring — builder, bindings, racks, station sims — with VERB-
+        // CONTRACT action counts. Clean = every task completes, zero mistakes,
+        // zero bugs, and every consumed chemical has a sufficient bench source.
+        {
+            var simLog = new System.Text.StringBuilder();
+            var sim = SimulatedRun.Run("prelim-chemical-compounding", simLog);
+            string simNote = sim == null ? "did not run"
+                : sim.Clean ? "" : "  [" + sim.completedTasks + "/" + sim.totalTasks + " tasks, "
+                  + sim.mistakes + " mistakes; " + string.Join(" | ", sim.bugs) + "]";
+            A("simrun: Exp 2 plays END-TO-END clean" + simNote, sim != null && sim.Clean);
         }
 
         // RackMath (2026-07-16): a step shared by a SET of tubes is done only when
@@ -3892,7 +4013,7 @@ public static class PharmaSelfTests
         var bleach = Make("Sodium Hypochlorite 5%", 11f, ox: true);
         var ethanol = Make("Ethanol", 7f, HazardType.Flammable);
         var kmno4 = Make("Potassium Permanganate 0.1%", 7f, ox: true);
-        var water = Make("Purified Water");
+        var water = Make("Distilled Water");
 
         try
         {
@@ -4034,9 +4155,14 @@ public static class PharmaSelfTests
             && RawReagentCatalog.Find("Benzaldehyde").labware == RawReagentCatalog.LabwareKind.AmberBottle
             && RawReagentCatalog.Find("Silver Nitrate").labware == RawReagentCatalog.LabwareKind.AmberBottle
             && RawReagentCatalog.Find("Bromine Water").labware == RawReagentCatalog.LabwareKind.AmberBottle);
-        A("raw: fume-hood set marked",
-            RawReagentCatalog.Find("Aniline").fumeHood && RawReagentCatalog.Find("Benzoyl Chloride").fumeHood
-            && RawReagentCatalog.Find("Ammonia Solution").fumeHood);
+        // Manuscript audit 2026-07-17: the hood is demanded in exactly ONE step
+        // (Exp 5 §A — aniline + acetyl chloride). Everything else works the bench.
+        A("raw: fume-hood set = the manuscript's two, no more",
+            RawReagentCatalog.Find("Aniline").fumeHood && RawReagentCatalog.Find("Acetyl Chloride").fumeHood
+            && !RawReagentCatalog.Find("Benzoyl Chloride").fumeHood
+            && !RawReagentCatalog.Find("Ammonia Solution").fumeHood
+            && !RawReagentCatalog.Find("Phenol").fumeHood
+            && !RawReagentCatalog.Find("Concentrated Hydrochloric Acid").fumeHood);
         A("raw: manuscript consumables present",
             RawReagentCatalog.Find("Litmus Paper") != null && RawReagentCatalog.Find("Matchsticks") != null
             && RawReagentCatalog.Find("Cotton Swabs") != null && RawReagentCatalog.Find("Filter Paper") != null

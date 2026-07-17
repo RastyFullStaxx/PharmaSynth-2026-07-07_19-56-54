@@ -105,7 +105,7 @@ public static class LabInfoDatabase
         AddEquip("testtube", "Test Tube",
             "Holds a small sample for a reaction or confirmatory test. Add only a few millilitres, heat gently along the SIDE (not the base) while shaking, and always point the mouth away from people.");
         AddEquip("washbottle", "Wash Bottle",
-            "Squeeze bottle of distilled water. Use it to rinse glassware, wash the last drops of a solution into a flask, or knock crystals off a rod — a clean rinse keeps your results accurate.");
+            "Squeeze bottle for RINSING only — clean glassware, wash the last drops of a solution into a flask, knock crystals off a rod. When a procedure says 'add distilled water', that means the Distilled Water reagent bottle, not this.");
         AddEquip("watchglass", "Watch Glass",
             "Shallow glass disc. Cover a beaker to stop splashing, evaporate a few drops to reveal a solid, or hold a sample on the balance. Handy for eyeing a colour change against a white background.");
         AddEquip("beaker", "Beaker",

@@ -18,6 +18,16 @@ MonoBehaviour:
   - Prepare chloroform by the haloform reaction of acetone with bleaching powder
   - Purify by decantation and distillation over CaCl2
   - Confirm by non-flammability and alcoholic silver-nitrate tests
+  materialReagents:
+  - "Bleaching Powder \u2014 50 g"
+  - "Acetone \u2014 50 ml"
+  - "Silver Nitrate \u2014 50 ml"
+  - "Potassium Dichromate \u2014 50 g"
+  materialApparatus:
+  - Distilling flask
+  - Beaker 100 mL
+  - "Test tubes \xD7 3"
+  - Burner
   tasks: []
   graphTasks:
   - taskId: prep-bleach

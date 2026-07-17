@@ -24,6 +24,40 @@ public static class ChecklistPager
         return null;
     }
 
+    /// MATERIALS header for the top of the holo board (user 2026-07-17): everything
+    /// the experiment will need — reagents WITH totals, apparatus with counts — so
+    /// the player can assemble the bench BEFORE starting. Deliberately not part of
+    /// the checklist: it completes nothing and stays fully visible for the whole
+    /// run (the player scrolls; the panel keeps its scroll position between opens).
+    public static string BuildMaterialsHeader(ExperimentModuleDefinition module)
+    {
+        if (module == null) return string.Empty;
+        bool anyR = module.materialReagents != null && module.materialReagents.Count > 0;
+        bool anyA = module.materialApparatus != null && module.materialApparatus.Count > 0;
+        if (!anyR && !anyA) return string.Empty;
+
+        // One BULLET ROW per item (user 2026-07-17) — the dot-joined single line
+        // wrapped mid-name and made totals hard to scan against the bench.
+        var sb = new StringBuilder(256);
+        sb.Append("<b>MATERIALS</b> <size=78%><color=#AEB9CC>— gather these before you start</color></size>\n");
+        if (anyR)
+        {
+            sb.Append("<color=#61D6FF>Reagents:</color>\n<size=85%>");
+            foreach (var r in module.materialReagents)
+                sb.Append("• ").Append(GlyphSafe.Sanitize(r)).Append('\n');
+            sb.Append("</size>");
+        }
+        if (anyA)
+        {
+            sb.Append("<color=#61D6FF>Apparatus:</color>\n<size=85%>");
+            foreach (var a in module.materialApparatus)
+                sb.Append("• ").Append(GlyphSafe.Sanitize(a)).Append('\n');
+            sb.Append("</size>");
+        }
+        sb.Append('\n');
+        return sb.ToString();
+    }
+
     public static string BuildFocusedText(TaskGraph graph)
     {
         if (graph == null) return string.Empty;

@@ -91,6 +91,20 @@ public class TaskGraph
             if (_conditions.TryGetValue(id, out var cond) && IsAvailable(id) && cond())
                 TryComplete(id);
         }
+        // WRAP-UP steps ("record your observations"): no physical verb of their
+        // own — they complete once every NON-wrap-up task is done. Checked after
+        // conditions so a condition completing the last real task cascades in
+        // the same tick.
+        for (int i = 0; i < _tasks.Count; i++)
+        {
+            var t = _tasks[i];
+            if (!t.autoCompleteWhenOthersDone || IsComplete(t.taskId)) continue;
+            bool othersDone = true;
+            for (int j = 0; j < _tasks.Count; j++)
+                if (!_tasks[j].autoCompleteWhenOthersDone && !IsComplete(_tasks[j].taskId))
+                { othersDone = false; break; }
+            if (othersDone) TryComplete(t.taskId);
+        }
     }
 
     /// Explicitly complete a task (from a trigger/UI event). Prerequisite-guarded.

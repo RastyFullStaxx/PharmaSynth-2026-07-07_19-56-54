@@ -19,6 +19,19 @@ MonoBehaviour:
   - Isolate the product by filtering MnO2 and acidifying with HCl
   - Purify crystals by recrystallisation from hot water
   - Confirm benzoic acid by litmus, FeCl3 and ester-formation tests
+  materialReagents:
+  - "Potassium Permanganate 0.1% \u2014 50 ml"
+  - "Benzaldehyde \u2014 50 ml"
+  - "Hydrochloric Acid 6N \u2014 50 ml"
+  - "Ferric Chloride 10% \u2014 50 ml"
+  - "Sulfuric Acid \u2014 50 ml"
+  - "Propyl Alcohol \u2014 50 ml"
+  materialApparatus:
+  - Beaker 500 mL
+  - Funnel + filter paper
+  - "Test tubes \xD7 3"
+  - Burner
+  - Glass rod
   tasks: []
   graphTasks:
   - taskId: prepare-permanganate
@@ -116,6 +129,7 @@ MonoBehaviour:
     rubricCategory: 5
     required: 1
     hint: Enter the crystal mass, % yield and each test result.
+  assessmentMode: 0
   masteryThreshold: 0.9
   bkt:
     pL0: 0.25
