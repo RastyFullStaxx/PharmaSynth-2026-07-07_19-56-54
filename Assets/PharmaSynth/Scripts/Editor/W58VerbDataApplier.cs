@@ -103,6 +103,15 @@ public static class W58VerbDataApplier
             }
         }
 
+        // TIME-SKIP is a scene singleton (2026-07-17): one controller listens for
+        // any longProcess task (a week's fermentation…) and fades black → "time
+        // passed". Lives on the runner's object; self-subscribes in Awake.
+        if (runner != null && runner.GetComponent<TimeSkipController>() == null)
+        {
+            runner.gameObject.AddComponent<TimeSkipController>().Bind(runner);
+            sceneChanges++;
+        }
+
         // The WATER BATH is a zone-free tool (2026-07-17): fill it with distilled
         // water, put a lit burner beside it, and it warms any vessel brought
         // close — anywhere in the lab. Needs a liquid receiver (the water the

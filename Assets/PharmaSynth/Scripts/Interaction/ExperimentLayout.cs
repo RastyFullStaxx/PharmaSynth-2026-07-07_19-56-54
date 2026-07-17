@@ -73,6 +73,9 @@ public class ExperimentLayout : ScriptableObject
 
         [Tooltip("ZONE-FREE heat step (2026-07-17, replaces fixed Heat stations): >0 = the vessel's deferred (completesTask:false, no rack) task completes when the vessel has ALL its reagents AND has been heated to this temperature — wherever the player does it (water bath + lit burner, anywhere in the lab). VesselHeatTask registers the graph condition.")]
         public float heatToC = 0f;
+
+        [Tooltip("FERMENTATION flask (Exp 3): set to the ferment taskId. Once prepare-must is done, this flask evolves CO₂ into any nearby limewater vessel (turning it milky); the named task completes when that vessel clouds. FermentationController; zone-free like the water bath.")]
+        public string fermentTaskId = "";
     }
 
     public string moduleId;

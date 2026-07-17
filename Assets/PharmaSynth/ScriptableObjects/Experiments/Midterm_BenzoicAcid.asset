@@ -43,6 +43,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Dissolve 0.1 g potassium permanganate in 100 mL purified water.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: oxidise-benzaldehyde
     label: Add benzaldehyde to KMnO4 and warm to oxidise
     phase: 1
@@ -53,6 +56,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Add benzaldehyde to the permanganate; warm until the violet colour is discharged.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: filter-mno2
     label: Filter off the brown MnO2 sludge
     phase: 1
@@ -63,6 +69,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Filter the hot mixture to remove the brown manganese dioxide.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: acidify
     label: Acidify the filtrate with 6N HCl to precipitate benzoic acid
     phase: 1
@@ -73,6 +82,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Add 6N HCl until acidic; white benzoic acid crystals separate.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: crystallise
     label: Cool in an ice bath; recrystallise from hot water
     phase: 1
@@ -84,6 +96,9 @@ MonoBehaviour:
     required: 1
     hint: Chill to complete crystallisation, then recrystallise from the minimum
       hot water.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: test-litmus
     label: 'Litmus test: turns blue litmus red (acidic)'
     phase: 2
@@ -95,6 +110,9 @@ MonoBehaviour:
     required: 1
     hint: Dissolve a little product; blue litmus turning red confirms a carboxylic
       acid.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: test-fecl3
     label: 'FeCl3 test: buff / salmon precipitate'
     phase: 2
@@ -106,6 +124,9 @@ MonoBehaviour:
     required: 1
     hint: Neutralise to sodium benzoate then add FeCl3; a buff precipitate confirms
       benzoate.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: test-ester
     label: Ester test with propyl alcohol (fruity odour)
     phase: 2
@@ -117,6 +138,9 @@ MonoBehaviour:
     required: 1
     hint: Warm with propyl alcohol + a drop of H2SO4; a fruity ester odour confirms
       the acid.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: record-yield
     label: Record yield and observations on the data sheet
     phase: 3
@@ -129,6 +153,9 @@ MonoBehaviour:
     rubricCategory: 5
     required: 1
     hint: Enter the crystal mass, % yield and each test result.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   assessmentMode: 0
   masteryThreshold: 0.9
   bkt:

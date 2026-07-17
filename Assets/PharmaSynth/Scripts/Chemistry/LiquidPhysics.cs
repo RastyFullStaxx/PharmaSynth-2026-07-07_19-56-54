@@ -286,7 +286,12 @@ public class LiquidPhysics : MonoBehaviour
         }
     }
 
-    public void AddLiquid(ChemicalData incomingChemical, float amountToAdd)
+    /// notify=false: run the chemistry (reactions, precipitate, ledger) WITHOUT
+    /// raising LiquidAdded/WrongReagentMixed — for a REACTION DRIVER that is not a
+    /// procedure reagent (Exp 3's CO₂ bubbled into limewater). Without this the
+    /// task binding graded every CO₂ bubble a "wrong reagent" even as the
+    /// registered Limewater_CO2 reaction correctly clouded the tube (2026-07-17).
+    public void AddLiquid(ChemicalData incomingChemical, float amountToAdd, bool notify = true)
     {
         if (incomingChemical == null)
             return;
@@ -295,11 +300,11 @@ public class LiquidPhysics : MonoBehaviour
         // (it used to complete tasks on pours into an already-full vessel).
         if (currentLiquidVolume + currentPptVolume + amountToAdd > maxVolume)
         {
-            LiquidRejected?.Invoke(incomingChemical, amountToAdd);
+            if (notify) LiquidRejected?.Invoke(incomingChemical, amountToAdd);
             return;
         }
 
-        LiquidAdded?.Invoke(incomingChemical, amountToAdd);
+        if (notify) LiquidAdded?.Invoke(incomingChemical, amountToAdd);
         Ledger.Add(incomingChemical.chemicalName, amountToAdd,
                    incomingChemical.state == PhysicalState.Solid || incomingChemical.state == PhysicalState.Powder);
 
@@ -341,7 +346,7 @@ public class LiquidPhysics : MonoBehaviour
                 currentLiquidVolume += amountToAdd;
                 // No registered reaction: report the mix so a context-aware binding can
                 // decide whether it is actually "wrong" for the current step.
-                if (currentChemical != null && incomingChemical != null && currentChemical != incomingChemical)
+                if (notify && currentChemical != null && incomingChemical != null && currentChemical != incomingChemical)
                     WrongReagentMixed?.Invoke(currentChemical, incomingChemical);
             }
         }

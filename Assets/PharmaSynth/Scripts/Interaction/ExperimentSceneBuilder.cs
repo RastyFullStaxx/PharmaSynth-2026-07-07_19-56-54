@@ -719,6 +719,14 @@ public class ExperimentSceneBuilder : MonoBehaviour
             else
                 Debug.LogWarning("[SceneBuilder] " + v.benchItem + " sets heatToC but has no deferred (completesTask:false) binding to own.");
         }
+        // FERMENTATION flask (Exp 3): evolves CO₂ into nearby limewater vessels.
+        if (!string.IsNullOrEmpty(v.fermentTaskId))
+        {
+            var co2 = assets.GetChemical("Carbon Dioxide");
+            var lime = assets.GetChemical("Limewater");
+            (inst.GetComponent<FermentationController>() ?? inst.AddComponent<FermentationController>())
+                .Bind(runner, lp, v.fermentTaskId, co2, lime);
+        }
         // GetComponent-or-Add: a SPAWNED vessel is fresh, but a BENCH item survives
         // every rebuild — blind AddComponent would stack a new copy of each of these
         // on it per module load.
@@ -746,6 +754,9 @@ public class ExperimentSceneBuilder : MonoBehaviour
         if (prefabName.Contains("Beaker_500")) return 500f;
         if (prefabName.Contains("GraduatedCylinder_50")) return 50f;
         if (prefabName.Contains("ErlenmeyerFlask")) return 400f;
+        if (prefabName.Contains("FlorenceFlask")) return 250f;      // Exp 3 fermentation
+        if (prefabName.Contains("DistillingFlask")) return 250f;    // Exp 3 distillation
+        if (prefabName.Contains("WatchGlass")) return 20f;          // combustion test drops
         return current;
     }
 
@@ -802,6 +813,12 @@ public class ExperimentSceneBuilder : MonoBehaviour
             if (h == null || (_stage != null && h.transform.IsChildOf(_stage))) continue;
             h.Detach();
             Kill(h);
+        }
+        foreach (var fc in FindObjectsByType<FermentationController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (fc == null || (_stage != null && fc.transform.IsChildOf(_stage))) continue;
+            fc.Detach();
+            Kill(fc);
         }
     }
 

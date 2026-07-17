@@ -149,6 +149,15 @@ public static class SimulatedRun
         for (int pass = 0; pass < res.totalTasks + 2 && done.Count < res.totalTasks; pass++)
         {
             bool progressed = false;
+            // Reconcile first: a wrap-up ("record observations") or a condition
+            // task can auto-complete via Graph.Tick DURING another task's sim
+            // (e.g. the ester heat loop ticks the graph). Count it here or the
+            // walk false-deadlocks — it's already complete, so never "available".
+            foreach (var gt in runner.Graph.Tasks)
+                if (runner.Graph.IsComplete(gt.taskId) && !done.Contains(gt.taskId))
+                { done.Add(gt.taskId); res.completedTasks++; progressed = true;
+                  log.AppendLine("\n» " + gt.taskId + " — auto-completed (wrap-up / condition)"); }
+
             foreach (var t in new List<ExperimentTask>(runner.Graph.AvailableTasks()))
             {
                 string id = t.taskId;
@@ -184,6 +193,7 @@ public static class SimulatedRun
                             }
                         }
                         else if (SimulateVesselHeat(runner, id, steps, res, log)) { }
+                        else if (SimulateFermentation(runner, id, steps, res, log)) { }
                         else if (SimulateStation(runner, id, simStations, zoneStations, temps, labItems, res, log)) { }
                         else if (deferred)
                         {
@@ -420,6 +430,51 @@ public static class SimulatedRun
                 res.bugs.Add(id + ": bath topped out at " + bath.BathC.ToString("0") + " C but "
                              + rule.name + " (needs " + rule.minTemperatureC.ToString("0") + " C) did not fire");
         }
+    }
+
+    /// The zone-free FERMENTATION step (Exp 3): the must is prepared, the player
+    /// leads the delivery tube from the flask into a limewater tube; CO₂ clouds
+    /// it (CaCO₃) and the task completes — then the longProcess time-skip fires
+    /// ("one week later"). Played by bubbling CO₂ into the limewater vessel this
+    /// task's binding names, until the FermentationController's condition trips.
+    static bool SimulateFermentation(ExperimentRunner runner, string id,
+        List<(LiquidTaskBinding b, LiquidTaskBinding.ReagentStep s)> steps, Result res, StringBuilder log)
+    {
+        FermentationController fc = null;
+        foreach (var f in Object.FindObjectsByType<FermentationController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (f != null && f.FermentTaskId == id) { fc = f; break; }
+        if (fc == null) return false;
+
+        // The limewater vessel this task fills (its binding holds limewater).
+        LiquidPhysics lime = null;
+        foreach (var (b, s) in steps)
+        {
+            var lp = b != null ? b.GetComponent<LiquidPhysics>() : null;
+            if (lp != null && fc.Limewater != null && lp.currentChemical == fc.Limewater) { lime = lp; break; }
+        }
+        if (lime == null)
+        {
+            res.bugs.Add(id + ": fermentation has no limewater vessel to cloud (pour limewater into a tube first)");
+            return true;
+        }
+        if (!fc.Fermenting)
+        {
+            res.bugs.Add(id + ": flask is not fermenting (is prepare-must complete + the must in the flask?)");
+            return true;
+        }
+        for (int i = 0; i < 200 && !runner.Graph.IsComplete(id); i++)
+        {
+            fc.BubbleInto(lime);
+            runner.Graph.Tick();
+        }
+        if (runner.Graph.IsComplete(id))
+            log.AppendLine("  ✓ led the delivery tube in — limewater clouded (CaCO₃), fermentation confirmed → time-skip");
+        else
+        {
+            res.bugs.Add(id + ": bubbled CO₂ but the limewater never clouded / task never completed");
+            runner.CompleteTask(id);
+        }
+        return true;
     }
 
     /// The zone-free heat STEP: the vessel owning a VesselHeatTask is served,
@@ -674,11 +729,16 @@ public static class SimulatedRun
     // ---- the VERB CONTRACT, mirrored ---------------------------------------
     static bool IsSolid(LiquidTaskBinding.ReagentStep s)
         => s.reagent != null && (s.reagent.state == PhysicalState.Solid || s.reagent.state == PhysicalState.Powder);
+    // A player picks the tool by scale: the SCOOPULA (2 g) for a bulk weigh-out
+    // (Exp 3's 12 g sugar / 4 g yeast — 120 spatula dips would be absurd), the
+    // fine porcelain SPATULA (0.1 g) only for sub-gram amounts (Exp 2's 0.1 g).
     static float IncrementFor(LiquidTaskBinding.ReagentStep s)
-        => IsSolid(s) ? ScoopMath.GramsPerSpatula : DropperMath.MlPerSqueeze;
+        => IsSolid(s) ? (s.requiredMl >= 2f ? ScoopMath.GramsPerScoop : ScoopMath.GramsPerSpatula)
+                      : DropperMath.MlPerSqueeze;
     static int ActionsFor(LiquidTaskBinding.ReagentStep s)
         => s.requiredMl <= 0f ? 1 : Mathf.CeilToInt(s.requiredMl / IncrementFor(s) - 0.0001f);
-    static string VerbFor(LiquidTaskBinding.ReagentStep s) => IsSolid(s) ? "spatula-dip" : "squeeze/pour";
+    static string VerbFor(LiquidTaskBinding.ReagentStep s)
+        => IsSolid(s) ? (s.requiredMl >= 2f ? "scoopula-dip" : "spatula-dip") : "squeeze/pour";
     static string UnitFor(LiquidTaskBinding.ReagentStep s) => IsSolid(s) ? " g" : " ml";
 }
 #endif

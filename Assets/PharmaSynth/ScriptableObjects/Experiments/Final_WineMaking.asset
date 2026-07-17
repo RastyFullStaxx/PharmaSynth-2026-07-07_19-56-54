@@ -40,6 +40,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Dissolve sugar in the fruit juice and pitch the yeast.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: seal-airlock
     label: Seal the vessel with an airlock / balloon
     phase: 1
@@ -50,6 +53,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Fit the airlock so CO2 escapes but air cannot enter.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: confirm-co2
     label: "Confirm fermentation \u2014 CO2 turns limewater milky"
     phase: 2
@@ -60,6 +66,9 @@ MonoBehaviour:
     rubricCategory: 1
     required: 1
     hint: Bubble the evolved gas through limewater; it turns milky.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: ferment-timeskip
     label: "Ferment \u20187 days & 7 nights\u2019 (time-skip)"
     phase: 1
@@ -70,6 +79,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Let fermentation run to completion (time-skip montage).
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: rack
     label: Rack the wine off the lees
     phase: 1
@@ -80,6 +92,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Siphon the clear wine off the sediment.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: test-clarity
     label: Assess clarity and appearance
     phase: 2
@@ -90,6 +105,9 @@ MonoBehaviour:
     rubricCategory: 1
     required: 1
     hint: Judge colour and clarity against the standard.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: test-tasting
     label: "Tasting finale \u2014 evaluate flavour"
     phase: 2
@@ -100,6 +118,9 @@ MonoBehaviour:
     rubricCategory: 1
     required: 1
     hint: Evaluate aroma and flavour at the tasting finale.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: record-label
     label: Create the label and record volume & observations
     phase: 3
@@ -111,6 +132,9 @@ MonoBehaviour:
     rubricCategory: 5
     required: 1
     hint: Design the label and log the final volume and notes.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   assessmentMode: 0
   masteryThreshold: 0.9
   bkt:

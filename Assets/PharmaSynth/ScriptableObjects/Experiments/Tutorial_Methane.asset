@@ -42,6 +42,9 @@ MonoBehaviour:
     hint: "Scoop the sodium acetate + soda lime into the mortar, then GRAB THE PESTLE
       and grind in the bowl until it is a fine powder. (You do not move the powder
       into the tube \u2014 grinding is all this step needs.)"
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: setup-apparatus
     label: Load the mixture into the hard-glass tube
     phase: 1
@@ -54,6 +57,9 @@ MonoBehaviour:
     hint: "Scoop the ground mixture from the mortar into the \"Hard-glass tube\"
       \u2014 this is the tube you will heat. (Ignore the bent delivery tubes; they
       are not used.)"
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: heat-mixture
     label: Heat the hard-glass tube
     phase: 1
@@ -66,6 +72,9 @@ MonoBehaviour:
     hint: Grab a match and strike it on the matchbox, touch it to the burner to light
       it, then hold the lit burner under the "Hard-glass tube". Heating it makes
       the methane gas.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: collect-gas
     label: Collect the gas in the collection tube
     phase: 1
@@ -77,6 +86,9 @@ MonoBehaviour:
     required: 1
     hint: "Keep the \"Gas collection tube\" held against the heated \"Hard-glass
       tube\" \u2014 methane collects until the tube is full (a few seconds)."
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: test-gas
     label: Test the gas with a lit match
     phase: 2
@@ -88,6 +100,9 @@ MonoBehaviour:
     required: 1
     hint: "Light a match and bring it to the mouth of the full \"Gas collection tube\"
       \u2014 methane pops and burns with a pale blue flame. Test complete!"
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   assessmentMode: 0
   masteryThreshold: 0.9
   bkt:

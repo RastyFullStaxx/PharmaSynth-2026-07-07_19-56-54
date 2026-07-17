@@ -20,11 +20,17 @@ MonoBehaviour:
   - "Distil and collect the 70\u201380\xB0C fraction"
   - Confirm ethanol by combustion, iodoform and ester tests
   materialReagents:
-  - "Brown Sugar \u2014 50 g"
-  - "Yeast \u2014 50 g"
-  - "Potassium Iodide 10% \u2014 50 ml"
-  - "Sodium Hypochlorite \u2014 50 ml"
-  - "Diluted Acetic Acid \u2014 50 ml"
+  - "Ethanol \u2014 34 ml"
+  - "Distilled Water \u2014 20 ml"
+  - "Brown Sugar \u2014 12 g"
+  - "Limewater \u2014 10 ml"
+  - "Potassium Iodide 10% \u2014 10 ml"
+  - "Sodium Hypochlorite \u2014 5 ml"
+  - "Yeast \u2014 4 g"
+  - "Diluted Acetic Acid \u2014 4 ml"
+  - "Sodium Hydroxide 10% \u2014 2 ml"
+  - "Ammonium Phosphate \u2014 1 g"
+  - "Sulfuric Acid \u2014 1 ml"
   materialApparatus:
   - Fermentation flask
   - Delivery (bent) tube + stopper
@@ -45,7 +51,11 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 0
     required: 1
-    hint: Dissolve brown sugar, add dry yeast and ammonium phosphate.
+    hint: "12% sugar + 4 g yeast + a pinch of ammonium phosphate ferments to alcohol.\n\u2192
+      Scoopula the sugar & yeast into the flask, add water, then the ammonium phosphate."
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: ferment
     label: Ferment; confirm CO2 with limewater
     phase: 1
@@ -55,17 +65,42 @@ MonoBehaviour:
     skill: 3
     rubricCategory: 0
     required: 1
-    hint: Seal with a delivery tube into limewater; watch it turn milky.
-  - taskId: distill
-    label: "Distil; collect the 70\u201380\xB0C fraction"
+    hint: "Yeast digests sugar to ethanol + CO2; the CO2 clouds limewater (CaCO3)
+      \u2014 proof it works.\n\u2192 Pour limewater into a test tube, lead the delivery
+      tube from the flask into it, watch it turn milky."
+    autoCompleteWhenOthersDone: 0
+    longProcess: 1
+    longProcessMessage: "One week later \u2014 the mixture has fermented. Time to
+      distil."
+  - taskId: adjust-ph
+    label: Adjust the wash slightly alkaline
     phase: 1
     prerequisites:
     - ferment
     progressWeight: 1
+    skill: 0
+    rubricCategory: 0
+    required: 1
+    hint: "Distilling runs cleaner from a slightly alkaline wash.\n\u2192 Add 10%
+      sodium hydroxide to the flask until litmus reads faintly blue."
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
+  - taskId: distill
+    label: "Distil; collect the 70\u201380\xB0C fraction"
+    phase: 1
+    prerequisites:
+    - adjust-ph
+    progressWeight: 1
     skill: 1
     rubricCategory: 0
     required: 1
-    hint: "Heat gently; collect only the 70\u201380\xB0C cut."
+    hint: "Ethanol boils at 78\xB0C \u2014 collect the 70\u201380\xB0C cut and leave
+      the water behind.\n\u2192 Pour the wash into the distilling flask and warm
+      it in the water bath."
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: test-combustion
     label: Combustion test (blue flame)
     phase: 2
@@ -75,7 +110,11 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: Ignite a sample; a blue flame means complete combustion.
+    hint: "Pure ethanol burns with a clean BLUE flame (complete combustion).\n\u2192
+      Put a few drops on the watch glass and touch a lit match to it."
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: test-iodoform
     label: Iodoform test (yellow precipitate)
     phase: 2
@@ -85,9 +124,14 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Add KI + NaOCl, warm to 60\xB0C; look for a yellow precipitate."
+    hint: "Ethanol gives a pale-YELLOW iodoform precipitate with KI + hypochlorite.\n\u2192
+      Add KI then hypochlorite to a little distillate and warm it to 60\xB0C in the
+      water bath."
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: test-ester
-    label: Ester formation (fruity odor)
+    label: Ester formation (fruity odour)
     phase: 2
     prerequisites:
     - distill
@@ -95,7 +139,11 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: Warm with acetic acid + H2SO4; note the fruity smell.
+    hint: "Ethanol + acetic acid + sulfuric acid make a sweet, fruity ESTER smell.\n\u2192
+      Combine them in a tube and warm gently; note the odour."
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: record-yield
     label: Record yield and observations
     phase: 3
@@ -107,7 +155,11 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 5
     required: 1
-    hint: Enter the distillate volume and test results.
+    hint: "Every colour, odour and the distillate volume goes on the data sheet.\n\u2192
+      Read the results back, then answer on the tablet."
+    autoCompleteWhenOthersDone: 1
+    longProcess: 0
+    longProcessMessage: 
   assessmentMode: 0
   masteryThreshold: 0.9
   bkt:

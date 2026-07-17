@@ -36,13 +36,26 @@ public static class WaterBathMath
 /// anywhere, it still works.
 public class WaterBathController : MonoBehaviour
 {
-    private LiquidPhysics _lp;
-    private TemperatureSim _temp;
-    private ProximityLabel _label;
+    // SERIALIZED (2026-07-17): a domain reload wipes non-serialized privates, and
+    // in edit mode Awake never re-binds — the SimulatedRun then saw an unbound
+    // bath ("could not fill the water bath") after any recompile. Serialized, the
+    // Apply-W5.8 Bind persists into the saved scene and survives reloads.
+    [SerializeField] private LiquidPhysics _lp;
+    [SerializeField] private TemperatureSim _temp;
+    [SerializeField] private ProximityLabel _label;
     private float _nextScan;
 
-    public float BathC => _temp != null ? Mathf.Min(_temp.CurrentC, WaterBathMath.BathMaxC) : 25f;
-    public bool HasWater => _lp != null && WaterBathMath.HasWater(_lp.currentLiquidVolume);
+    public float BathC { get { EnsureRefs(); return _temp != null ? Mathf.Min(_temp.CurrentC, WaterBathMath.BathMaxC) : 25f; } }
+    public bool HasWater { get { EnsureRefs(); return _lp != null && WaterBathMath.HasWater(_lp.currentLiquidVolume); } }
+
+    /// Belt-and-suspenders: resolve from own hierarchy if a reference is missing
+    /// (a bath that never went through Apply W5.8, or a stale reload).
+    private void EnsureRefs()
+    {
+        if (_lp == null) _lp = GetComponentInChildren<LiquidPhysics>(true);
+        if (_temp == null) _temp = GetComponentInChildren<TemperatureSim>(true);
+        if (_label == null) _label = GetComponentInChildren<ProximityLabel>(true);
+    }
 
     /// Edit-mode / wiring seam.
     public void Bind(LiquidPhysics lp, TemperatureSim temp, ProximityLabel label)

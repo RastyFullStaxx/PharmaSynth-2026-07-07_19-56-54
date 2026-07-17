@@ -164,7 +164,7 @@ Both were **game-authored** (Aspirin is named only in the manuscript's intro pro
 |---|---|---|
 | **tutorial-methane** | Tutorial | ✅ **DONE (2026-07-15)** — playable end-to-end: scoop → grind → load tube → heat → collect → match test → quiz → grade |
 | **prelim-chemical-compounding** | Prelim | 🔨 **PLAYABLE, awaiting headset playtest (2026-07-16)** — rebuilt to manuscript Exp 2. ✅ 13-task graph + ILOs + quiz. ✅ VR design SETTLED + BUILT: **dropper = counted squeezes**, **spatula 0.1 g/dip**, KMnO₄→liquid 0.1%, **RackTaskGroup** (a step waits for EVERY tube), layout rebuilt (20 vessels / 4 racks), 8 reactions, 13 two-line hints. ⬜ Left: two-step picker, `StirController` tip-tracking fix, headset pass. |
-| **prelim-ethyl-alcohol** | Prelim | ⬜ then this — the ONLY module the manuscript gives a **bent (delivery) tube + stopper + cotton swab + CO₂→limewater** test (`manuscript.txt:2430-2434`). Those delivery tubes on the bench are real Exp 3 equipment. |
+| **prelim-ethyl-alcohol** | Prelim | ✅ BUILT + simulated clean 2026-07-17 (8/8). Zone-free ferment→CO₂→limewater (`FermentationController`) + week time-skip + distillation + 3 warm tests. ⬜ Left: headset playtest; combustion could gain real match-ignition; the "wash" is bench-Ethanol shorthand. |
 | midterm-* / final-* | — | ⬜ not started |
 
 ### The METHANE FLOW — the template every module follows
@@ -498,8 +498,28 @@ including an action line that said only "compare" and never named a thing to tou
 
 **Manuscript Reagents:** Concentrated sulfuric acid; 6% Sodium hypochlorite; Diluted acetic acid; 10% Potassium iodide; Dry yeast; 10% Sodium hydroxide; Ethanol; Ammonium phosphate; Saturated calcium hydroxide; Brown sugar
 
+### ⭐ VR apparatus review (2026-07-17) — every manuscript item IS on the bench
+All 19 apparatus map to existing bench objects: distilling flask `kit-distillingflask` · Erlenmeyer `kit-erlenmeyerflask` · **delivery/"bath Rubber tubing"** `kit-deliverytube` (the CO₂→limewater bubbler — Exp 3's signature) · cotton swab `Raw_CottonSwabs` · cork `kit-rubberstopper` · watch glass `Eq_WatchGlass` · graduated cylinder `Eq_GraduatedCylinder_50mL` · porcelain spatula · stirring rod `Eq_GlassRod` · test tubes/brush/holder · pipette = `Eq_Dropper_1–4`.
 
-### Task graph (play order)
+**⛔ Six items REMOVED from the bench (menu `Remove VR-Inappropriate Apparatus`) — a DELIBERATE, documented exception to the "all tools always present" rule; prefabs kept in the project so any later module can re-place them. Do NOT let an all-tools audit re-add them.**
+
+| Removed | Why it is not a VR interaction |
+|---|---|
+| Iron stand (`kit-retortstand`) | Support scaffold to hold a flask on a rod. VR heats **zone-free** — carry the flask to the water bath; there is no clamp-rig to assemble. |
+| Iron clamp + S-clamp (`kit-utilityclamp`) | The clamps that fix glassware to that stand — same scaffold, no VR action. |
+| Aspirator (`kit-aspirator`) | Vacuum suction for filtration/transfer. The game moves liquid by **pour/decant**, never suction. |
+| Condenser (`kit-condenser`) | Distillation cooling. Distillation is an **abstracted heat + collect** sim (lenient 70–80 °C window); the player never assembles a condenser train. |
+| Thermometer (`kit-thermometer`) | Temperature is shown live by the floating **ProcessReadout** / water-bath label, so the physical instrument is decorative. |
+
+The chemistry apparatus (flasks, delivery tube, watch glass, graduated cylinder, droppers, tubes, spatula, rod) all stay interactive.
+
+### ⏳ Time-skip (fermentation) — reusable across ALL experiments
+The manuscript ferments **one full week**. VR compresses this: once the must is prepared and sealed, the completing task is authored `longProcess` → `TimeSkipController` **fades to black ~2 s and returns with a "time has passed" success message**. This is the standard treatment for every lengthy real-world wait in any module (overnight dries, hour-long crystallisations) — author the closing task `longProcess=true` + a message.
+
+### ✅ BUILT + SIMULATED CLEAN 2026-07-17 (8/8 · 0 mistakes · 0 bugs)
+Zone-free, bench-bound (like Exp 2). **8 tasks**: prepare-must → ferment (CO₂/limewater + **week time-skip**) → adjust-ph → distill → test-combustion/iodoform/ester → record-yield (auto-completes). **Vessels:** `FlorenceFlask` (fermentation, `fermentTaskId`) · limewater `Kit_TestTube_5` · `DistillingFlask` (`heatToC 70`) · `Eq_WatchGlass` (combustion) · iodoform `Kit_TestTube_6` (`heatToC 60`) · ester `Kit_TestTube_7` (`heatToC 50`). **The CO₂→limewater mechanic** = `FermentationController` (zone-free, mirrors the water bath): once prepare-must is done the flask evolves CO₂ into any nearby limewater vessel → `Limewater_CO2` clouds it milky → ferment completes → time-skip. CO₂ is a REACTION DRIVER, added via `AddLiquid(notify:false)` so it drives the reaction without being graded a reagent. Distillation + warm tests reuse `heatToC` + the water bath. **VR simplifications** (documented): bulk solids use the scoopula (2 g), sub-gram the spatula; the "wash" poured into the distilling flask is bench Ethanol standing in for the decanted ferment; combustion completes on the ethanol-on-watch-glass pour (match = guidance). Generator: scratchpad `gen_ethyl.py`.
+
+The pre-polish stub graph is retained below for history.
 
 | # | task | phase | label | prerequisites | hint |
 |---|------|-------|-------|---------------|------|

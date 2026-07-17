@@ -41,6 +41,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Measure concentrated ammonia in the fume hood.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: ice-bath
     label: Cool the flask in an ice bath
     phase: 0
@@ -51,6 +54,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Chilling controls the vigorous reaction.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: add-benzoyl
     label: Add 1 mL benzoyl chloride dropwise, shaking
     phase: 1
@@ -61,6 +67,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Add benzoyl chloride drop by drop, shaking frequently.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: stand
     label: "Let stand 10\u201315 minutes"
     phase: 1
@@ -71,6 +80,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Allow the benzamide to crystallise fully.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: filter-dry
     label: Filter, wash with cold water, oven-dry
     phase: 1
@@ -81,6 +93,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Collect the precipitate and dry it in the oven.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: test-alkali
     label: "Alkaline hydrolysis (ammonia vapour \u2192 blue litmus)"
     phase: 2
@@ -91,6 +106,9 @@ MonoBehaviour:
     rubricCategory: 1
     required: 1
     hint: Boil with 10% NaOH; ammonia vapour turns moist litmus blue.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: test-acid
     label: Acid hydrolysis (dil HCl)
     phase: 2
@@ -101,6 +119,9 @@ MonoBehaviour:
     rubricCategory: 1
     required: 1
     hint: Boil with dilute HCl; test the vapour with litmus.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: test-nitrous
     label: Nitrous-acid test (dil HCl + sodium nitrite)
     phase: 2
@@ -112,6 +133,9 @@ MonoBehaviour:
     required: 1
     hint: "Add sodium nitrite to the acidified sample. (Manual's 'nitrate' is a typo
       \u2014 use nitrite.)"
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: record-yield
     label: Record % yield and observations
     phase: 3
@@ -124,6 +148,9 @@ MonoBehaviour:
     rubricCategory: 5
     required: 1
     hint: Enter crystal mass, % yield and test results.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   assessmentMode: 0
   masteryThreshold: 0.9
   bkt:

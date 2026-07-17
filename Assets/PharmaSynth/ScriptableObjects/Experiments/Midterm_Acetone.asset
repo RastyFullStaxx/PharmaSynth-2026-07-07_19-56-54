@@ -40,6 +40,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Dissolve 10 g KOH in 100 mL purified water.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: weigh-acetates
     label: Weigh & mix 7 g calcium acetate + 7 g sodium acetate
     phase: 0
@@ -50,6 +53,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Mix the two dry acetate powders in a test tube.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: setup-distill
     label: Set the tube horizontal, connect the condenser
     phase: 1
@@ -60,6 +66,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Tap a channel along the tube and connect it to a condenser.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: heat-glow
     label: Heat until the acetates glow, turning the tube
     phase: 1
@@ -70,6 +79,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Heat strongly, rotating the tube for even decomposition.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: collect-56
     label: "Distil and collect the fraction at 56 \xB0C"
     phase: 1
@@ -80,6 +92,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: "Acetone boils at 56 \xB0C \u2014 collect only that cut."
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: test-tollens
     label: "Tollen's test (no silver mirror \u2014 ketone)"
     phase: 2
@@ -90,6 +105,9 @@ MonoBehaviour:
     rubricCategory: 1
     required: 1
     hint: Ketones do not reduce Tollen's reagent, unlike aldehydes.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: test-schiff
     label: Schiff's reagent
     phase: 2
@@ -100,6 +118,9 @@ MonoBehaviour:
     rubricCategory: 1
     required: 1
     hint: Note the colour after standing.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: test-iodoform
     label: "Iodoform-type test (KI + NaOCl \u2192 yellow)"
     phase: 2
@@ -110,6 +131,9 @@ MonoBehaviour:
     rubricCategory: 1
     required: 1
     hint: Warm with KI and sodium hypochlorite; a yellow precipitate/odour is positive.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: test-bisulfite
     label: Bisulfite addition product
     phase: 2
@@ -120,6 +144,9 @@ MonoBehaviour:
     rubricCategory: 1
     required: 1
     hint: Shake acetone with saturated sodium bisulfite; a crystalline adduct forms.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: record-yield
     label: Record % yield and observations
     phase: 3
@@ -133,6 +160,9 @@ MonoBehaviour:
     rubricCategory: 5
     required: 1
     hint: Enter distillate mass, % yield and test results.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   assessmentMode: 0
   masteryThreshold: 0.9
   bkt:

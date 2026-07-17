@@ -39,6 +39,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Shake until the bleaching powder dissolves.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: prep-acetone-mix
     label: Mix 12 g acetone + 50 mL water in a separatory funnel
     phase: 0
@@ -49,6 +52,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Prepare the acetone-water mixture for dropwise addition.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: reflux-setup
     label: Connect the flask to a reflux condenser
     phase: 1
@@ -59,6 +65,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Fit the reflux condenser before adding acetone.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: add-dropwise
     label: Add the acetone-water mixture dropwise
     phase: 1
@@ -70,6 +79,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Add slowly through the condenser; the reaction is exothermic.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: distil
     label: Distil off the crude chloroform
     phase: 1
@@ -80,6 +92,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Rearrange for distillation and collect the dense chloroform layer.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: decant-wash
     label: "Wash by decantation with water (\xD72)"
     phase: 1
@@ -90,6 +105,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Decant off the water twice to wash the chloroform.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: dry-redistil
     label: Dry over CaCl2 and redistil until clear
     phase: 1
@@ -100,6 +118,9 @@ MonoBehaviour:
     rubricCategory: 0
     required: 1
     hint: Dry with anhydrous calcium chloride, then redistil to a clear liquid.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: test-flammability
     label: Non-flammability test
     phase: 2
@@ -110,6 +131,9 @@ MonoBehaviour:
     rubricCategory: 1
     required: 1
     hint: "Chloroform does not readily burn \u2014 unlike the acetone feedstock."
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: test-oxidation
     label: Oxidation test (dichromate + H2SO4)
     phase: 2
@@ -121,6 +145,9 @@ MonoBehaviour:
     required: 1
     hint: "Warm chloroform with potassium dichromate and conc. H2SO4 \u2014 the pungent
       phosgene-like odour confirms it. Fume hood!"
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: test-agno3
     label: Alcoholic AgNO3 (no precipitate cold)
     phase: 2
@@ -131,6 +158,9 @@ MonoBehaviour:
     rubricCategory: 1
     required: 1
     hint: Alcoholic silver nitrate gives no precipitate in the cold with chloroform.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   - taskId: record-yield
     label: Record % yield and observations
     phase: 3
@@ -143,6 +173,9 @@ MonoBehaviour:
     rubricCategory: 5
     required: 1
     hint: Enter chloroform mass, % yield and test results.
+    autoCompleteWhenOthersDone: 0
+    longProcess: 0
+    longProcessMessage: 
   assessmentMode: 0
   masteryThreshold: 0.9
   bkt:

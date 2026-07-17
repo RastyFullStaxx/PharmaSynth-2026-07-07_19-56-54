@@ -975,7 +975,9 @@ public static class PharmaSelfTests
             ("Layout_Benzamide",    "Benzamide",      new[] { "Sodium Hydroxide", "Sodium Nitrite", "Diluted Hydrochloric Acid" }),
             ("Layout_Chloroform",   "Chloroform",     new[] { "Silver Nitrate", "Potassium Dichromate" }),
             ("Layout_Acetone",      "Acetone",        new[] { "Silver Nitrate", "Sodium Hypochlorite", "Schiff's Reagent" }),
-            ("Layout_EthylAlcohol", "Ethanol",        new[] { "Sodium Hypochlorite", "Diluted Acetic Acid" }),
+            // Ethyl (Exp 3) rebuilt zone-free 2026-07-17: no seeded vessel now (it
+            // POURS ethanol/hypochlorite into fresh tubes) — its Iodoform/Ester
+            // reactions are validated by the Exp 3 simrun firing them at temperature.
             ("Layout_WineMaking",   "Carbon Dioxide", new[] { "Limewater" }),
         };
         foreach (var c in cases)
@@ -2136,6 +2138,22 @@ public static class PharmaSelfTests
             A("wrapup: Exp 2's record-observations is authored as a wrap-up", authored);
         }
 
+        // TIME-SKIP (user 2026-07-17): a longProcess task fades black then returns
+        // with a "time passed" message — the reusable compression for week-long
+        // waits (Exp 3 fermentation and every later lengthy process).
+        {
+            var plain = new ExperimentTask { taskId = "x", label = "X" };
+            var skip = new ExperimentTask { taskId = "ferment", label = "Ferment",
+                longProcess = true, longProcessMessage = "One week later — fermentation complete." };
+            var skipBlank = new ExperimentTask { taskId = "dry", label = "Dry", longProcess = true };
+            A("timeskip: only a longProcess task triggers a skip",
+                !TimeSkipController.IsTimeSkip(plain) && TimeSkipController.IsTimeSkip(skip)
+                && !TimeSkipController.IsTimeSkip(null));
+            A("timeskip: authored message wins, blank falls back",
+                TimeSkipController.MessageFor(skip) == "One week later — fermentation complete."
+                && TimeSkipController.MessageFor(skipBlank).Length > 0);
+        }
+
         // SIMULATED RUN (2026-07-17, user: "I want you to see the bugs yourselves
         // before I test manually"): every suite run PLAYS Exp 2 end-to-end through
         // the real wiring — builder, bindings, racks, station sims — with VERB-
@@ -2148,6 +2166,25 @@ public static class PharmaSelfTests
                 : sim.Clean ? "" : "  [" + sim.completedTasks + "/" + sim.totalTasks + " tasks, "
                   + sim.mistakes + " mistakes; " + string.Join(" | ", sim.bugs) + "]";
             A("simrun: Exp 2 plays END-TO-END clean" + simNote, sim != null && sim.Clean);
+
+            // Exp 3 (ethyl alcohol): the zone-free ferment→CO₂→limewater mechanic,
+            // the week-long time-skip, distillation + the three warm tests all
+            // played through the real wiring (2026-07-17).
+            var sim3Log = new System.Text.StringBuilder();
+            var sim3 = SimulatedRun.Run("prelim-ethyl-alcohol", sim3Log);
+            string sim3Note = sim3 == null ? "did not run"
+                : sim3.Clean ? "" : "  [" + sim3.completedTasks + "/" + sim3.totalTasks + " tasks, "
+                  + sim3.mistakes + " mistakes; " + string.Join(" | ", sim3.bugs) + "]";
+            A("simrun: Exp 3 plays END-TO-END clean" + sim3Note, sim3 != null && sim3.Clean);
+        }
+
+        // FERMENTATION (Exp 3): pure gates for the CO₂→limewater mechanic.
+        {
+            A("ferment: fermenting only after the must is prepared + in the flask",
+                !FermentationMath.IsFermenting(false, 40f) && !FermentationMath.IsFermenting(true, 0f)
+                && FermentationMath.IsFermenting(true, 40f));
+            A("ferment: confirmed only once the limewater has actually clouded",
+                !FermentationMath.CO2Confirmed(0f) && FermentationMath.CO2Confirmed(2f));
         }
 
         // RackMath (2026-07-16): a step shared by a SET of tubes is done only when
@@ -2385,10 +2422,13 @@ public static class PharmaSelfTests
                 bool owned = false;
                 foreach (var s in layout.stations) if (s.taskId == t.taskId) owned = true;
                 foreach (var v in layout.vessels)
+                {
+                    if (v.fermentTaskId == t.taskId) owned = true;   // FermentationController condition
                     foreach (var b in v.bindings)
                         if (b.taskId == t.taskId
                             && (b.completesTask || !string.IsNullOrEmpty(v.rackGroup) || v.heatToC > 0f))
                             owned = true;
+                }
                 // DataSheet steps may be closed by the quiz/tablet rather than the stage.
                 if (!owned && t.phase != TaskPhase.DataSheet)
                 { allReachable = false; deadNote = layout.name + " -> " + t.taskId; }
@@ -2492,7 +2532,10 @@ public static class PharmaSelfTests
             var all = new List<Vector3>();
             foreach (var s in layout.stations) all.Add(s.pos);
             foreach (var p in layout.props) all.Add(p.pos);
-            foreach (var v in layout.vessels) all.Add(v.pos);
+            // A BENCH-BOUND vessel's pos is IGNORED (the object already exists and
+            // is hand-placed), so it can't overlap or fall off the deck — only
+            // SPAWNED vessels are laid out by the grid (2026-07-17).
+            foreach (var v in layout.vessels) if (string.IsNullOrEmpty(v.benchItem)) all.Add(v.pos);
             foreach (var p in all) if (!LayoutTidyMath.OnDeck(p)) badDeck++;
             for (int i = 0; i < all.Count; i++)
                 for (int j = i + 1; j < all.Count; j++)
@@ -2894,13 +2937,18 @@ public static class PharmaSelfTests
     {
         var lib = AssetDatabase.LoadAssetAtPath<SceneAssetLibrary>("Assets/PharmaSynth/ScriptableObjects/SceneAssetLibrary.asset");
         var reg = AssetDatabase.LoadAssetAtPath<ReactionRegistry>("Assets/PharmaSynth/ScriptableObjects/Reactions/MasterReactionRegistry.asset");
-        var lay = AssetDatabase.LoadAssetAtPath<ExperimentLayout>("Assets/PharmaSynth/ScriptableObjects/Layouts/Layout_EthylAlcohol.asset");
+        // Fixture is the still-STATION-based Acetone layout (2026-07-17): Exp 2 &
+        // Exp 3 migrated to bench-bound/zone-free, so this legacy spawn-path test —
+        // stations, sockets, hazards, teleport pads, props, seeded vessels — now
+        // runs against a midterm that still exercises that path. Counts derived
+        // from the layout so it can't rot on a re-author.
+        var lay = AssetDatabase.LoadAssetAtPath<ExperimentLayout>("Assets/PharmaSynth/ScriptableObjects/Layouts/Layout_Acetone.asset");
         A("builder: library/registry/layout exist", lib != null && reg != null && lay != null);
         A("builder: library has prefabs + chemicals", lib != null && lib.prefabs.Count >= 40 && lib.chemicals.Count >= 20);
         A("builder: library resolves Wine (winemaking end product)", lib != null && lib.GetChemical("Wine") != null);
         if (lib == null || lay == null) return;
 
-        var module = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>("Assets/PharmaSynth/ScriptableObjects/Experiments/Prelim_EthylAlcohol.asset");
+        var module = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>("Assets/PharmaSynth/ScriptableObjects/Experiments/Midterm_Acetone.asset");
         var rgo = new GameObject("sb_runner"); var bgo = new GameObject("sb_builder");
         try
         {
@@ -2909,20 +2957,23 @@ public static class PharmaSelfTests
             var builder = bgo.AddComponent<ExperimentSceneBuilder>();
             builder.SetRefs(runner, lib, reg, new List<ExperimentLayout> { lay });
 
-            int n = builder.Build("prelim-ethyl-alcohol");
-            A("builder: spawns 11 roots (2 stations + 7 props + 2 vessels)", n == 11);   // W5.9: +KI vial
-            A("builder: 2 task stations built", bgo.GetComponentsInChildren<ExperimentTaskStation>().Length == 2);
+            int stationCount = lay.stations.Count;
+            int n = builder.Build("midterm-acetone");
+            A("builder: spawns a root per station/prop/vessel",
+                n == stationCount + lay.props.Count + lay.vessels.Count);
+            A("builder: a task station per layout station",
+                bgo.GetComponentsInChildren<ExperimentTaskStation>().Length == stationCount);
 
             // §2 sockets: each station gets a snap socket filtered to its item.
             var sockets = bgo.GetComponentsInChildren<UnityEngine.XR.Interaction.Toolkit.Interactors.XRSocketInteractor>();
-            A("builder: one socket per station", sockets.Length == 2);
-            bool filtersOk = sockets.Length == 2;
+            A("builder: one socket per station", sockets.Length == stationCount);
+            bool filtersOk = sockets.Length == stationCount;
             foreach (var so in sockets)
                 if (so.GetComponent<StationSocketFilter>() == null || string.IsNullOrEmpty(so.GetComponent<StationSocketFilter>().requiredItemId)) filtersOk = false;
             A("builder: sockets carry item filters", filtersOk);
-            // §1 hot-surface hazard: the Heat station gets a player-only zone.
+            // §1 hot-surface hazard: each Heat station gets a player-only zone.
             var hazards = bgo.GetComponentsInChildren<HazardZone>();
-            A("builder: heat station gets a hot-surface hazard", hazards.Length == 1);
+            A("builder: heat station gets a hot-surface hazard", hazards.Length >= 1);
             var pr = new GameObject("root").transform;
             var hand = new GameObject("hand").transform;
             var stray = new GameObject("prop").transform;
@@ -2941,8 +2992,8 @@ public static class PharmaSelfTests
 
             // §2 teleport anchors: one floor pad per station, seated at floor level.
             var anchors = bgo.GetComponentsInChildren<UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.TeleportationAnchor>();
-            A("builder: one teleport anchor per station", anchors.Length == 2);
-            bool onFloor = anchors.Length == 2;
+            A("builder: one teleport anchor per station", anchors.Length == stationCount);
+            bool onFloor = anchors.Length == stationCount;
             foreach (var an in anchors) if (an.transform.position.y > 0.1f) onFloor = false;
             A("builder: anchors sit on the floor", onFloor);
 
@@ -2959,7 +3010,7 @@ public static class PharmaSelfTests
             int propItems = 0;
             foreach (var li2 in bgo.GetComponentsInChildren<LabItem>())
                 if (li2.name.StartsWith("Prop_")) propItems++;
-            A("builder: props carry LabItem ids", propItems == 7);   // W5.9: +KI vial
+            A("builder: props carry LabItem ids", propItems == lay.props.Count);
 
             // ⛔ INVERTED 2026-07-16. These used to REQUIRE the builder to stage a rack +
             // 6 tubes, 2 spare beakers, a flask and a MatchStriker cube on every module —
@@ -2984,11 +3035,15 @@ public static class PharmaSelfTests
 
             var bind = bgo.GetComponentInChildren<LiquidTaskBinding>();
             A("builder: vessel has a LiquidTaskBinding", bind != null);
-            var sugar = LoadChem("Chem_BrownSugar");
-            if (bind != null && sugar != null)
+            // Pouring a binding's OWN reagent completes (or readies) its task — the
+            // pour→event→completion chain is exercised generically (the module-
+            // specific completions are covered by the simruns).
+            if (bind != null && bind.ExpectedSteps.Count > 0)
             {
-                bind.HandleReagent(sugar);            // = pour Brown Sugar into the fermentation beaker
-                A("builder: pouring sugar completes prepare-must", runner.Graph.IsComplete("prepare-must"));
+                var step0 = bind.ExpectedSteps[0];
+                bind.HandleReagent(step0.reagent);
+                A("builder: pouring a bound reagent drives its task",
+                    runner.Graph.IsComplete(step0.taskId) || bind.ReadyFor(step0.taskId) || bind.IsListening);
             }
 
             // W5.8 pour fix: receiving vessels must spawn EMPTY (wake branch
@@ -3020,6 +3075,7 @@ public static class PharmaSelfTests
             A("builder: vessels get live status + mix feedback",
                 bgo.GetComponentsInChildren<VesselStatus>().Length >= 2 && bgo.GetComponentsInChildren<MixFeedback>().Length >= 2);
 
+            builder.Build("tutorial-methane");   // teardown to a clean stage
             int m = builder.Build("tutorial-methane");
             A("builder: Methane builds 0 dynamic (uses its hand-built stage)", m == 0);
         }
@@ -3669,7 +3725,7 @@ public static class PharmaSelfTests
         string dir = "Assets/PharmaSynth/ScriptableObjects/Experiments/";
         foreach (var (file, tasks) in new[] {
             // Compounding: 6 → 13 when it was rebuilt to manuscript Exp 2 (2026-07-15).
-            ("Tutorial_Methane", 5), ("Prelim_ChemicalCompounding", 13), ("Prelim_EthylAlcohol", 7),
+            ("Tutorial_Methane", 5), ("Prelim_ChemicalCompounding", 13), ("Prelim_EthylAlcohol", 8),
             ("Midterm_BenzoicAcid", 9),
             ("Midterm_Acetanilide", 10), ("Midterm_Acetone", 10), ("Midterm_Chloroform", 11),   // W5.9: +test-oxidation
             ("Final_Benzamide", 9), ("Final_WineMaking", 8) })
