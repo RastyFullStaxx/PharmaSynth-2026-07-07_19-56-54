@@ -78,6 +78,24 @@ public static class DropperMath
     /// Popup for a draw: how many squeezes the student now has in hand.
     public static string FillLabel(string chem, float chargeMl)
         => chem + "  ·  " + SqueezesLeft(chargeMl) + " drops loaded";
+
+    // ---- charge-drain geometry (2026-07-17, user: the shrinking charge was
+    // "nailed to the middle") ------------------------------------------------
+    // Scaling a capsule shrinks it symmetrically about its pivot, so both ends
+    // receded toward the centre. Physically the liquid POOLS AT THE TIP and the
+    // empty space grows at the bulb — so the capsule also shifts toward the tip
+    // by exactly the half-length it lost, keeping the tip end anchored.
+
+    /// Visible charge length for a loaded fraction. Floors at 20% so a loaded
+    /// dropper always shows SOME charge (readability over realism).
+    public static float DrainScaleY(float authoredScaleY, float frac01)
+        => authoredScaleY * Mathf.Lerp(0.2f, 1f, Mathf.Clamp01(frac01));
+
+    /// Distance the capsule's CENTER moves toward the tip so its tip end stays
+    /// fixed: the half-length lost to the drain (meshHalfY = the capsule mesh's
+    /// unscaled Y half-extent, 1 for a Unity capsule primitive).
+    public static float DrainShift(float meshHalfY, float authoredScaleY, float currentScaleY)
+        => meshHalfY * (authoredScaleY - currentScaleY);
 }
 
 /// Dropper/pipette verb: touch a liquid reagent's bottle to draw a charge, hold
@@ -109,7 +127,15 @@ public class DropperController : MonoBehaviour
     public bool Loaded => _loaded != null && _loadedMl > 0.001f;
     public int SqueezesLeft => DropperMath.SqueezesLeft(_loadedMl);
 
-    void Awake() { if (_grab == null) Bind(GetComponent<XRGrab>()); }
+    void Awake()
+    {
+        if (_grab == null) Bind(GetComponent<XRGrab>());
+        // Hide the hand-fitted charge capsule IMMEDIATELY — it is a fitting aid
+        // in the editor and "the actual contents" in play; an empty dropper must
+        // never show it (user 2026-07-17). Without this it stayed visible from
+        // scene load until the first draw finally called RefreshFill.
+        CacheLiquid();
+    }
 
     /// Edit-mode / builder seam (AddComponent fires no Awake in edit mode).
     public void Bind(XRGrab grab)
@@ -231,6 +257,9 @@ public class DropperController : MonoBehaviour
     private GameObject _fill;            // fallback bead (no DropperLiquid child)
     private Transform _liquid;           // the hand-fitted interior capsule
     private Vector3 _liquidScale;        // its authored full-charge scale
+    private Vector3 _liquidPos;          // its authored full-charge position
+    private Vector3 _liquidTipAxis;      // capsule's long axis TOWARD the tip (parent space); zero = unknown
+    private float _liquidMeshHalfY = 1f; // unscaled mesh half-extent along the capsule's Y
     private bool _liquidCached;
 
     private void CacheLiquid()
@@ -240,6 +269,20 @@ public class DropperController : MonoBehaviour
         if (_liquid != null)
         {
             _liquidScale = _liquid.localScale;
+            _liquidPos = _liquid.localPosition;
+            var mf = _liquid.GetComponent<MeshFilter>();
+            if (mf != null && mf.sharedMesh != null)
+                _liquidMeshHalfY = mf.sharedMesh.bounds.extents.y;
+            // Which way is the tip? The capsule's own long axis (its local Y),
+            // signed toward the hand-placed DropperTip — both are direct children
+            // of the tool, so this is all one parent space.
+            var tip = transform.Find("DropperTip");
+            if (tip != null)
+            {
+                Vector3 axis = _liquid.localRotation * Vector3.up;
+                float sign = Vector3.Dot(axis, tip.localPosition - _liquidPos) >= 0f ? 1f : -1f;
+                _liquidTipAxis = axis.normalized * sign;
+            }
             if (Application.isPlaying && !Loaded) _liquid.gameObject.SetActive(false);
         }
         _liquidCached = true;
@@ -262,10 +305,16 @@ public class DropperController : MonoBehaviour
             // Drain along the capsule's own length (its local Y): the authored
             // scale IS full charge, and it recedes as squeezes go out. Never
             // fully vanishes while loaded — a sliver of charge stays readable.
+            // The capsule also SHIFTS toward the tip by the half-length it lost,
+            // so the charge stays pooled AT THE TIP instead of shrinking about
+            // its own centre ("nailed to the middle", user 2026-07-17).
             float frac = Mathf.Clamp01(_loadedMl / DropperMath.Capacity);
             var s = _liquidScale;
-            s.y = _liquidScale.y * Mathf.Lerp(0.2f, 1f, frac);
+            s.y = DropperMath.DrainScaleY(_liquidScale.y, frac);
             _liquid.localScale = s;
+            if (_liquidTipAxis != Vector3.zero)
+                _liquid.localPosition = _liquidPos
+                    + _liquidTipAxis * DropperMath.DrainShift(_liquidMeshHalfY, _liquidScale.y, s.y);
             var lr = _liquid.GetComponent<Renderer>();
             if (lr != null)
             {

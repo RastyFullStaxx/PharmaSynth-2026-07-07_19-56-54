@@ -1876,6 +1876,17 @@ public static class PharmaSelfTests
             DropperMath.SqueezeLabel("Ferric Chloride 10%", 3) == "drop 3  ·  Ferric Chloride 10%");
         A("dropper: fill label shows squeezes loaded",
             DropperMath.FillLabel("Tollen's Reagent", 10f) == "Tollen's Reagent  ·  10 drops loaded");
+        // Charge-drain geometry (2026-07-17): pivot-scaling shrank the charge
+        // symmetrically ("nailed to the middle") — it must pool AT THE TIP, so
+        // the capsule shifts toward the tip by exactly the half-length it lost.
+        A("dropper: drain shortens the charge, floored at a readable sliver",
+            Near(DropperMath.DrainScaleY(2f, 1f), 2f)
+            && Near(DropperMath.DrainScaleY(2f, 0.5f), 1.2f)
+            && Near(DropperMath.DrainScaleY(2f, 0f), 0.4f));
+        A("dropper: the tip end stays anchored while the bulb end recedes",
+            Near(DropperMath.DrainShift(1f, 2f, 1.2f), 0.8f)
+            && Near(DropperMath.DrainShift(1f, 2f, 2f), 0f)
+            && Near(DropperMath.DrainShift(0.5f, 2f, 1.2f), 0.4f));
 
         // TubeSlotMath (2026-07-16): release a tube near a workspace holder and it
         // seats in the nearest FREE green slot. Held or already-frozen tubes are not
@@ -1934,16 +1945,22 @@ public static class PharmaSelfTests
             // The charge visuals are HAND-FITTED children (skinned-mesh bounds lie —
             // a bounds-derived tip floated the bead in mid-air, 2026-07-17): a
             // DropperTip anchor and a DropperLiquid capsule inside the stem.
-            int tips2 = 0, liquids2 = 0, allDrop = 0;
+            int tips2 = 0, liquids2 = 0, allDrop = 0, hidden2 = 0;
             foreach (var t in UnityEngine.Object.FindObjectsByType<DropperController>(
                          FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
                 allDrop++;
                 if (t.transform.Find("DropperTip") != null) tips2++;
-                if (t.transform.Find("DropperLiquid") != null) liquids2++;
+                var liq = t.transform.Find("DropperLiquid");
+                if (liq != null) { liquids2++; if (!liq.gameObject.activeSelf) hidden2++; }
             }
             A("wired: every dropper has a hand-fit DropperTip", allDrop > 0 && tips2 == allDrop);
             A("wired: every dropper has a hand-fit DropperLiquid", allDrop > 0 && liquids2 == allDrop);
+            // The capsule stays VISIBLE in the editor (the fitting aid must be
+            // seen to be fitted) and Awake→CacheLiquid hides it the moment Play
+            // starts — in play only actual contents show (user 2026-07-17).
+            A("wired: DropperLiquid capsules stay visible in the editor scene",
+                liquids2 > 0 && hidden2 == 0);
 
             var spat = GameObject.Find("Eq_PorcelainSpatula");
             A("wired: the porcelain spatula dips fine (0.1 g)",

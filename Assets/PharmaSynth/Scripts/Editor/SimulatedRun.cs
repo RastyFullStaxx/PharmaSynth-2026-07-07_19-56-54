@@ -207,10 +207,15 @@ public static class SimulatedRun
         foreach (var b in res.bugs) log.AppendLine("  BUG  " + b);
         foreach (var w in res.warnings) log.AppendLine("  WARN " + w);
 
-        // Leave the scene as a plain revealed stage: a fresh Build clears the
-        // sim-mutated binding state (bench bindings are stripped + re-added).
+        // TEAR DOWN, don't leave a revealed stage: Build("tutorial-methane") is a
+        // pure clear (stage children incl. TeleAnchor_* pads, DynLabel_* billboards,
+        // bench bindings) that spawns nothing — methane's stage is hand-built. The
+        // sim used to end on Build(moduleId), which left the guidance litter in the
+        // scene after every suite run; the user kept hand-deleting DynLabels and
+        // TeleAnchors that the next run resurrected (2026-07-17). Use Reveal Stage
+        // when you WANT the built stage to inspect.
         runner.Mistakes.MistakeRecorded -= onMistake;
-        builder.Build(moduleId);
+        builder.Build("tutorial-methane");
         return res;
     }
 
