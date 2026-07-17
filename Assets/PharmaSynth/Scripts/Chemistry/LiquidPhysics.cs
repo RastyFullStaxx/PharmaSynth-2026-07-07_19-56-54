@@ -12,6 +12,7 @@ public class LiquidPhysics : MonoBehaviour
     public event Action<ChemicalData, float> LiquidRejected;       // overflow: add refused (vessel full)
     public event Action<ReactionRule> ReactionOccurred;            // a registered reaction fired
     public event Action<ChemicalData, ChemicalData> WrongReagentMixed; // (current, incoming) with no rule
+    public event Action<ReactionRule> ReactionPending;             // right recipe, not hot enough yet
 
     [Header("Components")]
     public Renderer mainRenderer;
@@ -33,6 +34,36 @@ public class LiquidPhysics : MonoBehaviour
     public ChemicalData currentPptChemical;
     public ReactionRegistry registry;
 
+    // ---- temperature-gated reactions (user 2026-07-17: "achieve the needed in
+    // the procedure first, before these reactions come") -----------------------
+    // A rule whose minTemperatureC isn't met at mix time no longer fires early —
+    // the Tollens mirror popped the instant you poured, cold, making the "warm
+    // it in the water bath" step meaningless. The mix is HELD as pending and
+    // fires the moment the vessel is actually heated to the rule's threshold
+    // (heat stations / the water bath propagate their sim temperature to
+    // vessels in their zone).
+    [Header("Temperature")]
+    public float currentTempC = 25f;   // ambient; SetTemperature raises it
+
+    private ReactionRule _pendingRule;
+    private float _pendingAmount;
+
+    public bool HasPendingReaction => _pendingRule != null;
+    public ReactionRule PendingRule => _pendingRule;
+
+    /// A heat source (bath / burner zone) reports its temperature into the
+    /// vessel; a pending recipe fires as soon as its threshold is met.
+    public void SetTemperature(float c)
+    {
+        currentTempC = c;
+        if (_pendingRule != null && _pendingRule.TemperatureSatisfied(currentTempC))
+        {
+            var rule = _pendingRule; float amount = _pendingAmount;
+            _pendingRule = null; _pendingAmount = 0f;
+            ApplyReaction(rule, amount, alreadyAdded: true);
+        }
+    }
+
     /// Display-only story of what went in ("Ethanol 120 ml + NaOH 50 ml") for
     /// hover cards and mix feedback. Chemistry stays in the fields above.
     public VesselLedger Ledger { get; } = new VesselLedger();
@@ -47,6 +78,8 @@ public class LiquidPhysics : MonoBehaviour
     {
         currentChemical = chem;
         currentLiquidVolume = chem != null ? Mathf.Max(0f, ml) : 0f;
+        _pendingRule = null; _pendingAmount = 0f;   // a reset vessel holds no half-done recipe
+        currentTempC = 25f;
         Ledger.Clear();
         if (chem != null && currentLiquidVolume > 0f)
             Ledger.Add(chem.chemicalName, currentLiquidVolume,
@@ -291,21 +324,17 @@ public class LiquidPhysics : MonoBehaviour
 
             if (rule != null)
             {
-                if (rule.resultLiquid != null) currentChemical = rule.resultLiquid;
-                if (rule.hasPrecipitate && rule.resultPrecipitate != null)
+                if (!rule.TemperatureSatisfied(currentTempC))
                 {
-                    currentPptChemical = rule.resultPrecipitate;
-                    currentPptVolume += amountToAdd;
+                    // The RIGHT recipe, not hot enough yet: hold it pending (no
+                    // early observation, no wrong-mix scold) until a heat source
+                    // brings the vessel to the rule's threshold.
+                    currentLiquidVolume += amountToAdd;
+                    _pendingRule = rule; _pendingAmount = amountToAdd;
+                    ReactionPending?.Invoke(rule);
                 }
                 else
-                {
-                    currentLiquidVolume += amountToAdd;
-                }
-                UpdateAllVisuals(); // Update Color only on reaction
-                Ledger.React(currentChemical != null ? currentChemical.chemicalName : null);
-                string cue = Mishandling.SfxForOutcome(rule.outcome);
-                if (cue.Length > 0) AudioService.TryPlay(cue);
-                ReactionOccurred?.Invoke(rule);
+                    ApplyReaction(rule, amountToAdd, alreadyAdded: false);
             }
             else
             {
@@ -316,6 +345,29 @@ public class LiquidPhysics : MonoBehaviour
                     WrongReagentMixed?.Invoke(currentChemical, incomingChemical);
             }
         }
+    }
+
+    /// The reaction body, shared by the immediate path and a pending fire.
+    /// alreadyAdded: a pending mix already put the incoming amount into the
+    /// liquid column; a precipitate result moves it over instead of doubling it.
+    private void ApplyReaction(ReactionRule rule, float amount, bool alreadyAdded)
+    {
+        if (rule.resultLiquid != null) currentChemical = rule.resultLiquid;
+        if (rule.hasPrecipitate && rule.resultPrecipitate != null)
+        {
+            currentPptChemical = rule.resultPrecipitate;
+            if (alreadyAdded) currentLiquidVolume = Mathf.Max(0f, currentLiquidVolume - amount);
+            currentPptVolume += amount;
+        }
+        else if (!alreadyAdded)
+        {
+            currentLiquidVolume += amount;
+        }
+        UpdateAllVisuals(); // Update Color only on reaction
+        Ledger.React(currentChemical != null ? currentChemical.chemicalName : null);
+        string cue = Mishandling.SfxForOutcome(rule.outcome);
+        if (cue.Length > 0) AudioService.TryPlay(cue);
+        ReactionOccurred?.Invoke(rule);
     }
 
     public void UpdateAllVisuals()

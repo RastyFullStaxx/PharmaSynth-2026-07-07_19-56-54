@@ -107,6 +107,23 @@ public static class SimulatedRun
             (type, msg) => log.AppendLine("  ⚠ MISTAKE [" + type + "] " + msg);
         runner.Mistakes.MistakeRecorded += onMistake;
 
+        // Heat-gate watchdog (user 2026-07-17: "achieve the needed in the
+        // procedure first, before these reactions come"): any temperature-gated
+        // rule that fires while its vessel is still COLD is a broken gate.
+        var watchers = new List<(LiquidPhysics lp, System.Action<ReactionRule> h)>();
+        foreach (var wlp in Object.FindObjectsByType<LiquidPhysics>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            var cap = wlp;
+            System.Action<ReactionRule> h = rule =>
+            {
+                if (rule != null && !rule.TemperatureSatisfied(cap.currentTempC))
+                    res.bugs.Add(cap.name + ": " + rule.name + " fired at " + cap.currentTempC.ToString("0")
+                                 + " C but needs " + rule.minTemperatureC.ToString("0") + " C — the heat gate is broken");
+            };
+            cap.ReactionOccurred += h;
+            watchers.Add((cap, h));
+        }
+
         // Index the mechanisms the build produced.
         var bindings = Object.FindObjectsByType<LiquidTaskBinding>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         var racks = Object.FindObjectsByType<RackTaskGroup>(FindObjectsInactive.Include, FindObjectsSortMode.None);
@@ -166,10 +183,11 @@ public static class SimulatedRun
                                 log.AppendLine("  ✓ rack fired (" + rack.MemberCount + " tubes)");
                             }
                         }
+                        else if (SimulateVesselHeat(runner, id, steps, res, log)) { }
                         else if (SimulateStation(runner, id, simStations, zoneStations, temps, labItems, res, log)) { }
                         else if (deferred)
                         {
-                            res.bugs.Add(id + ": steps defer completion (completesTask:false) but NO rack group or station owns the task");
+                            res.bugs.Add(id + ": steps defer completion (completesTask:false) but NO rack group, heat task, or station owns it");
                             log.AppendLine("  ✗ deferred but ownerless");
                         }
                         else
@@ -177,6 +195,9 @@ public static class SimulatedRun
                     }
                     else if (runner.Graph.IsComplete(id))
                         log.AppendLine("  ✓ completed by delivery");
+                    // The procedure's heat step, played: mixes held cold go into
+                    // the water bath and must fire there.
+                    if (runner.Graph.IsComplete(id)) WarmAtBath(id, steps, res, log);
                 }
                 else
                     handled = SimulateStation(runner, id, simStations, zoneStations, temps, labItems, res, log);
@@ -226,6 +247,7 @@ public static class SimulatedRun
         // TeleAnchors that the next run resurrected (2026-07-17). Use Reveal Stage
         // when you WANT the built stage to inspect.
         runner.Mistakes.MistakeRecorded -= onMistake;
+        foreach (var (wlp, wh) in watchers) if (wlp != null) wlp.ReactionOccurred -= wh;
         builder.Build("tutorial-methane");
 
         // Put every drop back: bottles refill, tubes empty — the scene must be
@@ -251,33 +273,51 @@ public static class SimulatedRun
         Dictionary<ChemicalData, float> demand,
         Dictionary<LiquidTaskBinding, float> pouredInto, Result res, StringBuilder log)
     {
-        int totalActions = 0, doneActions = 0;
-        foreach (var (b, s) in steps) totalActions += ActionsFor(s);
-
+        // PLAN first (source, increment, action count per step) so the early-
+        // completion check compares against the REAL minimum — planning dips but
+        // executing tilt-pours made 10/10 look like 10/50; overshoot pours are
+        // OPTIONAL (a player stops when the ✓ shows), so only completion BELOW
+        // the minimum is a bug.
+        var plan = new List<(LiquidTaskBinding b, LiquidTaskBinding.ReagentStep s, LiquidPhysics src, bool vesselSource, float inc, int n)>();
+        int minTotal = 0;
         foreach (var (b, s) in steps)
         {
-            var lp = b.GetComponent<LiquidPhysics>();
-            if (lp == null)
+            var plp = b.GetComponent<LiquidPhysics>();
+            if (plp == null)
             {
                 res.bugs.Add(id + ": binding for " + s.reagent.chemicalName + " sits on '" + b.name
                              + "' which has NO LiquidPhysics — nothing to pour into");
                 return false;
             }
-            var src = FindSource(s.reagent);
-            if (src == null)
+            var psrc = FindSource(s.reagent, plp);
+            if (psrc == null)
             {
                 res.bugs.Add(id + ": no bench source holds '" + s.reagent.chemicalName
                              + "' — the player cannot perform this step");
                 log.AppendLine("  ✗ no source bottle for " + s.reagent.chemicalName);
                 continue;   // supply audit details it; keep walking
             }
-
-            float inc = IncrementFor(s);
-            int n = ActionsFor(s);
+            // Pouring FROM another vessel (the filtrate through the funnel) is a
+            // tilt-pour of the solution — never spatula dips, whatever the
+            // chemical's dry state says (round one dipped the hydrolysate 50×).
+            bool pv = psrc.GetComponent<LiquidTaskBinding>() != null;
+            float pinc = pv ? 0.5f : IncrementFor(s);
+            int pmin = s.requiredMl <= 0f ? 1 : Mathf.CeilToInt(s.requiredMl / pinc - 0.0001f);
+            int pn = pmin;
             // Human overshoot on bulk tilt-pours only — squeezes and dips are counted.
-            if (!IsSolid(s) && s.requiredMl > 5f) n = Mathf.CeilToInt(n * 1.2f);
+            if ((pv || !IsSolid(s)) && s.requiredMl > 4f) pn = Mathf.CeilToInt(pn * 1.2f);
+            plan.Add((b, s, psrc, pv, pinc, pn));
+            minTotal += pmin;
+        }
+
+        int doneActions = 0;
+
+        foreach (var (b, s, src, vesselSource, inc, n) in plan)
+        {
+            var lp = b.GetComponent<LiquidPhysics>();
 
             float before = b.AccumulatedFor(id, s.reagent);
+            int poured = 0;
             for (int k = 0; k < n; k++)
             {
                 var chem = src.PourOut(inc);                    // out of the real bottle
@@ -288,13 +328,17 @@ public static class SimulatedRun
                     break;
                 }
                 lp.AddLiquid(chem, inc);                        // the real chemistry path
-                doneActions++;
-                if (runner.Graph.IsComplete(id) && doneActions < totalActions)
+                doneActions++; poured++;
+                if (runner.Graph.IsComplete(id))
                 {
-                    res.bugs.Add(id + ": completed EARLY at action " + doneActions + "/" + totalActions
-                                 + " (" + s.reagent.chemicalName + ") — a threshold or step-set is wrong");
-                    log.AppendLine("  ✗ completed early at " + doneActions + "/" + totalActions);
-                    return false;
+                    if (doneActions < minTotal)
+                    {
+                        res.bugs.Add(id + ": completed EARLY at action " + doneActions + "/" + minTotal
+                                     + " minimum (" + s.reagent.chemicalName + ") — a threshold or step-set is wrong");
+                        log.AppendLine("  ✗ completed early at " + doneActions + "/" + minTotal);
+                        return false;
+                    }
+                    break;   // the ✓ showed — a player stops pouring
                 }
             }
             // The pour happened; did the BINDING hear it? Silent-unsubscribed is
@@ -308,11 +352,105 @@ public static class SimulatedRun
                 log.AppendLine("  ✗ binding heard nothing");
             }
 
-            demand.TryGetValue(s.reagent, out float d); demand[s.reagent] = d + Mathf.Max(inc * n, 0f);
-            pouredInto.TryGetValue(b, out float pv); pouredInto[b] = pv + inc * n;
-            log.AppendLine("  " + n + "× " + VerbFor(s) + " " + s.reagent.chemicalName
-                           + " (from " + src.name + ") → " + b.name
-                           + " (" + (inc * n).ToString("0.#") + UnitFor(s) + ")");
+            demand.TryGetValue(s.reagent, out float d); demand[s.reagent] = d + Mathf.Max(inc * poured, 0f);
+            pouredInto.TryGetValue(b, out float pv); pouredInto[b] = pv + inc * poured;
+            log.AppendLine("  " + poured + "× " + (vesselSource ? "tilt-pour (through the funnel)" : VerbFor(s))
+                           + " " + s.reagent.chemicalName + " (from " + src.name + ") → " + b.name
+                           + " (" + (inc * poured).ToString("0.#") + (vesselSource ? " ml" : UnitFor(s)) + ")");
+        }
+        return true;
+    }
+
+    /// The REAL water bath, prepared like a player: pour distilled water into it
+    /// from the shelf bottle (once), stand a lit burner beside it, let it heat.
+    /// Returns the ready controller, or null with a bug when the tool chain is
+    /// broken. The bath is the only heat source — no zones, no stations.
+    static WaterBathController PrepareBath(Result res, StringBuilder log)
+    {
+        var bath = Object.FindAnyObjectByType<WaterBathController>();
+        if (bath == null)
+        {
+            res.bugs.Add("no WaterBathController in the scene — heated steps are unplayable (run Apply W5.8 Verb Data)");
+            return null;
+        }
+        if (!bath.HasWater)
+        {
+            var bathLp = bath.GetComponentInChildren<LiquidPhysics>();
+            ChemicalData water = null;
+            foreach (var lp in Object.FindObjectsByType<LiquidPhysics>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (lp != null && lp.currentChemical != null && lp.currentChemical.chemicalName == "Distilled Water"
+                    && lp.GetComponent<LiquidTaskBinding>() == null)
+                { water = lp.currentChemical;
+                  for (int i = 0; i < 20; i++) { var c = lp.PourOut(1f); if (c == null) break; bathLp.AddLiquid(c, 1f); }
+                  break; }
+            if (water == null || !bath.HasWater)
+            {
+                res.bugs.Add("could not fill the water bath with Distilled Water — bath unusable");
+                return null;
+            }
+            log.AppendLine("  (filled the water bath with 20 ml Distilled Water)");
+        }
+        log.AppendLine("  (lit a burner beside the bath)");
+        return bath;
+    }
+
+    /// A mixed-cold recipe carried to the bath: heat until it fires (or the bath
+    /// tops out — then the gate itself is broken).
+    static void WarmAtBath(string id,
+        List<(LiquidTaskBinding b, LiquidTaskBinding.ReagentStep s)> steps, Result res, StringBuilder log)
+    {
+        var seen = new HashSet<LiquidPhysics>();
+        foreach (var (b, _) in steps)
+        {
+            var lp = b != null ? b.GetComponent<LiquidPhysics>() : null;
+            if (lp == null || !seen.Add(lp) || !lp.HasPendingReaction) continue;
+            var rule = lp.PendingRule;
+            var bath = PrepareBath(res, log);
+            if (bath == null) return;
+            for (int i = 0; i < 600 && lp.HasPendingReaction; i++)
+            {
+                bath.DriveForTest(0.5f);
+                bath.HeatVessel(lp);
+            }
+            if (!lp.HasPendingReaction)
+                log.AppendLine("  ✓ held " + lp.name + " in the bath (" + bath.BathC.ToString("0")
+                               + " C) → " + rule.name
+                               + (string.IsNullOrEmpty(rule.expectedObservation) ? "" : " (" + rule.expectedObservation + ")"));
+            else
+                res.bugs.Add(id + ": bath topped out at " + bath.BathC.ToString("0") + " C but "
+                             + rule.name + " (needs " + rule.minTemperatureC.ToString("0") + " C) did not fire");
+        }
+    }
+
+    /// The zone-free heat STEP: the vessel owning a VesselHeatTask is served,
+    /// then held in the bath until its task condition (served AND hot) trips.
+    static bool SimulateVesselHeat(ExperimentRunner runner, string id,
+        List<(LiquidTaskBinding b, LiquidTaskBinding.ReagentStep s)> steps, Result res, StringBuilder log)
+    {
+        VesselHeatTask heat = null; LiquidPhysics tube = null;
+        foreach (var (b, _) in steps)
+        {
+            var h = b != null ? b.GetComponent<VesselHeatTask>() : null;
+            if (h != null && h.TaskId == id) { heat = h; tube = b.GetComponent<LiquidPhysics>(); break; }
+        }
+        if (heat == null || tube == null) return false;
+
+        var bath = PrepareBath(res, log);
+        if (bath == null) return true;   // owned, but the tool chain is broken (bug already logged)
+        for (int i = 0; i < 600 && !runner.Graph.IsComplete(id); i++)
+        {
+            bath.DriveForTest(0.5f);
+            bath.HeatVessel(tube);
+            runner.Graph.Tick();
+        }
+        if (runner.Graph.IsComplete(id))
+            log.AppendLine("  ✓ held " + tube.name + " in the bath to " + heat.RequiredC.ToString("0")
+                           + " C — step complete (tube at " + tube.currentTempC.ToString("0") + " C)");
+        else
+        {
+            res.bugs.Add(id + ": bath heating never completed the step (tube " + tube.currentTempC.ToString("0")
+                         + " C / needs " + heat.RequiredC.ToString("0") + " C, bath " + bath.BathC.ToString("0") + " C)");
+            runner.CompleteTask(id);   // force past to keep exploring downstream
         }
         return true;
     }
@@ -361,17 +499,31 @@ public static class SimulatedRun
                        + " through the funnel: " + src.name + " → " + dst.name);
     }
 
-    /// The bench bottle a player would pour from: holds the chemical, is not a
-    /// task vessel, has the most left. Mirrors the dropper's own source rule.
-    static LiquidPhysics FindSource(ChemicalData chem)
+    /// The source a player would pour from. A TASK VESSEL that already holds the
+    /// chemical wins over the shelf — that IS the filtrate pour (tube 17's
+    /// hydrolysate through the funnel into the beaker), the intended play; the
+    /// shelf bottle is the fallback for fresh reagents.
+    static LiquidPhysics FindSource(ChemicalData chem, LiquidPhysics destination)
     {
-        LiquidPhysics best = null;
+        LiquidPhysics vessel = null, shelf = null;
         foreach (var lp in Object.FindObjectsByType<LiquidPhysics>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            if (lp != null && lp.currentChemical == chem && lp.currentLiquidVolume > 0.01f
-                && lp.GetComponent<LiquidTaskBinding>() == null && !lp.name.StartsWith("Vessel_")
-                && (best == null || lp.currentLiquidVolume > best.currentLiquidVolume))
-                best = lp;
-        return best;
+        {
+            if (lp == null || lp == destination || lp.currentChemical != chem
+                || lp.currentLiquidVolume <= 0.01f || lp.name.StartsWith("Vessel_")) continue;
+            if (lp.GetComponent<LiquidTaskBinding>() != null)
+            {
+                // A bound vessel is a source ONLY when it is a SYNTHESIS vessel
+                // (carries a VesselHeatTask) that IS that substance (ledger
+                // collapsed to one product entry) — the hydrolysate pour. Round
+                // one drew "ethanol" out of the finished enol tube; round two
+                // tipped the beaker's violet TEST RESIDUE into the control tube.
+                if (lp.Ledger.Count != 1 || lp.GetComponent<VesselHeatTask>() == null) continue;
+                if (vessel == null || lp.currentLiquidVolume > vessel.currentLiquidVolume) vessel = lp;
+            }
+            else
+            { if (shelf == null || lp.currentLiquidVolume > shelf.currentLiquidVolume) shelf = lp; }
+        }
+        return vessel != null ? vessel : shelf;
     }
 
     /// Sustained-verb (sim) and drop-zone stations. Returns false when no station
@@ -421,6 +573,29 @@ public static class SimulatedRun
                 log.AppendLine("  ✗ sim stalled");
                 runner.CompleteTask(id);   // force past to keep exploring downstream
             }
+            // The boil itself: the bath at target heats the vessels bound to
+            // this task, which is what fires their high-threshold pending
+            // reactions (the aspirin hydrolysis needs 90 C — only here).
+            if (st.Kind == StationSim.Heat)
+                foreach (var b2 in Object.FindObjectsByType<LiquidTaskBinding>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                    foreach (var s2 in b2.ExpectedSteps)
+                    {
+                        if (s2 == null || s2.taskId != id) continue;
+                        var vlp = b2.GetComponent<LiquidPhysics>();
+                        if (vlp != null)
+                        {
+                            bool had = vlp.HasPendingReaction;
+                            var pr = vlp.PendingRule;
+                            vlp.SetTemperature(100f);
+                            if (had && !vlp.HasPendingReaction)
+                                log.AppendLine("  ✓ boil fired " + (pr != null ? pr.name : "the pending reaction")
+                                               + " in " + vlp.name);
+                            else if (had)
+                                res.bugs.Add(id + ": boiled " + vlp.name + " to 100 C but "
+                                             + (pr != null ? pr.name : "its reaction") + " still pending");
+                        }
+                        break;
+                    }
             return true;
         }
         foreach (var st in zones)
@@ -485,11 +660,14 @@ public static class SimulatedRun
         {
             var lp = kv.Key != null ? kv.Key.GetComponent<LiquidPhysics>() : null;
             if (lp == null || lp.maxVolume <= 0f) continue;
+            // Judge the PEAK the player saw — a vessel deliberately emptied later
+            // (the hydrolysis tube pours through the funnel) is not "invisible".
             float end = lp.currentLiquidVolume + lp.currentPptVolume;
-            float frac = end / lp.maxVolume;
+            float peak = Mathf.Max(end, kv.Value);
+            float frac = peak / lp.maxVolume;
             if (frac > 0f && frac < 0.04f)
-                res.warnings.Add(kv.Key.name + ": ends the run at " + (frac * 100f).ToString("0.#")
-                                 + "% of capacity (" + end.ToString("0.#") + "/" + lp.maxVolume + " ml) — invisible in VR");
+                res.warnings.Add(kv.Key.name + ": never exceeds " + (frac * 100f).ToString("0.#")
+                                 + "% of capacity (" + peak.ToString("0.#") + "/" + lp.maxVolume + " ml) — invisible in VR");
         }
     }
 

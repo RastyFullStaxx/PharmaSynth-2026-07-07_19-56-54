@@ -1,0 +1,145 @@
+using UnityEngine;
+
+/// Pure rules for the ZONE-FREE water bath (user 2026-07-17: "I don't want any
+/// zone. The entire lab IS the zone. The tools themselves function when brought
+/// together ANYWHERE"). The bath is a real tool with real requirements, exactly
+/// like the manuscript's: fill it with water, put a lit burner under it, and it
+/// warms whatever vessel you bring to it — wherever in the lab it happens to sit.
+public static class WaterBathMath
+{
+    /// Lenient minimum: a splash of water is enough (accuracy is never the test).
+    public const float MinWaterMl = 5f;
+    /// A water bath can never exceed boiling — that's its whole point (the only
+    /// naked-flame heat in any experiment is Exp 6's dry distillation).
+    public const float BathMaxC = 100f;
+    /// A lit burner within this distance drives the bath.
+    public const float BurnerRadius = 0.45f;
+    /// Vessels within this distance of the bath take its temperature.
+    public const float VesselRadius = 0.32f;
+
+    public static bool HasWater(float waterMl) => waterMl >= MinWaterMl;
+
+    public static bool IsHeating(bool hasWater, bool litBurnerNear) => hasWater && litBurnerNear;
+
+    /// The bath's own live label — always tells the player the NEXT thing it needs.
+    public static string StatusLine(bool hasWater, bool litBurnerNear, float bathC)
+        => !hasWater ? "Water Bath — pour in distilled water"
+         : !litBurnerNear ? "Water Bath — needs a lit burner beside it"
+         : "Water Bath — " + Mathf.RoundToInt(bathC) + " C";
+}
+
+/// The bath itself: LiquidPhysics holds the water the player pours in,
+/// TemperatureSim heats while a lit burner sits near, and every vessel brought
+/// close takes the bath's temperature — which is what releases temperature-gated
+/// reactions (Tollens mirror, ester odours, the hydrolysis boil) and satisfies
+/// VesselHeatTask steps. No station, no pad, no fixed position: carry the bath
+/// anywhere, it still works.
+public class WaterBathController : MonoBehaviour
+{
+    private LiquidPhysics _lp;
+    private TemperatureSim _temp;
+    private ProximityLabel _label;
+    private float _nextScan;
+
+    public float BathC => _temp != null ? Mathf.Min(_temp.CurrentC, WaterBathMath.BathMaxC) : 25f;
+    public bool HasWater => _lp != null && WaterBathMath.HasWater(_lp.currentLiquidVolume);
+
+    /// Edit-mode / wiring seam.
+    public void Bind(LiquidPhysics lp, TemperatureSim temp, ProximityLabel label)
+    { _lp = lp; _temp = temp; _label = label; }
+
+    private void Update()
+    {
+        if (!Application.isPlaying || _temp == null) return;
+        if (Time.time < _nextScan) return;
+        _nextScan = Time.time + 0.25f;
+
+        bool lit = AnyLitBurnerNear();
+        bool heating = WaterBathMath.IsHeating(HasWater, lit);
+        // Source slightly above boiling so the model actually REACHES 100; the
+        // push below clamps at BathMaxC — a water bath cannot exceed boiling.
+        _temp.SetHeating(heating, 110f);
+
+        if (BathC > 30f) PushHeat();
+        if (_label != null)
+            _label.SetLabel(WaterBathMath.StatusLine(HasWater, lit, BathC), 1.6f);
+    }
+
+    private bool AnyLitBurnerNear()
+    {
+        foreach (var b in FindObjectsByType<BurnerController>(FindObjectsSortMode.None))
+            if (b != null && b.IsLit
+                && Vector3.Distance(b.transform.position, transform.position) <= WaterBathMath.BurnerRadius)
+                return true;
+        return false;
+    }
+
+    private void PushHeat()
+    {
+        foreach (var col in Physics.OverlapSphere(transform.position, WaterBathMath.VesselRadius,
+                                                  ~0, QueryTriggerInteraction.Ignore))
+        {
+            var lp = col != null ? col.GetComponentInParent<LiquidPhysics>() : null;
+            if (lp != null && lp != _lp) lp.SetTemperature(BathC);
+        }
+    }
+
+    /// Explicitly warm one vessel to the bath's temperature (SimulatedRun's
+    /// stand-in for physically holding the tube in the bath).
+    public void HeatVessel(LiquidPhysics vessel)
+    { if (vessel != null && vessel != _lp) vessel.SetTemperature(BathC); }
+
+    /// Deterministic drive for edit-mode simulation: a lit burner is present,
+    /// water state is real (the sim pours it in first, like the player).
+    public void DriveForTest(float dt)
+    {
+        if (_temp == null) return;
+        _temp.SetHeating(WaterBathMath.IsHeating(HasWater, true), 110f);
+        _temp.Tick(dt);
+    }
+}
+
+/// Completes a heat step ZONE-FREE: the task is done when this vessel has been
+/// served all its reagents AND actually reached the required temperature —
+/// however and wherever the player heated it. Replaces the old fixed
+/// Station_prep-hydrolysis (deleted with its pad/label/teleport anchor).
+public class VesselHeatTask : MonoBehaviour
+{
+    private ExperimentRunner _runner;
+    private string _taskId;
+    private float _requiredC;
+    private LiquidTaskBinding _binding;
+    private LiquidPhysics _lp;
+    private bool _subscribed;
+
+    public string TaskId => _taskId;
+    public float RequiredC => _requiredC;
+
+    /// Pure (suite-pinned): served AND hot — never one without the other.
+    public static bool ShouldComplete(bool allReagentsIn, float tempC, float requiredC)
+        => allReagentsIn && tempC >= requiredC;
+
+    public void Bind(ExperimentRunner runner, string taskId, float requiredC,
+                     LiquidTaskBinding binding, LiquidPhysics lp)
+    {
+        if (_runner != null && _subscribed) { _runner.ExperimentStarted -= OnStarted; _subscribed = false; }
+        _runner = runner; _taskId = taskId; _requiredC = requiredC; _binding = binding; _lp = lp;
+        if (_runner != null) { _runner.ExperimentStarted += OnStarted; _subscribed = true; }
+        Register();
+    }
+
+    /// Teardown seam (ClearBenchBindings) — bench items survive rebuilds.
+    public void Detach()
+    { if (_runner != null && _subscribed) { _runner.ExperimentStarted -= OnStarted; _subscribed = false; } }
+
+    private void OnDestroy() => Detach();
+    private void OnStarted(ExperimentModuleDefinition _) => Register();
+
+    private void Register()
+    {
+        if (_runner == null || _runner.Graph == null || string.IsNullOrEmpty(_taskId)) return;
+        _runner.Graph.RegisterCondition(_taskId, () =>
+            _binding != null && _lp != null
+            && ShouldComplete(_binding.ReadyFor(_taskId), _lp.currentTempC, _requiredC));
+    }
+}

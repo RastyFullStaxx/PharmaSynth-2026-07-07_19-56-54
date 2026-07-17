@@ -142,6 +142,7 @@ MonoBehaviour:
       requiredMl: 50
       completesTask: 1
     rackGroup: 
+    heatToC: 0
   - benchItem: 
     prefabName: TestTube_WithLiquid
     displayName: Product Test Tube
@@ -162,3 +163,4 @@ MonoBehaviour:
       requiredMl: 50
       completesTask: 1
     rackGroup: 
+    heatToC: 0

@@ -1522,9 +1522,24 @@ public static class PharmaSelfTests
             lp.mainRenderer = null; lp.precipitateRenderer = null;   // skip material work in edit mode
             lp.registry = reg; lp.currentChemical = benz; lp.currentLiquidVolume = 100f;
             bool reacted = false; lp.ReactionOccurred += _ => reacted = true;
+            bool pended = false; lp.ReactionPending += _ => pended = true;
+
+            // HEAT GATE (user 2026-07-17: "achieve the needed in the procedure
+            // first, before these reactions come"): BenzoicOxidation needs 40 C —
+            // poured COLD it must HOLD (no early observation, no wrong-mix
+            // scold), then fire the moment the bath brings the vessel there.
             lp.AddLiquid(kmno4, 40f);
-            A("reaction: AddLiquid fires ReactionOccurred", reacted);
+            A("reaction: the right recipe poured COLD holds as pending",
+                !reacted && pended && lp.HasPendingReaction && lp.currentChemical == benz
+                && Near(lp.currentLiquidVolume, 140f));
+            lp.SetTemperature(30f);
+            A("reaction: below-threshold heat still holds", !reacted && lp.HasPendingReaction);
+            lp.SetTemperature(60f);
+            A("reaction: reaching temperature fires it", reacted && !lp.HasPendingReaction);
             A("reaction: currentChemical becomes the product", lp.currentChemical == benzoic);
+            lp.SetContents(null, 0f);
+            A("reaction: a reset vessel holds no half-done recipe",
+                !lp.HasPendingReaction && Near(lp.currentTempC, 25f));
         }
         finally { UnityEngine.Object.DestroyImmediate(vgo); }
 
@@ -1564,6 +1579,11 @@ public static class PharmaSelfTests
             // scold): an expected chem for a PENDING task passes IsExpectedNow;
             // after its task completes it stops being expected.
             A("pour: a pending step's reagent is expected", bind.IsExpectedNow(water5));
+            // Leniency epsilon (2026-07-17): fifty 0.1 g float dips sum below 5.0 —
+            // strict >= left the player one phantom dip short, forever.
+            float drift = 0f; for (int k = 0; k < 50; k++) drift += 0.1f;
+            A("pour: float-drift dips still meet the threshold",
+                LiquidTaskBinding.MetThreshold(drift, 5f) && !LiquidTaskBinding.MetThreshold(4.8f, 5f));
             A("pour: a random reagent is not expected", !bind.IsExpectedNow(LoadChem("Chem_Phenol")));
             // Completion must NOT revoke sanction: LiquidAdded (completes the
             // task) fires before WrongReagentMixed inside the same AddLiquid, so
@@ -1963,6 +1983,21 @@ public static class PharmaSelfTests
                 ExperimentSceneBuilder.BenchDisplayNameFor("Kit_TestTube_3") == "Test Tube 3"
                 && ExperimentSceneBuilder.BenchDisplayNameFor("Kit_Hard-GlassTestTube_2") == "Hard-Glass Test Tube 2"
                 && ExperimentSceneBuilder.BenchDisplayNameFor("Eq_Beaker_100mL") == "Beaker 100 mL");
+
+            // ZONE-FREE heat (user 2026-07-17: "the entire lab IS the zone"): the
+            // water bath is a real tool — water first, flame second, then heat;
+            // capped at boiling; its label always names the next thing it needs.
+            A("waterbath: water then flame then heat",
+                !WaterBathMath.IsHeating(false, true) && !WaterBathMath.IsHeating(true, false)
+                && WaterBathMath.IsHeating(true, true) && WaterBathMath.HasWater(5f) && !WaterBathMath.HasWater(4f));
+            A("waterbath: label narrates the missing piece",
+                WaterBathMath.StatusLine(false, true, 25f) == "Water Bath — pour in distilled water"
+                && WaterBathMath.StatusLine(true, false, 25f) == "Water Bath — needs a lit burner beside it"
+                && WaterBathMath.StatusLine(true, true, 82.4f) == "Water Bath — 82 C");
+            A("vesselheat: completes only served AND hot",
+                !VesselHeatTask.ShouldComplete(false, 95f, 90f)
+                && !VesselHeatTask.ShouldComplete(true, 80f, 90f)
+                && VesselHeatTask.ShouldComplete(true, 90f, 90f));
         }
         // The SCENE wiring — the dropper bug's exact shape was "verb authored, never
         // ATTACHED" (DropperController existed in code, 0 in the scene, and the player
@@ -2343,14 +2378,16 @@ public static class PharmaSelfTests
                 { allKnown = false; orphanNote = layout.name + " -> " + id; }
 
             // (b) Every graph task needs an owner: a station, a completing binding,
-            //     or a rack group (deferred bindings whose members share a rackGroup).
+            //     a rack group (deferred bindings whose members share a rackGroup),
+            //     or a zone-free heat vessel (heatToC > 0 — VesselHeatTask, 2026-07-17).
             foreach (var t in module.graphTasks)
             {
                 bool owned = false;
                 foreach (var s in layout.stations) if (s.taskId == t.taskId) owned = true;
                 foreach (var v in layout.vessels)
                     foreach (var b in v.bindings)
-                        if (b.taskId == t.taskId && (b.completesTask || !string.IsNullOrEmpty(v.rackGroup)))
+                        if (b.taskId == t.taskId
+                            && (b.completesTask || !string.IsNullOrEmpty(v.rackGroup) || v.heatToC > 0f))
                             owned = true;
                 // DataSheet steps may be closed by the quiz/tablet rather than the stage.
                 if (!owned && t.phase != TaskPhase.DataSheet)

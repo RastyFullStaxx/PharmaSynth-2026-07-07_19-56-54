@@ -103,6 +103,45 @@ public static class W58VerbDataApplier
             }
         }
 
+        // The WATER BATH is a zone-free tool (2026-07-17): fill it with distilled
+        // water, put a lit burner beside it, and it warms any vessel brought
+        // close — anywhere in the lab. Needs a liquid receiver (the water the
+        // player pours), a heat model, its live label, and the controller.
+        foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (t.name != "WaterBath") continue;
+            var host = t.gameObject;
+            // LiquidPhysics requires a Renderer host — use the bath root only if
+            // it renders, else the first mesh child (colliders find it via parent).
+            if (host.GetComponent<Renderer>() == null)
+                foreach (var r in t.GetComponentsInChildren<MeshRenderer>(true))
+                { host = r.gameObject; break; }
+            var blp = host.GetComponent<LiquidPhysics>();
+            if (blp == null)
+            {
+                blp = host.AddComponent<LiquidPhysics>();
+                blp.maxVolume = 400f;
+                blp.SetContents(null, 0f);   // starts EMPTY — the player fills it
+                sceneChanges++;
+            }
+            var bts = t.GetComponent<TemperatureSim>();
+            if (bts == null)
+            {
+                bts = t.gameObject.AddComponent<TemperatureSim>();
+                var so = new SerializedObject(bts);
+                so.FindProperty("ambientC").floatValue = 25f;
+                so.FindProperty("targetC").floatValue = 95f;
+                so.FindProperty("overheatC").floatValue = 999f;   // a WATER bath cannot ruin a batch
+                so.ApplyModifiedPropertiesWithoutUndo();
+                sceneChanges++;
+            }
+            var blabel = t.GetComponent<ProximityLabel>() ?? t.gameObject.AddComponent<ProximityLabel>();
+            var wbc = t.GetComponent<WaterBathController>();
+            if (wbc == null) { wbc = t.gameObject.AddComponent<WaterBathController>(); sceneChanges++; }
+            wbc.Bind(blp, bts, blabel);
+            blabel.SetLabel(WaterBathMath.StatusLine(false, false, 25f), 1.6f);
+        }
+
         // The porcelain spatula is the FINE solids tool: Exp 2 weighs 0.1 g salicylic
         // and 0.5 g aspirin, both smaller than the scoopula's 2 g dip. Its charge is
         // ScoopMath.GramsPerSpatula; the scoopula keeps the coarse 2 g.

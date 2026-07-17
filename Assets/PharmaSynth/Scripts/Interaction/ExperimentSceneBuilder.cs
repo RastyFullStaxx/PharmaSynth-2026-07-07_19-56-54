@@ -705,6 +705,20 @@ public class ExperimentSceneBuilder : MonoBehaviour
                 _rackBindings[v.rackGroup] = list = new List<LiquidTaskBinding>();
             list.Add(bind);
         }
+        // ZONE-FREE heat step (2026-07-17): the vessel's deferred task completes
+        // when it is served AND heated to heatToC — wherever the player does it.
+        // Replaces the fixed Heat station (pad/label/teleport anchor all gone).
+        if (v.heatToC > 0f)
+        {
+            string heatTask = null;
+            foreach (var b in v.bindings)
+                if (!b.completesTask && !string.IsNullOrEmpty(b.taskId)) { heatTask = b.taskId; break; }
+            if (heatTask != null)
+                (inst.GetComponent<VesselHeatTask>() ?? inst.AddComponent<VesselHeatTask>())
+                    .Bind(runner, heatTask, v.heatToC, bind, lp);
+            else
+                Debug.LogWarning("[SceneBuilder] " + v.benchItem + " sets heatToC but has no deferred (completesTask:false) binding to own.");
+        }
         // GetComponent-or-Add: a SPAWNED vessel is fresh, but a BENCH item survives
         // every rebuild — blind AddComponent would stack a new copy of each of these
         // on it per module load.
@@ -782,6 +796,12 @@ public class ExperimentSceneBuilder : MonoBehaviour
         {
             if (g == null || (_stage != null && g.transform.IsChildOf(_stage))) continue;
             Kill(g);
+        }
+        foreach (var h in FindObjectsByType<VesselHeatTask>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (h == null || (_stage != null && h.transform.IsChildOf(_stage))) continue;
+            h.Detach();
+            Kill(h);
         }
     }
 

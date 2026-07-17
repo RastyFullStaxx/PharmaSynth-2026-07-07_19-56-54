@@ -23,12 +23,24 @@ public class MixFeedback : MonoBehaviour
             _lp.ReactionOccurred -= OnReaction;
             _lp.WrongReagentMixed -= OnWrongMix;
             _lp.LiquidRejected -= OnRejected;
+            _lp.ReactionPending -= OnPending;
         }
         _lp = lp;
         if (_lp == null) return;
         _lp.ReactionOccurred += OnReaction;
         _lp.WrongReagentMixed += OnWrongMix;
         _lp.LiquidRejected += OnRejected;
+        _lp.ReactionPending += OnPending;
+    }
+
+    /// The right recipe, cold: tell the player exactly what the procedure wants
+    /// next (2026-07-17 — reactions no longer fire before their heat step).
+    private void OnPending(ReactionRule rule)
+    {
+        if (rule == null || Time.time < _quietUntil) return;
+        _quietUntil = Time.time + 2.5f;
+        FloatingText.Show("Needs heat — warm to " + Mathf.RoundToInt(rule.minTemperatureC) + " C (water bath)",
+                          PopupPos(), new Color(1f, 0.75f, 0.4f));
     }
 
     private void OnDestroy() { if (_lp != null) Bind(null); }

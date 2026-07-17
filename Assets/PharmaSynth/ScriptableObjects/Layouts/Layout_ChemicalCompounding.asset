@@ -13,19 +13,7 @@ MonoBehaviour:
   m_Name: Layout_ChemicalCompounding
   m_EditorClassIdentifier: Assembly-CSharp::ExperimentLayout
   moduleId: prelim-chemical-compounding
-  stations:
-  - taskId: prep-hydrolysis
-    label: 9. Boil the aspirin mixture
-    requiredItemId: kit-bunsenburner
-    pos: {x: -1.55, y: 0.91, z: -3.36}
-    sim: 1
-    simTargetC: 95
-  - taskId: filter-hydrolysate
-    label: 10. Filter the hydrolysate
-    requiredItemId: kit-funnel
-    pos: {x: -0.55, y: 0.91, z: -3.36}
-    sim: 3
-    simTargetC: 85
+  stations: []
   props:
   vessels:
   - benchItem: Kit_TestTube_0
@@ -371,7 +359,8 @@ MonoBehaviour:
       taskId: prep-hydrolysis
       requiredMl: 1
       completesTask: 0
-    rackGroup: 
+    rackGroup:
+    heatToC: 90
   - benchItem: Eq_Beaker_100mL
     prefabName: Beaker_100mL
     displayName: FiltrateBeaker
@@ -381,8 +370,8 @@ MonoBehaviour:
     bindings:
     - reagentChemical: Salicylic Acid
       taskId: filter-hydrolysate
-      requiredMl: 0
-      completesTask: 0
+      requiredMl: 5
+      completesTask: 1
     - reagentChemical: Ferric Chloride 10%
       taskId: test-hydrolysis-fecl3
       requiredMl: 2

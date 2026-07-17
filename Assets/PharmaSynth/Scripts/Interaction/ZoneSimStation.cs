@@ -26,6 +26,9 @@ public class ZoneSimStation : MonoBehaviour
     public float filtrateMlPerSec = 30f;
     public float gasMlPerSec = 25f;
     [Range(0.1f, 1f)] public float doneFraction = 0.95f;
+    [Tooltip("A Heat station warms any vessel within this radius to its sim temperature — the water-bath zone that fires temperature-gated reactions (2026-07-17).")]
+    public float heatRadius = 0.5f;
+    private float _nextHeatPush;
 
     private bool _subscribed;
     private SimLoopAudio _loop;
@@ -112,7 +115,11 @@ public class ZoneSimStation : MonoBehaviour
         switch (_kind)
         {
             case StationSim.Heat:
-                if (_temp != null) _temp.SetHeating(occupied && (_ignitionGate == null || _ignitionGate()), heatSourceC);
+                if (_temp != null)
+                {
+                    _temp.SetHeating(occupied && (_ignitionGate == null || _ignitionGate()), heatSourceC);
+                    PushHeatToVessels();
+                }
                 break;
             case StationSim.Crystallise:
                 if (occupied && _cryst != null) _cryst.BeginCrystallization();  // ice bath: place & let it set
@@ -123,6 +130,23 @@ public class ZoneSimStation : MonoBehaviour
             case StationSim.Collect:
                 if (occupied && _gas != null) _gas.AddGas(gasMlPerSec * Mathf.Max(0f, dt));
                 break;
+        }
+    }
+
+    /// The bath IS the heat source: any vessel held/placed within heatRadius
+    /// takes the sim temperature, which is what fires temperature-gated
+    /// reactions (Tollens mirror, ester odours, the hydrolysis boil) at the
+    /// moment the procedure actually asks for — never before. Throttled; only
+    /// pushes while the bath is meaningfully above ambient.
+    private void PushHeatToVessels()
+    {
+        if (_temp == null || _temp.CurrentC < 30f) return;
+        if (Application.isPlaying && Time.time < _nextHeatPush) return;
+        _nextHeatPush = Time.time + 0.25f;
+        foreach (var col in Physics.OverlapSphere(transform.position, heatRadius, ~0, QueryTriggerInteraction.Ignore))
+        {
+            var lp = col != null ? col.GetComponentInParent<LiquidPhysics>() : null;
+            if (lp != null) lp.SetTemperature(_temp.CurrentC);
         }
     }
 }

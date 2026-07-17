@@ -70,6 +70,9 @@ public class ExperimentLayout : ScriptableObject
         public List<Bind> bindings = new List<Bind>();   // reagent poured in → task completed
         [Tooltip("Vessels sharing a rackGroup are ONE SET: a step they share only completes once EVERY member has had its reagent (RackTaskGroup). Exp 2's five enol tubes, its butyl alcohols, acetone-vs-acetaldehyde. Empty = a standalone vessel. Members author their shared bindings completesTask:false — the group completes them.")]
         public string rackGroup = "";
+
+        [Tooltip("ZONE-FREE heat step (2026-07-17, replaces fixed Heat stations): >0 = the vessel's deferred (completesTask:false, no rack) task completes when the vessel has ALL its reagents AND has been heated to this temperature — wherever the player does it (water bath + lit burner, anywhere in the lab). VesselHeatTask registers the graph condition.")]
+        public float heatToC = 0f;
     }
 
     public string moduleId;

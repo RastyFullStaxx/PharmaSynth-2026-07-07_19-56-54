@@ -121,7 +121,7 @@ public class LiquidTaskBinding : MonoBehaviour
             _accumulated.TryGetValue(step, out float have);
             have += Mathf.Max(0f, amountMl);
             _accumulated[step] = have;
-            if (have < step.requiredMl)
+            if (!MetThreshold(have, step.requiredMl))
             {
                 // Live pour guide (user 2026-07-17: "I can't even see how much
                 // water I've poured") — a throttled running count over the vessel.
@@ -192,6 +192,12 @@ public class LiquidTaskBinding : MonoBehaviour
         }
         return true;
     }
+
+    /// Threshold check with a leniency epsilon (suite-pinned): fifty 0.1 g
+    /// spatula dips sum to 4.9999995 in floats — strictly-less-than left the
+    /// player one phantom dip short of a 5 g step, forever (SimulatedRun,
+    /// 2026-07-17). Thresholds are minimums, not calipers.
+    public static bool MetThreshold(float have, float required) => have >= required - 0.01f;
 
     /// This vessel has everything the task asked of it (the rack group's poll).
     public bool ReadyFor(string taskId) => _ready.Contains(taskId);
