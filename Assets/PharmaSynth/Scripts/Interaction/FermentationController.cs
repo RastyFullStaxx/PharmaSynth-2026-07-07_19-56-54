@@ -18,6 +18,15 @@ public static class FermentationMath
     public static bool IsFermenting(bool mustPrepared, float flaskMl) => mustPrepared && flaskMl > 1f;
     /// Confirmed the moment the limewater has clouded (any CaCO₃ precipitate).
     public static bool CO2Confirmed(float limewaterPptMl) => limewaterPptMl > 0.5f;
+
+    /// After this long fermenting with nothing clouding, nudge the player — they
+    /// have likely forgotten to lead the delivery tube into a limewater tube.
+    public const float NudgeAfterSeconds = 5f;
+
+    /// One-time guidance when the flask is bubbling but no limewater is catching
+    /// the CO₂ (edge case: the player sealed the flask but forgot the limewater).
+    public static bool ShouldNudge(bool fermenting, bool confirmed, float secondsFermenting, bool alreadyNudged)
+        => fermenting && !confirmed && !alreadyNudged && secondsFermenting >= NudgeAfterSeconds;
 }
 
 public class FermentationController : MonoBehaviour
@@ -31,6 +40,8 @@ public class FermentationController : MonoBehaviour
     private float _nextPush;
     private bool _subscribed;
     private bool _confirmed;   // a limewater vessel has actually clouded
+    private float _fermentingSince = -1f;
+    private bool _nudged;
 
     public bool Fermenting => flask != null && FermentationMath.IsFermenting(
         runner != null && runner.Graph != null && runner.Graph.IsComplete(mustTaskId), flask.currentLiquidVolume);
@@ -73,7 +84,8 @@ public class FermentationController : MonoBehaviour
     private void OnDestroy() => Detach();
     private void OnEnable() => Subscribe();
     private void OnDisable() => Unsubscribe();
-    private void OnStarted(ExperimentModuleDefinition _) { _confirmed = false; Register(); }
+    private void OnStarted(ExperimentModuleDefinition _)
+    { _confirmed = false; _nudged = false; _fermentingSince = -1f; Register(); }
 
     private void Register()
     {
@@ -88,6 +100,17 @@ public class FermentationController : MonoBehaviour
     private void Update()
     {
         if (!Application.isPlaying || runner == null || !runner.IsRunning || !Fermenting) return;
+
+        // Guidance for the "forgot the limewater" edge case: if the flask has
+        // been bubbling a while with nothing clouding, tell the player what to do.
+        if (_fermentingSince < 0f) _fermentingSince = Time.time;
+        if (FermentationMath.ShouldNudge(true, _confirmed, Time.time - _fermentingSince, _nudged))
+        {
+            _nudged = true;
+            FloatingText.Show("CO₂ is bubbling — lead the delivery tube into a limewater tube to confirm it",
+                              flask.transform.position + Vector3.up * 0.25f, new Color(0.7f, 0.9f, 1f), 1.1f);
+        }
+
         if (Time.time < _nextPush) return;
         _nextPush = Time.time + 0.25f;
         EmitCO2();

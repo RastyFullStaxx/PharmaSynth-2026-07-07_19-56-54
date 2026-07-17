@@ -93,6 +93,7 @@ public static class PharmaSelfTests
         RawReagentSuite();
         VoiceSuite();
         DispenserSuite();
+        EdgeCaseSuite();
 
         string summary = $"PharmaSynth Self-Tests: {_total - _fail}/{_total} passed";
         if (_fail == 0) Debug.Log("<color=#4CD07D>" + summary + " — ALL GREEN</color>");
@@ -3718,6 +3719,145 @@ public static class PharmaSelfTests
             A("launcher: unknown id returns null", launcher.Launch("does-not-exist") == null);
         }
         finally { UnityEngine.Object.DestroyImmediate(rgo); UnityEngine.Object.DestroyImmediate(lgo); }
+    }
+
+    /// Adversarial EDGE CASES (user 2026-07-17: "cover edge cases with proper
+    /// error handling, effects, features"): a confused/mischievous player does
+    /// the WRONG thing and the game must respond — grade the mistake, refuse the
+    /// impossible, block the out-of-order, never false-complete. Each drives the
+    /// REAL components with real Exp 3 chemicals (effects self-guard in edit mode).
+    static void EdgeCaseSuite()
+    {
+        var reg = AssetDatabase.LoadAssetAtPath<ReactionRegistry>("Assets/PharmaSynth/ScriptableObjects/Reactions/MasterReactionRegistry.asset");
+        var ethanol = LoadChem("Chem_Ethanol");
+        var sugar   = LoadChem("Chem_BrownSugar");
+        var hypo    = LoadChem("Chem_SodiumHypochlorite");
+        var sulfuric= LoadChem("Chem_SulfuricAcid");
+        var lime    = LoadChem("Chem_Limewater");
+        var co2     = LoadChem("Chem_CarbonDioxide");
+        A("edge: Exp 3 chemicals resolve",
+            ethanol && sugar && hypo && sulfuric && lime && co2 && reg != null);
+        if (!(ethanol && sugar && hypo && sulfuric && lime && co2) || reg == null) return;
+
+        ExperimentModuleDefinition OneTask(string id) {
+            var m = ScriptableObject.CreateInstance<ExperimentModuleDefinition>();
+            m.graphTasks = new List<ExperimentTask> { new ExperimentTask { taskId = id, label = id } };
+            return m;
+        }
+
+        // E1 — WRONG REAGENT into a task vessel is graded (not silently swallowed).
+        {
+            var rgo = new GameObject("ec1r"); var vgo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            try {
+                var runner = rgo.AddComponent<ExperimentRunner>();
+                runner.SetModule(OneTask("t")); runner.StartExperiment();
+                var lp = vgo.AddComponent<LiquidPhysics>(); lp.mainRenderer = null; lp.registry = reg;
+                lp.currentChemical = ethanol; lp.currentLiquidVolume = 10f;
+                var bind = vgo.AddComponent<LiquidTaskBinding>();
+                bind.SetVesselAndRunner(lp, runner);
+                bind.AddExpected(ethanol, "t");
+                int before = runner.MistakeCount;
+                lp.AddLiquid(sugar, 2f);                    // brown sugar — no step wants it here
+                A("edge: a wrong reagent is graded a mistake", runner.MistakeCount > before);
+            } finally { UnityEngine.Object.DestroyImmediate(rgo); UnityEngine.Object.DestroyImmediate(vgo); }
+        }
+
+        // E2 — OVERFLOW: pouring past capacity is REFUSED (no phantom completion).
+        {
+            var vgo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            try {
+                var lp = vgo.AddComponent<LiquidPhysics>(); lp.mainRenderer = null; lp.registry = reg;
+                lp.maxVolume = 25f; lp.SetContents(null, 0f);
+                bool rejected = false, added = false;
+                lp.LiquidRejected += (c, m) => rejected = true;
+                lp.LiquidAdded += (c, m) => added = true;
+                lp.AddLiquid(ethanol, 30f);                 // 30 into a 25 ml tube
+                A("edge: overfilling a vessel is refused (rejected, nothing added)",
+                    rejected && !added && lp.currentLiquidVolume <= 25f);
+            } finally { UnityEngine.Object.DestroyImmediate(vgo); }
+        }
+
+        // E3 — HAZARDOUS MIX: acid into hypochlorite (the iodoform tube holds
+        // hypochlorite) = toxic gas → classified, and the reactor grades it.
+        {
+            A("edge: acid + hypochlorite classifies as toxic gas",
+                HazardousMix.Classify(hypo, sulfuric) == HazardousMix.HazardOutcome.ToxicGas);
+            var rgo = new GameObject("ec3r"); var vgo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            try {
+                var runner = rgo.AddComponent<ExperimentRunner>();
+                runner.SetModule(OneTask("t")); runner.StartExperiment();
+                var lp = vgo.AddComponent<LiquidPhysics>(); lp.mainRenderer = null; lp.registry = reg;
+                lp.currentChemical = hypo; lp.currentLiquidVolume = 10f;
+                var hz = vgo.AddComponent<HazardousMixReactor>(); hz.Bind(lp, runner);
+                int before = runner.MistakeCount;
+                lp.AddLiquid(sulfuric, 2f);                 // acid into bleach → toxic gas
+                A("edge: a dangerous mix is graded a hazardous action", runner.MistakeCount > before);
+            } finally { UnityEngine.Object.DestroyImmediate(rgo); UnityEngine.Object.DestroyImmediate(vgo); }
+        }
+
+        // E4 — OUT OF ORDER: distilling before fermenting is BLOCKED + graded
+        // (the real Exp 3 graph, prerequisites intact).
+        {
+            var rgo = new GameObject("ec4r");
+            try {
+                var runner = rgo.AddComponent<ExperimentRunner>();
+                var module = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>(
+                    "Assets/PharmaSynth/ScriptableObjects/Experiments/Prelim_EthylAlcohol.asset");
+                runner.SetModule(module); runner.StartExperiment();
+                var res = runner.CompleteTask("distill");   // ferment/adjust-ph not done
+                A("edge: distilling before fermenting is blocked + graded",
+                    res == TaskCompletionResult.BlockedByPrerequisite && runner.MistakeCount >= 1);
+            } finally { UnityEngine.Object.DestroyImmediate(rgo); }
+        }
+
+        // E5 — FERMENTATION with NO limewater never FALSE-confirms (the player
+        // forgot the limewater tube — the step legitimately can't complete).
+        {
+            var rgo = new GameObject("ec5r"); var fgo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            try {
+                var runner = rgo.AddComponent<ExperimentRunner>();
+                var m = ScriptableObject.CreateInstance<ExperimentModuleDefinition>();
+                m.graphTasks = new List<ExperimentTask> {
+                    new ExperimentTask { taskId = "prepare-must", label = "m" },
+                    new ExperimentTask { taskId = "ferment", label = "f",
+                        prerequisites = new List<string> { "prepare-must" } } };
+                runner.SetModule(m); runner.StartExperiment();
+                runner.CompleteTask("prepare-must");
+                var flask = fgo.AddComponent<LiquidPhysics>(); flask.mainRenderer = null; flask.registry = reg;
+                flask.currentChemical = sugar; flask.currentLiquidVolume = 30f;   // must is in
+                var fc = fgo.AddComponent<FermentationController>();
+                fc.Bind(runner, flask, "ferment", co2, lime);
+                A("edge: the flask IS fermenting once the must is prepared", fc.Fermenting);
+                bool got = fc.BubbleInto(null);              // no limewater tube to lead into
+                runner.Graph.Tick();
+                A("edge: fermenting with no limewater never false-completes",
+                    !got && !runner.Graph.IsComplete("ferment"));
+            } finally { UnityEngine.Object.DestroyImmediate(rgo); UnityEngine.Object.DestroyImmediate(fgo); }
+        }
+
+        // E5b — GUIDANCE feature for that edge case: after bubbling a while with
+        // nothing clouding, the player is nudged once (not spammed, not before).
+        A("edge: forgot-the-limewater nudge fires once, only after a delay",
+            !FermentationMath.ShouldNudge(true, false, 1f, false)                 // too soon
+            && FermentationMath.ShouldNudge(true, false, 6f, false)               // now
+            && !FermentationMath.ShouldNudge(true, false, 6f, true)               // already nudged
+            && !FermentationMath.ShouldNudge(true, true, 6f, false)               // already confirmed
+            && !FermentationMath.ShouldNudge(false, false, 6f, false));           // not fermenting
+
+        // E6 — the Exp 3 BENCH vessels actually carry the safety/feedback wiring,
+        // so the edge cases above fire in the built scene, not just in a probe.
+        {
+            var builder = UnityEngine.Object.FindAnyObjectByType<ExperimentSceneBuilder>();
+            if (builder != null)
+            {
+                builder.Build("prelim-ethyl-alcohol");
+                var tube = GameObject.Find("Kit_TestTube_6");   // the iodoform tube
+                A("edge: Exp 3 tubes carry hazard + feedback + status wiring",
+                    tube != null && tube.GetComponent<HazardousMixReactor>() != null
+                    && tube.GetComponent<MixFeedback>() != null && tube.GetComponent<VesselStatus>() != null);
+                builder.Build("tutorial-methane");              // tear down
+            }
+        }
     }
 
     static void ContentSuite()
