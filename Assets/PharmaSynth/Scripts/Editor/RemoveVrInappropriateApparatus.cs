@@ -27,7 +27,30 @@ public static class RemoveVrInappropriateApparatus
         ("kit-aspirator",    "vacuum suction for filtration/transfer — the game moves liquid by pour/decant, never suction"),
         ("kit-condenser",    "distillation cooling — distillation is an abstracted heat+collect sim, no condenser assembly"),
         ("kit-thermometer",  "temperature is shown live by the floating ProcessReadout / water-bath label, so the physical device is decorative"),
+        // Flame-rig / crucible ignition set (user 2026-07-18). NO manuscript step
+        // and NO game experiment uses any of these; the zone-free water bath caps
+        // at 100 °C so a crucible's >500 °C ignition has no place. The TRIPOD +
+        // WIRE GAUZE are KEPT — the user uses them as a heat platform over a burner.
+        ("kit-claytriangle", "cradles a crucible over an open flame — the crucible is gone and the tripod+gauze cover 'hold over the burner'"),
+        ("kit-crucible",     "strong >500 °C ignition/ashing vessel — no experiment needs it; the water bath caps at 100 °C"),
+        ("kit-crucibletongs","handles the hot crucible — useless once the crucible is removed"),
+        ("kit-alcoholburner","redundant flame source — the Bunsen burner beside the water bath covers all heating (user 2026-07-18)"),
+        // Empty sample vials (user 2026-07-18): 0 manuscript ("vial"/"amber" never
+        // appear) and 0 game usage — no layout, prop, or code references them.
+        // Leftover reagent-staging containers from the retired-battery Ethyl layout;
+        // the bench-bound rebuild draws every reagent from the Raw_ bottles.
+        ("kit-vial", "empty sample vial — 0 manuscript & 0 game usage (leftover reagent-staging container)"),
     };
+
+    // Matched by NAME (these carry NO LabItem itemId). CONTAINS, not StartsWith.
+    //   • IronRing — TWO of them (`Eq_IronRing` + `IronRing_2`), both orphaned
+    //     (they clamp the already-removed retort stand); StartsWith missed `Eq_`.
+    //   • VialBrown — the four brown/amber vials (`Eq_Vial_Brown` + `Vial_Brown_2/3/4`),
+    //     same unused-vial justification as kit-vial above.
+    //   • Forceps — `Eq_Forceps`. 0 manuscript, 0 game usage; its only refs are
+    //     generic metadata (size/physics/hover), no task or verb reads it. In VR
+    //     the player grabs litmus/paper/crystals directly, so it's redundant.
+    static readonly string[] RemovedByName = { "IronRing", "VialBrown", "Forceps" };
 
     [MenuItem("Tools/PharmaSynth/Remove VR-Inappropriate Apparatus")]
     public static void Run()
@@ -37,11 +60,18 @@ public static class RemoveVrInappropriateApparatus
         var ids = new HashSet<string>(Removed.Select(r => r.itemId));
         var kill = new List<GameObject>();
         foreach (var li in Object.FindObjectsByType<LabItem>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            if (li != null && ids.Contains(li.itemId)) kill.Add(li.gameObject);
+            if (li != null && !string.IsNullOrEmpty(li.itemId) && ids.Contains(li.itemId)) kill.Add(li.gameObject);
+        // By-name items (no itemId) — CONTAINS so it catches both `Eq_IronRing`
+        // and `IronRing_2` (StartsWith missed the Eq_-prefixed one).
+        foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var nm in RemovedByName)
+                if (t != null && t.name.Replace("_", "").IndexOf(nm, System.StringComparison.OrdinalIgnoreCase) >= 0
+                    && !kill.Contains(t.gameObject))
+                    kill.Add(t.gameObject);
 
         foreach (var go in kill)
         {
-            // Unpack a prefab instance child so DestroyImmediate can remove just it.
+            if (go == null) continue;   // a child already died with its parent (fake-null)
             Undo.DestroyObjectImmediate(go);
         }
 

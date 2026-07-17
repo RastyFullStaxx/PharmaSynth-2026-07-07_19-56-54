@@ -51,6 +51,8 @@ public class ScoopController : MonoBehaviour
     [SerializeField] private float gramsPerDip = ScoopMath.GramsPerScoop;
     [Tooltip("The scooping BLADE/BOWL is at the NEGATIVE end of the tool's longest axis (user 2026-07-14: the heap was riding the handle butt). Flip if the heap rides the handle.")]
     [SerializeField] private bool bladeAtPositiveEnd = false;
+    [Tooltip("Shape of the carried heap on the blade/bowl (local scale). The SCOOPULA gets a rounded bowl-pile (default); the porcelain SPATULA a flat elongated smear (set by Apply W5.8 Verb Data). The two tools shouldn't look the same (user 2026-07-18).")]
+    [SerializeField] private Vector3 heapScale = new Vector3(0.026f, 0.018f, 0.026f);   // rounded bowl-pile (scoopula)
 
     private XRGrab _grab;
     private ChemicalData _carrying;
@@ -71,6 +73,11 @@ public class ScoopController : MonoBehaviour
 
     /// Read seam (suite): which charge this tool actually dips.
     public float GramsPerDip => gramsPerDip;
+
+    /// Builder seam: the porcelain spatula's flat elongated smear vs the scoopula's
+    /// rounded bowl-pile. Read seam pins the two tools differ.
+    public void SetHeapScale(Vector3 s) { if (s.sqrMagnitude > 1e-8f) heapScale = s; }
+    public Vector3 HeapScale => heapScale;
 
     void Update()
     {
@@ -157,7 +164,7 @@ public class ScoopController : MonoBehaviour
             var hc = _heap.GetComponent<Collider>();
             if (hc != null) Destroy(hc);
             _heap.transform.SetParent(transform, false);
-            _heap.transform.localScale = new Vector3(0.028f, 0.012f, 0.028f);
+            _heap.transform.localScale = heapScale;   // per-tool: rounded bowl-pile vs flat smear
             var r = _heap.GetComponent<Renderer>();
             r.sharedMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = "ScoopHeap_Runtime" };
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;

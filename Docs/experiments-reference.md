@@ -510,6 +510,14 @@ All 19 apparatus map to existing bench objects: distilling flask `kit-distilling
 | Aspirator (`kit-aspirator`) | Vacuum suction for filtration/transfer. The game moves liquid by **pour/decant**, never suction. |
 | Condenser (`kit-condenser`) | Distillation cooling. Distillation is an **abstracted heat + collect** sim (lenient 70–80 °C window); the player never assembles a condenser train. |
 | Thermometer (`kit-thermometer`) | Temperature is shown live by the floating **ProcessReadout** / water-bath label, so the physical instrument is decorative. |
+| Iron ring ×2 (`Eq_IronRing` + `IronRing_2`, no itemId) | Both clamp onto the retort stand (already removed) → orphaned. Matched by name CONTAINS so both go. |
+| Clay triangle (`kit-claytriangle`) | Cradles a crucible over an open flame — the crucible is gone and the kept tripod+gauze already cover "hold over the burner". |
+| Crucible (`kit-crucible`) + tongs (`kit-crucibletongs`) | Strong >500 °C ignition/ashing vessel + its handler — **0 manuscript & 0 game usage**; the water bath caps at 100 °C. |
+| Alcohol burner (`kit-alcoholburner`) | Redundant flame source — the Bunsen burner beside the water bath covers all heating. |
+| Empty vials ×8 (`Kit_Vial_0–3` = `kit-vial`; `Eq_Vial_Brown` + `Vial_Brown_2/3/4`, no itemId) | **0 manuscript, 0 game usage** — leftover reagent-staging containers from the retired-battery layout; reagents now come from the `Raw_` bottles. |
+| Forceps (`Eq_Forceps`, no itemId) | **0 manuscript, 0 game usage** — only generic metadata refs (size/physics/hover), no task or verb reads it; VR grab replaces it. |
+
+**KEPT** (user 2026-07-18): **tripod (`kit-tripod`) + wire gauze (`kit-wiregauze`)** — a genuine heat platform the player sets over a burner to hold a vessel for heating.
 
 The chemistry apparatus (flasks, delivery tube, watch glass, graduated cylinder, droppers, tubes, spatula, rod) all stay interactive.
 

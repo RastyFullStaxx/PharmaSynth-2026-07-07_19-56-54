@@ -2040,6 +2040,16 @@ public static class PharmaSelfTests
             A("wired: the porcelain spatula dips fine (0.1 g)",
                 spat != null && spat.GetComponent<ScoopController>() != null
                 && Near(spat.GetComponent<ScoopController>().GramsPerDip, ScoopMath.GramsPerSpatula));
+            // The two solids tools carry DIFFERENT heap shapes (user 2026-07-18):
+            // the porcelain spatula a flat elongated smear, the scoopula a rounded
+            // bowl-pile — they must not look identical.
+            var scoopula = GameObject.Find("Eq_Scoopula");
+            A("wired: scoopula + spatula heaps are DIFFERENT shapes",
+                spat != null && scoopula != null
+                && spat.GetComponent<ScoopController>() != null && scoopula.GetComponent<ScoopController>() != null
+                && Vector3.Distance(spat.GetComponent<ScoopController>().HeapScale,
+                                    scoopula.GetComponent<ScoopController>().HeapScale) > 0.005f
+                && spat.GetComponent<ScoopController>().HeapScale.y < scoopula.GetComponent<ScoopController>().HeapScale.y);
 
             int holders = 0, snapping = 0;
             foreach (var t in UnityEngine.Object.FindObjectsByType<Transform>(

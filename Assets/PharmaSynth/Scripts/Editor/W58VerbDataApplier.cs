@@ -159,6 +159,10 @@ public static class W58VerbDataApplier
         if (spatScoop != null)
         {
             spatScoop.SetGramsPerDip(ScoopMath.GramsPerSpatula);
+            // The porcelain spatula is a thin flat blade → its 0.1 g smear is a
+            // flat, slightly-elongated wafer, NOT the scoopula's rounded bowl-pile
+            // (user 2026-07-18: "not supposed to be the same shape as the porcelain's").
+            spatScoop.SetHeapScale(new Vector3(0.012f, 0.004f, 0.022f));
             EditorUtility.SetDirty(spatScoop);
             sceneChanges++;
         }

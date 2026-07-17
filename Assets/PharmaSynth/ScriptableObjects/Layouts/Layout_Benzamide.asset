@@ -143,6 +143,7 @@ MonoBehaviour:
       completesTask: 1
     rackGroup: 
     heatToC: 0
+    fermentTaskId: 
   - benchItem: 
     prefabName: TestTube_WithLiquid
     displayName: Product Test Tube
@@ -164,3 +165,4 @@ MonoBehaviour:
       completesTask: 1
     rackGroup: 
     heatToC: 0
+    fermentTaskId: 
