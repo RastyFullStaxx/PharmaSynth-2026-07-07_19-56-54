@@ -36,23 +36,46 @@ public class LiquidTaskBinding : MonoBehaviour
 
     public IReadOnlyList<ReagentStep> ExpectedSteps => expectedReagents;
 
-    private void OnEnable()
+    // ⛔ THE 2026-07-17 STUCK BUG: in play mode AddComponent fires OnEnable
+    // IMMEDIATELY — before the builder can assign the vessel — so this ran with
+    // vessel==null, subscribed to nothing, and SetVesselAndRunner never fixed it.
+    // Result: every pour fired LiquidAdded into the void, no step ever counted,
+    // and the player was stuck at "add distilled water" forever (while the
+    // HazardousMixReactor — which binds correctly — kept scolding them).
+    // Subscription now lives in one idempotent seam that BOTH paths call.
+    private bool _subscribed;
+
+    private void Subscribe()
     {
-        if (vessel != null)
-        {
-            vessel.LiquidAdded += OnLiquidAdded;
-            vessel.WrongReagentMixed += OnWrongReagentMixed;
-        }
+        if (_subscribed || vessel == null) return;
+        vessel.LiquidAdded += OnLiquidAdded;
+        vessel.WrongReagentMixed += OnWrongReagentMixed;
+        _subscribed = true;
     }
 
-    private void OnDisable()
+    private void Unsubscribe()
     {
+        if (!_subscribed) return;
         if (vessel != null)
         {
             vessel.LiquidAdded -= OnLiquidAdded;
             vessel.WrongReagentMixed -= OnWrongReagentMixed;
         }
+        _subscribed = false;
     }
+
+    /// True once this binding actually listens to its vessel (suite-pinned: the
+    /// silent-unsubscribed state is exactly the bug that shipped).
+    public bool IsListening => _subscribed;
+
+    /// Explicit unhook for teardown (ClearBenchBindings): DestroyImmediate skips
+    /// OnDisable for edit-mode components whose OnEnable never ran, so relying on
+    /// lifecycle left ghost subscriptions on the permanent bench vessels.
+    public void Detach() => Unsubscribe();
+
+    private void OnEnable() => Subscribe();
+    private void OnDisable() => Unsubscribe();
+    private void OnDestroy() => Unsubscribe();
 
     private void OnLiquidAdded(ChemicalData chem, float amount) => HandleReagent(chem, amount);
 
@@ -70,6 +93,12 @@ public class LiquidTaskBinding : MonoBehaviour
 
     private void Handle(ChemicalData chem, float amountMl, bool fullDelivery)
     {
+        // A DESTROYED binding can still be subscribed (edit-mode components whose
+        // OnEnable never ran get no OnDisable/OnDestroy on DestroyImmediate), and
+        // its stale accumulators completed tasks on the first squeeze while its
+        // stale step list scolded sanctioned pours (ghost-binding bug, found by
+        // the player-path sim 2026-07-17). Unity's fake-null catches the corpse.
+        if (this == null) return;
         if (runner == null || chem == null) return;
 
         // Fume-hood safety: a toxic/volatile reagent handled outside the hood is a violation.
@@ -92,9 +121,20 @@ public class LiquidTaskBinding : MonoBehaviour
             _accumulated.TryGetValue(step, out float have);
             have += Mathf.Max(0f, amountMl);
             _accumulated[step] = have;
-            if (have < step.requiredMl) return;    // keep pouring — not enough yet
+            if (have < step.requiredMl)
+            {
+                // Live pour guide (user 2026-07-17: "I can't even see how much
+                // water I've poured") — a throttled running count over the vessel.
+                ShowProgress(step, have);
+                return;                            // keep pouring — not enough yet
+            }
         }
+        bool firstSatisfy = !_satisfied.Contains(step);
         _satisfied.Add(step);
+        if (firstSatisfy && step.requiredMl > 0f && Application.isPlaying && vessel != null)
+            FloatingText.Show("✓ " + chem.chemicalName + " — enough",
+                              vessel.transform.position + Vector3.up * 0.22f,
+                              new Color(0.55f, 1f, 0.65f), 0.75f);
 
         // A task that names several reagents in this vessel needs them ALL before
         // it can be called done — half a recipe is not the step.
@@ -112,6 +152,21 @@ public class LiquidTaskBinding : MonoBehaviour
     }
 
     private readonly HashSet<string> _ready = new HashSet<string>();
+    private float _nextNoteAt;   // progress-text throttle (a tilt-pour ticks every frame)
+
+    /// "Distilled Water 6 / 10 ml" over the vessel while a metered step fills.
+    private void ShowProgress(ReagentStep step, float have)
+    {
+        if (!Application.isPlaying || vessel == null || Time.time < _nextNoteAt) return;
+        _nextNoteAt = Time.time + 0.5f;
+        bool solid = step.reagent != null
+                     && (step.reagent.state == PhysicalState.Solid || step.reagent.state == PhysicalState.Powder);
+        FloatingText.Show(step.reagent.chemicalName + "  "
+                          + Mathf.Min(have, step.requiredMl).ToString("0.#") + " / "
+                          + step.requiredMl.ToString("0.#") + (solid ? " g" : " ml"),
+                          vessel.transform.position + Vector3.up * 0.22f,
+                          new Color(0.6f, 0.85f, 1f), 0.7f);
+    }
 
     /// Every reagent this task names in THIS vessel has met its own threshold.
     private bool AllStepsSatisfied(string taskId)
@@ -185,9 +240,25 @@ public class LiquidTaskBinding : MonoBehaviour
         return s != null ? s.taskId : null;
     }
 
+    /// The incoming chemical is one this vessel's OWN procedure names — the
+    /// wrong-mix layer (HazardousMixReactor + MixFeedback) checks this before
+    /// punishing, so a sanctioned dilution ("add 10 ml of distilled water" onto
+    /// the sample) never reads as "not in the procedure" again. Deliberately
+    /// ignores task completion: inside one AddLiquid call LiquidAdded (which
+    /// completes the task) fires BEFORE WrongReagentMixed, so a pending-only
+    /// check made the COMPLETING pour punish itself (SimulatedRun caught the
+    /// last sulfuric squeeze of each ester test being graded a mistake). Extra
+    /// pours of a named reagent are over-pours of the right thing, not crimes.
+    public bool IsExpectedNow(ChemicalData chem) => StepForReagent(chem) != null;
+
     // Runtime helpers for authoring/binding.
     public void AddExpected(ChemicalData reagent, string taskId, float requiredMl = 0f, bool completesTask = true)
         => expectedReagents.Add(new ReagentStep { reagent = reagent, taskId = taskId, requiredMl = requiredMl, completesTask = completesTask });
 
-    public void SetVesselAndRunner(LiquidPhysics v, ExperimentRunner r) { vessel = v; runner = r; }
+    public void SetVesselAndRunner(LiquidPhysics v, ExperimentRunner r)
+    {
+        Unsubscribe();          // may be re-bound to a different vessel between modules
+        vessel = v; runner = r;
+        Subscribe();
+    }
 }

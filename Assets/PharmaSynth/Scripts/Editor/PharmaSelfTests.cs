@@ -1546,6 +1546,30 @@ public static class PharmaSelfTests
             A("pour: expected reagent completes its task", runner.Graph.IsComplete("oxidise-benzaldehyde"));
             bind.HandleReagent(LoadChem("Chem_Aniline"));           // unexpected reagent → mistake
             A("pour: unexpected reagent logs a WrongReagent mistake", runner.Mistakes.CountOf(LabErrorType.WrongReagent) >= 1);
+
+            // ⛔ THE 2026-07-17 STUCK BUG, pinned at its exact shape: the binding
+            // must LISTEN to its vessel after SetVesselAndRunner (play-mode
+            // AddComponent ran OnEnable with vessel==null and nothing ever
+            // subscribed — every pour fired into the void and the player could
+            // never complete "add distilled water"). The REAL path is AddLiquid →
+            // event → binding, so that is what this drives.
+            A("pour: binding LISTENS after SetVesselAndRunner", bind.IsListening);
+            var water5 = LoadChem("Chem_DistilledWater");
+            bind.AddExpected(water5, "dilute-test", 10f);
+            lp2.AddLiquid(water5, 4f);   // through the VESSEL, not the binding
+            A("pour: AddLiquid reaches the binding through the event (4 ml counted)",
+                Near(bind.AccumulatedFor("dilute-test", water5), 4f));
+
+            // Procedure-sanctioned mixes are NOT "wrong" (the water-dilution
+            // scold): an expected chem for a PENDING task passes IsExpectedNow;
+            // after its task completes it stops being expected.
+            A("pour: a pending step's reagent is expected", bind.IsExpectedNow(water5));
+            A("pour: a random reagent is not expected", !bind.IsExpectedNow(LoadChem("Chem_Phenol")));
+            // Completion must NOT revoke sanction: LiquidAdded (completes the
+            // task) fires before WrongReagentMixed inside the same AddLiquid, so
+            // a pending-only gate made the completing pour punish itself.
+            A("pour: a completed task's reagent STAYS sanctioned",
+                runner.Graph.IsComplete("oxidise-benzaldehyde") && bind.IsExpectedNow(kmno4));
         }
         finally { UnityEngine.Object.DestroyImmediate(rgo); UnityEngine.Object.DestroyImmediate(vgo2); }
     }
@@ -1602,6 +1626,12 @@ public static class PharmaSelfTests
         A("ledger: reaction collapses to the product", led.Summary() == "Ester 180 ml");
         led.Clear();
         A("ledger: clears", led.Count == 0 && led.Summary() == "");
+        // Units per entry (2026-07-17): a 0.5 g spatula dip used to int-round to
+        // "0 ml" — solids read in grams, sub-unit amounts keep one decimal.
+        led.Add("Aspirin", 0.5f, solid: true); led.Add("Distilled Water", 10f);
+        A("ledger: solids read in grams, sub-gram amounts survive",
+            led.Summary() == "Aspirin 0.5 g + Distilled Water 10 ml");
+        led.Clear();
 
         ChemicalData Chem(string n) { var c = ScriptableObject.CreateInstance<ChemicalData>(); c.chemicalName = n; return c; }
         var chemA = Chem("PG_A"); var chemB = Chem("PG_B"); var chemC = Chem("PG_C");
@@ -1715,6 +1745,12 @@ public static class PharmaSelfTests
         A("status: unknown liquid", VesselStatusMath.Compose("Beaker", null, 55f) == "Beaker — 55 ml liquid");
         A("status: reagent bottle drops the echo", VesselStatusMath.Compose("Ethanol", "Ethanol", 150f) == "Ethanol — 150 ml");
         A("status: null name safe", VesselStatusMath.Compose(null, "Ethanol", 10f) == "Vessel — 10 ml Ethanol");
+        // Mixed contents show every element AND its amount (user 2026-07-17:
+        // "clear text of the current elements in this tube and their proportions").
+        A("status: mixed contents list the proportions",
+            VesselStatusMath.ComposeMixed("Test Tube 3", "Ethanol 1 ml + Distilled Water 10 ml")
+                == "Test Tube 3 — Ethanol 1 ml + Distilled Water 10 ml"
+            && VesselStatusMath.ComposeMixed("Test Tube 3", "") == "Test Tube 3 — empty");
 
         // Hover live line.
         A("hover: empty line", VesselStatusMath.HoverLine(null, 0f, "", 0) == "Now: empty");

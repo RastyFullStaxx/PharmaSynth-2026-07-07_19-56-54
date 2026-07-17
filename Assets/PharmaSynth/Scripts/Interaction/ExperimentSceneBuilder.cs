@@ -775,6 +775,7 @@ public class ExperimentSceneBuilder : MonoBehaviour
         foreach (var b in FindObjectsByType<LiquidTaskBinding>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             if (b == null || (_stage != null && b.transform.IsChildOf(_stage))) continue;   // stage ones die with the stage
+            b.Detach();   // DestroyImmediate skips OnDisable in edit mode → ghost subscriptions
             Kill(b);
         }
         foreach (var g in FindObjectsByType<RackTaskGroup>(FindObjectsInactive.Include, FindObjectsSortMode.None))

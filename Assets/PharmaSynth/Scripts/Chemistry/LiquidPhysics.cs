@@ -48,7 +48,9 @@ public class LiquidPhysics : MonoBehaviour
         currentChemical = chem;
         currentLiquidVolume = chem != null ? Mathf.Max(0f, ml) : 0f;
         Ledger.Clear();
-        if (chem != null && currentLiquidVolume > 0f) Ledger.Add(chem.chemicalName, currentLiquidVolume);
+        if (chem != null && currentLiquidVolume > 0f)
+            Ledger.Add(chem.chemicalName, currentLiquidVolume,
+                       chem.state == PhysicalState.Solid || chem.state == PhysicalState.Powder);
     }
 
     [Header("Visual Smoothness")]
@@ -265,7 +267,8 @@ public class LiquidPhysics : MonoBehaviour
         }
 
         LiquidAdded?.Invoke(incomingChemical, amountToAdd);
-        Ledger.Add(incomingChemical.chemicalName, amountToAdd);
+        Ledger.Add(incomingChemical.chemicalName, amountToAdd,
+                   incomingChemical.state == PhysicalState.Solid || incomingChemical.state == PhysicalState.Powder);
 
         // If waking up from empty, ensure visuals update
         if (currentLiquidVolume <= 0.1f && currentPptVolume <= 0.1f)

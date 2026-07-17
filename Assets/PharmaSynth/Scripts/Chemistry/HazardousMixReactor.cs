@@ -35,6 +35,14 @@ public class HazardousMixReactor : MonoBehaviour
 
     private void OnWrongMix(ChemicalData current, ChemicalData incoming)
     {
+        // Procedure-sanctioned mix: a pending step of THIS vessel expects the
+        // incoming chemical ("add 10 ml of distilled water" onto the sample has
+        // no ReactionRule, so it landed here and was graded "not in the
+        // procedure" — on every correct dilution; user playtest 2026-07-17).
+        // The binding shows the pour progress; this layer stays out of it.
+        var binding = GetComponent<LiquidTaskBinding>();
+        if (binding != null && binding.IsExpectedNow(incoming)) return;
+
         if (Time.time < _nextOk) return;
         _nextOk = Time.time + CooldownSeconds;
 

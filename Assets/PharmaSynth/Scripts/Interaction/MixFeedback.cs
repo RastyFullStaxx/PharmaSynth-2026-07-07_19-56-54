@@ -55,6 +55,13 @@ public class MixFeedback : MonoBehaviour
 
     private void OnWrongMix(ChemicalData current, ChemicalData incoming)
     {
+        // An EXPECTED pour (a pending step of this vessel names the incoming
+        // chemical) is the binding's moment — it shows the live "6 / 10 ml"
+        // count; an amber "Mixed — no reaction" on top read as an error message
+        // during every correct dilution (user playtest 2026-07-17).
+        var binding = GetComponent<LiquidTaskBinding>();
+        if (binding != null && binding.IsExpectedNow(incoming)) return;
+
         if (!ShouldAnnounceWrongMix(HazardousMix.Classify(current, incoming))) return;   // reactor owns hazards
         if (Time.time < _quietUntil) return;
         _quietUntil = Time.time + 2.5f;

@@ -90,6 +90,19 @@ public static class W58VerbDataApplier
             }
         }
 
+        // Funnels are liquid PASS-THROUGH (2026-07-17): without the marker the
+        // pour ray landed ON the funnel's collider and wasted the stream as a
+        // puddle there — a filter pour never reached the beaker underneath.
+        foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (!t.name.StartsWith("Eq_Funnel") && !t.name.StartsWith("Funnel_")) continue;
+            if (t.GetComponent<LiquidPassthrough>() == null)
+            {
+                t.gameObject.AddComponent<LiquidPassthrough>();
+                sceneChanges++;
+            }
+        }
+
         // The porcelain spatula is the FINE solids tool: Exp 2 weighs 0.1 g salicylic
         // and 0.5 g aspirin, both smaller than the scoopula's 2 g dip. Its charge is
         // ScoopMath.GramsPerSpatula; the scoopula keeps the coarse 2 g.

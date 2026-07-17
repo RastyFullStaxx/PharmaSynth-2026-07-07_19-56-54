@@ -19,6 +19,16 @@ public static class VesselStatusMath
         return name + " — " + Mathf.RoundToInt(ml) + " ml " + chem;
     }
 
+    /// Mixed-contents name tag (user 2026-07-17: "clear text of the current
+    /// elements in this tube and their proportions"): the ledger story IS the
+    /// proportions — "Test Tube 3 — Ethanol 1 ml + Distilled Water 10 ml".
+    public static string ComposeMixed(string displayName, string ledgerSummary)
+    {
+        string name = string.IsNullOrEmpty(displayName) ? "Vessel" : displayName;
+        if (string.IsNullOrEmpty(ledgerSummary)) return name + " — empty";
+        return name + " — " + ledgerSummary;
+    }
+
     /// Hover-card live suffix: "Now: 120 ml Ethanol" (+ "Mixed from: …" when
     /// the vessel holds more than one story entry) / "Now: empty".
     public static string HoverLine(string chemName, float ml, string ledgerSummary, int ledgerCount)

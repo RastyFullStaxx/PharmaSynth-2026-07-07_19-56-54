@@ -377,8 +377,12 @@ MonoBehaviour:
     displayName: FiltrateBeaker
     pos: {x: -0.55, y: 0.91, z: -3.64}
     targetHeight: 0.16
-    startChemical: 
+    startChemical:
     bindings:
+    - reagentChemical: Salicylic Acid
+      taskId: filter-hydrolysate
+      requiredMl: 0
+      completesTask: 0
     - reagentChemical: Ferric Chloride 10%
       taskId: test-hydrolysis-fecl3
       requiredMl: 2

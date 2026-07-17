@@ -206,6 +206,10 @@ public class LiquidPourer : MonoBehaviour
             // props and vessels share the DynamicStage root, and shelf bottles
             // share the ReagentShelf root, so a root check would skip real targets.
             if (source != null && col.transform.IsChildOf(source.transform)) continue;
+            // Funnels pass the stream through to whatever sits underneath —
+            // treating their collider as the landing surface wasted the
+            // hydrolysate as a puddle ON the funnel (2026-07-17).
+            if (col.GetComponentInParent<LiquidPassthrough>() != null) continue;
             if (hits[i].distance < bestDist)
             {
                 bestDist = hits[i].distance;

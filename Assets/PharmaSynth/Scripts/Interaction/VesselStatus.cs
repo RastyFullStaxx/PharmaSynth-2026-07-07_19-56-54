@@ -34,9 +34,14 @@ public class VesselStatus : MonoBehaviour
         if (_lp == null || _label == null) return;
         if (_clean == null) _clean = GetComponent<CleanableVessel>();
         string name = (_clean != null ? _clean.NamePrefix() : "") + _displayName;
-        string s = VesselStatusMath.Compose(name,
-            _lp.currentChemical != null ? _lp.currentChemical.chemicalName : null,
-            _lp.currentLiquidVolume + _lp.currentPptVolume);
+        // A vessel holding a MIX names every element and its amount (the ledger
+        // story) — "Ethanol 1 ml + Distilled Water 10 ml"; a single chemical
+        // keeps the short form (user 2026-07-17).
+        string s = _lp.Ledger.Count > 1 && !_lp.IsEmpty
+            ? VesselStatusMath.ComposeMixed(name, _lp.Ledger.Summary(3))
+            : VesselStatusMath.Compose(name,
+                _lp.currentChemical != null ? _lp.currentChemical.chemicalName : null,
+                _lp.currentLiquidVolume + _lp.currentPptVolume);
         if (s == _last) return;
         _last = s;
         _label.SetLabel(GlyphSafe.Sanitize(s), _showDist);

@@ -16,15 +16,19 @@ using UnityEngine;
 ///   • pours that land invisibly small in their vessel
 ///   • correct play being flagged as a mistake (mis-authored bindings)
 ///
-/// HOW it simulates: builder.Build() wires the real scene (bench-bound vessels
-/// included), runner.StartExperiment() opens the real graph, then each available
-/// task is completed through its own mechanism — LiquidTaskBinding.HandleReagent
-/// per VERB-CONTRACT action (1 ml a squeeze, 0.1 g a spatula dip), RackTaskGroup
-/// .ShouldFire after the set is served, ZoneSimStation.Drive + TemperatureSim
-/// .Tick for sustained verbs, ExperimentTaskStation.Activate for zone drops.
-/// Edit-mode AddComponent fires no OnEnable, so the LiquidPhysics→binding event
-/// hop is NOT exercised here — that hop is play-mode-only and stays on the
-/// headset checklist.
+/// HOW it simulates — the PLAYER PATH, not the plumbing (user 2026-07-17: "do
+/// not cheat by programmatically connecting things; you wouldn't see issues"):
+/// builder.Build() wires the real scene, runner.StartExperiment() opens the real
+/// graph, and every reagent is then TRANSFERRED the way a hand would — drawn out
+/// of the actual bench source bottle (PourOut) and landed through
+/// LiquidPhysics.AddLiquid in VERB-CONTRACT increments (1 ml a squeeze, 0.1 g a
+/// spatula dip, 0.5 ml tilt-pour ticks WITH human overshoot). Completion may
+/// only arrive through the real event chain: AddLiquid → LiquidAdded → binding →
+/// CompleteTask, rack-group polls, ZoneSimStation sims. The first version drove
+/// binding.HandleReagent directly and reported Exp 2 CLEAN while a real player
+/// was hard-stuck — the binding had never subscribed to its vessel's events, a
+/// bug the direct call bypassed entirely. Never again: pours go through the
+/// bottle or they don't count.
 public static class SimulatedRun
 {
     public class Result
@@ -81,6 +85,13 @@ public static class SimulatedRun
                            + (runner == null ? "runner " : "") + (module == null ? "module" : ""));
             return null;
         }
+
+        // The player path DRAINS real bottles and FILLS real tubes — snapshot
+        // every vessel's contents first and restore after, or each edit-mode sim
+        // permanently corrupts the saved scene's supplies.
+        var snapshot = new List<(LiquidPhysics lp, ChemicalData chem, float ml, ChemicalData ppt, float pptMl)>();
+        foreach (var lp in Object.FindObjectsByType<LiquidPhysics>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            snapshot.Add((lp, lp.currentChemical, lp.currentLiquidVolume, lp.currentPptChemical, lp.currentPptVolume));
 
         // Real wiring, real graph — exactly what a campaign start does.
         builder.Build(moduleId);
@@ -216,11 +227,24 @@ public static class SimulatedRun
         // when you WANT the built stage to inspect.
         runner.Mistakes.MistakeRecorded -= onMistake;
         builder.Build("tutorial-methane");
+
+        // Put every drop back: bottles refill, tubes empty — the scene must be
+        // byte-identical to before the run.
+        foreach (var (lp, chem, ml, ppt, pptMl) in snapshot)
+        {
+            if (lp == null) continue;
+            lp.SetContents(chem, ml);
+            lp.currentPptChemical = ppt;
+            lp.currentPptVolume = pptMl;
+        }
         return res;
     }
 
-    /// Deliver every reagent step of one task in VERB-CONTRACT increments,
-    /// checking the thresholds behave: never complete before the final action.
+    /// Deliver every reagent step of one task THE WAY A HAND WOULD: draw each
+    /// increment out of the real bench source bottle and land it through
+    /// LiquidPhysics.AddLiquid — the full event chain (wake/mix/hazard/ledger/
+    /// binding) runs for every action. Bulk tilt-pours overshoot ~20% like a
+    /// human, which also proves the leniency contract (thresholds are minimums).
     /// Returns false when the task completed EARLY (already reported as a bug).
     static bool SimulatePours(ExperimentRunner runner, string id,
         List<(LiquidTaskBinding b, LiquidTaskBinding.ReagentStep s)> steps,
@@ -232,11 +256,38 @@ public static class SimulatedRun
 
         foreach (var (b, s) in steps)
         {
+            var lp = b.GetComponent<LiquidPhysics>();
+            if (lp == null)
+            {
+                res.bugs.Add(id + ": binding for " + s.reagent.chemicalName + " sits on '" + b.name
+                             + "' which has NO LiquidPhysics — nothing to pour into");
+                return false;
+            }
+            var src = FindSource(s.reagent);
+            if (src == null)
+            {
+                res.bugs.Add(id + ": no bench source holds '" + s.reagent.chemicalName
+                             + "' — the player cannot perform this step");
+                log.AppendLine("  ✗ no source bottle for " + s.reagent.chemicalName);
+                continue;   // supply audit details it; keep walking
+            }
+
             float inc = IncrementFor(s);
             int n = ActionsFor(s);
+            // Human overshoot on bulk tilt-pours only — squeezes and dips are counted.
+            if (!IsSolid(s) && s.requiredMl > 5f) n = Mathf.CeilToInt(n * 1.2f);
+
+            float before = b.AccumulatedFor(id, s.reagent);
             for (int k = 0; k < n; k++)
             {
-                b.HandleReagent(s.reagent, inc);
+                var chem = src.PourOut(inc);                    // out of the real bottle
+                if (chem == null)
+                {
+                    res.warnings.Add(id + ": source " + src.name + " ran DRY mid-step ("
+                                     + s.reagent.chemicalName + ") — starvation");
+                    break;
+                }
+                lp.AddLiquid(chem, inc);                        // the real chemistry path
                 doneActions++;
                 if (runner.Graph.IsComplete(id) && doneActions < totalActions)
                 {
@@ -246,12 +297,81 @@ public static class SimulatedRun
                     return false;
                 }
             }
+            // The pour happened; did the BINDING hear it? Silent-unsubscribed is
+            // exactly the bug that hard-stuck the 2026-07-17 headset run.
+            if (s.requiredMl > 0f && b.AccumulatedFor(id, s.reagent) <= before + 0.001f
+                && !runner.Graph.IsComplete(id))
+            {
+                res.bugs.Add(id + ": poured " + s.reagent.chemicalName + " into " + b.name
+                             + " but the binding COUNTED NOTHING (IsListening=" + b.IsListening
+                             + ") — the event chain is broken");
+                log.AppendLine("  ✗ binding heard nothing");
+            }
+
             demand.TryGetValue(s.reagent, out float d); demand[s.reagent] = d + Mathf.Max(inc * n, 0f);
             pouredInto.TryGetValue(b, out float pv); pouredInto[b] = pv + inc * n;
             log.AppendLine("  " + n + "× " + VerbFor(s) + " " + s.reagent.chemicalName
-                           + " → " + b.name + " (" + (inc * n).ToString("0.#") + UnitFor(s) + ")");
+                           + " (from " + src.name + ") → " + b.name
+                           + " (" + (inc * n).ToString("0.#") + UnitFor(s) + ")");
         }
         return true;
+    }
+
+    /// The filter pour, played honestly: source = a liquid-holding vessel bound
+    /// to one of the filter task's PREREQUISITE tasks (the boiled tube);
+    /// destination = the vessel bound to a task that lists the filter task as
+    /// its prerequisite (the beaker the test happens in). Transferred in real
+    /// 0.5 ml PourOut→AddLiquid ticks, exactly like a tilt through the funnel.
+    static void SimulateFunnelPour(ExperimentRunner runner, string filterTaskId, StringBuilder log)
+    {
+        ExperimentTask filterTask = null;
+        foreach (var t in runner.Graph.Tasks) if (t.taskId == filterTaskId) filterTask = t;
+        if (filterTask == null) return;
+
+        var bindings = Object.FindObjectsByType<LiquidTaskBinding>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        LiquidPhysics src = null, dst = null;
+        foreach (var b in bindings)
+        {
+            var lp = b.GetComponent<LiquidPhysics>();
+            if (lp == null) continue;
+            foreach (var s in b.ExpectedSteps)
+            {
+                if (s == null) continue;
+                if (filterTask.prerequisites.Contains(s.taskId) && lp.currentLiquidVolume > 1f) src = lp;
+                foreach (var t in runner.Graph.Tasks)
+                    if (t.taskId == s.taskId && t.prerequisites.Contains(filterTaskId)) dst = lp;
+            }
+        }
+        if (src == null || dst == null)
+        {
+            log.AppendLine("  (no funnel pour modelled: src=" + (src != null ? src.name : "—")
+                           + " dst=" + (dst != null ? dst.name : "—") + ")");
+            return;
+        }
+        float moved = 0f;
+        for (int i = 0; i < 400 && src.currentLiquidVolume > 0.5f; i++)
+        {
+            var chem = src.PourOut(0.5f);
+            if (chem == null) break;
+            dst.AddLiquid(chem, 0.5f);
+            moved += 0.5f;
+        }
+        log.AppendLine("  poured " + moved.ToString("0.#") + " ml of "
+                       + (dst.currentChemical != null ? dst.currentChemical.chemicalName : "filtrate")
+                       + " through the funnel: " + src.name + " → " + dst.name);
+    }
+
+    /// The bench bottle a player would pour from: holds the chemical, is not a
+    /// task vessel, has the most left. Mirrors the dropper's own source rule.
+    static LiquidPhysics FindSource(ChemicalData chem)
+    {
+        LiquidPhysics best = null;
+        foreach (var lp in Object.FindObjectsByType<LiquidPhysics>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (lp != null && lp.currentChemical == chem && lp.currentLiquidVolume > 0.01f
+                && lp.GetComponent<LiquidTaskBinding>() == null && !lp.name.StartsWith("Vessel_")
+                && (best == null || lp.currentLiquidVolume > best.currentLiquidVolume))
+                best = lp;
+        return best;
     }
 
     /// Sustained-verb (sim) and drop-zone stations. Returns false when no station
@@ -263,6 +383,14 @@ public static class SimulatedRun
         foreach (var st in sims)
         {
             if (st == null || st.TaskId != id) continue;
+            // FILTER stations: the player POURS the previous step's vessel
+            // through the funnel into the receiver below (LiquidPassthrough lets
+            // the stream through). Model that pour for real — the receiving
+            // vessel must actually hold the filtrate or the follow-up chemical
+            // test has nothing to react with (the FeCl3 violet stayed invisible
+            // until this was simulated honestly, 2026-07-17).
+            if (st.Kind == StationSim.Filter)
+                SimulateFunnelPour(runner, id, log);
             // Heat stations gate on a LIT burner (ignition gate) — the player's
             // match-strike becomes an Ignite() call here. Snuffed after, so the
             // scene isn't left with burning burners.
@@ -317,13 +445,14 @@ public static class SimulatedRun
         return false;
     }
 
-    /// Every chemical the run consumed must have a real source on the bench with
-    /// enough in it — this is the "if apparatus we need is missing, TELL me" rule
-    /// applied to reagents, and the starvation check before the player hits it.
+    /// The run REALLY drained the bottles (PourOut per action), so sufficiency
+    /// was proven by playing: a dry source mid-step already warned. This audit
+    /// reports what the full run left in each bottle — a small remainder is the
+    /// early starvation signal for a player who wastes a few pours.
     static void AuditSupplies(Dictionary<ChemicalData, float> demand, LabItem[] labItems,
                               Result res, StringBuilder log)
     {
-        log.AppendLine("\n--- supply audit ---");
+        log.AppendLine("\n--- supply audit (post-run: consumed vs left in the bottle) ---");
         var sources = Object.FindObjectsByType<LiquidPhysics>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (var kv in demand)
         {
@@ -334,20 +463,21 @@ public static class SimulatedRun
                     && !lp.name.StartsWith("Vessel_") && lp.GetComponent<LiquidTaskBinding>() == null)
                     best = lp;   // a task vessel is a destination, never the shelf supply
             if (best == null)
-                res.bugs.Add("no bench source holds '" + kv.Key.chemicalName + "' (run needs "
+                res.bugs.Add("no bench source holds '" + kv.Key.chemicalName + "' (run consumed "
                              + kv.Value.ToString("0.#") + ") — the player cannot obtain it");
-            else if (best.currentLiquidVolume < kv.Value)
-                res.warnings.Add("'" + kv.Key.chemicalName + "': source " + best.name + " holds "
-                                 + best.currentLiquidVolume.ToString("0.#") + " but the run needs "
-                                 + kv.Value.ToString("0.#") + " — starvation before the last step");
-            log.AppendLine("  " + kv.Key.chemicalName + ": need " + kv.Value.ToString("0.#")
-                           + (best == null ? "  ✗ NO SOURCE" : "  ← " + best.name + " (" + best.currentLiquidVolume.ToString("0.#") + ")"));
+            else if (best.currentLiquidVolume < kv.Value * 0.5f)
+                res.warnings.Add("'" + kv.Key.chemicalName + "': one perfect run left only "
+                                 + best.currentLiquidVolume.ToString("0.#") + " in " + best.name
+                                 + " — little margin for a wasteful player");
+            log.AppendLine("  " + kv.Key.chemicalName + ": consumed " + kv.Value.ToString("0.#")
+                           + (best == null ? "  ✗ NO SOURCE" : "  · " + best.name + " has " + best.currentLiquidVolume.ToString("0.#") + " left"));
         }
     }
 
     /// A correct delivery the player cannot SEE reads as a bug in VR (the 0.5%
-    /// bucket-fill lesson) — flag any vessel whose full scripted intake stays
-    /// under 4% of its capacity.
+    /// bucket-fill lesson) — flag any task vessel that ENDS the run under 4% of
+    /// its capacity. Reads the LIVE vessel (funnel pours and reactions included),
+    /// not the scripted-delivery tally, which under-counted the filtrate beaker.
     static void AuditVisibility(Dictionary<LiquidTaskBinding, float> pouredInto,
                                 Result res, StringBuilder log)
     {
@@ -355,10 +485,11 @@ public static class SimulatedRun
         {
             var lp = kv.Key != null ? kv.Key.GetComponent<LiquidPhysics>() : null;
             if (lp == null || lp.maxVolume <= 0f) continue;
-            float frac = kv.Value / lp.maxVolume;
+            float end = lp.currentLiquidVolume + lp.currentPptVolume;
+            float frac = end / lp.maxVolume;
             if (frac > 0f && frac < 0.04f)
-                res.warnings.Add(kv.Key.name + ": full scripted intake is " + (frac * 100f).ToString("0.#")
-                                 + "% of capacity (" + kv.Value.ToString("0.#") + "/" + lp.maxVolume + " ml) — invisible in VR");
+                res.warnings.Add(kv.Key.name + ": ends the run at " + (frac * 100f).ToString("0.#")
+                                 + "% of capacity (" + end.ToString("0.#") + "/" + lp.maxVolume + " ml) — invisible in VR");
         }
     }
 
