@@ -20,7 +20,7 @@ MonoBehaviour:
   viscosity: 0.5
   boilingPointC: 38
   precipitateColor: {r: 1, g: 1, b: 1, a: 1}
-  pH: 7
+  pH: 11.6
   evolvesGas: 0
   hazard: 4
   requiresFumeHood: 0

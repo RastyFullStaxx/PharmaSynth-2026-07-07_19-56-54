@@ -253,7 +253,8 @@ public static class SimulatedRun
                     handled = SimulateStation(runner, id, simStations, zoneStations, temps, labItems, res, log)
                               || SimulateChillTask(runner, id, res, log)
                               || SimulateVesselHeat(runner, id, null, res, log)   // heat with no reagents of its own (Exp 6's heat-glow)
-                              || SimulateWeigh(runner, id, null, res, log);       // weigh with no pours of its own (Exp 7's weigh-product)
+                              || SimulateWeigh(runner, id, null, res, log)        // weigh with no pours of its own (Exp 7's weigh-product)
+                              || SimulateStir(runner, id, res, log);              // stir with no pours of its own (Exp 8's stir & stand)
 
                 if (!handled)
                 {
@@ -715,13 +716,47 @@ public static class SimulatedRun
 
         if (runner.Graph.IsComplete(id))
             log.AppendLine("  ✓ touched a litmus strip to " + tube.name + " — mixture pH "
-                           + tube.CurrentPH.ToString("0.#") + " read ACID, strip turned red");
+                           + tube.CurrentPH.ToString("0.#")
+                           + (tube.CurrentPH <= LitmusMath.AcidPH
+                              ? " read ACID, strip turned red" : " read BASE, strip turned blue"));
         else
         {
             res.bugs.Add(id + ": the litmus touch did not complete the task (mixture pH "
                          + (tube != null ? tube.CurrentPH.ToString("0.#") : "?")
-                         + ", red needs <= " + LitmusMath.AcidPH + ")");
+                         + ", definitive needs <= " + LitmusMath.AcidPH + " or >= " + LitmusMath.BasePH + ")");
             runner.CompleteTask(id);   // force past to keep exploring downstream
+        }
+        return true;
+    }
+
+    /// The zone-free STIR verb (Exp 8 "shake frequently while dropping"): the
+    /// bench glass rod is circled inside the vessel that owns the task — driven
+    /// through StirController.Tick, the SAME sample path a play-mode frame
+    /// feeds, in quarter-rev-safe 10° steps around the mouth.
+    static bool SimulateStir(ExperimentRunner runner, string id, Result res, StringBuilder log)
+    {
+        StirController stir = null;
+        foreach (var s in Object.FindObjectsByType<StirController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (s != null && s.TaskId == id) { stir = s; break; }
+        if (stir == null) return false;
+
+        int samples = 0;
+        for (int i = 0; i < 200 && !runner.Graph.IsComplete(id); i++)
+        {
+            float a = i * 10f * Mathf.Deg2Rad;
+            stir.Tick(Mathf.Cos(a) * 0.04f, Mathf.Sin(a) * 0.04f, true);
+            samples++;
+            if (i % 18 == 0) runner.Graph.Tick();
+        }
+        runner.Graph.Tick();
+        if (runner.Graph.IsComplete(id))
+            log.AppendLine("  ✓ circled the glass rod in " + stir.name + " — "
+                           + (samples / 36f).ToString("0.#") + " revolutions, well stirred");
+        else
+        {
+            res.bugs.Add(id + ": circling the rod " + (samples / 36f).ToString("0.#")
+                         + " revolutions never completed the stir");
+            runner.CompleteTask(id);
         }
         return true;
     }

@@ -17,7 +17,7 @@ public static class ChemicalStateAudit
     {
         "Sodium Acetate", "Calcium Acetate", "Soda Lime", "Salicylic",
         "Benzoic Acid", "Acetanilide", "Benzamide", "Aspirin",
-        "Sodium Nitrite", "Urea",   // NOT KMnO4: the manuscript only ever uses the 0.1% SOLUTION
+        "Urea",   // NOT KMnO4 or Sodium Nitrite: the manuscript only ever uses their SOLUTIONS (0.1% / 10%, added by the ml)
         "Iodine Crystals", "Yeast",
         // (Murexide + Caffeine purged 2026-07-16 with the dropped Caffeine module.)
     };

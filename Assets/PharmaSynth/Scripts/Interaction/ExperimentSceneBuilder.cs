@@ -777,6 +777,14 @@ public class ExperimentSceneBuilder : MonoBehaviour
             (inst.GetComponent<VesselFlameTask>() ?? inst.AddComponent<VesselFlameTask>())
                 .Bind(runner, v.flameTaskId, flameHasSteps ? bind : null, lp);
         }
+        // ZONE-FREE stir step (Exp 8 "shake frequently"): circle the bench glass
+        // rod inside this vessel, anywhere — StirController is vessel-relative.
+        if (!string.IsNullOrEmpty(v.stirTaskId))
+        {
+            var rodGo = FindBenchItem("Eq_GlassRod");
+            (inst.GetComponent<StirController>() ?? inst.AddComponent<StirController>())
+                .Bind(runner, v.stirTaskId, lp, rodGo != null ? rodGo.transform : null);
+        }
         // FERMENTATION flask (Exp 3): evolves CO₂ into nearby limewater vessels.
         if (!string.IsNullOrEmpty(v.fermentTaskId))
         {
@@ -913,6 +921,12 @@ public class ExperimentSceneBuilder : MonoBehaviour
             if (ft == null || (_stage != null && ft.transform.IsChildOf(_stage))) continue;
             ft.Detach();
             Kill(ft);
+        }
+        foreach (var sc in FindObjectsByType<StirController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (sc == null || (_stage != null && sc.transform.IsChildOf(_stage))) continue;
+            sc.Detach();
+            Kill(sc);
         }
     }
 

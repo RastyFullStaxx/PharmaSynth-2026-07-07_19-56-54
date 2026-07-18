@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Test_BenzamideAlkali
   m_EditorClassIdentifier: Assembly-CSharp::ReactionRule
   inputChemicalA: {fileID: 11400000, guid: c670af5d85067014db38951819f05867, type: 2}
-  inputChemicalB: {fileID: 11400000, guid: 15ddfe811c70f044181309258c0f8812, type: 2}
+  inputChemicalB: {fileID: 11400000, guid: bab7d7119a2e4eb4398d1c60914328c5, type: 2}
   resultLiquid: {fileID: 11400000, guid: c670af5d85067014db38951819f05867, type: 2}
   resultPrecipitate: {fileID: 0}
   hasPrecipitate: 0
-  minTemperatureC: 40
+  minTemperatureC: 90
   outcome: 5
   evolvesGas: 1
   expectedObservation: "Ammonia gas evolved on boiling \u2014 turns red litmus blue

@@ -14,14 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ExperimentLayout
   moduleId: midterm-acetone
   stations: []
-  props:
+  props: []
   vessels:
   - benchItem: Kit_Hard-GlassTestTube_0
     prefabName: TestTube
     displayName: AcetateTube
     pos: {x: 0, y: 0.9, z: 0}
     targetHeight: 0.15
-    startChemical:
+    startChemical: 
     bindings:
     - reagentChemical: Calcium Acetate
       taskId: weigh-acetates
@@ -31,41 +31,45 @@ MonoBehaviour:
       taskId: weigh-acetates
       requiredMl: 7
       completesTask: 0
-    rackGroup:
+    rackGroup: 
     heatToC: 150
-    fermentTaskId:
+    fermentTaskId: 
     chillToC: 0
     chillTaskId: 
     litmusTaskId: 
     heatTaskId: heat-glow
     weighTaskId: weigh-acetates
     vaporTaskId: collect-56
+    flameTaskId: 
+    stirTaskId: 
   - benchItem: Kit_TestTube_14
     prefabName: TestTube
     displayName: ReceiverTube
     pos: {x: 0, y: 0.9, z: 0}
     targetHeight: 0.15
-    startChemical:
+    startChemical: 
     bindings:
     - reagentChemical: Acetone
       taskId: collect-56
       requiredMl: 8
       completesTask: 1
-    rackGroup:
+    rackGroup: 
     heatToC: 0
-    fermentTaskId:
+    fermentTaskId: 
     chillToC: 0
     chillTaskId: 
     litmusTaskId: 
     heatTaskId: 
     weighTaskId: 
     vaporTaskId: 
+    flameTaskId: 
+    stirTaskId: 
   - benchItem: Kit_TestTube_15
     prefabName: TestTube
     displayName: TollensTube
     pos: {x: 0, y: 0.9, z: 0}
     targetHeight: 0.15
-    startChemical:
+    startChemical: 
     bindings:
     - reagentChemical: Acetone
       taskId: test-tollens
@@ -79,21 +83,23 @@ MonoBehaviour:
       taskId: test-tollens
       requiredMl: 2
       completesTask: 1
-    rackGroup:
+    rackGroup: 
     heatToC: 0
-    fermentTaskId:
+    fermentTaskId: 
     chillToC: 0
     chillTaskId: 
     litmusTaskId: 
     heatTaskId: 
     weighTaskId: 
     vaporTaskId: 
+    flameTaskId: 
+    stirTaskId: 
   - benchItem: Kit_TestTube_16
     prefabName: TestTube
     displayName: SchiffTube
     pos: {x: 0, y: 0.9, z: 0}
     targetHeight: 0.15
-    startChemical:
+    startChemical: 
     bindings:
     - reagentChemical: Schiff's Reagent
       taskId: test-schiff
@@ -103,21 +109,23 @@ MonoBehaviour:
       taskId: test-schiff
       requiredMl: 2
       completesTask: 1
-    rackGroup:
+    rackGroup: 
     heatToC: 0
-    fermentTaskId:
+    fermentTaskId: 
     chillToC: 0
     chillTaskId: 
     litmusTaskId: 
     heatTaskId: 
     weighTaskId: 
     vaporTaskId: 
+    flameTaskId: 
+    stirTaskId: 
   - benchItem: Kit_TestTube_17
     prefabName: TestTube
     displayName: IodoformTube
     pos: {x: 0, y: 0.9, z: 0}
     targetHeight: 0.15
-    startChemical:
+    startChemical: 
     bindings:
     - reagentChemical: Acetone
       taskId: test-iodoform
@@ -131,21 +139,23 @@ MonoBehaviour:
       taskId: test-iodoform
       requiredMl: 10
       completesTask: 0
-    rackGroup:
+    rackGroup: 
     heatToC: 60
-    fermentTaskId:
+    fermentTaskId: 
     chillToC: 0
     chillTaskId: 
     litmusTaskId: 
     heatTaskId: 
     weighTaskId: 
     vaporTaskId: 
+    flameTaskId: 
+    stirTaskId: 
   - benchItem: Kit_TestTube_18
     prefabName: TestTube
     displayName: BisulfiteTube
     pos: {x: 0, y: 0.9, z: 0}
     targetHeight: 0.15
-    startChemical:
+    startChemical: 
     bindings:
     - reagentChemical: Sodium Bisulfite
       taskId: test-bisulfite
@@ -159,12 +169,14 @@ MonoBehaviour:
       taskId: test-bisulfite
       requiredMl: 1
       completesTask: 0
-    rackGroup:
+    rackGroup: 
     heatToC: 0
-    fermentTaskId:
+    fermentTaskId: 
     chillToC: 8
     chillTaskId: test-bisulfite
     litmusTaskId: 
     heatTaskId: 
     weighTaskId: 
     vaporTaskId: 
+    flameTaskId: 
+    stirTaskId: 

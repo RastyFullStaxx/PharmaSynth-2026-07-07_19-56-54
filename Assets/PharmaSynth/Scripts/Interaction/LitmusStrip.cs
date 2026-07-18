@@ -8,15 +8,19 @@ public static class LitmusMath
     public static readonly Color BaseBlue = new Color(0.2f, 0.35f, 0.85f);
 
     /// Blue litmus turns red at/below this — also the completion gate for
-    /// litmus-confirmation tasks (Exp 4's "blue litmus turns red").
+    /// acid litmus-confirmation tasks (Exp 4's "blue litmus turns red").
     public const float AcidPH = 4.5f;
+
+    /// Red litmus turns blue at/above this — the completion gate for BASE
+    /// litmus-confirmation tasks (Exp 8's ammonia vapour on alkali hydrolysis).
+    public const float BasePH = 8.3f;
 
     /// Red below ~4.5, blue above ~8.3, graded violet between.
     public static Color ColorForPH(float pH)
     {
         if (pH <= AcidPH) return AcidRed;
-        if (pH >= 8.3f) return BaseBlue;
-        float t = Mathf.InverseLerp(AcidPH, 8.3f, pH);
+        if (pH >= BasePH) return BaseBlue;
+        float t = Mathf.InverseLerp(AcidPH, BasePH, pH);
         return t < 0.5f
             ? Color.Lerp(AcidRed, NeutralViolet, t * 2f)
             : Color.Lerp(NeutralViolet, BaseBlue, (t - 0.5f) * 2f);
@@ -78,36 +82,43 @@ public class LitmusStrip : MonoBehaviour
 }
 
 /// Completes a litmus-confirmation step ZONE-FREE (Exp 4's "blue litmus turns
-/// red"): the task is done when this vessel has been served its reagents AND a
-/// litmus strip actually touched it while the mixture read ACID — the strip
-/// turning red IS the completion, wherever the player does it. A neutral read
-/// (water first, nothing dissolved yet) marks nothing; touch again with a fresh
-/// strip once the product is in.
+/// red"; Exp 8's "red litmus turns blue"): the task is done when this vessel
+/// has been served its reagents AND a litmus strip actually touched it while
+/// the mixture read a DEFINITIVE pH — red on acid, blue on base — wherever the
+/// player does it. A neutral read (water first, nothing dissolved yet) marks
+/// nothing; touch again with a fresh strip once the product is in.
 public class VesselLitmusTask : MonoBehaviour
 {
     private ExperimentRunner _runner;
     private string _taskId;
     private LiquidTaskBinding _binding;
     private LiquidPhysics _lp;
-    private bool _readAcidic;
+    private bool _readDefinitive;
     private bool _subscribed;
 
     public string TaskId => _taskId;
 
-    /// Pure (suite-pinned): served AND the strip really turned red.
-    public static bool ShouldComplete(bool allReagentsIn, bool stripReadAcid)
-        => allReagentsIn && stripReadAcid;
+    /// Pure (suite-pinned): served AND the strip really changed colour.
+    public static bool ShouldComplete(bool allReagentsIn, bool stripReadDefinitive)
+        => allReagentsIn && stripReadDefinitive;
 
     /// Called by the strip that touched this vessel.
     public void NotifyRead(float pH)
     {
-        if (pH <= LitmusMath.AcidPH && !_readAcidic)
+        if (!_readDefinitive && pH <= LitmusMath.AcidPH)
         {
-            _readAcidic = true;
+            _readDefinitive = true;
             // Assurance cue: the colour change is small — say what it means.
             if (Application.isPlaying)
                 FloatingText.Show("Blue litmus turns RED — acid confirmed",
                                   transform.position + Vector3.up * 0.15f, LitmusMath.AcidRed, 1f);
+        }
+        else if (!_readDefinitive && pH >= LitmusMath.BasePH)
+        {
+            _readDefinitive = true;
+            if (Application.isPlaying)
+                FloatingText.Show("Red litmus turns BLUE — base confirmed",
+                                  transform.position + Vector3.up * 0.15f, LitmusMath.BaseBlue, 1f);
         }
         if (_runner != null && _runner.Graph != null) _runner.Graph.Tick();
     }
@@ -116,7 +127,7 @@ public class VesselLitmusTask : MonoBehaviour
     {
         if (_runner != null && _subscribed) { _runner.ExperimentStarted -= OnStarted; _subscribed = false; }
         _runner = runner; _taskId = taskId; _binding = binding; _lp = lp;
-        _readAcidic = false;
+        _readDefinitive = false;
         if (_runner != null) { _runner.ExperimentStarted += OnStarted; _subscribed = true; }
         Register();
     }
@@ -126,12 +137,12 @@ public class VesselLitmusTask : MonoBehaviour
     { if (_runner != null && _subscribed) { _runner.ExperimentStarted -= OnStarted; _subscribed = false; } }
 
     private void OnDestroy() => Detach();
-    private void OnStarted(ExperimentModuleDefinition _) { _readAcidic = false; Register(); }
+    private void OnStarted(ExperimentModuleDefinition _) { _readDefinitive = false; Register(); }
 
     private void Register()
     {
         if (_runner == null || _runner.Graph == null || string.IsNullOrEmpty(_taskId)) return;
         _runner.Graph.RegisterCondition(_taskId, () =>
-            _binding != null && ShouldComplete(_binding.ReadyFor(_taskId), _readAcidic));
+            _binding != null && ShouldComplete(_binding.ReadyFor(_taskId), _readDefinitive));
     }
 }

@@ -191,6 +191,12 @@ public static class RawReagentCatalog
               "The acylating agent — fumes violently with water. Hood, gloves, and slow additions.", "Exp 5"),
             R("Benzoyl Chloride", PhysicalState.Liquid, C(0.93f,0.91f,0.84f, 0.7f), 1f, HazardType.Corrosive, false, LabwareKind.AmberBottle, GroupOrganics,
               "Lachrymator acyl chloride — benzamide's precursor. Eyes water; pour and recap fast.", "Exp 8"),
+            // Missed on the first catalog pass (found by the Exp 8 polish sim:
+            // no bench source held it). The manuscript's "10% Sodium NITRATE
+            // solution" is the documented nitrite typo — added by the ml, so a
+            // liquid solution like the KMnO4 0.1%.
+            R("Sodium Nitrite", PhysicalState.Liquid, C(0.94f,0.93f,0.88f), 9f, HazardType.None, false, LabwareKind.ReagentBottle, GroupTests,
+              "10% sodium nitrite solution — with dilute HCl it makes nitrous acid in situ (the manual's 'nitrate' is a typo).", "Exp 8"),
             R("Glacial Acetic Acid", PhysicalState.Liquid, C(0.95f,0.95f,0.9f, 0.6f), 2.4f, HazardType.Corrosive, false, LabwareKind.ReagentBottle, GroupOrganics,
               "Water-free acetic acid — freezes at 17 °C, hence 'glacial'. Sharp vinegar bite.", "Exp 5"),
             R("Acetone", PhysicalState.Liquid, C(0.92f,0.94f,0.95f, 0.55f), 7f, HazardType.Flammable, false, LabwareKind.ReagentBottle, GroupOrganics,

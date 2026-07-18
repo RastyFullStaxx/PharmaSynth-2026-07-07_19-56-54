@@ -169,7 +169,8 @@ Both were **game-authored** (Aspirin is named only in the manuscript's intro pro
 | **midterm-acetanilide** | Midterm | ✅ **BUILT + simulated clean 2026-07-18 (8/8)** — the FUME-HOOD module: hood-sanctioned acylation (position-based check, finally wired) → heat-gated white plates → ice-water + chill crystallise → filter/wash/dry time-skip → hydrolysis boil + **two-tube bromination comparison** (rackGroup). ⬜ Left: headset playtest (hood carry feel). |
 | **midterm-acetone** | Midterm | ✅ **BUILT + simulated clean 2026-07-18 (8/8)** — bench-balance WEIGH (live grams) → **NAKED-FLAME** dry distillation (150 °C glow, hard-glass) → **VAPOR collect** at 56 °C into the receiver → 4 tests (2 authored negatives, iodoform warm, bisulfite adduct in the ice). New reusable: `NakedFlameHeat`, `VaporCollectController`, `VesselWeighTask`+balance rig. ⬜ Left: headset playtest. |
 | **midterm-chloroform** | Midterm | ✅ **BUILT + simulated clean 2026-07-18 (13/13)** — two water-bath distillations (heat task + vapor collect ×2, 65 °C), decant wash, CaCl2 dry, balance weigh, then the **lit-match non-flammability confirm** (`VesselFlameTask`, new reusable), the hood-sanctioned dichromate oxidation and the warm AgNO3 white-ppt test. Rule fixes: oxidation resultLiquid-null trap + cold-fire, AgNO3 missing precipitate + plain-vs-alcoholic AgNO3. The legacy builder fixture is now SYNTHETIC (no module stages stations any more). ⬜ Left: headset playtest. |
-| final-* | Final | ⬜ not started. ⚠ Fix `StirController` tip-tracking before Exp 8's "stir & stand". |
+| **final-benzamide** | Final | ✅ **BUILT + simulated clean 2026-07-18 (10/10)** — ice-bath-controlled synthesis (rule fires COLD), the **zone-free glass-rod STIR** (`Vessel.stirTaskId`; tip-tracking FIXED — closest-point like the pestle, either bench rod, no anchor), filter/wash/dry time-skips, weigh, then the **BASE litmus read** (new: red litmus turns blue on the ammonia tube), the acid litmus read, and the instant nitrous effervescence. Fixes: 2 resultLiquid-null traps, boil gates 40→90, alkali paired the 10% NaOH bottle, **Sodium Nitrite added to the catalog/bench** (was missing entirely), pending rule cleared on fire. ⬜ Left: headset playtest. |
+| final-winemaking | Final | ⬜ not started — the LAST module. Reuses ferment/CO₂/limewater (Exp 3) + time-skip; check the manuscript's group-activity framing + the rack/clarity/tasting steps for zone-free design. |
 
 ### The METHANE FLOW — the template every module follows
 1. **Gate** — Pharmee → Campaign → pick module → don **all 3 PPE** (hard-gated: `GatekeeperModel.RequiresPPEToOpen`) → "I'm ready" → cross the threshold (timer starts).
@@ -199,7 +200,8 @@ Both were **game-authored** (Aspirin is named only in the manuscript's intro pro
 | **Ice-bath chill step** (Exp 4 crystallise; Exp 8's ice bath) | `IceBathController` on `Raw_IceBucket` + `VesselChillTask` (`Vessel.chillToC` + `chillTaskId`) | The water bath's cold twin, zone-free: any vessel within the chill zone is pulled to ~2 °C; the task completes only when the vessel HOLDS something AND is ≤ `chillToC` (ambient 25 °C can never self-complete). Pair with `longProcess` for the crystallise/dry time-skip. Wired by Apply W5.8. |
 | **User-scalable EFFECT-ZONE anchors** (2026-07-18) | `PlacementAnchor` children read by the tool controllers via `WaterBathMath.EffectRadius` | The wire-sphere gizmo's world **scale IS the diameter** of the tool's reach — scale it in the editor and the mechanic follows exactly. Four exist (created by Apply W5.8, centred on the rendered body): `WaterBath/HeatZone` (orange, vessels warm inside) · `WaterBath/BurnerZone` (red, a lit burner inside drives the bath) · `Raw_IceBucket/ChillZone` (blue, vessels chill inside) · `FlorenceFlask/FermentZone` (green, limewater clouds inside). Moving the anchor re-centres the zone; deleting it falls back to the coded constant. Add the same pattern to any future area-of-effect. |
 | **Flame (non-)flammability confirm** (Exp 7 test-flammability) | `VesselFlameTask` (`Vessel.flameTaskId`) + `FlameTestMath` | Zone-free: once the sample vessel is served, ANY lit match or burner flame held within 0.2 m confirms ("Won't ignite — NON-FLAMMABLE ✓" FloatingText) and completes the task. Resets on Retry. The sim lights the bench burner and holds the dish at its flame — the same `PollFlames` scan a play frame runs. |
-| **Litmus confirmation step** (Exp 4; pH checks in Exp 3/8) | `VesselLitmusTask` (`Vessel.litmusTaskId`) + `LiquidPhysics.CurrentPH` | A strip from the bench litmus box touched to the served tube completes the task when the MIXTURE reads acid (strip turns red + "acid confirmed" FloatingText). `CurrentPH` is mixture pH — the component farthest from 7 dominates (`LitmusMath.DominantPH`), so pour order can't soft-lock the read. ⚠ pH must be AUTHORED on the ChemicalData (most assets default 7 — benzoic 2.9 / HCl 6N 0.5 / H₂SO₄ 0.4 authored 2026-07-18; suite pins them). |
+| **Stir verb, zone-free** (Exp 8 "shake frequently") | `StirController` (`Vessel.stirTaskId`) + `OrbitMath` | Circle ANY bench glass rod inside the vessel (on the bench or held) — the controller tracks whichever rod's closest-geometry TIP is nearest (anchor-free, origin-agnostic like `GrindController.PestleTip`; the old origin-tracking never entered the mouth). Progress popups at 25% steps → "Well stirred!". Pair with `longProcess` for stand time-skips. |
+| **Litmus confirmation step** (Exp 4 acid; Exp 8 BASE — red→blue) | `VesselLitmusTask` (`Vessel.litmusTaskId`) + `LiquidPhysics.CurrentPH` | A strip from the bench litmus box touched to the served tube completes the task when the MIXTURE reads acid (strip turns red + "acid confirmed" FloatingText). `CurrentPH` is mixture pH — the component farthest from 7 dominates (`LitmusMath.DominantPH`), so pour order can't soft-lock the read. ⚠ pH must be AUTHORED on the ChemicalData (most assets default 7 — benzoic 2.9 / HCl 6N 0.5 / H₂SO₄ 0.4 authored 2026-07-18; suite pins them). |
 | Live temp goal on the vessel itself | `VesselStatusMath.TempGoalLine` (auto via `VesselStatus`) | Heat/chill vessels append "25 C — warm to 50 C (water bath)" / "chill to 8 C (ice bath)" to their name tag until the goal is reached. No extra wiring — reads the vessel's VesselHeatTask/VesselChillTask. |
 | Vessels POUR OUT | `ShelfPourWiring.WireBottle` called by `BuildVessel` | Every task vessel (bench-bound or spawned) gets a `LiquidPourer`+spout+spill grading — the filter pour and draw-from-your-own-product steps were unplayable while only shelf bottles poured (2026-07-18; the sim's direct PourOut masked it). |
 | Pharmee's spoken guidance | `PharmeeBrain.InstructionFor` | Speaks ONLY the ACTION line (after the →) of a two-line hint — short, imperative, "do this now"; the fact line stays on the wrist panel. |
@@ -875,43 +877,31 @@ Zone-free, bench-bound; stations DELETED (the LAST classic Weigh/Heat/Collect st
 **Manuscript Reagents:** Concentrated; 10% Sodium hydroxide; Diluted hydrochloric; ammonia 10% Sodium nitrate solution; acid Benzoyl chloride
 
 
-### Task graph (play order)
+**VR adaptations (documented):** the old "measure in the fume hood" hint was game-invented \u2014 the manuscript never asks for the hood in Exp 8 (the ICE BATH is its safety teaching), so no hood step; the **Beaker 100 mL stands in for the 50-ml flask** (5+1 ml stays a visible 6% fill); "shake the flask frequently" plays as the **glass-rod STIR verb** (either bench rod \u2014 the controller tracks whichever rod tip is nearest, anchor-free); the stand + filter/wash/oven-dry compress into two time-skips; a **weigh step** was added (the data sheet's % yield needs the crystal mass, Exp 6/7 precedent). \u26a0 engine wake-rule: the benzamide dips pour FIRST in every test tube.
 
-| # | task | phase | label | prerequisites | hint |
-|---|------|-------|-------|---------------|------|
-| 1 | `measure-ammonia` | ReagentPrep | Place 5 mL concentrated ammonia in a 50 mL flask (fume hood) | - | Measure concentrated ammonia in the fume hood. |
-| 2 | `ice-bath` | ReagentPrep | Cool the flask in an ice bath | measure-ammonia | Chilling controls the vigorous reaction. |
-| 3 | `add-benzoyl` | Synthesis | Add 1 mL benzoyl chloride dropwise, shaking | ice-bath | Add benzoyl chloride drop by drop, shaking frequently. |
-| 4 | `stand` | Synthesis | Let stand 10\u201315 minutes | add-benzoyl | Allow the benzamide to crystallise fully. |
-| 5 | `filter-dry` | Synthesis | Filter, wash with cold water, oven-dry | stand | Collect the precipitate and dry it in the oven. |
-| 6 | `test-alkali` | ChemicalTests | Alkaline hydrolysis (ammonia vapour \u2192 blue litmus) | filter-dry | Boil with 10% NaOH; ammonia vapour turns moist litmus blue. |
-| 7 | `test-acid` | ChemicalTests | Acid hydrolysis (dil HCl) | filter-dry | Boil with dilute HCl; test the vapour with litmus. |
-| 8 | `test-nitrous` | ChemicalTests | Nitrous-acid test (dil HCl + sodium nitrite) | filter-dry | Add sodium nitrite to the acidified sample. (Manual's 'nitrate' is a typo - use nitrite.) |
-| 9 | `record-yield` | DataSheet | Record % yield and observations | test-alkali, test-acid, test-nitrous | Enter crystal mass, % yield and test results. |
+### Task graph (play order \u2014 as built, 10 tasks)
 
-### Stage layout
+| # | task | phase | label | prereq | how it completes |
+|---|------|-------|-------|--------|------------------|
+| 1 | `measure-ammonia` | ReagentPrep | Place 5 mL concentrated ammonia in the flask | - | `Eq_Beaker_100mL`: 5 squeezes of ammonia solution |
+| 2 | `ice-bath` | ReagentPrep | Cool the flask in an ice bath | 1 | beaker in the ice bucket to \u22645 \u00b0C (`chillTaskId`) |
+| 3 | `add-benzoyl` | Synthesis | Add 1 mL benzoyl chloride drop by drop | 2 | 1 dropper squeeze into the CHILLED beaker \u2192 `Benzamide` rule fires cold (white solid, no gate \u2014 the ice is the control) |
+| 4 | `stir-stand` | Synthesis | Shake while adding, then let stand 10\u201315 min | 3 | circle a GLASS ROD inside the beaker (`stirTaskId` \u2192 **StirController**, tip-tracked, either bench rod) \u2192 "Well stirred!" \u2192 time-skip |
+| 5 | `filter-dry` | Synthesis | Filter, wash with cold water, oven-dry | 4 | tilt-pour 4 ml through the funnel onto `Eq_WatchGlass` \u2192 wash/oven time-skip |
+| 6 | `weigh-product` | Synthesis | Weigh your benzamide crystals | 5 | watch glass settled on the bench balance (`weighTaskId`) |
+| 7 | `test-alkali` | ChemicalTests | Alkaline hydrolysis \u2014 red litmus turns BLUE | 6 | Tube 15: 5 dips benzamide + 2 squeezes NaOH 10% \u2192 warm \u226590 \u00b0C at the bath (ammonia gas \u2697) + litmus strip reads BASE (`litmusTaskId`) |
+| 8 | `test-acid` | ChemicalTests | Acid hydrolysis \u2014 the tube reads ACID | 6 | Tube 16: 5 dips + 2 squeezes dil. HCl \u2192 warm \u226590 \u00b0C (benzoic crystals \u2697) + litmus reads ACID |
+| 9 | `test-nitrous` | ChemicalTests | Nitrous-acid test \u2014 brisk N2 effervescence | 6 | Tube 17: 5 dips + 2 squeezes dil. HCl + 3 squeezes sodium nitrite \u2192 instant effervescence \u2697 (completes on delivery) |
+| 10 | `record-yield` | DataSheet | Record % yield and observations | 6\u20139 | auto-completes (wrap-up) |
 
-**Stations:** `ice-bath` (Crystallise) ; `stand` (Stir) ; `filter-dry` (Filter) ; `test-alkali` (zone-touch) ; `test-nitrous` (zone-touch)
-
-**Reagents staged (pourable):** Ammonia Solution (Vial_Brown, auto-supply) ; Benzoyl Chloride (Vial_Brown, auto-supply) ; Diluted Hydrochloric Acid (Vial_Brown, auto-supply) ; Sodium Hydroxide (Vial_Brown, auto-supply) ; Sodium Nitrite (Vial_Brown, auto-supply)
-
-**Tools staged:** Ice Bath Dish ; Stirring Rod ; Funnel ; Alkali Test Tube ; Dropper
-
-**Vessel Beaker_500mL** (Reaction Beaker) - starts EMPTY
-  - pour **Ammonia Solution** >= 50 ml -> completes `measure-ammonia`
-  - pour **Benzoyl Chloride** >= 50 ml -> completes `add-benzoyl`
-
-**Vessel TestTube_WithLiquid** (Product Test Tube) - starts with Benzamide
-  - pour **Diluted Hydrochloric Acid** >= 50 ml -> completes `test-acid`
-  - pour **Sodium Hydroxide** >= 50 ml -> completes `test-alkali`
-  - pour **Sodium Nitrite** >= 50 ml -> completes `test-nitrous`
+**All test dips come from the Watch Glass** (the filtered, dried pure-product dish). **Sodium Nitrite was MISSING from the bench entirely** \u2014 absent from `RawReagentCatalog`, so no bottle existed; added 2026-07-18 as the manuscript's 10% SOLUTION (liquid, `Raw_SodiumNitrite`, cabinet rebuilt + recovery chain run).
 
 ### Reactions & expected observations
 
-- **Benzamide**: Benzoyl Chloride + Ammonia Solution - "White benzamide solid"
-- **Test_BenzamideAcid**: Benzamide + Diluted Hydrochloric Acid - "White benzoic acid crystals separate on boiling with acid"
-- **Test_BenzamideAlkali**: Benzamide + Sodium Hydroxide -> Benzamide - "Ammonia gas evolved on boiling \u2014 turns red litmus blue"
-- **Test_BenzamideNitrous**: Benzamide + Sodium Nitrite -> Benzamide - "Brisk effervescence \u2014 nitrogen gas is evolved with nitrous"
+- **Benzamide** (no gate \u2014 fires IN the ice; fixed 2026-07-18: resultLiquid was NULL, so the beaker's contents stayed "Ammonia Solution" and nothing downstream could pour or find the product): Benzoyl Chloride + Ammonia Solution \u2192 Benzamide (+ white ppt) \u2014 "White benzamide solid"
+- **Test_BenzamideAlkali** (min 90 \u00b0C "heat to boiling", was 40; inputB fixed \u2192 **Sodium Hydroxide 10%** \u2014 plain "Sodium Hydroxide" has NO bench bottle): \u2192 "Ammonia gas evolved on boiling \u2014 turns red litmus blue"
+- **Test_BenzamideAcid** (min 90 \u00b0C, was 40; resultLiquid NULL fixed \u2192 Benzamide): + Diluted HCl \u2192 white benzoic ppt \u2014 "White benzoic acid crystals separate on boiling"
+- **Test_BenzamideNitrous** (instant, cold): + Sodium Nitrite \u2192 "Brisk effervescence \u2014 nitrogen gas". \u26a0 Engine: a FIRED reaction now CLEARS any pending rule (`LiquidPhysics.ApplyReaction`) \u2014 without this, tube 17's half-armed acid-hydrolysis pend outlived the effervescence and kept showing "needs heat".
 
 ### Quiz (Documentation score)
 

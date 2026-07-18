@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: Chem_SodiumNitrite
   m_EditorClassIdentifier: Assembly-CSharp::ChemicalData
   chemicalName: Sodium Nitrite
-  state: 1
+  state: 0
   liquidColor: {r: 0.95, g: 0.92, b: 0.62, a: 1}
   liquidTopColor: {r: 0.95, g: 0.92, b: 0.62, a: 1}
   sceneColourAmount: 0.12
   viscosity: 0.5
   boilingPointC: 100
   precipitateColor: {r: 1, g: 1, b: 1, a: 1}
-  pH: 7
+  pH: 9
   evolvesGas: 0
   hazard: 1
   requiresFumeHood: 0

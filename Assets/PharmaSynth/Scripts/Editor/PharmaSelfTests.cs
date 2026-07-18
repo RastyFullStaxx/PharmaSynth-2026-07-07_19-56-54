@@ -977,7 +977,10 @@ public static class PharmaSelfTests
             // Acetanilide (Exp 5) rebuilt zone-free 2026-07-18: no seeded vessel
             // (the player synthesises + scoops the crystals) — its bromination/
             // hydrolysis rules are validated by the Exp 5 simrun firing them.
-            ("Layout_Benzamide",    "Benzamide",      new[] { "Sodium Hydroxide", "Sodium Nitrite", "Diluted Hydrochloric Acid" }),
+            // Benzamide (Exp 8) rebuilt zone-free 2026-07-18: no seeded vessel
+            // (the player synthesises in the ice bath and dips crystals from the
+            // dried watch glass) — its alkali/acid/nitrous rules are validated
+            // by the Exp 8 simrun firing them at temperature.
             // Chloroform (Exp 7) rebuilt zone-free 2026-07-18: no seeded vessel
             // (the player distils, washes and redistils the chloroform, then
             // draws every test from Test Tube 14) — its AgNO3/oxidation rules
@@ -2250,6 +2253,17 @@ public static class PharmaSelfTests
                 : sim7.Clean ? "" : "  [" + sim7.completedTasks + "/" + sim7.totalTasks + " tasks, "
                   + sim7.mistakes + " mistakes; " + string.Join(" | ", sim7.bugs) + "]";
             A("simrun: Exp 7 plays END-TO-END clean" + sim7Note, sim7 != null && sim7.Clean);
+
+            // Exp 8 (benzamide): the ice-bath-controlled synthesis, the
+            // glass-rod STIR verb (tip-tracked), the filter/wash/dry time-skip,
+            // and the two LITMUS reads (blue on ammonia, red on acid) plus the
+            // nitrous effervescence all played through the real wiring.
+            var sim8Log = new System.Text.StringBuilder();
+            var sim8 = SimulatedRun.Run("final-benzamide", sim8Log);
+            string sim8Note = sim8 == null ? "did not run"
+                : sim8.Clean ? "" : "  [" + sim8.completedTasks + "/" + sim8.totalTasks + " tasks, "
+                  + sim8.mistakes + " mistakes; " + string.Join(" | ", sim8.bugs) + "]";
+            A("simrun: Exp 8 plays END-TO-END clean" + sim8Note, sim8 != null && sim8.Clean);
         }
 
         // FERMENTATION (Exp 3): pure gates for the CO₂→limewater mechanic.
@@ -2358,9 +2372,15 @@ public static class PharmaSelfTests
         A("litmus: the extreme component dominates the mixture",
             LitmusMath.DominantPH(7f, 2.9f) == 2.9f && LitmusMath.DominantPH(2.9f, 7f) == 2.9f
             && LitmusMath.DominantPH(7f, 13.5f) == 13.5f);
-        A("litmus: task needs served AND an acid read",
+        A("litmus: task needs served AND a definitive read",
             VesselLitmusTask.ShouldComplete(true, true) && !VesselLitmusTask.ShouldComplete(true, false)
             && !VesselLitmusTask.ShouldComplete(false, true));
+        // Exp 8 (2026-07-18): the BASE read — ammonia vapour on alkaline
+        // hydrolysis turns red litmus blue, and that read completes too.
+        A("litmus: 10% NaOH actually reads BASE (authored pH)",
+            LoadChem("Chem_SodiumHydroxide10") != null
+            && LoadChem("Chem_SodiumHydroxide10").pH >= LitmusMath.BasePH
+            && LitmusMath.ColorForPH(LoadChem("Chem_SodiumHydroxide10").pH) == LitmusMath.BaseBlue);
         {
             // DATA pin: the litmus lesson dies silently if a re-import ever
             // resets these pH values back to the un-authored 7.
@@ -2627,6 +2647,7 @@ public static class PharmaSelfTests
                     if (v.weighTaskId == t.taskId) owned = true;     // VesselWeighTask (bench balance)
                     if (v.vaporTaskId == t.taskId) owned = true;     // VaporCollectController (source side)
                     if (v.flameTaskId == t.taskId) owned = true;     // VesselFlameTask (lit-match confirm, Exp 7)
+                    if (v.stirTaskId == t.taskId) owned = true;      // StirController (glass-rod stir, Exp 8)
                     foreach (var b in v.bindings)
                         if (b.taskId == t.taskId
                             && (b.completesTask || !string.IsNullOrEmpty(v.rackGroup) || v.heatToC > 0f))
@@ -2670,8 +2691,10 @@ public static class PharmaSelfTests
             && balT.GetComponent<WeighingScaleController>() != null);
         A("verbwire: burners carry the naked flame",
             UnityEngine.Object.FindAnyObjectByType<NakedFlameHeat>(FindObjectsInactive.Include) != null);
+        // Zone-free since the Exp 8 polish (2026-07-18): the stir is authored as
+        // Vessel.stirTaskId on the chilled reaction beaker, not a Stir station.
         bool benzStir = false;
-        if (benzamide != null) foreach (var s in benzamide.stations) if (s.taskId == "stand" && s.sim == StationSim.Stir) benzStir = true;
+        if (benzamide != null) foreach (var v in benzamide.vessels) if (v.stirTaskId == "stir-stand") benzStir = true;
         A("verbwire: benzamide stir authored", benzStir);
 
         // Builder wires the controllers (fresh runner, no graph — Register no-ops).
@@ -2683,7 +2706,10 @@ public static class PharmaSelfTests
             builder.SetRefs(runner, lib, reg, layouts);
 
             builder.Build("final-benzamide");
-            A("verbwire: benzamide rod stirs the vessel", bgo.GetComponentInChildren<StirController>() != null);
+            // Bench-bound: the StirController sits on the bench beaker (outside
+            // the stage root), so look scene-wide.
+            A("verbwire: benzamide rod stirs the vessel",
+                UnityEngine.Object.FindAnyObjectByType<StirController>(FindObjectsInactive.Include) != null);
 
             // (The acetone balance/burner assertions moved to the BENCH pins
             // above when Exp 6 went zone-free, 2026-07-18.)
@@ -3067,6 +3093,39 @@ public static class PharmaSelfTests
                 if (v.flameTaskId == "test-flammability" && v.benchItem == "Eq_WatchGlass") m2Flame = true;
         A("m2: chloroform layout is zone-free with the watch-glass flame test",
             m2Flame && m2Stations);
+
+        // M6 (Exp 8 polish 2026-07-18): benzamide rules un-trapped and paired
+        // with bottles that EXIST. The synthesis + acid rules had resultLiquid
+        // NULL (the product trap); the hydrolyses fired at 40 despite "heat to
+        // BOILING"; the alkali paired plain "Sodium Hydroxide" — a chem with no
+        // bench bottle (only the 10% and 6N bottles exist); Sodium Nitrite was
+        // missing from the reagent catalog entirely (no bottle at all) and
+        // marked Solid though the manuscript adds "3 ml of 10% solution".
+        var benzRule = AssetDatabase.LoadAssetAtPath<ReactionRule>("Assets/PharmaSynth/ScriptableObjects/Reactions/Benzamide.asset");
+        A("m6: benzamide synthesis keeps its product + fires in the ice (no gate)",
+            benzRule != null && benzRule.resultLiquid == Chem("Chem_Benzamide") && benzRule.minTemperatureC <= 0f);
+        var acidHyd = AssetDatabase.LoadAssetAtPath<ReactionRule>("Assets/PharmaSynth/ScriptableObjects/Reactions/Test_BenzamideAcid.asset");
+        A("m6: acid hydrolysis keeps its product + gates at the boil",
+            acidHyd != null && acidHyd.resultLiquid == Chem("Chem_Benzamide") && acidHyd.minTemperatureC >= 90f);
+        var alkHyd = AssetDatabase.LoadAssetAtPath<ReactionRule>("Assets/PharmaSynth/ScriptableObjects/Reactions/Test_BenzamideAlkali.asset");
+        A("m6: alkali hydrolysis pairs the 10% NaOH bottle + gates at the boil",
+            alkHyd != null && alkHyd.inputChemicalB == Chem("Chem_SodiumHydroxide10") && alkHyd.minTemperatureC >= 90f);
+        A("m6: sodium nitrite is the manuscript's 10% SOLUTION with a catalog bottle",
+            Chem("Chem_SodiumNitrite") != null && Chem("Chem_SodiumNitrite").state == PhysicalState.Liquid
+            && RawReagentCatalog.Find("Sodium Nitrite") != null
+            && RawReagentCatalog.Find("Sodium Nitrite").labware == RawReagentCatalog.LabwareKind.ReagentBottle);
+        var benzLayout = Layout("Layout_Benzamide");
+        bool m6Stir = false, m6LitmusA = false, m6LitmusB = false;
+        bool m6Stations = benzLayout != null && benzLayout.stations.Count == 0;
+        if (benzLayout != null)
+            foreach (var v in benzLayout.vessels)
+            {
+                if (v.stirTaskId == "stir-stand" && v.chillTaskId == "ice-bath") m6Stir = true;
+                if (v.litmusTaskId == "test-alkali") m6LitmusA = true;
+                if (v.litmusTaskId == "test-acid") m6LitmusB = true;
+            }
+        A("m6: benzamide layout is zone-free — chilled stir beaker + both litmus tubes",
+            m6Stations && m6Stir && m6LitmusA && m6LitmusB);
 
         // M3: no grapes (manuscript exclusion).
         A("m3: fruit juice renamed", Chem("Chem_GrapeJuice") != null && Chem("Chem_GrapeJuice").chemicalName == "Mixed Fruit Juice");
@@ -4164,7 +4223,7 @@ public static class PharmaSelfTests
             ("Tutorial_Methane", 5), ("Prelim_ChemicalCompounding", 13), ("Prelim_EthylAlcohol", 8),
             ("Midterm_BenzoicAcid", 9),
             ("Midterm_Acetanilide", 8), ("Midterm_Acetone", 8), ("Midterm_Chloroform", 13),   // Exp 5+6 rebuilt to 8; Exp 7 rebuilt to 13 (two distillations + weigh, 2026-07-18)
-            ("Final_Benzamide", 9), ("Final_WineMaking", 8) })
+            ("Final_Benzamide", 10), ("Final_WineMaking", 8) })   // Exp 8 rebuilt to 10 (ice bath, stir & stand, weigh; 2026-07-18)
         {
             var m = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>(dir + file + ".asset");
             A("content: " + file + " loads", m != null);

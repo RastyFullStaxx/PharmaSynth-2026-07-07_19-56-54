@@ -96,6 +96,9 @@ public class ExperimentLayout : ScriptableObject
 
         [Tooltip("FLAME (non-)flammability confirmation (Exp 7 test-flammability): the named task completes when this vessel is served its sample AND a LIT match/burner flame is held within reach (VesselFlameTask; zone-free — the negative 'does not ignite' is the observation).")]
         public string flameTaskId = "";
+
+        [Tooltip("ZONE-FREE stir step (Exp 8 'shake frequently while dropping'): the named task completes when the bench glass rod is circled inside this vessel while it holds liquid (StirController, vessel-relative — on the bench or in a hand).")]
+        public string stirTaskId = "";
     }
 
     public string moduleId;

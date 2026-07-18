@@ -13,133 +13,45 @@ MonoBehaviour:
   m_Name: Layout_Benzamide
   m_EditorClassIdentifier: Assembly-CSharp::ExperimentLayout
   moduleId: final-benzamide
-  stations:
-  - taskId: ice-bath
-    label: 2. Ice bath
-    requiredItemId: ice-bath
-    pos: {x: -1.8, y: 0.91, z: -3.78}
-    sim: 2
-    simTargetC: 85
-  - taskId: stand
-    label: 4. Stir & stand
-    requiredItemId: stand
-    pos: {x: -1.3, y: 0.91, z: -3.78}
-    sim: 5
-    simTargetC: 85
-  - taskId: filter-dry
-    label: 5. Filter & dry
-    requiredItemId: filter-dry
-    pos: {x: -0.79999995, y: 0.91, z: -3.78}
-    sim: 3
-    simTargetC: 85
-  - taskId: test-alkali
-    label: 6. Alkali test
-    requiredItemId: test-alkali
-    pos: {x: -0.29999995, y: 0.91, z: -3.78}
-    sim: 0
-    simTargetC: 85
-  - taskId: test-nitrous
-    label: 8. Nitrous acid test
-    requiredItemId: test-nitrous
-    pos: {x: 0.20000005, y: 0.91, z: -3.78}
-    sim: 0
-    simTargetC: 85
-  props:
-  - prefabName: Vial_Brown
-    itemId: measure-ammonia
-    displayName: Ammonia Solution
-    pos: {x: 1.33, y: 0.91, z: -3.52}
-    targetHeight: 0.16
-    pourable: 1
-    fillChemical: Ammonia Solution
-    supplyMl: 0
-  - prefabName: Vial_Brown
-    itemId: add-benzoyl
-    displayName: Benzoyl Chloride
-    pos: {x: 1.33, y: 0.91, z: -3.33}
-    targetHeight: 0.16
-    pourable: 1
-    fillChemical: Benzoyl Chloride
-    supplyMl: 0
-  - prefabName: Vial_Brown
-    itemId: test-acid
-    displayName: HCl 6N
-    pos: {x: 1.33, y: 0.91, z: -3.1399999}
-    targetHeight: 0.16
-    pourable: 1
-    fillChemical: Diluted Hydrochloric Acid
-    supplyMl: 0
-  - prefabName: WatchGlass
-    itemId: ice-bath
-    displayName: Ice Bath Dish
-    pos: {x: -1.7, y: 0.91, z: -3.44}
-    targetHeight: 0.12
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
-  - prefabName: GlassRod
-    itemId: stand
-    displayName: Stirring Rod
-    pos: {x: -1.7, y: 0.91, z: -3.25}
-    targetHeight: 0.18
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
-  - prefabName: Funnel
-    itemId: filter-dry
-    displayName: Funnel
-    pos: {x: -1.7, y: 0.91, z: -3.06}
-    targetHeight: 0.2
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
-  - prefabName: TestTube
-    itemId: test-alkali
-    displayName: Alkali Test Tube
-    pos: {x: -1.46, y: 0.91, z: -3.44}
-    targetHeight: 0.14
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
-  - prefabName: Dropper
-    itemId: test-nitrous
-    displayName: Dropper
-    pos: {x: -1.46, y: 0.91, z: -3.25}
-    targetHeight: 0.14
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
-  - prefabName: Vial_Brown
-    itemId: test-alkali
-    displayName: Sodium Hydroxide
-    pos: {x: 1.33, y: 0.91, z: -2.95}
-    targetHeight: 0.16
-    pourable: 1
-    fillChemical: Sodium Hydroxide
-    supplyMl: 0
-  - prefabName: Vial_Brown
-    itemId: test-nitrous
-    displayName: Sodium Nitrite
-    pos: {x: 1.11, y: 0.91, z: -3.52}
-    targetHeight: 0.16
-    pourable: 1
-    fillChemical: Sodium Nitrite
-    supplyMl: 0
+  stations: []
+  props: []
   vessels:
-  - benchItem: 
-    prefabName: Beaker_500mL
-    displayName: Reaction Beaker
-    pos: {x: -0.25, y: 0.91, z: -3.18}
-    targetHeight: 0.24
+  - benchItem: Eq_Beaker_100mL
+    prefabName: Beaker_100mL
+    displayName: ReactionBeaker
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.15
     startChemical: 
     bindings:
     - reagentChemical: Ammonia Solution
       taskId: measure-ammonia
-      requiredMl: 50
+      requiredMl: 5
       completesTask: 1
     - reagentChemical: Benzoyl Chloride
       taskId: add-benzoyl
-      requiredMl: 50
+      requiredMl: 1
+      completesTask: 1
+    rackGroup: 
+    heatToC: 0
+    fermentTaskId: 
+    chillToC: 5
+    chillTaskId: ice-bath
+    litmusTaskId: 
+    heatTaskId: 
+    weighTaskId: 
+    vaporTaskId: 
+    flameTaskId: 
+    stirTaskId: stir-stand
+  - benchItem: Eq_WatchGlass
+    prefabName: WatchGlass
+    displayName: CrystalDish
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Benzamide
+      taskId: filter-dry
+      requiredMl: 4
       completesTask: 1
     rackGroup: 
     heatToC: 0
@@ -148,26 +60,80 @@ MonoBehaviour:
     chillTaskId: 
     litmusTaskId: 
     heatTaskId: 
+    weighTaskId: weigh-product
+    vaporTaskId: 
+    flameTaskId: 
+    stirTaskId: 
+  - benchItem: Kit_TestTube_15
+    prefabName: TestTube
+    displayName: AlkaliTube
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Benzamide
+      taskId: test-alkali
+      requiredMl: 0.5
+      completesTask: 0
+    - reagentChemical: Sodium Hydroxide 10%
+      taskId: test-alkali
+      requiredMl: 2
+      completesTask: 0
+    rackGroup: 
+    heatToC: 0
+    fermentTaskId: 
+    chillToC: 0
+    chillTaskId: 
+    litmusTaskId: test-alkali
+    heatTaskId: 
     weighTaskId: 
     vaporTaskId: 
-  - benchItem: 
-    prefabName: TestTube_WithLiquid
-    displayName: Product Test Tube
-    pos: {x: 0.19999999, y: 0.91, z: -3.18}
-    targetHeight: 0.13
-    startChemical: Benzamide
+    flameTaskId: 
+    stirTaskId: 
+  - benchItem: Kit_TestTube_16
+    prefabName: TestTube
+    displayName: AcidTube
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.15
+    startChemical: 
     bindings:
+    - reagentChemical: Benzamide
+      taskId: test-acid
+      requiredMl: 0.5
+      completesTask: 0
     - reagentChemical: Diluted Hydrochloric Acid
       taskId: test-acid
-      requiredMl: 50
+      requiredMl: 2
+      completesTask: 0
+    rackGroup: 
+    heatToC: 0
+    fermentTaskId: 
+    chillToC: 0
+    chillTaskId: 
+    litmusTaskId: test-acid
+    heatTaskId: 
+    weighTaskId: 
+    vaporTaskId: 
+    flameTaskId: 
+    stirTaskId: 
+  - benchItem: Kit_TestTube_17
+    prefabName: TestTube
+    displayName: NitrousTube
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.15
+    startChemical: 
+    bindings:
+    - reagentChemical: Benzamide
+      taskId: test-nitrous
+      requiredMl: 0.5
       completesTask: 1
-    - reagentChemical: Sodium Hydroxide
-      taskId: test-alkali
-      requiredMl: 50
+    - reagentChemical: Diluted Hydrochloric Acid
+      taskId: test-nitrous
+      requiredMl: 2
       completesTask: 1
     - reagentChemical: Sodium Nitrite
       taskId: test-nitrous
-      requiredMl: 50
+      requiredMl: 3
       completesTask: 1
     rackGroup: 
     heatToC: 0
@@ -178,3 +144,5 @@ MonoBehaviour:
     heatTaskId: 
     weighTaskId: 
     vaporTaskId: 
+    flameTaskId: 
+    stirTaskId: 

@@ -372,6 +372,11 @@ public class LiquidPhysics : MonoBehaviour
     /// liquid column; a precipitate result moves it over instead of doubling it.
     private void ApplyReaction(ReactionRule rule, float amount, bool alreadyAdded)
     {
+        // A FIRED reaction supersedes any half-armed pending recipe — the ledger
+        // collapses to the product, so the pending pair no longer exists in the
+        // vessel (Exp 8's nitrous tube: the heat-gated acid-hydrolysis pend must
+        // not outlive the instant nitrite effervescence and keep begging for heat).
+        _pendingRule = null; _pendingAmount = 0f;
         if (rule.resultLiquid != null) { currentChemical = rule.resultLiquid; _mixPH = rule.resultLiquid.pH; }
         if (rule.hasPrecipitate && rule.resultPrecipitate != null)
         {
