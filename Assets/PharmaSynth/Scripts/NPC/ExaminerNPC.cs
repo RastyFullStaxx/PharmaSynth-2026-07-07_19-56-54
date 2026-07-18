@@ -100,13 +100,21 @@ public class ExaminerNPC : MonoBehaviour
     /// Jimenez's own bubble/animator, never Pharmee's channel).
     public void SpeakLine(string line) => Say(line);
 
+    /// How long this line will really take him to say (reveal + read hold) —
+    /// the gate schedules its next review beat off THIS, not a fixed dwell, so a
+    /// long line (his ILO recap) can't be spoken over by the beat behind it.
+    public float SecondsFor(string line)
+        => narration != null ? narration.SecondsFor(line, lineSeconds) : lineSeconds;
+
     private void Say(string line)
     {
         if (string.IsNullOrEmpty(line)) return;
         LastLine = line;
         if (narration != null) narration.Say(line, lineSeconds);
         SetTalking(true);
-        _talkUntil = Time.time + lineSeconds;
+        // Keep the talking animation up for the line's REAL duration, not the
+        // authored dwell — his mouth used to stop moving mid-sentence.
+        _talkUntil = Time.time + SecondsFor(line);
     }
 
     private void SetTalking(bool on)

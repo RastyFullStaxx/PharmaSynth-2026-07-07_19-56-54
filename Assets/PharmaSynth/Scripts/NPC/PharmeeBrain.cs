@@ -209,6 +209,16 @@ public class PharmeeBrain : MonoBehaviour
         // kept talking over it, blocking the read), stay quiet — the player is
         // reading, not acting. The window also covers 1.5 s after it closes.
         if (WristWatchController.SuppressNpcPokes) return;
+        // ⛔ THE REVIEW BELONGS TO THE GATEKEEPER'S SCRIPT (user 2026-07-19:
+        // "pharmee is still speaking something even if I am now in the quiz cut
+        // scenes where dr jimenez now speaks"). Only Update() checked this, so
+        // Pharmee's AUTONOMOUS reactions still fired over Dr. Jimenez: submitting
+        // the quiz completes the DataSheet task → OnTaskCompleted → an
+        // instruction line, and runner.Finish → OnFinished → a celebrate line
+        // landing on top of Jimenez's verdict. The gatekeeper still speaks
+        // Pharmee's SCRIPTED review lines directly through the narration
+        // controller, which is unaffected — this only silences the brain.
+        if (PharmeeGatekeeper.ReviewFlowActive) return;
 
         State = state;
         LastLine = line;

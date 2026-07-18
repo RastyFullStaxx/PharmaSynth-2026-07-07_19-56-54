@@ -92,6 +92,7 @@ public class NPCNarrationController : MonoBehaviour
     private void OnDisable()
     {
         IsRevealing = false;
+        if (s_floor == this) s_floor = null;   // never strand the floor on a dead narrator
         _queued.Clear();
         // A disable mid-line used to leave IsSpeaking TRUE and never raise
         // LineEnded, so the HUD bar kept a half-revealed line on screen with no
@@ -151,6 +152,13 @@ public class NPCNarrationController : MonoBehaviour
         }
         if (narrationRoutine != null)
             StopCoroutine(narrationRoutine);
+        // ANOTHER narrator is mid-sentence — wait for them rather than speaking
+        // over the top (the two NPCs share no timeline of their own).
+        if (FloorBusy && s_floor != this)
+        {
+            narrationRoutine = StartCoroutine(WaitForFloorThenSay(subtitle, seconds, clip));
+            return;
+        }
         narrationRoutine = StartCoroutine(SayRoutine(subtitle, seconds, clip));
     }
 
@@ -185,6 +193,7 @@ public class NPCNarrationController : MonoBehaviour
         if (panelRoot != null) panelRoot.SetActive(false);
         if (skipButton != null) skipButton.SetActive(false);
         IsRevealing = false; VisibleCount = int.MaxValue;
+        if (s_floor == this) s_floor = null;         // release the floor
         if (!IsSpeaking) return; // idempotent — visuals reset above either way
         IsSpeaking = false;
         LineEnded?.Invoke();
@@ -220,6 +229,42 @@ public class NPCNarrationController : MonoBehaviour
     /// True during the inter-line beat (line finished, next one pending).
     private bool _chaining;
 
+    // ---- CROSS-NPC FLOOR -----------------------------------------------------
+    // Pharmee and Dr. Jimenez own SEPARATE controllers with no shared timeline,
+    // so either could start a sentence on top of the other's (user 2026-07-19:
+    // "pharmee is still speaking ... where dr jimenez now speaks"). Whoever is
+    // mid-REVEAL holds the floor; another speaker waits for them to finish
+    // instead of talking over. Only the reveal is protected — the post-reveal
+    // read hold is interruptible, so conversation still feels responsive.
+    private static NPCNarrationController s_floor;
+
+    /// True while ANY narrator is still typing a line out.
+    public static bool FloorBusy => s_floor != null && s_floor.IsRevealing;
+
+    /// The longest another speaker will be made to wait before going anyway —
+    /// a safety valve so a stuck reveal can never mute the game.
+    private const float MaxFloorWait = 8f;
+
+    private IEnumerator WaitForFloorThenSay(string subtitle, float seconds, AudioClip clip)
+    {
+        float t = 0f;
+        while (FloorBusy && s_floor != this && t < MaxFloorWait)
+        { t += Time.deltaTime; yield return null; }
+        yield return new WaitForSeconds(Mathf.Max(0f, interLineGap));
+        narrationRoutine = StartCoroutine(SayRoutine(subtitle, seconds, clip));
+    }
+
+    /// How long a line will actually occupy the floor: the typewriter reveal plus
+    /// the read hold. Schedulers MUST use this rather than a fixed dwell — a line
+    /// longer than (dwell x cps) chars overruns its slot and the next speaker
+    /// starts on top of it, which is precisely how the review beats collided.
+    public float SecondsFor(string subtitle, float authoredSeconds)
+    {
+        int n = string.IsNullOrEmpty(subtitle) ? 0 : subtitle.Length;
+        float reveal = typewriter ? n / Mathf.Max(1f, charsPerSecond) : 0f;
+        return reveal + HoldSecondsAfterReveal(authoredSeconds, reveal, minHoldSeconds);
+    }
+
     /// Type the line out character-by-character (with per-few-chars talking blips),
     /// then hold the finished line for the remaining dwell time, then end it. The HUD
     /// dialogue bar mirrors the reveal via LineStarted + the shared TypeCps().
@@ -250,6 +295,7 @@ public class NPCNarrationController : MonoBehaviour
         if (typewriter && total > 0)
         {
             IsRevealing = true; _skipReveal = false;
+            s_floor = this;                 // claim the spoken floor while typing
             float cps = TypeCps();
             int sinceBlip = 0, shown = 0;
             // TIME-ACCUMULATOR, not WaitForSeconds(1/cps) per char: a per-character

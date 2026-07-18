@@ -641,21 +641,33 @@ public class PharmeeGatekeeper : MonoBehaviour
         var ilos = BriefObjectives();
         if (beat == 2 && ilos.Length > 0 && examiner != null)
         {
-            examiner.SpeakLine("Before you answer — recall this session's objectives.");
-            After(lineSeconds, () => SpeakJimenezBrief(beat + 1));
+            SpeakAsJimenez("Before you answer — recall this session's objectives.", beat);
             return;
         }
         int iloIndex = beat - 3;
         if (iloIndex >= 0 && iloIndex < ilos.Length)
         {
-            if (examiner != null) examiner.SpeakLine(ilos[iloIndex]);
-            After(lineSeconds, () => SpeakJimenezBrief(beat + 1));
+            SpeakAsJimenez(ilos[iloIndex], beat);
             return;
         }
         if (beat >= 2) { Model.Fire(GateEvent.QuizBegin); return; }
+        SpeakAsJimenez(PharmeeLines.Pick(PharmeeLines.JimenezQuizBrief, beat), beat);
+    }
+
+    /// Speak one of Jimenez's review beats and schedule the next off the line's
+    /// REAL duration. A fixed `lineSeconds` under-scheduled anything longer than
+    /// (lineSeconds x reveal-speed) characters — his ILO recap lines are ~140
+    /// chars, so the following beat used to start while he was still mid-sentence
+    /// (user 2026-07-19: dialogue overlapping during the quiz cutscene).
+    private void SpeakAsJimenez(string line, int beat)
+    {
+        float wait = lineSeconds;
         if (examiner != null)
-            examiner.SpeakLine(PharmeeLines.Pick(PharmeeLines.JimenezQuizBrief, beat));
-        After(lineSeconds, () => SpeakJimenezBrief(beat + 1));
+        {
+            examiner.SpeakLine(line);
+            wait = Mathf.Max(lineSeconds, examiner.SecondsFor(line));
+        }
+        After(wait + 0.25f, () => SpeakJimenezBrief(beat + 1));
     }
 
     /// The running module's Intended Learning Outcomes, manuscript-verbatim.

@@ -118,6 +118,7 @@ desktop.ini
 
 # Claude Code local settings (if it ever lands in the repo)
 .claude/settings.local.json
+CLAUDE.md
 
 # --- Client handoff binaries in Docs/ ---
 # These large source files exceed GitHub's 100 MB per-file limit and would
