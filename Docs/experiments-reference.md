@@ -170,7 +170,7 @@ Both were **game-authored** (Aspirin is named only in the manuscript's intro pro
 | **midterm-acetone** | Midterm | ✅ **BUILT + simulated clean 2026-07-18 (8/8)** — bench-balance WEIGH (live grams) → **NAKED-FLAME** dry distillation (150 °C glow, hard-glass) → **VAPOR collect** at 56 °C into the receiver → 4 tests (2 authored negatives, iodoform warm, bisulfite adduct in the ice). New reusable: `NakedFlameHeat`, `VaporCollectController`, `VesselWeighTask`+balance rig. ⬜ Left: headset playtest. |
 | **midterm-chloroform** | Midterm | ✅ **BUILT + simulated clean 2026-07-18 (13/13)** — two water-bath distillations (heat task + vapor collect ×2, 65 °C), decant wash, CaCl2 dry, balance weigh, then the **lit-match non-flammability confirm** (`VesselFlameTask`, new reusable), the hood-sanctioned dichromate oxidation and the warm AgNO3 white-ppt test. Rule fixes: oxidation resultLiquid-null trap + cold-fire, AgNO3 missing precipitate + plain-vs-alcoholic AgNO3. The legacy builder fixture is now SYNTHETIC (no module stages stations any more). ⬜ Left: headset playtest. |
 | **final-benzamide** | Final | ✅ **BUILT + simulated clean 2026-07-18 (10/10)** — ice-bath-controlled synthesis (rule fires COLD), the **zone-free glass-rod STIR** (`Vessel.stirTaskId`; tip-tracking FIXED — closest-point like the pestle, either bench rod, no anchor), filter/wash/dry time-skips, weigh, then the **BASE litmus read** (new: red litmus turns blue on the ammonia tube), the acid litmus read, and the instant nitrous effervescence. Fixes: 2 resultLiquid-null traps, boil gates 40→90, alkali paired the 10% NaOH bottle, **Sodium Nitrite added to the catalog/bench** (was missing entirely), pending rule cleared on fire. ⬜ Left: headset playtest. |
-| final-winemaking | Final | ⬜ not started — the LAST module. Reuses ferment/CO₂/limewater (Exp 3) + time-skip; check the manuscript's group-activity framing + the rack/clarity/tasting steps for zone-free design. |
+| **final-winemaking** | Final | ✅ **BUILT + simulated clean 2026-07-19 (7/7)** — the LAST module, and **all 9 now build + simulate clean**. Zone-free: pour the must (juice from the new `Raw_MixedFruitJuice` bottle + sugar + nutrient + yeast → new `WineFermentation` rule makes Wine) → glass-rod rouse → CO₂/limewater confirm + week time-skip → rack the clear wine off the lees through the funnel → clarity + tasting draws from the racked flask → label. Fixes: jar no longer start-fills with juice (unplayable shorthand), Wine is actually produced (was only ever juice). ⬜ Left: headset playtest. |
 
 ### The METHANE FLOW — the template every module follows
 1. **Gate** — Pharmee → Campaign → pick module → don **all 3 PPE** (hard-gated: `GatekeeperModel.RequiresPPEToOpen`) → "I'm ready" → cross the threshold (timer starts).
@@ -936,32 +936,26 @@ Zone-free, bench-bound; stations DELETED (the LAST classic Weigh/Heat/Collect st
 ### Task graph (play order)
 
 | # | task | phase | label | prerequisites | hint |
-|---|------|-------|-------|---------------|------|
-| 1 | `seal-airlock` | Synthesis | Seal the vessel with an airlock / balloon | prepare-must | Fit the airlock so CO2 escapes but air cannot enter. |
-| 2 | `confirm-co2` | ChemicalTests | Confirm fermentation \u2014 CO2 turns limewater milky | seal-airlock | Bubble the evolved gas through limewater; it turns milky. |
-| 3 | `ferment-timeskip` | Synthesis | Ferment \u20187 days & 7 nights\u2019 (time-skip) | confirm-co2 | Let fermentation run to completion (time-skip montage). |
-| 4 | `rack` | Synthesis | Rack the wine off the lees | ferment-timeskip | Siphon the clear wine off the sediment. |
-| 5 | `test-clarity` | ChemicalTests | Assess clarity and appearance | rack | Judge colour and clarity against the standard. |
-| 6 | `test-tasting` | ChemicalTests | Tasting finale \u2014 evaluate flavour | rack | Evaluate aroma and flavour at the tasting finale. |
-| 7 | `record-label` | DataSheet | Create the label and record volume & observations | test-clarity, test-tasting | Design the label and log the final volume and notes. |
+**VR adaptations (documented):** the manuscript's Exp 9 is a **group ACTIVITY with no bench procedure** (guidelines: ferment \u2265250 mL of any non-grape fruit juice, confirm, rack, taste, label) \u2014 so the chemistry is game-authored within it. The **jar START-filled with juice** (unplayable \u2014 no bench bottle to pour from, the Exp 3 hidden-shorthand class); it now starts EMPTY and the player pours **Mixed Fruit Juice** from the new `Raw_MixedFruitJuice` bottle. **Wine was never actually produced** (the jar only ever held juice \u2192 racking/tasting drew JUICE); new `WineFermentation` rule makes it. The old zone-touch stations (seal/ferment/rack/clarity/taste) are gone; the airlock is folded into the CO\u2082-confirm hint.
 
-### Stage layout
+### Task graph (play order \u2014 as built, 7 tasks)
 
-**Stations:** `seal-airlock` (zone-touch) ; `ferment-timeskip` (zone-touch) ; `rack` (zone-touch) ; `test-clarity` (zone-touch) ; `test-tasting` (zone-touch)
+| # | task | phase | label | prereq | how it completes |
+|---|------|-------|-------|--------|------------------|
+| 1 | `prepare-must` | ReagentPrep | Prepare the must \u2014 fruit juice (NOT grapes) + sugar + yeast | - | `Eq_Beaker_500mL`: 20 ml Mixed Fruit Juice + 3 dips brown sugar + 1 dip ammonium phosphate + 2 dips yeast \u2192 **`WineFermentation` fires** (juice + yeast \u2192 Wine, CO\u2082) |
+| 2 | `stir-must` | ReagentPrep | Swirl the must to rouse the yeast | 1 | circle a GLASS ROD in the jar (`stirTaskId` \u2192 StirController) |
+| 3 | `confirm-ferment` | Synthesis | Seal airlock & confirm \u2014 CO\u2082 clouds limewater | 2 | pour 10 ml Limewater into Test Tube 5 by the jar's mouth \u2192 CO\u2082 bubbles in (`FermentationController`) \u2192 CaCO\u2083 milky \u2697 + week time-skip |
+| 4 | `rack` | Synthesis | Rack the clear wine off the lees | 3 | tilt-pour 8 ml Wine from the jar (fermentation-wash source) through the funnel into the FlorenceFlask (Wine Bottle) |
+| 5 | `test-clarity` | ChemicalTests | Assess clarity, colour, appearance | 4 | pour 2 ml of the RACKED wine onto `Eq_WatchGlass` |
+| 6 | `test-tasting` | ChemicalTests | Tasting finale \u2014 aroma & flavour | 4 | pour 3 ml into `Eq_Beaker_100mL` (tasting glass) |
+| 7 | `record-label` | DataSheet | Create the label & record volume + observations | 5, 6 | auto-completes (wrap-up) |
 
-**Reagents staged (pourable):** Brown Sugar (Vial_Brown, auto-supply) ; Limewater (Vial_Brown, auto-supply)
-
-**Tools staged:** Airlock Tube ; Stirring Rod ; Racking Funnel ; Watch Glass ; Tasting Glass
-
-**Vessel Beaker_500mL** (Fermentation Jar) - starts with Mixed Fruit Juice
-  - pour **Brown Sugar** >= 50 ml -> completes `prepare-must`
-
-**Vessel TestTube_WithLiquid** (CO2 Collection Tube) - starts with Carbon Dioxide
-  - pour **Limewater** >= 50 ml -> completes `confirm-co2`
+**Clarity + tasting draw from the RACKED FlorenceFlask** (the clear wine off the lees = a pure-product source; the jar with its sediment is the lower-priority fermentation-wash). Uses every apparatus: jar, glass rod, limewater tube, racking funnel, wine bottle, watch glass, tasting glass.
 
 ### Reactions & expected observations
 
-- **Limewater_CO2**: Limewater + Carbon Dioxide - "Limewater turns milky (CaCO3)"
+- **WineFermentation** (new 2026-07-19, no gate): Mixed Fruit Juice + Yeast \u2192 **Wine** (CO\u2082 evolves) \u2014 "Yeast pitched into the juice \u2014 fermentation begins, CO\u2082 bubbles up and the must turns to young wine." Brown sugar + ammonium phosphate accumulate as nutrients (sanctioned, no mistake).
+- **Limewater_CO2**: Limewater + Carbon Dioxide \u2192 milky CaCO\u2083 ppt \u2014 "Limewater turns milky" (the FermentationController bubbles the jar's CO\u2082 into the tube; the tube is no longer pre-seeded).
 
 ### Quiz (Documentation score)
 

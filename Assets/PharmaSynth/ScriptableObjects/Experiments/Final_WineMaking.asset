@@ -19,84 +19,62 @@ MonoBehaviour:
   - Confirm fermentation by CO2 evolution (limewater)
   - Rack and evaluate the finished wine (appearance, clarity, flavour)
   materialReagents:
-  - "Brown Sugar \u2014 50 g"
-  - "Limewater \u2014 50 ml"
+  - "Mixed Fruit Juice \u2014 250 mL min (tilt-pour to 20 ml)"
+  - "Brown Sugar \u2014 3 scoopula dips (feeds the yeast)"
+  - "Ammonium Phosphate \u2014 1 dip (yeast nutrient)"
+  - "Yeast \u2014 2 scoopula dips (the fermenting catalyst)"
+  - "Limewater \u2014 10 ml (CO2 confirmation)"
   materialApparatus:
-  - Fermentation flask
-  - Delivery (bent) tube + stopper
-  - Cotton swab
-  - Test tube (limewater)
-  - Distilling flask
-  - Graduated cylinder 50 mL
+  - "Fermentation Jar - Beaker 500 mL (the must)"
+  - "Glass rod (rouse the yeast)"
+  - "Test Tube 5 (limewater CO2 check)"
+  - "Racking funnel + Wine Bottle - Florence flask"
+  - "Watch Glass (clarity) \u00B7 Beaker 100 mL (tasting glass)"
   tasks: []
   graphTasks:
   - taskId: prepare-must
-    label: "Prepare the must \u2014 fruit juice (not grapes) + sugar + yeast (250\u2013500
-      mL)"
+    label: "Prepare the must - fruit juice (NOT grapes) + sugar + yeast"
     phase: 0
     prerequisites: []
     progressWeight: 1
     skill: 0
     rubricCategory: 0
     required: 1
-    hint: Dissolve sugar in the fruit juice and pitch the yeast.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
-  - taskId: seal-airlock
-    label: Seal the vessel with an airlock / balloon
-    phase: 1
+    hint: "The manual: ferment at least 250 mL of any fruit juice EXCEPT grapes. Sugar feeds the yeast; a pinch of nutrient keeps it healthy.\n\u2192 Fermentation Jar: tilt-pour Mixed Fruit Juice to 20 ml, 3 scoopula dips of brown sugar, 1 dip of ammonium phosphate, then pitch 2 dips of yeast - the must turns to young wine."
+  - taskId: stir-must
+    label: "Swirl the must to rouse the yeast"
+    phase: 0
     prerequisites:
     - prepare-must
     progressWeight: 1
-    skill: 3
+    skill: 1
     rubricCategory: 0
     required: 1
-    hint: Fit the airlock so CO2 escapes but air cannot enter.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
-  - taskId: confirm-co2
-    label: "Confirm fermentation \u2014 CO2 turns limewater milky"
-    phase: 2
-    prerequisites:
-    - seal-airlock
-    progressWeight: 1
-    skill: 5
-    rubricCategory: 1
-    required: 1
-    hint: Bubble the evolved gas through limewater; it turns milky.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
-  - taskId: ferment-timeskip
-    label: "Ferment \u20187 days & 7 nights\u2019 (time-skip)"
+    hint: "Rousing spreads the yeast evenly through the sugary juice so every part ferments.\n\u2192 Circle the GLASS ROD in the jar until 'Well stirred!' shows."
+  - taskId: confirm-ferment
+    label: "Seal the airlock & confirm fermentation - CO2 clouds limewater"
     phase: 1
     prerequisites:
-    - confirm-co2
+    - stir-must
     progressWeight: 1
-    skill: 3
+    skill: 4
     rubricCategory: 0
     required: 1
-    hint: Let fermentation run to completion (time-skip montage).
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "A sealed airlock lets CO2 escape but keeps air out; leading that gas through limewater proves live fermentation as it turns milky (CaCO3).\n\u2192 Pour 10 ml of limewater into Test Tube 5 and keep it by the jar's mouth until it clouds - then the week-long ferment passes."
+    longProcess: 1
+    longProcessMessage: "Seven days and seven nights later - fermentation is complete and the wine has cleared over its lees."
   - taskId: rack
-    label: Rack the wine off the lees
+    label: "Rack the clear wine off the lees"
     phase: 1
     prerequisites:
-    - ferment-timeskip
+    - confirm-ferment
     progressWeight: 1
     skill: 2
     rubricCategory: 0
     required: 1
-    hint: Siphon the clear wine off the sediment.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Racking siphons the clear wine off the sediment (lees) without disturbing it - the manual: 'do not shake; decant the liquid'.\n\u2192 Tilt-pour 8 ml of the clear wine from the jar THROUGH the racking funnel into the Wine Bottle (Florence flask), leaving the lees behind."
   - taskId: test-clarity
-    label: Assess clarity and appearance
+    label: "Assess clarity, colour and appearance"
     phase: 2
     prerequisites:
     - rack
@@ -104,12 +82,9 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: Judge colour and clarity against the standard.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "General appearance is a fifth of the wine-tasting grade - a bright, clear pour with no haze scores well.\n\u2192 Pour 2 ml of your racked wine onto the Watch Glass and judge its clarity against the light."
   - taskId: test-tasting
-    label: "Tasting finale \u2014 evaluate flavour"
+    label: "Tasting finale - evaluate aroma and flavour"
     phase: 2
     prerequisites:
     - rack
@@ -117,12 +92,9 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: Evaluate aroma and flavour at the tasting finale.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Flavour, smell and taste are a quarter of the grade - the tasting finale of the whole course.\n\u2192 Pour 3 ml into the Tasting Glass and evaluate the aroma and flavour."
   - taskId: record-label
-    label: Create the label and record volume & observations
+    label: "Create the label & record volume and observations"
     phase: 3
     prerequisites:
     - test-clarity
@@ -131,10 +103,8 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 5
     required: 1
-    hint: Design the label and log the final volume and notes.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Design the bottle label and log the final volume (250-500 mL) with your appearance and tasting notes.\n\u2192 Review your wine, then answer on the tablet."
+    autoCompleteWhenOthersDone: 1
   assessmentMode: 0
   masteryThreshold: 0.9
   bkt:

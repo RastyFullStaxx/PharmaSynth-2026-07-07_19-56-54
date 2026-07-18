@@ -13,112 +13,128 @@ MonoBehaviour:
   m_Name: Layout_WineMaking
   m_EditorClassIdentifier: Assembly-CSharp::ExperimentLayout
   moduleId: final-winemaking
-  stations:
-  - taskId: seal-airlock
-    label: 2. Seal airlock
-    requiredItemId: seal-airlock
-    pos: {x: -1.8, y: 0.91, z: -3.78}
-    sim: 0
-    simTargetC: 85
-  - taskId: ferment-timeskip
-    label: 4. Ferment (time-skip)
-    requiredItemId: ferment-timeskip
-    pos: {x: -1.3, y: 0.91, z: -3.78}
-    sim: 0
-    simTargetC: 85
-  - taskId: rack
-    label: 5. Rack the wine
-    requiredItemId: rack
-    pos: {x: -0.79999995, y: 0.91, z: -3.78}
-    sim: 0
-    simTargetC: 85
-  - taskId: test-clarity
-    label: 6. Clarity check
-    requiredItemId: test-clarity
-    pos: {x: -0.29999995, y: 0.91, z: -3.78}
-    sim: 0
-    simTargetC: 85
-  - taskId: test-tasting
-    label: 7. Tasting
-    requiredItemId: test-tasting
-    pos: {x: 0.20000005, y: 0.91, z: -3.78}
-    sim: 0
-    simTargetC: 85
+  stations: []
   props:
-  - prefabName: Vial_Brown
-    itemId: prepare-must
-    displayName: Brown Sugar
-    pos: {x: 1.33, y: 0.91, z: -3.52}
-    targetHeight: 0.16
-    pourable: 1
-    fillChemical: Brown Sugar
-    supplyMl: 0
-  - prefabName: Vial_Brown
-    itemId: confirm-co2
-    displayName: Limewater
-    pos: {x: 1.33, y: 0.91, z: -3.33}
-    targetHeight: 0.16
-    pourable: 1
-    fillChemical: Limewater
-    supplyMl: 0
-  - prefabName: TestTube
-    itemId: seal-airlock
-    displayName: Airlock Tube
-    pos: {x: -1.7, y: 0.91, z: -3.44}
-    targetHeight: 0.14
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
-  - prefabName: GlassRod
-    itemId: ferment-timeskip
-    displayName: Stirring Rod
-    pos: {x: -1.7, y: 0.91, z: -3.25}
-    targetHeight: 0.18
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
-  - prefabName: Funnel
-    itemId: rack
-    displayName: Racking Funnel
-    pos: {x: -1.7, y: 0.91, z: -3.06}
-    targetHeight: 0.2
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
-  - prefabName: WatchGlass
-    itemId: test-clarity
-    displayName: Watch Glass
-    pos: {x: -1.46, y: 0.91, z: -3.44}
-    targetHeight: 0.12
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
-  - prefabName: Beaker_100mL
-    itemId: test-tasting
-    displayName: Tasting Glass
-    pos: {x: -1.46, y: 0.91, z: -3.25}
-    targetHeight: 0.12
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
   vessels:
-  - prefabName: Beaker_500mL
-    displayName: Fermentation Jar
-    pos: {x: -0.25, y: 0.91, z: -3.18}
-    targetHeight: 0.24
-    startChemical: Mixed Fruit Juice
+  - benchItem: Eq_Beaker_500mL
+    prefabName: Beaker_500mL
+    displayName: FermentationJar
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.2
+    startChemical:
     bindings:
+    - reagentChemical: Mixed Fruit Juice
+      taskId: prepare-must
+      requiredMl: 20
+      completesTask: 1
     - reagentChemical: Brown Sugar
       taskId: prepare-must
-      requiredMl: 50
+      requiredMl: 6
       completesTask: 1
-  - prefabName: TestTube_WithLiquid
-    displayName: CO2 Collection Tube
-    pos: {x: 0.19999999, y: 0.91, z: -3.18}
-    targetHeight: 0.13
-    startChemical: Carbon Dioxide
+    - reagentChemical: Ammonium Phosphate
+      taskId: prepare-must
+      requiredMl: 2
+      completesTask: 1
+    - reagentChemical: Yeast
+      taskId: prepare-must
+      requiredMl: 4
+      completesTask: 1
+    rackGroup:
+    heatToC: 0
+    fermentTaskId: confirm-ferment
+    chillToC: 0
+    chillTaskId:
+    litmusTaskId:
+    heatTaskId:
+    weighTaskId:
+    vaporTaskId:
+    flameTaskId:
+    stirTaskId: stir-must
+  - benchItem: Kit_TestTube_5
+    prefabName: TestTube
+    displayName: LimewaterTube
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.2
+    startChemical:
     bindings:
     - reagentChemical: Limewater
-      taskId: confirm-co2
-      requiredMl: 50
+      taskId: confirm-ferment
+      requiredMl: 10
+      completesTask: 0
+    rackGroup:
+    heatToC: 0
+    fermentTaskId: 
+    chillToC: 0
+    chillTaskId:
+    litmusTaskId:
+    heatTaskId:
+    weighTaskId:
+    vaporTaskId:
+    flameTaskId:
+    stirTaskId: 
+  - benchItem: FlorenceFlask
+    prefabName: FlorenceFlask
+    displayName: WineBottle
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.2
+    startChemical:
+    bindings:
+    - reagentChemical: Wine
+      taskId: rack
+      requiredMl: 8
       completesTask: 1
+    rackGroup:
+    heatToC: 0
+    fermentTaskId: 
+    chillToC: 0
+    chillTaskId:
+    litmusTaskId:
+    heatTaskId:
+    weighTaskId:
+    vaporTaskId:
+    flameTaskId:
+    stirTaskId: 
+  - benchItem: Eq_WatchGlass
+    prefabName: WatchGlass
+    displayName: ClarityGlass
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.2
+    startChemical:
+    bindings:
+    - reagentChemical: Wine
+      taskId: test-clarity
+      requiredMl: 2
+      completesTask: 1
+    rackGroup:
+    heatToC: 0
+    fermentTaskId: 
+    chillToC: 0
+    chillTaskId:
+    litmusTaskId:
+    heatTaskId:
+    weighTaskId:
+    vaporTaskId:
+    flameTaskId:
+    stirTaskId: 
+  - benchItem: Eq_Beaker_100mL
+    prefabName: Beaker_100mL
+    displayName: TastingGlass
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.2
+    startChemical:
+    bindings:
+    - reagentChemical: Wine
+      taskId: test-tasting
+      requiredMl: 3
+      completesTask: 1
+    rackGroup:
+    heatToC: 0
+    fermentTaskId: 
+    chillToC: 0
+    chillTaskId:
+    litmusTaskId:
+    heatTaskId:
+    weighTaskId:
+    vaporTaskId:
+    flameTaskId:
+    stirTaskId: 

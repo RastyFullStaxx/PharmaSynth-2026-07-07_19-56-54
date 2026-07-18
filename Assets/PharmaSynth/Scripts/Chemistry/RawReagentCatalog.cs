@@ -174,6 +174,13 @@ public static class RawReagentCatalog
               "Sucrose feedstock — dissolved to a 12% solution, it feeds the fermentation.", "Exp 3, 4"),
             R("Yeast", PhysicalState.Powder, C(0.85f,0.78f,0.6f), 6f, HazardType.None, false, LabwareKind.PowderJar, GroupOrganics,
               "Dry baker's yeast — the living catalyst that turns sugar into ethanol and CO2.", "Exp 3, 9"),
+            // Missed on the first catalog pass (found by the Exp 9 polish sim: the
+            // fermentation jar START-filled with juice, so no bench bottle existed
+            // and the player couldn't pour their own must — the Exp 3 hidden-
+            // shorthand class). The manuscript's non-grape fruit of the student's
+            // choice — added by the ml into the jar.
+            R("Mixed Fruit Juice", PhysicalState.Liquid, C(0.62f,0.18f,0.32f, 0.85f), 4f, HazardType.None, false, LabwareKind.ReagentBottle, GroupOrganics,
+              "The fermentable base — any fruit juice EXCEPT grapes (manuscript exclusion). Its sugars become wine.", "Exp 9"),
             R("Salicylic Acid", PhysicalState.Powder, C(0.95f,0.95f,0.93f), 2.4f, HazardType.None, false, LabwareKind.PowderJar, GroupOrganics,
               "White crystalline phenol-acid — aspirin's parent compound; FeCl3 turns it violet.", "Exp 2"),
             // Aspirin became a RAW reagent 2026-07-16 when the game-authored Aspirin

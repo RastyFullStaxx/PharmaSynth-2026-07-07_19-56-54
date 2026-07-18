@@ -992,7 +992,10 @@ public static class PharmaSelfTests
             // Ethyl (Exp 3) rebuilt zone-free 2026-07-17: no seeded vessel now (it
             // POURS ethanol/hypochlorite into fresh tubes) — its Iodoform/Ester
             // reactions are validated by the Exp 3 simrun firing them at temperature.
-            ("Layout_WineMaking",   "Carbon Dioxide", new[] { "Limewater" }),
+            // WineMaking (Exp 9) rebuilt zone-free 2026-07-19: no pre-seeded CO2
+            // tube (the FermentationController bubbles CO2 into the limewater the
+            // player pours) — its WineFermentation + Limewater rules are validated
+            // by the Exp 9 simrun firing them.
         };
         foreach (var c in cases)
         {
@@ -2264,6 +2267,17 @@ public static class PharmaSelfTests
                 : sim8.Clean ? "" : "  [" + sim8.completedTasks + "/" + sim8.totalTasks + " tasks, "
                   + sim8.mistakes + " mistakes; " + string.Join(" | ", sim8.bugs) + "]";
             A("simrun: Exp 8 plays END-TO-END clean" + sim8Note, sim8 != null && sim8.Clean);
+
+            // Exp 9 (winemaking): the must poured from the new juice bottle,
+            // pitching yeast making Wine, the glass-rod rouse, the CO2→limewater
+            // confirm + week time-skip, racking the clear wine off the lees, and
+            // the clarity + tasting draws all played through the real wiring.
+            var sim9Log = new System.Text.StringBuilder();
+            var sim9 = SimulatedRun.Run("final-winemaking", sim9Log);
+            string sim9Note = sim9 == null ? "did not run"
+                : sim9.Clean ? "" : "  [" + sim9.completedTasks + "/" + sim9.totalTasks + " tasks, "
+                  + sim9.mistakes + " mistakes; " + string.Join(" | ", sim9.bugs) + "]";
+            A("simrun: Exp 9 plays END-TO-END clean" + sim9Note, sim9 != null && sim9.Clean);
         }
 
         // FERMENTATION (Exp 3): pure gates for the CO₂→limewater mechanic.
@@ -3131,10 +3145,34 @@ public static class PharmaSelfTests
         A("m3: fruit juice renamed", Chem("Chem_GrapeJuice") != null && Chem("Chem_GrapeJuice").chemicalName == "Mixed Fruit Juice");
         A("m3: old name no longer resolves", lib != null && lib.GetChemical("Grape Juice") == null
             && lib.GetChemical("Mixed Fruit Juice") != null);
+        // Exp 9 rebuilt zone-free 2026-07-19: the jar no longer START-fills with
+        // juice (that hid the shorthand — no bench bottle, so the player could
+        // not pour their own must); it starts EMPTY and BINDS Mixed Fruit Juice
+        // for prepare-must, poured from the new Raw_MixedFruitJuice catalog bottle.
         var wine = Layout("Layout_WineMaking");
-        bool m3Start = false;
-        if (wine != null) foreach (var v in wine.vessels) if (v.startChemical == "Mixed Fruit Juice") m3Start = true;
-        A("m3: fermentation jar starts with fruit juice", m3Start);
+        bool m3Binds = false, m3Empty = true, m3Stir = false, m3Ferment = false;
+        if (wine != null)
+            foreach (var v in wine.vessels)
+            {
+                if (!string.IsNullOrEmpty(v.startChemical)) m3Empty = false;
+                if (v.stirTaskId == "stir-must" && v.fermentTaskId == "confirm-ferment") { m3Stir = true; m3Ferment = true; }
+                foreach (var b in v.bindings)
+                    if (b.reagentChemical == "Mixed Fruit Juice" && b.taskId == "prepare-must") m3Binds = true;
+            }
+        A("m3: fermentation jar starts EMPTY and binds the fruit-juice must", m3Binds && m3Empty);
+        A("m3: winemaking is zone-free — stir + ferment on the jar, no stations",
+            m3Stir && m3Ferment && wine != null && wine.stations.Count == 0);
+        A("m3: Mixed Fruit Juice has a bench bottle (catalog row)",
+            RawReagentCatalog.Find("Mixed Fruit Juice") != null
+            && RawReagentCatalog.Find("Mixed Fruit Juice").labware == RawReagentCatalog.LabwareKind.ReagentBottle);
+        // The new WineFermentation rule: pitching yeast into the juice makes Wine
+        // (the client-rule product the player crafts) — without it the jar only
+        // ever held juice and every draw poured juice, not wine.
+        var wineRule = AssetDatabase.LoadAssetAtPath<ReactionRule>("Assets/PharmaSynth/ScriptableObjects/Reactions/WineFermentation.asset");
+        A("m3: WineFermentation makes Wine from juice + yeast (registered)",
+            wineRule != null && reg != null && reg.rules.Contains(wineRule)
+            && wineRule.resultLiquid == Chem("Chem_Wine")
+            && reg.FindReaction(Chem("Chem_GrapeJuice"), Chem("Chem_Yeast")) == wineRule);
 
         // M4: reagent fidelity — layouts AND rules agree.
         var esterForm = AssetDatabase.LoadAssetAtPath<ReactionRule>("Assets/PharmaSynth/ScriptableObjects/Reactions/EsterFormation.asset");
@@ -4223,7 +4261,7 @@ public static class PharmaSelfTests
             ("Tutorial_Methane", 5), ("Prelim_ChemicalCompounding", 13), ("Prelim_EthylAlcohol", 8),
             ("Midterm_BenzoicAcid", 9),
             ("Midterm_Acetanilide", 8), ("Midterm_Acetone", 8), ("Midterm_Chloroform", 13),   // Exp 5+6 rebuilt to 8; Exp 7 rebuilt to 13 (two distillations + weigh, 2026-07-18)
-            ("Final_Benzamide", 10), ("Final_WineMaking", 8) })   // Exp 8 rebuilt to 10 (ice bath, stir & stand, weigh; 2026-07-18)
+            ("Final_Benzamide", 10), ("Final_WineMaking", 7) })   // Exp 8 → 10; Exp 9 → 7 (zone-free ferment→rack→clarity/taste→label, 2026-07-19)
         {
             var m = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>(dir + file + ".asset");
             A("content: " + file + " loads", m != null);
