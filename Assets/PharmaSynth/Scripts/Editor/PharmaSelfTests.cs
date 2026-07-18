@@ -2243,6 +2243,13 @@ public static class PharmaSelfTests
             !MixFeedback.ShouldShowObservation(true, 10f, 9f)
             && MixFeedback.ShouldShowObservation(true, 14f, 9f)
             && MixFeedback.ShouldShowObservation(false, 10f, 9.9f));
+        // Live temp goal on heat/chill vessel tags (2026-07-18): shows until the
+        // goal side is reached, then yields to the step's own completion cue.
+        A("vesselstatus: temp goal narrates until reached",
+            VesselStatusMath.TempGoalLine(25f, 50f, false) == "25 C — warm to 50 C (water bath)"
+            && VesselStatusMath.TempGoalLine(55f, 50f, false) == ""
+            && VesselStatusMath.TempGoalLine(25f, 8f, true) == "25 C — chill to 8 C (ice bath)"
+            && VesselStatusMath.TempGoalLine(5f, 8f, true) == "");
         A("chill: completes only holding AND cold",
             VesselChillTask.ShouldComplete(true, IceBathMath.IceWaterC, 8f)
             && !VesselChillTask.ShouldComplete(false, IceBathMath.IceWaterC, 8f)

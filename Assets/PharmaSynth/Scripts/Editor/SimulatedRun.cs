@@ -116,19 +116,42 @@ public static class SimulatedRun
         // Heat-gate watchdog (user 2026-07-17: "achieve the needed in the
         // procedure first, before these reactions come"): any temperature-gated
         // rule that fires while its vessel is still COLD is a broken gate.
+        // ALSO the reaction TRANSCRIPT (strict pass 2026-07-18): every fire is
+        // logged with its observation, so "did the violet discharge / did the
+        // buff precipitate drop" is read straight off the log instead of being
+        // proven only transitively by the next step's source lookup.
+        var firedRules = new HashSet<string>();
         var watchers = new List<(LiquidPhysics lp, System.Action<ReactionRule> h)>();
         foreach (var wlp in Object.FindObjectsByType<LiquidPhysics>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             var cap = wlp;
             System.Action<ReactionRule> h = rule =>
             {
-                if (rule != null && !rule.TemperatureSatisfied(cap.currentTempC))
+                if (rule == null) return;
+                if (!rule.TemperatureSatisfied(cap.currentTempC))
                     res.bugs.Add(cap.name + ": " + rule.name + " fired at " + cap.currentTempC.ToString("0")
                                  + " C but needs " + rule.minTemperatureC.ToString("0") + " C — the heat gate is broken");
+                if (firedRules.Add(rule.name + "@" + cap.name))   // first fire per vessel — bursts stay one line
+                    log.AppendLine("  ⚗ " + rule.name + " in " + cap.name
+                                   + (string.IsNullOrEmpty(rule.expectedObservation) ? "" : " — " + rule.expectedObservation));
+                // A precipitate rule must leave VISIBLE precipitate volume, or
+                // the observation text lies to the player.
+                if (rule.hasPrecipitate && rule.resultPrecipitate != null && cap.currentPptVolume <= 0.01f)
+                    res.bugs.Add(cap.name + ": " + rule.name + " claims a precipitate but the vessel shows none");
             };
             cap.ReactionOccurred += h;
             watchers.Add((cap, h));
         }
+
+        // FUNNEL audit (strict pass 2026-07-18): a funnel WITHOUT the
+        // LiquidPassthrough marker EATS any pour aimed through it (the stream
+        // lands on its collider as a puddle — the W5.15 headset bug). The hints
+        // tell the player to pour through the funnel, so a bad funnel breaks
+        // the filter step even though a direct pour would work.
+        foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if ((t.name.StartsWith("Eq_Funnel") || t.name.StartsWith("Funnel_"))
+                && t.GetComponent<LiquidPassthrough>() == null)
+                res.bugs.Add(t.name + " has NO LiquidPassthrough — a pour through it is wasted (run Apply W5.8 Verb Data)");
 
         // Index the mechanisms the build produced.
         var bindings = Object.FindObjectsByType<LiquidTaskBinding>(FindObjectsInactive.Include, FindObjectsSortMode.None);
@@ -518,7 +541,8 @@ public static class SimulatedRun
         }
         if (runner.Graph.IsComplete(id))
             log.AppendLine("  ✓ held " + tube.name + " in the bath to " + heat.RequiredC.ToString("0")
-                           + " C — step complete (tube at " + tube.currentTempC.ToString("0") + " C)");
+                           + " C — step complete (tube at " + tube.currentTempC.ToString("0")
+                           + " C; the sim's 0.5 s ticks overshoot — in play the step completes AT the threshold)");
         else
         {
             res.bugs.Add(id + ": bath heating never completed the step (tube " + tube.currentTempC.ToString("0")
