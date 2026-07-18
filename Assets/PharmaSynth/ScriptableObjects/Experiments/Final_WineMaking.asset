@@ -19,7 +19,7 @@ MonoBehaviour:
   - Confirm fermentation by CO2 evolution (limewater)
   - Rack and evaluate the finished wine (appearance, clarity, flavour)
   materialReagents:
-  - "Mixed Fruit Juice \u2014 250 mL min (tilt-pour to 20 ml)"
+  - "Mixed Fruit Juice \u2014 250 mL min (tilt-pour to 40 ml)"
   - "Brown Sugar \u2014 3 scoopula dips (feeds the yeast)"
   - "Ammonium Phosphate \u2014 1 dip (yeast nutrient)"
   - "Yeast \u2014 2 scoopula dips (the fermenting catalyst)"
@@ -40,7 +40,7 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 0
     required: 1
-    hint: "The manual: ferment at least 250 mL of any fruit juice EXCEPT grapes. Sugar feeds the yeast; a pinch of nutrient keeps it healthy.\n\u2192 Fermentation Jar: tilt-pour Mixed Fruit Juice to 20 ml, 3 scoopula dips of brown sugar, 1 dip of ammonium phosphate, then pitch 2 dips of yeast - the must turns to young wine."
+    hint: "The manual: ferment at least 250 mL of any fruit juice EXCEPT grapes. Sugar feeds the yeast; a pinch of nutrient keeps it healthy.\n\u2192 Fermentation Jar: tilt-pour Mixed Fruit Juice to the 40 ml band, 3 scoopula dips of brown sugar, 1 dip of ammonium phosphate, then pitch 2 dips of yeast - watch the tag turn to 'Wine'."
   - taskId: stir-must
     label: "Swirl the must to rouse the yeast"
     phase: 0
@@ -50,9 +50,9 @@ MonoBehaviour:
     skill: 1
     rubricCategory: 0
     required: 1
-    hint: "Rousing spreads the yeast evenly through the sugary juice so every part ferments.\n\u2192 Circle the GLASS ROD in the jar until 'Well stirred!' shows."
+    hint: "Rousing spreads the yeast evenly through the sugary juice so every part ferments.\n\u2192 Circle the GLASS ROD in the jar until the 'Well stirred!' cue shows."
   - taskId: confirm-ferment
-    label: "Seal the airlock & confirm fermentation - CO2 clouds limewater"
+    label: "Confirm fermentation - CO2 turns limewater milky"
     phase: 1
     prerequisites:
     - stir-must
@@ -60,7 +60,7 @@ MonoBehaviour:
     skill: 4
     rubricCategory: 0
     required: 1
-    hint: "A sealed airlock lets CO2 escape but keeps air out; leading that gas through limewater proves live fermentation as it turns milky (CaCO3).\n\u2192 Pour 10 ml of limewater into Test Tube 5 and keep it by the jar's mouth until it clouds - then the week-long ferment passes."
+    hint: "Fermenting wine gives off CO2 (that is what an airlock vents); leading that gas through limewater proves it is alive - the limewater turns milky (CaCO3).\n\u2192 Pour 10 ml of limewater into Test Tube 5 and hold it at the jar's mouth until it clouds - then the week-long ferment passes."
     longProcess: 1
     longProcessMessage: "Seven days and seven nights later - fermentation is complete and the wine has cleared over its lees."
   - taskId: rack
@@ -72,7 +72,7 @@ MonoBehaviour:
     skill: 2
     rubricCategory: 0
     required: 1
-    hint: "Racking siphons the clear wine off the sediment (lees) without disturbing it - the manual: 'do not shake; decant the liquid'.\n\u2192 Tilt-pour 8 ml of the clear wine from the jar THROUGH the racking funnel into the Wine Bottle (Florence flask), leaving the lees behind."
+    hint: "Racking siphons the clear wine off the sediment (lees) without disturbing it - the manual: 'do not shake; decant the liquid'.\n\u2192 Tilt-pour the clear wine from the jar THROUGH the racking funnel into the Wine Bottle (Florence flask) to the 30 ml band, leaving the lees behind."
   - taskId: test-clarity
     label: "Assess clarity, colour and appearance"
     phase: 2
@@ -82,7 +82,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "General appearance is a fifth of the wine-tasting grade - a bright, clear pour with no haze scores well.\n\u2192 Pour 2 ml of your racked wine onto the Watch Glass and judge its clarity against the light."
+    hint: "General appearance is a fifth of the wine-tasting grade - a bright, clear pour with no haze scores well.\n\u2192 Pour a splash (about 6 ml) of your racked wine onto the Watch Glass and judge its clarity against the light."
   - taskId: test-tasting
     label: "Tasting finale - evaluate aroma and flavour"
     phase: 2
@@ -92,7 +92,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Flavour, smell and taste are a quarter of the grade - the tasting finale of the whole course.\n\u2192 Pour 3 ml into the Tasting Glass and evaluate the aroma and flavour."
+    hint: "Flavour, smell and taste are a quarter of the grade - the tasting finale of the whole course.\n\u2192 Pour about 12 ml into the Tasting Glass and evaluate the aroma and flavour."
   - taskId: record-label
     label: "Create the label & record volume and observations"
     phase: 3

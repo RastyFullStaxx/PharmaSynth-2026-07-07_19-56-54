@@ -942,15 +942,15 @@ Zone-free, bench-bound; stations DELETED (the LAST classic Weigh/Heat/Collect st
 
 | # | task | phase | label | prereq | how it completes |
 |---|------|-------|-------|--------|------------------|
-| 1 | `prepare-must` | ReagentPrep | Prepare the must \u2014 fruit juice (NOT grapes) + sugar + yeast | - | `Eq_Beaker_500mL`: 20 ml Mixed Fruit Juice + 3 dips brown sugar + 1 dip ammonium phosphate + 2 dips yeast \u2192 **`WineFermentation` fires** (juice + yeast \u2192 Wine, CO\u2082) |
+| 1 | `prepare-must` | ReagentPrep | Prepare the must \u2014 fruit juice (NOT grapes) + sugar + yeast | - | `Eq_Beaker_500mL`: 40 ml Mixed Fruit Juice + 3 dips brown sugar + 1 dip ammonium phosphate + 2 dips yeast \u2192 **`WineFermentation` fires** (juice + yeast \u2192 Wine, CO\u2082); the tag turns to "Wine" |
 | 2 | `stir-must` | ReagentPrep | Swirl the must to rouse the yeast | 1 | circle a GLASS ROD in the jar (`stirTaskId` \u2192 StirController) |
-| 3 | `confirm-ferment` | Synthesis | Seal airlock & confirm \u2014 CO\u2082 clouds limewater | 2 | pour 10 ml Limewater into Test Tube 5 by the jar's mouth \u2192 CO\u2082 bubbles in (`FermentationController`) \u2192 CaCO\u2083 milky \u2697 + week time-skip |
-| 4 | `rack` | Synthesis | Rack the clear wine off the lees | 3 | tilt-pour 8 ml Wine from the jar (fermentation-wash source) through the funnel into the FlorenceFlask (Wine Bottle) |
-| 5 | `test-clarity` | ChemicalTests | Assess clarity, colour, appearance | 4 | pour 2 ml of the RACKED wine onto `Eq_WatchGlass` |
-| 6 | `test-tasting` | ChemicalTests | Tasting finale \u2014 aroma & flavour | 4 | pour 3 ml into `Eq_Beaker_100mL` (tasting glass) |
+| 3 | `confirm-ferment` | Synthesis | Confirm fermentation \u2014 CO\u2082 turns limewater milky | 2 | pour 10 ml Limewater into Test Tube 5 by the jar's mouth \u2192 CO\u2082 bubbles in (`FermentationController`) \u2192 CaCO\u2083 milky \u2697 + week time-skip. **No "seal the airlock" action** \u2014 the airlock is a concept in the fact line; the verb is the limewater test |
+| 4 | `rack` | Synthesis | Rack the clear wine off the lees | 3 | tilt-pour ~30 ml Wine from the jar (fermentation-wash source) through the funnel into the FlorenceFlask (Wine Bottle) |
+| 5 | `test-clarity` | ChemicalTests | Assess clarity, colour, appearance | 4 | pour ~6 ml of the RACKED wine onto `Eq_WatchGlass` |
+| 6 | `test-tasting` | ChemicalTests | Tasting finale \u2014 aroma & flavour | 4 | pour ~12 ml into `Eq_Beaker_100mL` (tasting glass) |
 | 7 | `record-label` | DataSheet | Create the label & record volume + observations | 5, 6 | auto-completes (wrap-up) |
 
-**Clarity + tasting draw from the RACKED FlorenceFlask** (the clear wine off the lees = a pure-product source; the jar with its sediment is the lower-priority fermentation-wash). Uses every apparatus: jar, glass rod, limewater tube, racking funnel, wine bottle, watch glass, tasting glass.
+**Clarity + tasting draw from the RACKED FlorenceFlask** (the clear wine off the lees = a pure-product source; the jar with its sediment is the lower-priority fermentation-wash). Uses every apparatus: jar, glass rod, limewater tube, racking funnel, wine bottle, watch glass, tasting glass. **Volumes were scaled UP from the first pass** (juice 20→40, rack 8→30, clarity 2→6, tasting 3→12) — the wine bottle/tasting glass were poured so thin (3% of capacity) they read as EMPTY in VR; every pour now clears the visibility floor.
 
 ### Reactions & expected observations
 

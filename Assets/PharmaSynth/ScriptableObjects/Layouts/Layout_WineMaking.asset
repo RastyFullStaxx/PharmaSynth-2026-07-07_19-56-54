@@ -25,7 +25,7 @@ MonoBehaviour:
     bindings:
     - reagentChemical: Mixed Fruit Juice
       taskId: prepare-must
-      requiredMl: 20
+      requiredMl: 40
       completesTask: 1
     - reagentChemical: Brown Sugar
       taskId: prepare-must
@@ -81,7 +81,7 @@ MonoBehaviour:
     bindings:
     - reagentChemical: Wine
       taskId: rack
-      requiredMl: 8
+      requiredMl: 30
       completesTask: 1
     rackGroup:
     heatToC: 0
@@ -103,7 +103,7 @@ MonoBehaviour:
     bindings:
     - reagentChemical: Wine
       taskId: test-clarity
-      requiredMl: 2
+      requiredMl: 6
       completesTask: 1
     rackGroup:
     heatToC: 0
@@ -125,7 +125,7 @@ MonoBehaviour:
     bindings:
     - reagentChemical: Wine
       taskId: test-tasting
-      requiredMl: 3
+      requiredMl: 12
       completesTask: 1
     rackGroup:
     heatToC: 0
