@@ -15,9 +15,8 @@ MonoBehaviour:
   moduleId: midterm-acetanilide
   moduleTitle: 'Midterm 2: Acetanilide'
   intendedLearningOutcomes:
-  - Acetylate aniline to acetanilide in the fume hood
-  - Isolate crystals by ice crystallisation and washing
-  - Confirm the amide by hydrolysis and bromination tests
+  - 'Objective 1: Synthesize acetanilide.'
+  - 'Objective 2: Determine its identity through chemical tests.'
   materialReagents:
   - "Aniline \u2014 2 ml + 2 ml (FUME HOOD, both times)"
   - "Glacial Acetic Acid \u2014 2 ml (2 squeezes)"
@@ -124,7 +123,7 @@ MonoBehaviour:
   masteryThreshold: 0.9
   bkt:
     pL0: 0.25
-    pTransit: 0.2
+    pTransit: 0.3
     pSlip: 0.1
     pGuess: 0.2
   trackedSkills:

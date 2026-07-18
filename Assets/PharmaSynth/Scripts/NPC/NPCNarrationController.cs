@@ -28,8 +28,10 @@ public class NPCNarrationController : MonoBehaviour
 
     [Header("Typewriter (user 2026-07-10: type lines out + talking blips)")]
     [SerializeField] private bool typewriter = true;
-    [SerializeField] private float charsPerSecond = 32f;
-    [SerializeField] private int blipEveryChars = 2;            // a voice blip every N revealed non-space chars
+    // 32 cps ≈ 384 wpm — far past comfortable reading, and it read as Pharmee
+    // "speaking rapidly" (user 2026-07-19). 22 cps ≈ 260 wpm: brisk but legible.
+    [SerializeField] private float charsPerSecond = 22f;
+    [SerializeField] private int blipEveryChars = 4;            // a voice blip every N revealed non-space chars
     [SerializeField] private string voiceBlipKey = "";          // this speaker's talking blip (SoundBank key)
     [SerializeField, Range(0f, 1f)] private float blipVolume = 0.5f;
 
@@ -70,10 +72,16 @@ public class NPCNarrationController : MonoBehaviour
         = new Queue<(string, float, AudioClip)>();
     private const int MaxQueued = 2;
 
+    [Header("Pacing (user 2026-07-19: lines felt rapid + ran together)")]
+    [Tooltip("Minimum time a FULLY revealed line stays up, whatever the authored dwell.")]
+    [SerializeField] private float minHoldSeconds = 1.9f;
+    [Tooltip("Clear beat between consecutive lines so they never run together.")]
+    [SerializeField] private float interLineGap = 1.25f;
+
     /// Post-reveal read time: the authored dwell minus what typing consumed,
     /// floored so a long line always holds ≥ minHold once fully shown (long
     /// lines used to vanish 0.6 s after the last character). Pure + tested.
-    public static float HoldSecondsAfterReveal(float authoredWait, float revealSeconds, float minHold = 1.2f)
+    public static float HoldSecondsAfterReveal(float authoredWait, float revealSeconds, float minHold = 1.9f)
         => Mathf.Max(minHold, authoredWait - revealSeconds);
 
     /// Edit-mode/test binding for the auto-hidden bubble panel.
@@ -85,6 +93,11 @@ public class NPCNarrationController : MonoBehaviour
     {
         IsRevealing = false;
         _queued.Clear();
+        // A disable mid-line used to leave IsSpeaking TRUE and never raise
+        // LineEnded, so the HUD bar kept a half-revealed line on screen with no
+        // owner to finish or clear it (2026-07-19).
+        if (IsSpeaking) { IsSpeaking = false; LineEnded?.Invoke(); }
+        VisibleCount = int.MaxValue;
     }
 
     /// Voice-over seam: the hash-keyed clip bank + which character this channel is.
@@ -125,7 +138,12 @@ public class NPCNarrationController : MonoBehaviour
     public void Say(string subtitle, float seconds = 3f, AudioClip clip = null)
     {
         if (!isActiveAndEnabled) return; // edit-mode / disabled: no coroutine
-        if (IsRevealing && IsSpeaking)
+        // QUEUE while a line is still typing OR while we're in the inter-line beat.
+        // The gap used to be a hole: for its 1.25 s neither IsSpeaking nor
+        // IsRevealing was true, so an arriving Say() stopped the outer SayRoutine
+        // and the line already queued behind it was silently destroyed, never
+        // shown at all (2026-07-19).
+        if ((IsRevealing && IsSpeaking) || _chaining)
         {
             while (_queued.Count >= MaxQueued) _queued.Dequeue();   // drop the stalest
             _queued.Enqueue((subtitle, seconds, clip));
@@ -140,17 +158,29 @@ public class NPCNarrationController : MonoBehaviour
     /// Public so it is edit-mode testable and callable by cutscene staging.
     public void BeginLine(string subtitle, float seconds)
     {
-        if (subtitleText != null) { subtitleText.text = subtitle; subtitleText.maxVisibleCharacters = int.MaxValue; }
+        // Activate BEFORE writing text — same TMP-on-inactive-object trap as
+        // RevealAndHold (a stale textInfo here would mis-measure any mirror).
         if (panelRoot != null) panelRoot.SetActive(true);
         if (skipButton != null) skipButton.SetActive(true);
+        if (subtitleText != null) { subtitleText.text = subtitle; subtitleText.maxVisibleCharacters = int.MaxValue; }
         IsSpeaking = true;
         VisibleCount = int.MaxValue;      // instant path shows the whole line
         LineStarted?.Invoke(subtitle, seconds);
     }
 
     /// Coroutine-free line end: clears text, hides bubble + skip, raises LineEnded.
-    public void EndLine()
+    /// EXTERNAL interrupt — also kills the reveal coroutine, because an orphaned
+    /// RevealAndHold used to write VisibleCount/maxVisibleCharacters back over the
+    /// line this just cleared (2026-07-19).
+    public void EndLine() => EndLine(true);
+
+    private void EndLine(bool stopRoutine)
     {
+        // ⚠ Only an EXTERNAL caller may stop the routine: RevealAndHold calls this
+        // at its own natural end from INSIDE narrationRoutine, and stopping it
+        // there would kill SayRoutine's queued-line chaining (dropped lines).
+        if (stopRoutine && narrationRoutine != null)
+        { StopCoroutine(narrationRoutine); narrationRoutine = null; _chaining = false; _queued.Clear(); }
         if (subtitleText != null) subtitleText.text = string.Empty;
         if (panelRoot != null) panelRoot.SetActive(false);
         if (skipButton != null) skipButton.SetActive(false);
@@ -180,57 +210,89 @@ public class NPCNarrationController : MonoBehaviour
         if (_queued.Count > 0)
         {
             var next = _queued.Dequeue();
-            yield return new WaitForSeconds(InterLineGap);
+            _chaining = true;                       // Say() must QUEUE, not stomp, during the beat
+            yield return new WaitForSeconds(Mathf.Max(0f, interLineGap));
+            _chaining = false;
             narrationRoutine = StartCoroutine(SayRoutine(next.subtitle, next.seconds, next.clip));
         }
     }
 
-    /// Beat between consecutive Pharmee lines so they don't run together.
-    private const float InterLineGap = 0.85f;
+    /// True during the inter-line beat (line finished, next one pending).
+    private bool _chaining;
 
     /// Type the line out character-by-character (with per-few-chars talking blips),
     /// then hold the finished line for the remaining dwell time, then end it. The HUD
     /// dialogue bar mirrors the reveal via LineStarted + the shared TypeCps().
     private IEnumerator RevealAndHold(string subtitle, float waitSeconds)
     {
+        // ⛔ ORDER IS LOAD-BEARING (the mid-sentence truncation bug, 2026-07-19).
+        // The panel must be ACTIVE before ForceMeshUpdate(): TMP does not rebuild
+        // textInfo on an inactive GameObject, so characterCount came back STALE
+        // FROM THE PREVIOUS LINE (or 0 on the very first). A shorter previous line
+        // meant `total` was too small, the reveal loop exited early, and the line
+        // sat permanently cut off mid-sentence for its whole dwell — exactly the
+        // "text doesn't get completely written" the user kept seeing on both the
+        // world bubble and the HUD bar (the HUD mirrors VisibleCount).
+        if (panelRoot != null) panelRoot.SetActive(true);
+        if (skipButton != null) skipButton.SetActive(true);
         if (subtitleText != null)
         {
             subtitleText.text = subtitle;
             subtitleText.maxVisibleCharacters = typewriter ? 0 : int.MaxValue;
             subtitleText.ForceMeshUpdate();
         }
-        if (panelRoot != null) panelRoot.SetActive(true);
-        if (skipButton != null) skipButton.SetActive(true);
         IsSpeaking = true;
         VisibleCount = typewriter ? 0 : int.MaxValue;
         LineStarted?.Invoke(subtitle, waitSeconds);
 
-        int total = subtitleText != null ? subtitleText.textInfo.characterCount
-                                          : (subtitle != null ? subtitle.Length : 0);
+        int total = CharacterTotal(subtitle);
         float revealTime = 0f;
         if (typewriter && total > 0)
         {
             IsRevealing = true; _skipReveal = false;
             float cps = TypeCps();
-            float perChar = 1f / cps;
             int sinceBlip = 0, shown = 0;
+            // TIME-ACCUMULATOR, not WaitForSeconds(1/cps) per char: a per-character
+            // yield is frame-quantised (at 72 Hz a 1/32 s wait really costs 1/24 s),
+            // so the true reveal ran ~33% slower than the cps the hold math assumed
+            // — the line then lost that time off its READ hold.
+            float carry = 0f;
             while (shown < total && IsSpeaking && !_skipReveal)   // skip fills instantly
             {
-                shown++;
+                yield return null;
+                carry += Time.deltaTime * cps;
+                int step = Mathf.FloorToInt(carry);
+                if (step <= 0) continue;
+                carry -= step;
+                for (int k = 0; k < step && shown < total; k++)
+                {
+                    shown++;
+                    if (!char.IsWhiteSpace(CharAt(shown - 1)) && ++sinceBlip >= Mathf.Max(1, blipEveryChars))
+                    { sinceBlip = 0; PlayBlip(); }
+                }
                 if (subtitleText != null) subtitleText.maxVisibleCharacters = shown;
                 VisibleCount = shown;
-                if (!char.IsWhiteSpace(CharAt(shown - 1)) && ++sinceBlip >= Mathf.Max(1, blipEveryChars))
-                { sinceBlip = 0; PlayBlip(); }
-                yield return new WaitForSeconds(perChar);
             }
+            if (!IsSpeaking) yield break;      // EndLine ran underneath us — don't re-show
             if (subtitleText != null) subtitleText.maxVisibleCharacters = total;
             VisibleCount = total;
             IsRevealing = false; _skipReveal = false;
             revealTime = total / cps;
         }
 
-        yield return new WaitForSeconds(HoldSecondsAfterReveal(waitSeconds, revealTime));
-        EndLine();
+        yield return new WaitForSeconds(HoldSecondsAfterReveal(waitSeconds, revealTime, minHoldSeconds));
+        EndLine(false);   // natural end — never stop our own routine (kills chaining)
+    }
+
+    /// Character count for the reveal. Prefers TMP's parsed count (rich-text tags
+    /// are not characters) but NEVER trusts a zero/stale value — falls back to the
+    /// raw string so a line can always finish typing.
+    private int CharacterTotal(string subtitle)
+    {
+        int raw = subtitle != null ? subtitle.Length : 0;
+        if (subtitleText == null || subtitleText.textInfo == null) return raw;
+        int parsed = subtitleText.textInfo.characterCount;
+        return parsed > 0 ? parsed : raw;
     }
 
     private char CharAt(int i)
@@ -272,15 +334,26 @@ public class NPCNarrationController : MonoBehaviour
         if (narratorAudioSource != null)
             narratorAudioSource.Stop();
 
+        // Take the queue BEFORE EndLine — the external path clears it.
+        bool hasNext = _queued.Count > 0;
+        var next = hasNext ? _queued.Dequeue() : default;
         EndLine();
-        // Skip advances: play the next queued line if one is waiting.
-        if (_queued.Count > 0)
+        if (hasNext)
         {
-            var next = _queued.Dequeue();
-            narrationRoutine = StartCoroutine(SayRoutine(next.subtitle, next.seconds, next.clip));
+            narrationRoutine = StartCoroutine(SkipChain(next));
             return;
         }
         onNarrationFinished?.Invoke();
+    }
+
+    /// A skipped line still leaves the beat before the next one (skip used to
+    /// chain with NO gap, so two lines ran together on a fast tap).
+    private IEnumerator SkipChain((string subtitle, float seconds, AudioClip clip) next)
+    {
+        _chaining = true;
+        yield return new WaitForSeconds(Mathf.Max(0f, interLineGap));
+        _chaining = false;
+        narrationRoutine = StartCoroutine(SayRoutine(next.subtitle, next.seconds, next.clip));
     }
 
     private IEnumerator PlayLinesRoutine()

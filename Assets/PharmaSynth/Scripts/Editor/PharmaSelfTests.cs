@@ -292,6 +292,15 @@ public static class PharmaSelfTests
             narr.EndLine();
             A("narration: EndLine idempotent", ends == 1);
 
+            // PACING (user 2026-07-19: "pharmee might become too annoying if he
+            // speaks rapidly"). The post-reveal READ hold is the floor that keeps
+            // a finished line up long enough to actually read.
+            A("narration: a finished line always holds the minimum read time",
+                Near(NPCNarrationController.HoldSecondsAfterReveal(4f, 3.8f), 1.9f)
+                && Near(NPCNarrationController.HoldSecondsAfterReveal(9f, 3f), 6f));
+            A("narration: the read floor is unaffected by a long reveal",
+                NPCNarrationController.HoldSecondsAfterReveal(2f, 12f) >= 1.9f);
+
             var barRoot = new GameObject("Bar"); barRoot.transform.SetParent(go.transform);
             var lineGo = new GameObject("Line"); lineGo.transform.SetParent(barRoot.transform);
             var lineText = lineGo.AddComponent<TMPro.TextMeshProUGUI>();
@@ -301,6 +310,29 @@ public static class PharmaSelfTests
             A("hudbar: mirrors line", barRoot.activeSelf && lineText.text == "step two");
             narr.EndLine();
             A("hudbar: hides on end", !barRoot.activeSelf && lineText.text == string.Empty);
+
+            // MULTI-SPEAKER (2026-07-19): Dr. Jimenez owns a SEPARATE narration
+            // controller, so the bar used to show nothing at all while he spoke
+            // (it subscribed to exactly one channel) and the scene's baked
+            // "Pharmee" name was sticky. Each channel now carries its own name.
+            var speakerGo = new GameObject("Speaker"); speakerGo.transform.SetParent(barRoot.transform);
+            var speakerText = speakerGo.AddComponent<TMPro.TextMeshProUGUI>();
+            var jimGo = new GameObject("JimenezNarr");
+            jimGo.transform.SetParent(go.transform);
+            var jimNarr = jimGo.AddComponent<NPCNarrationController>();
+            bar.Bind(narr, barRoot, speakerText, lineText, null, null,
+                new[] { new HudDialogueBar.Channel
+                    { narration = jimNarr, speakerName = "Dr. Jimenez", portrait = null } });
+            jimNarr.BeginLine("your documentation counts", 1f);
+            A("hudbar: a SECOND speaker reaches the HUD bar",
+                barRoot.activeSelf && lineText.text == "your documentation counts");
+            A("hudbar: names the speaker who is talking", speakerText.text == "Dr. Jimenez");
+            narr.BeginLine("back to me", 1f);
+            A("hudbar: name switches back to the primary", speakerText.text == "Pharmee");
+            // A stale end from the NON-active speaker must not hide the live line.
+            jimNarr.EndLine();
+            A("hudbar: the other speaker's end does not steal the bar",
+                barRoot.activeSelf && lineText.text == "back to me");
         }
         finally { UnityEngine.Object.DestroyImmediate(go); }
     }
@@ -1085,7 +1117,8 @@ public static class PharmaSelfTests
 
         // Narration pacing (W5.12: long lines no longer vanish right after the
         // last character types in; short lines keep their authored dwell).
-        A("narration: long line keeps a read hold", Near(NPCNarrationController.HoldSecondsAfterReveal(3.5f, 4.7f), 1.2f));
+        // 1.2 → 1.9 s floor (2026-07-19): lines read as rushed in the headset.
+        A("narration: long line keeps a read hold", Near(NPCNarrationController.HoldSecondsAfterReveal(3.5f, 4.7f), 1.9f));
         A("narration: short line keeps authored dwell", Near(NPCNarrationController.HoldSecondsAfterReveal(3.5f, 1.0f), 2.5f));
 
         // Holo board scroll paging (W5.12: wrap + scrollable checklist).
@@ -4302,6 +4335,46 @@ public static class PharmaSelfTests
             A("content: " + file + " is BEATABLE (perfect run clears the mastery gate: "
                 + mastery.OverallMastery().ToString("0.000") + ")",
                 mastery.OverallMastery() >= m.masteryThreshold);
+
+            // FORGIVING (2026-07-19, pTransit 0.20→0.30): the mastery gate is
+            // INVISIBLE to the player — the grade screen shows a rubric %, so a
+            // run that earns >=90 there must not be secretly failed by BKT. One
+            // slip costs the rubric 4 points (procedure -0.10 × weight 0.40), so
+            // a 2-mistake run still shows ~92% and MUST still pass mastery.
+            // Models "fumbled each skill once, then got it right" — the realistic
+            // shape of a learner's run. (Two slips on the SAME skill is a
+            // different, harsher case: the 5-task tutorial gives its one tracked
+            // skill only 2 opportunities, so it mathematically cannot recover —
+            // correctly, since that IS a failing performance on a 5-step lab.)
+            var forgiving = m.BuildMasteryModel();
+            var fumbled = new HashSet<LabSkill>();
+            foreach (var t in m.graphTasks)
+            {
+                if (!forgiving.IsTracked(t.skill)) continue;
+                if (fumbled.Add(t.skill)) forgiving.Observe(t.skill, false);   // fumble it once
+                forgiving.Observe(t.skill, true);                             // then get it right
+            }
+            A("content: " + file + " survives a fumble per skill (mastery "
+                + forgiving.OverallMastery().ToString("0.000") + " still clears the gate)",
+                forgiving.OverallMastery() >= m.masteryThreshold);
+
+            // ILOs REACH THE PLAYER (2026-07-19). intendedLearningOutcomes was
+            // DEAD DATA — its only reader was the legacy ExperimentFlowManager,
+            // which isn't in the scene — and the asset text had drifted from the
+            // manuscript-verbatim IloCopy the intro cutscene actually speaks.
+            // Now: synced to IloCopy, rendered on the wrist board for the whole
+            // run, and recapped by Dr. Jimenez before the quiz.
+            var ilos = m.intendedLearningOutcomes;
+            A("content: " + file + " carries its manuscript ILOs", ilos != null && ilos.Count > 0);
+            var copy = IloCopy.ForModule(m.moduleId);
+            bool iloMatch = ilos != null && copy != null && ilos.Count == copy.Length;
+            if (iloMatch)
+                for (int i = 0; i < copy.Length; i++)
+                    if (ilos[i] != copy[i]) iloMatch = false;
+            A("content: " + file + " ILOs match the manuscript (IloCopy) verbatim", iloMatch);
+            A("content: " + file + " objectives render on the wrist board",
+                ChecklistPager.BuildObjectivesHeader(m).Contains("OBJECTIVES")
+                && (ilos.Count == 0 || ChecklistPager.BuildObjectivesHeader(m).Contains(ilos[0].Trim())));
         }
     }
 

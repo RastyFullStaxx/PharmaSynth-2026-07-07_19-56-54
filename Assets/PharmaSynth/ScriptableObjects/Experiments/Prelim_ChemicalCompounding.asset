@@ -15,9 +15,8 @@ MonoBehaviour:
   moduleId: prelim-chemical-compounding
   moduleTitle: 'Prelim: Chemical Compounding'
   intendedLearningOutcomes:
-  - Write chemical reactions involved in some organic compounds such as alcohols,
-    aldehydes, ketones, carboxylic acids and esters
-  - Differentiate tests for different organic compounds
+  - 'Objective 1: Write chemical reactions involved in some organic compounds such as alcohols, aldehydes, ketones, carboxylic acids and esters.'
+  - 'Objective 2: Differentiate tests for different organic compounds.'
   materialReagents:
   - "Distilled Water \u2014 60 ml"
   - "Ferric Chloride 10% \u2014 29 ml"
@@ -260,7 +259,7 @@ MonoBehaviour:
   masteryThreshold: 0.9
   bkt:
     pL0: 0.25
-    pTransit: 0.2
+    pTransit: 0.3
     pSlip: 0.1
     pGuess: 0.2
   trackedSkills:

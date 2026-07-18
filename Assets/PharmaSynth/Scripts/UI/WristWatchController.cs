@@ -125,7 +125,8 @@ public class WristWatchController : MonoBehaviour
             if (holoTitle != null) holoTitle.text = runner.Module != null ? runner.Module.moduleTitle : "Procedures";
             if (holoSummary != null) holoSummary.text = ChecklistPager.BuildHeader(runner);
             if (holoBody != null && runner.Graph != null)
-                holoBody.text = ChecklistPager.BuildMaterialsHeader(runner.Module)
+                holoBody.text = ChecklistPager.BuildObjectivesHeader(runner.Module)
+                              + ChecklistPager.BuildMaterialsHeader(runner.Module)
                               + ChecklistPager.BuildFocusedText(runner.Graph);
             if (holoReaction != null) holoReaction.text = GlyphSafe.Sanitize(balancedReaction);
         }

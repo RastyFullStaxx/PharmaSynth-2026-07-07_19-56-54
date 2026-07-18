@@ -21,8 +21,8 @@ public class ExaminerNPC : MonoBehaviour
     [SerializeField] private string talkBool = "Talking";
     [SerializeField] private float lineSeconds = 4f;
     [SerializeField] private float firstRemarkDelay = 12f;
-    [SerializeField] private float remarkMin = 24f;
-    [SerializeField] private float remarkMax = 44f;
+    [SerializeField] private float remarkMin = 45f;
+    [SerializeField] private float remarkMax = 90f;
 
     private bool _subscribed, _hasTalk, _running, _talking;
     private float _talkUntil, _nextRemark;

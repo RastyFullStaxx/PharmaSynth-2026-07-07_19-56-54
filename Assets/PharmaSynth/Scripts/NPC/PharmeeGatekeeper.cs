@@ -579,14 +579,46 @@ public class PharmeeGatekeeper : MonoBehaviour
         roamer.ReturnHomeAndHold(cam != null ? cam.transform : playerRig);
     }
 
-    /// Jimenez's two-beat quiz briefing at the review corner, then the quiz opens.
+    /// Jimenez's quiz briefing at the review corner, then the quiz opens.
+    /// Beats 0-1 = the generic brief; then he RECAPS this module's manuscript
+    /// objectives before the questions (user 2026-07-19: "ensure pharmee and dr
+    /// load the important things written in the manuscript like learning
+    /// outcomes"). Jimenez's pools are module-blind, so this is the one place he
+    /// says something specific to the experiment just performed — and it lands
+    /// exactly where a "here is what you were meant to learn" recap belongs.
     private void SpeakJimenezBrief(int beat)
     {
         if (Model.State != GateState.QuizIntro) return;
+        var ilos = BriefObjectives();
+        if (beat == 2 && ilos.Length > 0 && examiner != null)
+        {
+            examiner.SpeakLine("Before you answer — recall this session's objectives.");
+            After(lineSeconds, () => SpeakJimenezBrief(beat + 1));
+            return;
+        }
+        int iloIndex = beat - 3;
+        if (iloIndex >= 0 && iloIndex < ilos.Length)
+        {
+            if (examiner != null) examiner.SpeakLine(ilos[iloIndex]);
+            After(lineSeconds, () => SpeakJimenezBrief(beat + 1));
+            return;
+        }
         if (beat >= 2) { Model.Fire(GateEvent.QuizBegin); return; }
         if (examiner != null)
             examiner.SpeakLine(PharmeeLines.Pick(PharmeeLines.JimenezQuizBrief, beat));
         After(lineSeconds, () => SpeakJimenezBrief(beat + 1));
+    }
+
+    /// The running module's Intended Learning Outcomes, manuscript-verbatim.
+    /// Prefers the authored asset field, falling back to IloCopy (the same
+    /// Appendix C source the intro cutscene beats are injected from).
+    private string[] BriefObjectives()
+    {
+        var m = runner != null ? runner.Module : null;
+        if (m == null) return new string[0];
+        if (m.intendedLearningOutcomes != null && m.intendedLearningOutcomes.Count > 0)
+            return m.intendedLearningOutcomes.ToArray();
+        return IloCopy.ForModule(m.moduleId);
     }
 
     /// Hold the spoken score remarks until the Success/Failure outro cutscene ends.

@@ -15,10 +15,8 @@ MonoBehaviour:
   moduleId: prelim-ethyl-alcohol
   moduleTitle: 'Prelim: Ethyl Alcohol Synthesis'
   intendedLearningOutcomes:
-  - Ferment sugar to ethanol with yeast
-  - Confirm CO2 evolution with limewater
-  - "Distil and collect the 70\u201380\xB0C fraction"
-  - Confirm ethanol by combustion, iodoform and ester tests
+  - 'Objective 1: Synthesize ethyl alcohol.'
+  - 'Objective 2: Determine its identity through chemical tests.'
   materialReagents:
   - "Ethanol \u2014 34 ml"
   - "Distilled Water \u2014 20 ml"
@@ -164,7 +162,7 @@ MonoBehaviour:
   masteryThreshold: 0.9
   bkt:
     pL0: 0.25
-    pTransit: 0.2
+    pTransit: 0.3
     pSlip: 0.1
     pGuess: 0.2
   trackedSkills:

@@ -1,30 +1,79 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
-/// Screen-bottom dialogue bar (storyboard style): Pharmee's portrait + the line he
-/// is currently speaking, mirrored from NPCNarrationController so the player can
-/// read him without looking at him. Visible ONLY while a line is live; fades out
-/// smoothly when the line ends.
+/// Screen-bottom dialogue bar (storyboard style): the speaker's portrait + name +
+/// the line they are currently speaking, mirrored from NPCNarrationController so
+/// the player can read them without looking at them. Visible ONLY while a line is
+/// live; fades out smoothly when the line ends.
+///
+/// MULTI-SPEAKER (user 2026-07-19: "let's make dr jimenez same as pharmee that
+/// appears in our HUD as well"). Pharmee and Dr. Jimenez own SEPARATE
+/// NPCNarrationControllers (their own world bubbles); the bar used to subscribe
+/// to exactly one, so Jimenez's briefing/verdict never reached the HUD at all and
+/// the "Pharmee" name was baked into the scene text. Now each channel carries its
+/// own name + portrait, and whichever speaks last owns the bar.
 public class HudDialogueBar : MonoBehaviour
 {
-    [SerializeField] private NPCNarrationController narration;
+    [System.Serializable]
+    public class Channel
+    {
+        public NPCNarrationController narration;
+        public string speakerName = "Pharmee";
+        public Sprite portrait;
+    }
+
+    [SerializeField] private NPCNarrationController narration;   // channel 0 (legacy field, kept for scene refs)
     [SerializeField] private GameObject barRoot;      // toggled with the line
-    [SerializeField] private TMP_Text speakerText;    // "Pharmee"
+    [SerializeField] private TMP_Text speakerText;    // "Pharmee" / "Dr. Jimenez"
     [SerializeField] private TMP_Text lineText;
+    [SerializeField] private Image portraitImage;     // the DialogueBar's Portrait Image
+    [SerializeField] private string primarySpeakerName = "Pharmee";
+    [SerializeField] private Sprite primaryPortrait;
+    [Tooltip("Additional speakers (Dr. Jimenez). Each has its own narration channel, name and portrait.")]
+    [SerializeField] private Channel[] extraSpeakers = new Channel[0];
     [SerializeField] private float fadeSeconds = 0.5f;
 
     private bool _subscribed;
     private CanvasGroup _group;
     private Coroutine _fade;
+    /// The controller whose line is currently on the bar — the typewriter mirror
+    /// must follow THIS one, or a second speaker's line would never reveal.
+    private NPCNarrationController _active;
+    // Per-channel handlers, kept so Unsubscribe removes exactly what it added.
+    private System.Action<string, float>[] _started;
+    private System.Action[] _ended;
 
-    /// Edit-mode/test binding.
+    /// Edit-mode/test binding (single speaker — the original signature).
     public void Bind(NPCNarrationController n, GameObject root, TMP_Text speaker, TMP_Text line)
     {
         Unsubscribe();
         narration = n; barRoot = root; speakerText = speaker; lineText = line;
         Subscribe();
         if (barRoot != null) barRoot.SetActive(false);
+    }
+
+    /// Full binding: portrait + the extra speaker channels.
+    public void Bind(NPCNarrationController n, GameObject root, TMP_Text speaker, TMP_Text line,
+                     Image portrait, Sprite primaryIcon, Channel[] extras)
+    {
+        Unsubscribe();
+        narration = n; barRoot = root; speakerText = speaker; lineText = line;
+        portraitImage = portrait; primaryPortrait = primaryIcon;
+        extraSpeakers = extras ?? new Channel[0];
+        Subscribe();
+        if (barRoot != null) barRoot.SetActive(false);
+    }
+
+    /// Every channel, primary first.
+    private Channel[] Channels()
+    {
+        int extra = extraSpeakers != null ? extraSpeakers.Length : 0;
+        var all = new Channel[1 + extra];
+        all[0] = new Channel { narration = narration, speakerName = primarySpeakerName, portrait = primaryPortrait };
+        for (int i = 0; i < extra; i++) all[1 + i] = extraSpeakers[i];
+        return all;
     }
 
     private void OnEnable()
@@ -38,17 +87,36 @@ public class HudDialogueBar : MonoBehaviour
 
     private void Subscribe()
     {
-        if (_subscribed || narration == null) return;
-        narration.LineStarted += HandleLineStarted;
-        narration.LineEnded += HandleLineEnded;
-        _subscribed = true;
+        if (_subscribed) return;
+        var all = Channels();
+        _started = new System.Action<string, float>[all.Length];
+        _ended = new System.Action[all.Length];
+        bool any = false;
+        for (int i = 0; i < all.Length; i++)
+        {
+            var ch = all[i];
+            if (ch == null || ch.narration == null) continue;
+            var cap = ch;
+            _started[i] = (l, s) => HandleLineStarted(l, s, cap);
+            _ended[i] = () => HandleLineEnded(cap.narration);
+            ch.narration.LineStarted += _started[i];
+            ch.narration.LineEnded += _ended[i];
+            any = true;
+        }
+        _subscribed = any;
     }
 
     private void Unsubscribe()
     {
-        if (!_subscribed || narration == null) return;
-        narration.LineStarted -= HandleLineStarted;
-        narration.LineEnded -= HandleLineEnded;
+        if (!_subscribed) return;
+        var all = Channels();
+        for (int i = 0; i < all.Length && i < _started.Length; i++)
+        {
+            var ch = all[i];
+            if (ch == null || ch.narration == null) continue;
+            if (_started[i] != null) ch.narration.LineStarted -= _started[i];
+            if (_ended[i] != null) ch.narration.LineEnded -= _ended[i];
+        }
         _subscribed = false;
     }
 
@@ -62,33 +130,49 @@ public class HudDialogueBar : MonoBehaviour
         return _group;
     }
 
-    /// Public for headless tests.
+    /// Public for headless tests (single-speaker path).
     public void HandleLineStarted(string line, float seconds)
+        => HandleLineStarted(line, seconds,
+            new Channel { narration = narration, speakerName = primarySpeakerName, portrait = primaryPortrait });
+
+    private void HandleLineStarted(string line, float seconds, Channel ch)
     {
         if (_fade != null) { StopCoroutine(_fade); _fade = null; }
-        bool typing = narration != null && narration.Typewriter;
+        _active = ch != null ? ch.narration : narration;
+        bool typing = _active != null && _active.Typewriter;
         if (lineText != null)
         {
             lineText.text = line;
             lineText.maxVisibleCharacters = typing ? 0 : int.MaxValue;
         }
-        if (speakerText != null && string.IsNullOrEmpty(speakerText.text)) speakerText.text = "Pharmee";
+        // Set the name UNCONDITIONALLY — the old IsNullOrEmpty guard meant the
+        // scene's baked "Pharmee" was sticky, so a second speaker kept his name.
+        if (speakerText != null && ch != null && !string.IsNullOrEmpty(ch.speakerName))
+            speakerText.text = ch.speakerName;
+        if (portraitImage != null && ch != null && ch.portrait != null)
+            portraitImage.sprite = ch.portrait;
         var g = Group();
         if (g != null) g.alpha = 1f;
         if (barRoot != null) barRoot.SetActive(true);
     }
 
-    // Mirror the bubble's reveal count each frame → the HUD line types in lockstep
-    // with it (and a skip fills both at once), with no second timer to drift.
+    // Mirror the ACTIVE speaker's reveal count each frame → the HUD line types in
+    // lockstep with their bubble (and a skip fills both at once), no second timer.
     private void Update()
     {
-        if (narration == null || lineText == null) return;
-        if (narration.IsSpeaking && narration.Typewriter)
-            lineText.maxVisibleCharacters = narration.VisibleCount;
+        var n = _active != null ? _active : narration;
+        if (n == null || lineText == null) return;
+        if (n.IsSpeaking && n.Typewriter)
+            lineText.maxVisibleCharacters = n.VisibleCount;
     }
 
-    public void HandleLineEnded()
+    public void HandleLineEnded() => HandleLineEnded(null);
+
+    private void HandleLineEnded(NPCNarrationController from)
     {
+        // Ignore a stale end from a speaker who no longer owns the bar (the other
+        // NPC took it over) — otherwise one ending line hides the other's live one.
+        if (from != null && _active != null && from != _active) return;
         // Runtime: fade out smoothly; edit mode/tests: hide immediately.
         if (Application.isPlaying && isActiveAndEnabled && barRoot != null && barRoot.activeSelf)
         {
@@ -104,6 +188,7 @@ public class HudDialogueBar : MonoBehaviour
         if (lineText != null) lineText.text = string.Empty;
         var g = Group();
         if (g != null) g.alpha = 1f;
+        _active = null;
     }
 
     private IEnumerator FadeOutRoutine()

@@ -24,6 +24,30 @@ public static class ChecklistPager
         return null;
     }
 
+    /// OBJECTIVES header — the manuscript's Intended Learning Outcomes, on the
+    /// wrist board for the WHOLE run (user 2026-07-19: "ensure pharmee and dr
+    /// load the important things written in the manuscript like learning
+    /// outcomes"). Until now `intendedLearningOutcomes` was DEAD DATA: the only
+    /// reader was the legacy ExperimentFlowManager, which isn't in the scene —
+    /// so the objectives were spoken once in the intro cutscene and never
+    /// readable again. Sits ABOVE materials: why you're here, then what to grab.
+    public static string BuildObjectivesHeader(ExperimentModuleDefinition module)
+    {
+        if (module == null) return string.Empty;
+        var ilos = module.intendedLearningOutcomes;
+        if (ilos == null || ilos.Count == 0) return string.Empty;
+
+        var sb = new StringBuilder(256);
+        sb.Append("<b>OBJECTIVES</b> <size=78%><color=#AEB9CC>— what this session teaches</color></size>\n<size=85%>");
+        foreach (var o in ilos)
+        {
+            if (string.IsNullOrWhiteSpace(o)) continue;
+            sb.Append("• ").Append(GlyphSafe.Sanitize(o.Trim())).Append('\n');
+        }
+        sb.Append("</size>\n");
+        return sb.ToString();
+    }
+
     /// MATERIALS header for the top of the holo board (user 2026-07-17): everything
     /// the experiment will need — reagents WITH totals, apparatus with counts — so
     /// the player can assemble the bench BEFORE starting. Deliberately not part of

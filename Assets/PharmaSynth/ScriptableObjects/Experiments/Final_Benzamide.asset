@@ -15,9 +15,8 @@ MonoBehaviour:
   moduleId: final-benzamide
   moduleTitle: 'Final 1: Benzamide'
   intendedLearningOutcomes:
-  - Prepare benzamide from benzoyl chloride and ammonia in an ice bath
-  - Isolate and oven-dry the crystals
-  - Confirm the amide by alkaline, acid and nitrous-acid tests
+  - 'Objective 1: Synthesize benzamide.'
+  - 'Objective 2: Determine its identity through chemical tests.'
   materialReagents:
   - "Ammonia Solution \u2014 5 ml (5 squeezes)"
   - "Benzoyl Chloride \u2014 1 ml (1 squeeze, into the COLD flask)"
@@ -146,7 +145,7 @@ MonoBehaviour:
   masteryThreshold: 0.9
   bkt:
     pL0: 0.25
-    pTransit: 0.2
+    pTransit: 0.3
     pSlip: 0.1
     pGuess: 0.2
   trackedSkills:

@@ -15,9 +15,8 @@ MonoBehaviour:
   moduleId: midterm-chloroform
   moduleTitle: 'Midterm 4: Chloroform'
   intendedLearningOutcomes:
-  - Prepare chloroform by the haloform reaction of acetone with bleaching powder
-  - Purify by decantation and distillation over CaCl2
-  - Confirm by non-flammability and alcoholic silver-nitrate tests
+  - 'Objective 1: Synthesize chloroform.'
+  - 'Objective 2: Determine its identity through chemical tests.'
   materialReagents:
   - "Bleaching Powder \u2014 150 g (5 scoopula dips)"
   - "Distilled Water \u2014 flask 20 ml + cylinder 10 ml + wash 4 squeezes"
@@ -174,7 +173,7 @@ MonoBehaviour:
   masteryThreshold: 0.9
   bkt:
     pL0: 0.25
-    pTransit: 0.2
+    pTransit: 0.3
     pSlip: 0.1
     pGuess: 0.2
   trackedSkills:

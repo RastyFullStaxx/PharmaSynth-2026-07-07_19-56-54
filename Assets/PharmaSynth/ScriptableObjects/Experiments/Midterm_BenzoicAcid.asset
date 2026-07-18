@@ -15,10 +15,8 @@ MonoBehaviour:
   moduleId: midterm-benzoic-acid
   moduleTitle: 'Midterm 1: Benzoic Acid'
   intendedLearningOutcomes:
-  - Oxidise benzaldehyde to benzoic acid with dilute KMnO4
-  - Isolate the product by filtering MnO2 and acidifying with HCl
-  - Purify crystals by recrystallisation from hot water
-  - Confirm benzoic acid by litmus, FeCl3 and ester-formation tests
+  - 'Objective 1: Synthesize benzoic acid.'
+  - 'Objective 2: Determine its identity through chemical tests.'
   materialReagents:
   - "Potassium Permanganate 0.1% \u2014 ~40 ml"
   - "Benzaldehyde \u2014 2 ml (2 squeezes)"
@@ -138,7 +136,7 @@ MonoBehaviour:
   masteryThreshold: 0.9
   bkt:
     pL0: 0.25
-    pTransit: 0.2
+    pTransit: 0.3
     pSlip: 0.1
     pGuess: 0.2
   trackedSkills:

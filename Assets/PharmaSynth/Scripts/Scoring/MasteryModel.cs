@@ -9,8 +9,14 @@ public class BktParameters
 {
     [Range(0f, 1f), Tooltip("Prior probability the skill is already learned.")]
     public float pL0 = 0.25f;
+    // 0.20 → 0.30 (2026-07-19): at 0.20 a skill needed THREE clean observations to
+    // clear the 0.90 gate (1 obs .68 / 2 .92 / 3 .99) and ONE mistake knocked it
+    // back to ~.68 with little room to recover inside an attempt — so a player who
+    // earned ≥90 on the visible rubric could still be failed by the invisible
+    // mastery gate. At 0.30 two clean observations reach .944 and a mid-run mistake
+    // recovers to ~.958 with one more correct step. The 0.90 GATE is untouched.
     [Range(0f, 1f), Tooltip("Probability of learning the skill after an opportunity.")]
-    public float pTransit = 0.20f;
+    public float pTransit = 0.30f;
     [Range(0f, 1f), Tooltip("Probability of slipping (wrong despite knowing).")]
     public float pSlip = 0.10f;
     [Range(0f, 1f), Tooltip("Probability of guessing (right without knowing).")]

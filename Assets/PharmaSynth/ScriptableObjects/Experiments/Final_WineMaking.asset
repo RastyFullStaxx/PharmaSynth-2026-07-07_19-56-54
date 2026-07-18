@@ -15,9 +15,7 @@ MonoBehaviour:
   moduleId: final-winemaking
   moduleTitle: 'Final 4: Wine Making'
   intendedLearningOutcomes:
-  - Prepare a fermenting must from fruit, sugar and yeast
-  - Confirm fermentation by CO2 evolution (limewater)
-  - Rack and evaluate the finished wine (appearance, clarity, flavour)
+  - 'Objective: Learn the basic methodology in preparation and synthesis of alcohol using the fermentation technique, with basic ingredients found in any household kitchen.'
   materialReagents:
   - "Mixed Fruit Juice \u2014 250 mL min (tilt-pour to 40 ml)"
   - "Brown Sugar \u2014 3 scoopula dips (feeds the yeast)"
@@ -109,7 +107,7 @@ MonoBehaviour:
   masteryThreshold: 0.9
   bkt:
     pL0: 0.25
-    pTransit: 0.2
+    pTransit: 0.3
     pSlip: 0.1
     pGuess: 0.2
   trackedSkills:

@@ -39,8 +39,10 @@ public class PharmeeBrain : MonoBehaviour
 
     [Header("Ambient chatter (user 2026-07-10: richer interactions)")]
     [Tooltip("Seconds of quiet before Pharmee offers an idle comment while a run is active.")]
-    [SerializeField] private float idleChatterGap = 45f;   // W5.12: was 16 s — too chatty
+    [SerializeField] private float idleChatterGap = 80f;   // W5.12: was 16 s; 2026-07-19: 45 → 80
     [SerializeField] private bool idleChatterEnabled = true;
+    [Tooltip("Minimum gap between REACTION lines (step done). Collapses genuine duplicates — e.g. one pour satisfying two bindings in the same frame — WITHOUT silencing the instruction for a newly-available step. Kept short on purpose: the wrist checklist is the authoritative guidance, but the spoken next-step hint is what a lost player leans on.")]
+    [SerializeField] private float reactionCooldown = 3f;
 
     private IPharmeeFace _face;
     private bool _subscribed;
@@ -120,6 +122,11 @@ public class PharmeeBrain : MonoBehaviour
     {
         if (_assessment) return;
         if (runner == null || runner.Graph == null) return;
+        // ONE pour can satisfy two bindings in the same frame — that fired two
+        // Speak() calls back-to-back and read as Pharmee talking over himself
+        // (user 2026-07-19: "speaks rapidly from time to time"). SAFETY warnings
+        // deliberately bypass this cooldown (see OnMistake).
+        if (Time.time - _lastLineTime < reactionCooldown) return;
         string praise = (_praiseToggle = !_praiseToggle) ? PharmeeLines.Pick(PharmeeLines.Praise, _variant++) + " " : "";
         foreach (var nx in runner.Graph.AvailableTasks())
         {
@@ -137,19 +144,24 @@ public class PharmeeBrain : MonoBehaviour
     /// quiz, and idle lines were cutting off the gate's congratulations).
     private void Update()
     {
-        // While the wrist procedures panel is up, actively CLEAR any line Pharmee
-        // is mid-way through so it never lingers over the panel (user 2026-07-13).
+        // While the wrist procedures panel is up, clear any line Pharmee is
+        // showing so it never lingers over the panel (user 2026-07-13) — but
+        // NEVER mid-reveal: this ran every frame with no IsRevealing check, so a
+        // single stray palm-up frame (suppression latches 1.5 s) truncated the
+        // sentence the player was still reading (2026-07-19). A typing line is
+        // allowed to finish; only a fully-revealed one is cleared early.
         if (WristWatchController.SuppressNpcPokes)
         {
-            if (narration != null && narration.IsSpeaking) narration.EndLine();
+            if (narration != null && narration.IsSpeaking && !narration.IsRevealing)
+                narration.EndLine();
             return;
         }
         if (!idleChatterEnabled || _assessment) return;
         if (PharmeeGatekeeper.ReviewFlowActive) return;
         if (runner == null || !runner.IsRunning) return;
-        // Enforce a long quiet gap even if the scene serialized the old 16 s
-        // (user 2026-07-13: Pharmee was on the player's nerves).
-        if (Time.time - _lastLineTime < Mathf.Max(idleChatterGap, 45f)) return;
+        // Enforce a long quiet gap even if the scene serialized an older value
+        // (user 2026-07-13: Pharmee was on the player's nerves; 2026-07-19: 45 -> 80).
+        if (Time.time - _lastLineTime < Mathf.Max(idleChatterGap, 80f)) return;
         Speak(PharmeeState.Encouraging, PharmeeFaceExpression.Happy,
               PharmeeLines.Pick(PharmeeLines.Idle, _variant++));
     }
@@ -161,8 +173,14 @@ public class PharmeeBrain : MonoBehaviour
         return string.IsNullOrEmpty(v) ? authored : v;
     }
 
+    /// Safety/mistake warnings keep a SHORT floor only — the player must always
+    /// hear why something went wrong, but a burst of identical mistakes (a spill
+    /// bouncing) must not machine-gun the same warning.
     private void OnMistake(LabErrorType type, string message)
-        => Speak(PharmeeState.Warning, PharmeeFaceExpression.Warning, WarnLineFor(type));
+    {
+        if (Time.time - _lastLineTime < 1.5f) return;
+        Speak(PharmeeState.Warning, PharmeeFaceExpression.Warning, WarnLineFor(type));
+    }
 
     private void OnFinished(ExperimentResult r)
     {
