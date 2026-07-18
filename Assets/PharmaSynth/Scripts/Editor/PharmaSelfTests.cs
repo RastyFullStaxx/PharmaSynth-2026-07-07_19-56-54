@@ -301,6 +301,22 @@ public static class PharmaSelfTests
             A("narration: the read floor is unaffected by a long reveal",
                 NPCNarrationController.HoldSecondsAfterReveal(2f, 12f) >= 1.9f);
 
+            // OVERLAP (user 2026-07-19: "pharmee is still speaking ... where dr
+            // jimenez now speaks"). Two things caused it: Pharmee's autonomous
+            // brain reacted during the scripted review, and the gate scheduled
+            // each review beat on a FIXED dwell — a line longer than
+            // dwell x cps overran its slot and the next beat landed on top.
+            // SecondsFor reports a line's REAL floor time so schedulers can't
+            // under-book it.
+            float shortLine = narr.SecondsFor("Short.", 4f);
+            float longLine = narr.SecondsFor(new string('x', 200), 4f);
+            A("narration: a long line reports MORE floor time than a short one",
+                longLine > shortLine && longLine > 4f);
+            A("narration: floor time is never under the authored dwell",
+                narr.SecondsFor("Short.", 4f) >= 4f - 0.01f);
+            A("narration: nobody holds the floor when nothing is speaking",
+                !NPCNarrationController.FloorBusy);
+
             var barRoot = new GameObject("Bar"); barRoot.transform.SetParent(go.transform);
             var lineGo = new GameObject("Line"); lineGo.transform.SetParent(barRoot.transform);
             var lineText = lineGo.AddComponent<TMPro.TextMeshProUGUI>();
