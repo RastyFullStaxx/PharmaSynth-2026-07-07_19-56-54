@@ -166,7 +166,8 @@ Both were **game-authored** (Aspirin is named only in the manuscript's intro pro
 | **prelim-chemical-compounding** | Prelim | 🔨 **PLAYABLE, awaiting headset playtest (2026-07-16)** — rebuilt to manuscript Exp 2. ✅ 13-task graph + ILOs + quiz. ✅ VR design SETTLED + BUILT: **dropper = counted squeezes**, **spatula 0.1 g/dip**, KMnO₄→liquid 0.1%, **RackTaskGroup** (a step waits for EVERY tube), layout rebuilt (20 vessels / 4 racks), 8 reactions, 13 two-line hints. ⬜ Left: two-step picker, `StirController` tip-tracking fix, headset pass. |
 | **prelim-ethyl-alcohol** | Prelim | ✅ BUILT + simulated clean (8/8). Zone-free ferment→CO₂→limewater (`FermentationController`) + week time-skip + distillation + 3 warm tests. **The distill step DECANTS the fermented wash from the FlorenceFlask** (2026-07-18 — the old bench-Ethanol shorthand was unplayable: that bottle is HIDDEN during Exp 3 as its own end product). ⬜ Left: headset playtest; combustion could gain real match-ignition. |
 | **midterm-benzoic-acid** | Midterm | ✅ **BUILT + simulated clean 2026-07-18 (9/9)** — oxidise (heat-gated) → funnel-filter → acidify (white crystals) → **ice-bath crystallise** (time-skip) → litmus/FeCl3/ester tests drawing from the purified flask. New reusable: `IceBathController`+`VesselChillTask`, `VesselLitmusTask`+mixture pH, vessel pour-out, temp-goal tags. ⬜ Left: headset playtest. |
-| midterm-acetanilide → final-* | — | ⬜ not started |
+| **midterm-acetanilide** | Midterm | ✅ **BUILT + simulated clean 2026-07-18 (8/8)** — the FUME-HOOD module: hood-sanctioned acylation (position-based check, finally wired) → heat-gated white plates → ice-water + chill crystallise → filter/wash/dry time-skip → hydrolysis boil + **two-tube bromination comparison** (rackGroup). ⬜ Left: headset playtest (hood carry feel). |
+| midterm-acetone → final-* | — | ⬜ not started. ⚠ Fix `StirController` tip-tracking before Exp 8's "stir & stand". |
 
 ### The METHANE FLOW — the template every module follows
 1. **Gate** — Pharmee → Campaign → pick module → don **all 3 PPE** (hard-gated: `GatekeeperModel.RequiresPPEToOpen`) → "I'm ready" → cross the threshold (timer starts).
@@ -199,7 +200,9 @@ Both were **game-authored** (Aspirin is named only in the manuscript's intro pro
 | Live temp goal on the vessel itself | `VesselStatusMath.TempGoalLine` (auto via `VesselStatus`) | Heat/chill vessels append "25 C — warm to 50 C (water bath)" / "chill to 8 C (ice bath)" to their name tag until the goal is reached. No extra wiring — reads the vessel's VesselHeatTask/VesselChillTask. |
 | Vessels POUR OUT | `ShelfPourWiring.WireBottle` called by `BuildVessel` | Every task vessel (bench-bound or spawned) gets a `LiquidPourer`+spout+spill grading — the filter pour and draw-from-your-own-product steps were unplayable while only shelf bottles poured (2026-07-18; the sim's direct PourOut masked it). |
 | Pharmee's spoken guidance | `PharmeeBrain.InstructionFor` | Speaks ONLY the ACTION line (after the →) of a two-line hint — short, imperative, "do this now"; the fact line stays on the wrist panel. |
-| **Sim source honesty** (know when re-simulating) | `SimulatedRun.FindSource` | Sources rank: chill (purified product) > heat (synthesis) > fermentation wash (mixture allowed — the decant) > shelf; the module's own hidden END PRODUCT bottle is never legal. This is what exposed Exp 3's hidden-bottle shorthand. |
+| **Sim source honesty** (know when re-simulating) | `SimulatedRun.FindSource` | Sources rank: **pure-product vessel** (ledger collapsed to `DemoMode.ProductFor` — the dried crystals; the ONLY vessel scooped from) > chill (crude crystallising flask — decanted, not scooped) > heat (single-entry filtrates/distillates) > fermentation wash > shelf; the module's own hidden END PRODUCT bottle is never legal. This is what exposed Exp 3's hidden-bottle shorthand. |
+| **Fume hood step** (Exp 5 — the ONE hood module) | `LiquidTaskBinding.SetFumeHood` / `InFumeHood` + the hood's `WorkVolume` (`FumeHoodZone` + BoxCollider) | A `requiresFumeHood` chem (Aniline, Acetyl Chloride) is only sanctioned while the RECEIVING VESSEL sits inside the hood volume — position-based (the old hand-occupancy trigger was never wired and ALWAYS violated; builder wires the zone into every binding now). The sim carries the vessel in, pours, returns it. Resize the WorkVolume BoxCollider to tune the sanctioned area. |
+| ⚠ Fixture rule: building a bench-bound layout in a SUITE fixture | teardown `builder.Build("tutorial-methane")` in `finally` | Build() attaches bindings to REAL bench items — destroying only the fixture LEAKS them into later tests (the leaked Acetanilide bindings demanded a shelf-less chemical and broke the deplete monitor, 2026-07-18). |
 
 ### ⚠ Hard-won gotchas — CHECK THESE FIRST on the next module
 - **`LiquidPhysics` on an opaque vessel makes the vessel VANISH in play.** `Start()` adopts the host's own renderer when `mainRenderer` is null, then disables it while empty (this hid the mortar for days). `ShouldAdoptHostRenderer` now only adopts a real `_Fill` surface — never point `mainRenderer` at a vessel's own mesh.
@@ -677,42 +680,36 @@ Tools used from the bench: funnel (LiquidPassthrough), droppers, water bath + bu
 **Manuscript Reagents:** Bromine water; 0.1N Hydrochloric acid; Concentrated hydrochloric acid; Acetyl chloride; Glacial acetic acid; Aniline
 
 
-### Task graph (play order)
+### \u2705 BUILT + SIMULATED CLEAN 2026-07-18 (8/8 \u00b7 0 mistakes \u00b7 0 bugs \u00b7 0 warnings)
 
-| # | task | phase | label | prerequisites | hint |
-|---|------|-------|-------|---------------|------|
-| 1 | `prep-hcl` | ReagentPrep | Prepare 0.1N HCl (2.1 mL conc HCl \u2192 250 mL) | - | Slowly dilute 2.1 mL concentrated HCl to 250 mL in a volumetric flask. |
-| 2 | `measure-aniline` | ReagentPrep | Measure 2 mL aniline in the fume hood | prep-hcl | Aniline is toxic - always work in the fume hood. |
-| 3 | `add-acetic` | Synthesis | Add 2 mL glacial acetic acid | measure-aniline | Add glacial acetic acid to the aniline. |
-| 4 | `add-acylating` | Synthesis | Carefully add 2 mL acetyl chloride (fume hood) | add-acetic | Add acetyl chloride slowly; it reacts vigorously. (Client flag: acetic anhydride is the safer alternative.) |
-| 5 | `heat-bath` | Synthesis | Heat gently ~5 min in a water bath | add-acylating | Warm in a water bath about 5 minutes, then cool. |
-| 6 | `ice-crystallise` | Synthesis | Add 20 mL ice-cold water to crystallise | heat-bath | Pour into ice-cold water to precipitate acetanilide. |
-| 7 | `filter-wash` | Synthesis | Filter, wash 3\xD7 with water, dry | ice-crystallise | Filter the crystals, wash three times, and dry. |
-| 8 | `test-hydrolysis` | ChemicalTests | Hydrolysis with conc HCl (crystals reappear) | filter-wash | Boil with conc HCl; on cooling crystals of the amine salt appear. |
-| 9 | `test-bromination` | ChemicalTests | Bromination vs aniline (bromine uptake) | filter-wash | Add bromine water; compare the amount needed against free aniline. |
-| 10 | `record-yield` | DataSheet | Record % yield and observations | test-hydrolysis, test-bromination | Enter crystal mass, % yield and test results. |
+Zone-free, bench-bound; stations DELETED. **The one genuine FUME-HOOD module**: aniline + acetyl chloride are only sanctioned while the vessel sits inside the hood's `WorkVolume` (position-based check \u2014 the old hand-occupancy trigger was never wired and always violated; builder now wires `FumeHoodZone` into every binding). Generator: scratchpad `gen_acetanilide.py`. **VR adaptations (documented):** the manuscript's 0.1N-HCl prep preamble is unused by its own procedure \u2014 the bottle IS used here for the bromination tubes' trace acid (conc HCl there would collide with the hydrolysis heat-gate rule); "wash 3\u00d7 + dry + weigh" is the filter-wash time-skip (weighing stays record-only until Exp 6's weigh verb).
 
-### Stage layout
+### Task graph (play order \u2014 as built)
 
-**Stations:** `heat-bath` (Heat to 85 C) ; `ice-crystallise` (Crystallise) ; `filter-wash` (Filter) ; `test-hydrolysis` (zone-touch)
+| # | task | phase | label | prereq | how it completes |
+|---|------|-------|-------|--------|------------------|
+| 1 | `prep-aniline` | ReagentPrep | Measure aniline into the flask \u2014 in the FUME HOOD | - | carry the FlorenceFlask INTO the hood, 2 squeezes aniline there |
+| 2 | `add-acetic` | Synthesis | Add glacial acetic acid | 1 | 2 squeezes |
+| 3 | `acylate` | Synthesis | Carefully add acetyl chloride; warm at the bath | 2 | 2 squeezes acetyl chloride (in the hood) + warm \u226560 \u00b0C (`heatToC 60`; the Acetanilide rule is heat-gated at 40 \u2192 "White acetanilide plates" + ppt at the bath) |
+| 4 | `ice-crystallise` | Synthesis | Add ice-cold water; chill to crystallise | 3 | tilt-pour ~20 ml distilled water + set the flask in the ice bucket (`chillToC 8` \u2014 VesselChillTask now honors the water binding: served AND cold) |
+| 5 | `filter-wash` | Synthesis | Filter the crystals; wash and dry | 4 | funnel pour flask \u2192 `Eq_Beaker_100mL` (\u226510 ml Acetanilide) \u2192 **longProcess time-skip** ("washed three times and dried") |
+| 6 | `test-hydrolysis` | ChemicalTests | Hydrolysis test \u2014 boil with conc. HCl | 5 | Test Tube 11: 1 scoopula dip of crystals + 3 squeezes conc HCl, boil \u226590 \u00b0C (`Test_AcetanilideHydrolysis`, gated 90 \u2014 crystals reappear) |
+| 7 | `test-bromination` | ChemicalTests | Bromination \u2014 acetanilide vs free aniline | 5 | **two-tube rackGroup** (the comparison IS the lesson): Tube 12 = crystals + 5 water + 1 of 0.1N HCl + 5 bromine (yellow); Tube 13 = 2 aniline **(fume hood!)** + 5 water + 1 of 0.1N HCl + 2 bromine (`Test_AnilineBromination` \u2014 instant white tribromoaniline ppt) |
+| 8 | `record-yield` | DataSheet | Record % yield and observations | 6,7 | auto-completes (wrap-up) |
 
-**Reagents staged (pourable):** Hydrochloric Acid 0.1N (Vial_Brown, auto-supply) ; Aniline (Vial_Brown, auto-supply) ; Glacial Acetic Acid (Vial_Brown, auto-supply) ; Acetyl Chloride (Vial_Brown, auto-supply) ; Bromine Water (Vial_Brown, auto-supply)
+### Stage layout (5 bench-bound vessels; stations: [])
 
-**Tools staged:** Bunsen Burner ; Watch Glass ; Funnel ; Test Tube
-
-**Vessel ErlenmeyerFlask_400mL** (Reaction Flask) - starts EMPTY
-  - pour **Hydrochloric Acid 0.1N** >= 50 ml -> completes `prep-hcl`
-  - pour **Aniline** >= 50 ml -> completes `measure-aniline`
-  - pour **Glacial Acetic Acid** >= 50 ml -> completes `add-acetic`
-  - pour **Acetyl Chloride** >= 50 ml -> completes `add-acylating`
-
-**Vessel TestTube_WithLiquid** (Bromination Test Tube) - starts with Acetanilide
-  - pour **Bromine Water** >= 50 ml -> completes `test-bromination`
+- `FlorenceFlask` **ReactionFlask** \u2014 Aniline 2 (t1 \u2713) \u00b7 Glacial Acetic 2 (t2 \u2713) \u00b7 Acetyl Chloride 2 (t3 deferred) \u00b7 Distilled Water 20 (t4 deferred) \u00b7 `heatToC 60` + `chillToC 8`/`chillTaskId ice-crystallise`
+- `Eq_Beaker_100mL` **CollectionBeaker** \u2014 Acetanilide \u226510 (t5 \u2713, longProcess) \u2014 becomes the PURE-PRODUCT vessel the tests scoop from
+- `Kit_TestTube_11` **HydrolysisTube** \u2014 Acetanilide 2 + Conc HCl 3 (deferred) \u00b7 `heatToC 90`
+- `Kit_TestTube_12` / `Kit_TestTube_13` \u2014 the bromination pair, `rackGroup bromination` (task fires only when BOTH tubes are fully served)
 
 ### Reactions & expected observations
 
-- **Acetanilide**: Aniline + Acetyl Chloride - "White acetanilide plates"
-- **Test_AcetanilideBromination**: Acetanilide + Bromine Water -> Acetanilide - "Bromine water is decolorised to a yellow solution \u2014"
+- **Acetanilide** (min 40 \u00b0C; fixed 2026-07-18 \u2014 resultLiquid was NULL, trapping the product): Aniline + Acetyl Chloride \u2192 Acetanilide + white ppt \u2014 "White acetanilide plates"
+- **Test_AcetanilideHydrolysis** (new, min 90 \u00b0C): Acetanilide + Conc HCl \u2192 crystals reappear on cooling/dilution
+- **Test_AcetanilideBromination**: Acetanilide + Bromine Water \u2192 yellow solution (slow uptake)
+- **Test_AnilineBromination** (new): Aniline + Bromine Water \u2192 instant white **Tribromoaniline** ppt (new chem) \u2014 the free amine takes bromine far faster; the volume contrast (5 vs 2 squeezes) is the recorded result
 
 ### Quiz (Documentation score)
 

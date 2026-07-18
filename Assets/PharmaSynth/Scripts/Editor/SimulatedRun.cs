@@ -103,6 +103,10 @@ public static class SimulatedRun
         // be a source, however the edit-mode scene looks. Round one poured the
         // litmus sample straight from the (play-mode-hidden) Raw_BenzoicAcid.
         s_hiddenProduct = EndProductVisibility.HiddenProductFor(moduleId, false);
+        // The product IDENTITY (independent of whether a shelf bottle exists to
+        // hide): a bound vessel holding ONLY this substance is the player's own
+        // purified product — the preferred source for every test draw.
+        s_moduleProduct = DemoMode.ProductFor(moduleId);
 
         var res = new Result { totalTasks = module.graphTasks.Count };
         log.AppendLine("=== Simulated run: " + moduleId + " (" + res.totalTasks + " tasks) ===");
@@ -223,6 +227,7 @@ public static class SimulatedRun
                         }
                         else if (SimulateVesselHeat(runner, id, steps, res, log)) { }
                         else if (SimulateFermentation(runner, id, steps, res, log)) { }
+                        else if (SimulateChillTask(runner, id, res, log)) { }   // chill WITH reagents (Exp 5's ice water)
                         else if (SimulateLitmus(runner, id, steps, res, log)) { }
                         else if (SimulateStation(runner, id, simStations, zoneStations, temps, labItems, res, log)) { }
                         else if (deferred)
@@ -341,12 +346,14 @@ public static class SimulatedRun
             // Pouring FROM another vessel (the filtrate through the funnel) is a
             // tilt-pour of the solution — never spatula dips, whatever the
             // chemical's dry state says (round one dipped the hydrolysate 50×).
-            // EXCEPT crystals (user 2026-07-18: "if it's solid, shouldn't we use
-            // porcelain spatula or scoopula?"): a solid-state product drawn from
-            // the CHILL (crystallising) flask is a scoop dip — heat vessels hold
-            // liquid filtrates/distillates and stay pours.
+            // EXCEPT dry crystals (user 2026-07-18: "if it's solid, shouldn't we
+            // use porcelain spatula or scoopula?"): a solid product drawn from
+            // the PURE-PRODUCT vessel (crystallised flask / dried-crystal
+            // beaker) is a scoop dip — a crude chill flask still holding mother
+            // liquor is decanted (the filter pour), and heat vessels hold
+            // liquid filtrates/distillates.
             bool pv = psrc.GetComponent<LiquidTaskBinding>() != null;
-            bool scoopDraw = pv && IsSolid(s) && psrc.GetComponent<VesselChillTask>() != null;
+            bool scoopDraw = pv && IsSolid(s) && IsPureProductVessel(psrc);
             float pinc = pv && !scoopDraw ? 0.5f : IncrementFor(s);
             int pmin = s.requiredMl <= 0f ? 1 : Mathf.CeilToInt(s.requiredMl / pinc - 0.0001f);
             int pn = pmin;
@@ -361,6 +368,33 @@ public static class SimulatedRun
         foreach (var (b, s, src, vesselSource, scoopDraw, inc, n) in plan)
         {
             var lp = b.GetComponent<LiquidPhysics>();
+
+            // FUME HOOD (Exp 5): a toxic/volatile reagent is only sanctioned
+            // while the DESTINATION vessel sits inside the hood — so the sim
+            // does what the player does: carries the vessel to the hood, pours
+            // there, brings it back. A missing/collider-less hood is a hard bug
+            // (the pour would grade a violation with no way to avoid it).
+            Vector3 homePos = b.transform.position;
+            bool carried = false;
+            if (s.reagent.requiresFumeHood)
+            {
+                var hood = Object.FindAnyObjectByType<FumeHoodZone>(FindObjectsInactive.Include);
+                var hoodCol = hood != null ? hood.GetComponent<Collider>() : null;
+                if (hood == null || hoodCol == null)
+                {
+                    res.bugs.Add(id + ": " + s.reagent.chemicalName + " requires the fume hood but the scene has "
+                                 + (hood == null ? "no FumeHoodZone" : "a FumeHoodZone with NO collider")
+                                 + " — the pour cannot be sanctioned anywhere");
+                }
+                else
+                {
+                    b.transform.position = hoodCol.bounds.center;
+                    carried = true;
+                    log.AppendLine("  (carried " + b.name + " into the fume hood)");
+                    if (!b.InFumeHood())
+                        res.bugs.Add(id + ": vessel placed at the hood's centre still doesn't count as inside — the hood volume is broken");
+                }
+            }
 
             float before = b.AccumulatedFor(id, s.reagent);
             int poured = 0;
@@ -407,7 +441,13 @@ public static class SimulatedRun
                         : vesselSource ? "tilt-pour (vessel to vessel)" : VerbFor(s);
             log.AppendLine("  " + poured + "× " + verb
                            + " " + s.reagent.chemicalName + " (from " + src.name + ") → " + b.name
-                           + " (" + (inc * poured).ToString("0.#") + (vesselSource && !scoopDraw ? " ml" : UnitFor(s)) + ")");
+                           + " (" + (inc * poured).ToString("0.#") + (vesselSource && !scoopDraw ? " ml" : UnitFor(s))
+                           + (carried ? ", in the fume hood" : "") + ")");
+            if (carried)
+            {
+                b.transform.position = homePos;   // back to its hand-placed home
+                log.AppendLine("  (returned " + b.name + " to the bench)");
+            }
         }
         return true;
     }
@@ -686,6 +726,15 @@ public static class SimulatedRun
 
     /// The module's own hidden end product (null when it has none) — set per run.
     static string s_hiddenProduct;
+    /// The module's product NAME (DemoMode.ProductFor) — identifies the player's
+    /// own purified-product vessel even when no shelf bottle of it exists.
+    static string s_moduleProduct;
+
+    /// A bound vessel holding ONLY the module's product = the purified product
+    /// (Exp 4's crystallised flask, Exp 5's filtered-and-dried beaker).
+    static bool IsPureProductVessel(LiquidPhysics lp)
+        => lp != null && lp.Ledger.Count == 1 && lp.currentChemical != null
+           && lp.currentChemical.chemicalName == s_moduleProduct;
 
     /// The source a player would pour from. A TASK VESSEL that already holds the
     /// chemical wins over the shelf — that IS the filtrate pour (tube 17's
@@ -693,31 +742,31 @@ public static class SimulatedRun
     /// shelf bottle is the fallback for fresh reagents.
     static LiquidPhysics FindSource(ChemicalData chem, LiquidPhysics destination)
     {
-        LiquidPhysics product = null, vessel = null, wash = null, shelf = null;
+        LiquidPhysics product = null, chillV = null, vessel = null, wash = null, shelf = null;
         foreach (var lp in Object.FindObjectsByType<LiquidPhysics>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             if (lp == null || lp == destination || lp.currentChemical != chem
                 || lp.currentLiquidVolume <= 0.01f || lp.name.StartsWith("Vessel_")) continue;
             if (lp.GetComponent<LiquidTaskBinding>() != null)
             {
-                // A bound vessel is a source ONLY when it is a SYNTHESIS vessel
-                // (heat / chill / fermentation task) — the hydrolysate pour, the
-                // decant. Round one drew "ethanol" out of the finished enol
-                // tube; round two tipped the beaker's violet TEST RESIDUE into
-                // the control tube — hence heat/chill also require the ledger
-                // collapsed to ONE product entry.
-                // The CHILL (crystallising) vessel is the FINISHED product and
-                // beats any upstream heat vessel: Exp 4's tests must draw from
-                // the purified flask, not the crude reaction beaker still full
-                // of MnO2 sludge (round one did exactly that).
-                if (lp.GetComponent<VesselChillTask>() != null && lp.Ledger.Count == 1)
+                // Bound-vessel source classes, best first:
+                //  1. PURE PRODUCT (ledger collapsed to the module's own product
+                //     — Exp 4's crystallised flask, Exp 5's dried-crystal
+                //     beaker): every test draw comes from here.
+                //  2. CHILL (crystallising) vessel — may still hold mother
+                //     liquor (Exp 5's flask after the ice water), which is
+                //     exactly what the filter pour decants.
+                //  3. HEAT synthesis vessel, single-entry only (the hydrolysate
+                //     pour; round one drew "ethanol" out of a finished enol
+                //     tube, round two tipped violet TEST RESIDUE — hence the
+                //     ledger==1 guard).
+                //  4. FERMENTATION wash — a true mixture, no entry guard.
+                if (IsPureProductVessel(lp))
                 { if (product == null || lp.currentLiquidVolume > product.currentLiquidVolume) product = lp; }
+                else if (lp.GetComponent<VesselChillTask>() != null)
+                { if (chillV == null || lp.currentLiquidVolume > chillV.currentLiquidVolume) chillV = lp; }
                 else if (lp.GetComponent<VesselHeatTask>() != null && lp.Ledger.Count == 1)
                 { if (vessel == null || lp.currentLiquidVolume > vessel.currentLiquidVolume) vessel = lp; }
-                // The FERMENTATION flask is the manuscript's WASH — decanted
-                // into the distilling flask as a real mixture (its ledger still
-                // lists yeast/nutrient/NaOH), so no single-entry requirement.
-                // Lowest vessel priority: the distillate beats the crude wash.
                 else if (lp.GetComponent<FermentationController>() != null)
                 { if (wash == null || lp.currentLiquidVolume > wash.currentLiquidVolume) wash = lp; }
             }
@@ -731,7 +780,10 @@ public static class SimulatedRun
                 if (shelf == null || lp.currentLiquidVolume > shelf.currentLiquidVolume) shelf = lp;
             }
         }
-        return product != null ? product : vessel != null ? vessel : wash != null ? wash : shelf;
+        return product != null ? product
+             : chillV != null ? chillV
+             : vessel != null ? vessel
+             : wash != null ? wash : shelf;
     }
 
     /// Sustained-verb (sim) and drop-zone stations. Returns false when no station

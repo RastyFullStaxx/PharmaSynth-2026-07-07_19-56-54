@@ -68,6 +68,14 @@ public class LiquidTaskBinding : MonoBehaviour
     /// silent-unsubscribed state is exactly the bug that shipped).
     public bool IsListening => _subscribed;
 
+    /// Builder seam: the lab's fume hood (assigned per build — Exp 5's aniline
+    /// and acetyl chloride pours are only sanctioned inside it).
+    public void SetFumeHood(FumeHoodZone hood) => fumeHood = hood;
+
+    /// Whether this vessel currently counts as "in the fume hood".
+    public bool InFumeHood()
+        => fumeHood != null && (fumeHood.IsOccupied || fumeHood.Contains(transform.position));
+
     /// Explicit unhook for teardown (ClearBenchBindings): DestroyImmediate skips
     /// OnDisable for edit-mode components whose OnEnable never ran, so relying on
     /// lifecycle left ghost subscriptions on the permanent bench vessels.
@@ -101,8 +109,12 @@ public class LiquidTaskBinding : MonoBehaviour
         if (this == null) return;
         if (runner == null || chem == null) return;
 
-        // Fume-hood safety: a toxic/volatile reagent handled outside the hood is a violation.
-        if (chem.requiresFumeHood && (fumeHood == null || !fumeHood.IsOccupied))
+        // Fume-hood safety: a toxic/volatile reagent handled outside the hood is
+        // a violation. "In the hood" = THIS VESSEL sits inside the hood volume
+        // (position test — the work happens where the vessel is; 2026-07-18, the
+        // old hand-occupancy trigger was never wired and always violated) — or
+        // the physics occupancy when the trigger setup exists.
+        if (chem.requiresFumeHood && !InFumeHood())
             runner.RecordMistake(LabErrorType.FumeHoodViolation, chem.chemicalName + " must be handled in the fume hood");
 
         var step = StepForReagent(chem);

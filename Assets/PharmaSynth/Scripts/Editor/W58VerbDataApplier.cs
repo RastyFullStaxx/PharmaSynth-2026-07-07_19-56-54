@@ -169,6 +169,20 @@ public static class W58VerbDataApplier
             sceneChanges += EnsureZoneAnchor(t, "ChillZone", IceBathMath.VesselRadius, new Color(0.45f, 0.75f, 1f, 0.9f));
         }
 
+        // The FUME HOOD narrates itself (2026-07-18, user: "how do we use the
+        // fumehood?"): a label on the WorkVolume says what belongs inside and
+        // flips to "<vessel> protected ✓" while one actually is.
+        {
+            var hood = Object.FindAnyObjectByType<FumeHoodZone>(FindObjectsInactive.Include);
+            if (hood != null)
+            {
+                var hlabel = hood.GetComponent<ProximityLabel>() ?? hood.gameObject.AddComponent<ProximityLabel>();
+                if (hood.GetComponent<FumeHoodStatusLabel>() == null)
+                { hood.gameObject.AddComponent<FumeHoodStatusLabel>().Bind(hood, hlabel); sceneChanges++; }
+                hlabel.SetLabel(FumeHoodStatusLabel.StatusLine(null), 2.2f);
+            }
+        }
+
         // Exp 3's CO₂ delivery reach gets the same user-scalable zone anchor
         // (flask → limewater tube; FermentationController reads it).
         foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))

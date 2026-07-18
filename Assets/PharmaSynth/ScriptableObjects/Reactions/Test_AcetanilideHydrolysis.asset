@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4d4ee08956b0bd944979aca8e60416a0, type: 3}
-  m_Name: Acetanilide
+  m_Name: Test_AcetanilideHydrolysis
   m_EditorClassIdentifier: Assembly-CSharp::ReactionRule
-  inputChemicalA: {fileID: 11400000, guid: 8f9d5fc23ff8c1f4d92f103bb2378c1e, type: 2}
-  inputChemicalB: {fileID: 11400000, guid: 3b239248d99c16b4e9618a1c2ff0bdd3, type: 2}
+  inputChemicalA: {fileID: 11400000, guid: 681a555f71cface45bc96fcbcd4b3d7f, type: 2}
+  inputChemicalB: {fileID: 11400000, guid: 2b00e6a8cefa2bd4fbaecfaa0864324f, type: 2}
   resultLiquid: {fileID: 11400000, guid: 681a555f71cface45bc96fcbcd4b3d7f, type: 2}
   resultPrecipitate: {fileID: 11400000, guid: 681a555f71cface45bc96fcbcd4b3d7f, type: 2}
   hasPrecipitate: 1
-  minTemperatureC: 40
+  minTemperatureC: 90
   outcome: 3
   evolvesGas: 0
-  expectedObservation: White acetanilide plates
+  expectedObservation: 'Boiled in concentrated acid the amide hydrolyses; on cooling and diluting, crystals reappear - confirming acetanilide.'

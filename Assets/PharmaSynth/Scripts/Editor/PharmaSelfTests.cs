@@ -974,7 +974,9 @@ public static class PharmaSelfTests
             // Benzoic (Exp 4) rebuilt zone-free 2026-07-18: no seeded vessel now
             // (the player synthesises the acid and draws from the flask) — its
             // FeCl3/ester rules are validated by the Exp 4 simrun firing them.
-            ("Layout_Acetanilide",  "Acetanilide",    new[] { "Bromine Water" }),
+            // Acetanilide (Exp 5) rebuilt zone-free 2026-07-18: no seeded vessel
+            // (the player synthesises + scoops the crystals) — its bromination/
+            // hydrolysis rules are validated by the Exp 5 simrun firing them.
             ("Layout_Benzamide",    "Benzamide",      new[] { "Sodium Hydroxide", "Sodium Nitrite", "Diluted Hydrochloric Acid" }),
             ("Layout_Chloroform",   "Chloroform",     new[] { "Silver Nitrate", "Potassium Dichromate" }),
             ("Layout_Acetone",      "Acetone",        new[] { "Silver Nitrate", "Sodium Hypochlorite", "Schiff's Reagent" }),
@@ -2206,6 +2208,17 @@ public static class PharmaSelfTests
                 : sim4.Clean ? "" : "  [" + sim4.completedTasks + "/" + sim4.totalTasks + " tasks, "
                   + sim4.mistakes + " mistakes; " + string.Join(" | ", sim4.bugs) + "]";
             A("simrun: Exp 4 plays END-TO-END clean" + sim4Note, sim4 != null && sim4.Clean);
+
+            // Exp 5 (acetanilide): the FUME-HOOD carry (aniline + acetyl
+            // chloride sanctioned only inside the hood), the ice-water-then-
+            // chill crystallisation, and the two-tube bromination comparison
+            // all played through the real wiring (2026-07-18).
+            var sim5Log = new System.Text.StringBuilder();
+            var sim5 = SimulatedRun.Run("midterm-acetanilide", sim5Log);
+            string sim5Note = sim5 == null ? "did not run"
+                : sim5.Clean ? "" : "  [" + sim5.completedTasks + "/" + sim5.totalTasks + " tasks, "
+                  + sim5.mistakes + " mistakes; " + string.Join(" | ", sim5.bugs) + "]";
+            A("simrun: Exp 5 plays END-TO-END clean" + sim5Note, sim5 != null && sim5.Clean);
         }
 
         // FERMENTATION (Exp 3): pure gates for the CO₂→limewater mechanic.
@@ -2237,6 +2250,12 @@ public static class PharmaSelfTests
                 && bathT.transform.Find("BurnerZone") != null
                 && iceT != null && iceT.transform.Find("ChillZone") != null);
         }
+        // FUME HOOD guidance (2026-07-18): the hood is an OPEN alcove — its
+        // label guides idle and flips to a ✓ while a vessel is protected.
+        A("fumehood: label guides idle and confirms protection",
+            FumeHoodStatusLabel.StatusLine(null).Contains("IN here")
+            && FumeHoodStatusLabel.StatusLine("Florence Flask") == "Fume Hood — Florence Flask protected ✓");
+
         // Observation dedupe (2026-07-18): a burst of identical squeezes fires
         // ONE popup/sting; a different rule always announces.
         A("mixfx: repeated identical observation stays quiet",
@@ -2250,10 +2269,11 @@ public static class PharmaSelfTests
             && VesselStatusMath.TempGoalLine(55f, 50f, false) == ""
             && VesselStatusMath.TempGoalLine(25f, 8f, true) == "25 C — chill to 8 C (ice bath)"
             && VesselStatusMath.TempGoalLine(5f, 8f, true) == "");
-        A("chill: completes only holding AND cold",
-            VesselChillTask.ShouldComplete(true, IceBathMath.IceWaterC, 8f)
-            && !VesselChillTask.ShouldComplete(false, IceBathMath.IceWaterC, 8f)
-            && !VesselChillTask.ShouldComplete(true, 25f, 8f));
+        A("chill: completes only served AND holding AND cold",
+            VesselChillTask.ShouldComplete(true, true, IceBathMath.IceWaterC, 8f)
+            && !VesselChillTask.ShouldComplete(false, true, IceBathMath.IceWaterC, 8f)   // ice water not in yet (Exp 5)
+            && !VesselChillTask.ShouldComplete(true, false, IceBathMath.IceWaterC, 8f)
+            && !VesselChillTask.ShouldComplete(true, true, 25f, 8f));
 
         // LITMUS (Exp 4, 2026-07-18): the strip reads the MIXTURE, not whichever
         // chemical landed first — an acid dominates any amount of water, so
@@ -2935,10 +2955,13 @@ public static class PharmaSelfTests
         A("m4: benzamide acid test uses diluted HCl", acidRule != null && acidRule.inputChemicalB == Chem("Chem_DilutedHydrochloricAcid"));
         bool m4Acet = false;
         var acetanilide = Layout("Layout_Acetanilide");
+        // 2026-07-18 rebuild: the manuscript's 0.1N HCl prep-preamble bottle is
+        // USED in the bromination tubes (trace acidification) — the old staged
+        // prep-hcl prop is gone with the zone-free layout.
         if (acetanilide != null)
-            foreach (var p in acetanilide.props)
-                if (p.itemId == "prep-hcl" && p.fillChemical == "Hydrochloric Acid 0.1N") m4Acet = true;
-        A("m4: acetanilide preps 0.1N HCl", m4Acet);
+            foreach (var v in acetanilide.vessels) foreach (var b in v.bindings)
+                if (b.reagentChemical == "Hydrochloric Acid 0.1N" && b.taskId == "test-bromination") m4Acet = true;
+        A("m4: acetanilide uses the 0.1N HCl", m4Acet);
         int kiBindings = 0;
         foreach (var name in new[] { "Layout_EthylAlcohol", "Layout_Acetone" })
         {
@@ -3539,10 +3562,11 @@ public static class PharmaSelfTests
     {
         var lib = AssetDatabase.LoadAssetAtPath<SceneAssetLibrary>("Assets/PharmaSynth/ScriptableObjects/SceneAssetLibrary.asset");
         var reg = AssetDatabase.LoadAssetAtPath<ReactionRegistry>("Assets/PharmaSynth/ScriptableObjects/Reactions/MasterReactionRegistry.asset");
-        // Re-homed from Aspirin to Acetanilide 2026-07-16 when the Aspirin module was
-        // dropped: `heat-bath` is the same 85 °C water-bath rig `warm-waterbath` was.
-        var module = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>("Assets/PharmaSynth/ScriptableObjects/Experiments/Midterm_Acetanilide.asset");
-        A("simrig: library + acetanilide module load", lib != null && module != null);
+        // Re-homed 2026-07-18: Acetanilide went zone-free (its heat-bath station
+        // is GONE), so the Heat-station rig is exercised on ACETONE's dry-
+        // distillation `heat-glow` (150 °C) — the last classic Heat station.
+        var module = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>("Assets/PharmaSynth/ScriptableObjects/Experiments/Midterm_Acetone.asset");
+        A("simrig: library + acetone module load", lib != null && module != null);
         if (lib == null || module == null) return;
         var layouts = new List<ExperimentLayout>();
         foreach (var g in AssetDatabase.FindAssets("t:ExperimentLayout", new[] { "Assets/PharmaSynth/ScriptableObjects/Layouts" }))
@@ -3555,11 +3579,11 @@ public static class PharmaSelfTests
             runner.SetModule(module); runner.StartExperiment();
             var builder = bgo.AddComponent<ExperimentSceneBuilder>();
             builder.SetRefs(runner, lib, reg, layouts);
-            builder.Build("midterm-acetanilide");
+            builder.Build("midterm-acetone");
 
             ZoneSimStation heatRig = null;
             foreach (var z in bgo.GetComponentsInChildren<ZoneSimStation>(true))
-                if (z.gameObject.name == "Station_heat-bath") { heatRig = z; break; }
+                if (z.gameObject.name == "Station_heat-glow") { heatRig = z; break; }
             A("simrig: heat station built with a ZoneSimStation", heatRig != null);
             if (heatRig == null) return;
             var temp = heatRig.GetComponent<TemperatureSim>();
@@ -3567,32 +3591,41 @@ public static class PharmaSelfTests
             A("simrig: heat station carries TemperatureSim + sensor", temp != null && sensor != null);
 
             // Reach the step, then confirm it does NOT complete without the sustained heat verb.
-            runner.CompleteTask("prep-hcl");
-            runner.CompleteTask("measure-aniline");
-            runner.CompleteTask("add-acetic");
-            runner.CompleteTask("add-acylating");
+            runner.CompleteTask("prep-koh");
+            runner.CompleteTask("weigh-acetates");
+            runner.CompleteTask("setup-distill");
             runner.Graph.Tick();
-            A("simrig: heat-bath pending before heating", !runner.Graph.IsComplete("heat-bath"));
+            A("simrig: heat-glow pending before heating", !runner.Graph.IsComplete("heat-glow"));
 
             // W5.8 ignition gate: the station's prop is a BunsenBurner, so heat
             // only advances once the burner is LIT (light it with a match).
-            var burnerProp = FindChildByName(bgo.transform, "Prop_heat-bath");
+            var burnerProp = FindChildByName(bgo.transform, "Prop_heat-glow");
             var burner = burnerProp != null ? burnerProp.GetComponent<BurnerController>() : null;
-            A("simrig: waterbath burner is ignitable (W5.8)", burner != null);
+            A("simrig: heat-glow burner is ignitable (W5.8)", burner != null);
             sensor.ForceOccupied(true);
             heatRig.Drive(1f, true);           // burner present but UNLIT → no heat
-            for (int i = 0; i < 4; i++) temp.Tick(1f);
-            A("simrig: unlit burner never heats (W5.8)", !temp.AtLeast(85f));
+            for (int i = 0; i < 12; i++) temp.Tick(1f);
+            A("simrig: unlit burner never heats (W5.8)", !temp.AtLeast(150f));
 
             // Perform the verb: light the burner → heat to target → auto-completes.
             if (burner != null) burner.Ignite();
             heatRig.Drive(1f, true);           // flame on
-            for (int i = 0; i < 4; i++) temp.Tick(1f);
-            A("simrig: temperature reached target", temp.AtLeast(85f));
+            for (int i = 0; i < 12; i++) temp.Tick(1f);
+            A("simrig: temperature reached target", temp.AtLeast(150f));
             runner.Graph.Tick();
-            A("simrig: heat verb auto-completes heat-bath", runner.Graph.IsComplete("heat-bath"));
+            A("simrig: heat verb auto-completes heat-glow", runner.Graph.IsComplete("heat-glow"));
         }
-        finally { UnityEngine.Object.DestroyImmediate(rgo); UnityEngine.Object.DestroyImmediate(bgo); }
+        finally
+        {
+            // ⛔ TEAR DOWN THE BENCH before destroying the fixture: Build() on a
+            // bench-bound layout attaches bindings to REAL scene items, and
+            // destroying only the fixture LEAKS them (2026-07-18 — the leaked
+            // acetanilide bindings demanded a shelf-less "Acetanilide" and broke
+            // the deplete monitor test downstream).
+            var b2 = bgo.GetComponent<ExperimentSceneBuilder>();
+            if (b2 != null) b2.Build("tutorial-methane");
+            UnityEngine.Object.DestroyImmediate(rgo); UnityEngine.Object.DestroyImmediate(bgo);
+        }
     }
 
     static void CutsceneLibrarySuite()
@@ -3962,7 +3995,7 @@ public static class PharmaSelfTests
             // Compounding: 6 → 13 when it was rebuilt to manuscript Exp 2 (2026-07-15).
             ("Tutorial_Methane", 5), ("Prelim_ChemicalCompounding", 13), ("Prelim_EthylAlcohol", 8),
             ("Midterm_BenzoicAcid", 9),
-            ("Midterm_Acetanilide", 10), ("Midterm_Acetone", 10), ("Midterm_Chloroform", 11),   // W5.9: +test-oxidation
+            ("Midterm_Acetanilide", 8), ("Midterm_Acetone", 10), ("Midterm_Chloroform", 11),   // W5.9: +test-oxidation; Exp 5 rebuilt to 8 (2026-07-18)
             ("Final_Benzamide", 9), ("Final_WineMaking", 8) })
         {
             var m = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>(dir + file + ".asset");

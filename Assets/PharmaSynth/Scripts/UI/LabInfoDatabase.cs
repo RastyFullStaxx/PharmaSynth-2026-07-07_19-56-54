@@ -157,7 +157,7 @@ public static class LabInfoDatabase
         AddEquip("rubberstopper", "Rubber Stopper", "Bored rubber bung that seals a flask while letting a delivery tube or thermometer through the hole — keeps the evolved gas heading where you want it.");
         AddEquip("stopper", "Rubber Stopper", "Bored rubber bung that seals a flask while letting a delivery tube or thermometer through the hole.");
         AddEquip("splint", "Wooden Splint", "A thin wooden stick you light to test a collected gas: held to the mouth of the tube, methane ignites with a small pop and a clean blue flame — that confirms the gas.");
-        AddEquip("fumehood", "Fume Hood", "Ventilated enclosure that draws toxic fumes away from you. Do every step with aniline, chloroform, ammonia or acid chlorides inside it, with the sash low.");
+        AddEquip("fumehood", "Fume Hood", "Ventilated open alcove that draws toxic fumes away from you — nothing to open or switch on. Do every step with aniline, chloroform, ammonia or acid chlorides with the VESSEL inside it; its label shows a check mark while you're protected.");
         // PPE wearables (locker displays).
         AddEquip("labcoat", "Lab Coat", "Protects your clothes and skin from splashes and stray reagent. One of the three required PPE pieces — put it on at the locker; the door stays locked until all three are worn.");
         AddEquip("coat", "Lab Coat", "Protects your clothes and skin from splashes and stray reagent. One of the three required PPE pieces — put it on at the locker; the door stays locked until all three are worn.");

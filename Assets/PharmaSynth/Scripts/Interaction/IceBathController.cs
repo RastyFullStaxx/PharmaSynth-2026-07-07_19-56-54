@@ -70,19 +70,24 @@ public class VesselChillTask : MonoBehaviour
     private string _taskId;
     private float _requiredC;
     private LiquidPhysics _lp;
+    private LiquidTaskBinding _binding;   // optional: the chill step's own reagents (Exp 5's ice-cold water)
     private bool _subscribed;
 
     public string TaskId => _taskId;
     public float RequiredC => _requiredC;
 
-    /// Pure (suite-pinned): holding something AND cold — never one without the other.
-    public static bool ShouldComplete(bool hasContents, float tempC, float requiredC)
-        => hasContents && tempC <= requiredC;
+    /// Pure (suite-pinned): reagents served AND holding something AND cold —
+    /// never one without the others. (Exp 5's ice-crystallise pours 20 ml of
+    /// ice-cold water FIRST, then chills; Exp 4's crystallise has no reagent of
+    /// its own, so served=true when no binding step exists.)
+    public static bool ShouldComplete(bool allReagentsIn, bool hasContents, float tempC, float requiredC)
+        => allReagentsIn && hasContents && tempC <= requiredC;
 
-    public void Bind(ExperimentRunner runner, string taskId, float requiredC, LiquidPhysics lp)
+    public void Bind(ExperimentRunner runner, string taskId, float requiredC, LiquidPhysics lp,
+                     LiquidTaskBinding binding = null)
     {
         if (_runner != null && _subscribed) { _runner.ExperimentStarted -= OnStarted; _subscribed = false; }
-        _runner = runner; _taskId = taskId; _requiredC = requiredC; _lp = lp;
+        _runner = runner; _taskId = taskId; _requiredC = requiredC; _lp = lp; _binding = binding;
         if (_runner != null) { _runner.ExperimentStarted += OnStarted; _subscribed = true; }
         Register();
     }
@@ -99,7 +104,8 @@ public class VesselChillTask : MonoBehaviour
         if (_runner == null || _runner.Graph == null || string.IsNullOrEmpty(_taskId)) return;
         _runner.Graph.RegisterCondition(_taskId, () =>
             _lp != null
-            && ShouldComplete(_lp.currentLiquidVolume + _lp.currentPptVolume > 0.5f,
+            && ShouldComplete(_binding == null || _binding.ReadyFor(_taskId),
+                              _lp.currentLiquidVolume + _lp.currentPptVolume > 0.5f,
                               _lp.currentTempC, _requiredC));
     }
 }

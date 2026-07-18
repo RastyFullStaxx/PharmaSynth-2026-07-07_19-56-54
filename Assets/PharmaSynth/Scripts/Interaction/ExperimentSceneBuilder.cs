@@ -694,6 +694,10 @@ public class ExperimentSceneBuilder : MonoBehaviour
         EnsureLiquidVisual(inst, lp);
         var bind = inst.AddComponent<LiquidTaskBinding>();
         bind.SetVesselAndRunner(lp, runner);
+        // The hood ref was NEVER wired (2026-07-18) — every requiresFumeHood
+        // pour graded a violation no matter where the player stood. The check
+        // is now position-based: sanctioned when THIS vessel is inside the hood.
+        bind.SetFumeHood(FindAnyObjectByType<FumeHoodZone>(FindObjectsInactive.Include));
         foreach (var b in v.bindings)
         {
             var reagent = assets.GetChemical(b.reagentChemical);
@@ -721,9 +725,15 @@ public class ExperimentSceneBuilder : MonoBehaviour
         }
         // ZONE-FREE chill step (Exp 4): completes when the vessel holds product
         // AND has been cooled to chillToC — the ice bucket, anywhere in the lab.
+        // If the chill task has its own reagent steps (Exp 5's 20 ml ice-cold
+        // water), the binding gates completion too: served AND cold.
         if (v.chillToC > 0f && !string.IsNullOrEmpty(v.chillTaskId))
+        {
+            bool chillHasSteps = false;
+            foreach (var b in v.bindings) if (b.taskId == v.chillTaskId) chillHasSteps = true;
             (inst.GetComponent<VesselChillTask>() ?? inst.AddComponent<VesselChillTask>())
-                .Bind(runner, v.chillTaskId, v.chillToC, lp);
+                .Bind(runner, v.chillTaskId, v.chillToC, lp, chillHasSteps ? bind : null);
+        }
         // LITMUS confirmation (Exp 4): a strip touching this vessel while the
         // mixture reads acid completes the task — zone-free, no station.
         if (!string.IsNullOrEmpty(v.litmusTaskId))

@@ -13,134 +13,131 @@ MonoBehaviour:
   m_Name: Layout_Acetanilide
   m_EditorClassIdentifier: Assembly-CSharp::ExperimentLayout
   moduleId: midterm-acetanilide
-  stations:
-  - taskId: heat-bath
-    label: 5. Heat water bath
-    requiredItemId: heat-bath
-    pos: {x: -1.8, y: 0.91, z: -3.78}
-    sim: 1
-    simTargetC: 85
-  - taskId: ice-crystallise
-    label: 6. Ice crystallise
-    requiredItemId: ice-crystallise
-    pos: {x: -1.3, y: 0.91, z: -3.78}
-    sim: 2
-    simTargetC: 85
-  - taskId: filter-wash
-    label: 7. Filter & wash
-    requiredItemId: filter-wash
-    pos: {x: -0.79999995, y: 0.91, z: -3.78}
-    sim: 3
-    simTargetC: 85
-  - taskId: test-hydrolysis
-    label: 8. Hydrolysis test
-    requiredItemId: test-hydrolysis
-    pos: {x: -0.29999995, y: 0.91, z: -3.78}
-    sim: 0
-    simTargetC: 85
+  stations: []
   props:
-  - prefabName: Vial_Brown
-    itemId: prep-hcl
-    displayName: HCl 6N
-    pos: {x: 1.33, y: 0.91, z: -3.52}
-    targetHeight: 0.16
-    pourable: 1
-    fillChemical: Hydrochloric Acid 0.1N
-    supplyMl: 0
-  - prefabName: Vial_Brown
-    itemId: measure-aniline
-    displayName: Aniline
-    pos: {x: 1.33, y: 0.91, z: -3.33}
-    targetHeight: 0.16
-    pourable: 1
-    fillChemical: Aniline
-    supplyMl: 0
-  - prefabName: Vial_Brown
-    itemId: add-acetic
-    displayName: Glacial Acetic Acid
-    pos: {x: 1.33, y: 0.91, z: -3.1399999}
-    targetHeight: 0.16
-    pourable: 1
-    fillChemical: Glacial Acetic Acid
-    supplyMl: 0
-  - prefabName: Vial_Brown
-    itemId: add-acylating
-    displayName: Acetyl Chloride
-    pos: {x: 1.33, y: 0.91, z: -2.95}
-    targetHeight: 0.16
-    pourable: 1
-    fillChemical: Acetyl Chloride
-    supplyMl: 0
-  - prefabName: Vial_Brown
-    itemId: test-bromination
-    displayName: Bromine Water
-    pos: {x: 1.11, y: 0.91, z: -3.52}
-    targetHeight: 0.16
-    pourable: 1
-    fillChemical: Bromine Water
-    supplyMl: 0
-  - prefabName: BunsenBurner
-    itemId: heat-bath
-    displayName: Bunsen Burner
-    pos: {x: -1.7, y: 0.91, z: -3.44}
-    targetHeight: 0.22
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
-  - prefabName: WatchGlass
-    itemId: ice-crystallise
-    displayName: Watch Glass
-    pos: {x: -1.7, y: 0.91, z: -3.25}
-    targetHeight: 0.12
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
-  - prefabName: Funnel
-    itemId: filter-wash
-    displayName: Funnel
-    pos: {x: -1.7, y: 0.91, z: -3.06}
-    targetHeight: 0.2
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
-  - prefabName: TestTube
-    itemId: test-hydrolysis
-    displayName: Test Tube
-    pos: {x: -1.46, y: 0.91, z: -3.44}
-    targetHeight: 0.14
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
   vessels:
-  - prefabName: ErlenmeyerFlask_400mL
-    displayName: Reaction Flask
-    pos: {x: -0.25, y: 0.91, z: -3.18}
-    targetHeight: 0.22
-    startChemical: 
+  - benchItem: FlorenceFlask
+    prefabName: FlorenceFlask
+    displayName: ReactionFlask
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.15
+    startChemical:
     bindings:
-    - reagentChemical: Hydrochloric Acid 0.1N
-      taskId: prep-hcl
-      requiredMl: 50
-      completesTask: 1
     - reagentChemical: Aniline
-      taskId: measure-aniline
-      requiredMl: 50
+      taskId: prep-aniline
+      requiredMl: 2
       completesTask: 1
     - reagentChemical: Glacial Acetic Acid
       taskId: add-acetic
-      requiredMl: 50
+      requiredMl: 2
       completesTask: 1
     - reagentChemical: Acetyl Chloride
-      taskId: add-acylating
-      requiredMl: 50
-      completesTask: 1
-  - prefabName: TestTube_WithLiquid
-    displayName: Bromination Test Tube
-    pos: {x: 0.19999999, y: 0.91, z: -3.18}
-    targetHeight: 0.13
-    startChemical: Acetanilide
+      taskId: acylate
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: Distilled Water
+      taskId: ice-crystallise
+      requiredMl: 20
+      completesTask: 0
+    rackGroup: 
+    heatToC: 60
+    fermentTaskId:
+    chillToC: 8
+    chillTaskId: ice-crystallise
+    litmusTaskId: 
+  - benchItem: Eq_Beaker_100mL
+    prefabName: Beaker_100mL
+    displayName: CollectionBeaker
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.15
+    startChemical:
     bindings:
+    - reagentChemical: Acetanilide
+      taskId: filter-wash
+      requiredMl: 10
+      completesTask: 1
+    rackGroup: 
+    heatToC: 0
+    fermentTaskId:
+    chillToC: 0
+    chillTaskId: 
+    litmusTaskId: 
+  - benchItem: Kit_TestTube_11
+    prefabName: TestTube
+    displayName: HydrolysisTube
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.15
+    startChemical:
+    bindings:
+    - reagentChemical: Acetanilide
+      taskId: test-hydrolysis
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: Concentrated Hydrochloric Acid
+      taskId: test-hydrolysis
+      requiredMl: 3
+      completesTask: 0
+    rackGroup: 
+    heatToC: 90
+    fermentTaskId:
+    chillToC: 0
+    chillTaskId: 
+    litmusTaskId: 
+  - benchItem: Kit_TestTube_12
+    prefabName: TestTube
+    displayName: BromAcetanilideTube
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.15
+    startChemical:
+    bindings:
+    - reagentChemical: Acetanilide
+      taskId: test-bromination
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: Distilled Water
+      taskId: test-bromination
+      requiredMl: 5
+      completesTask: 0
+    - reagentChemical: Hydrochloric Acid 0.1N
+      taskId: test-bromination
+      requiredMl: 1
+      completesTask: 0
     - reagentChemical: Bromine Water
       taskId: test-bromination
-      requiredMl: 50
-      completesTask: 1
+      requiredMl: 5
+      completesTask: 0
+    rackGroup: bromination
+    heatToC: 0
+    fermentTaskId:
+    chillToC: 0
+    chillTaskId: 
+    litmusTaskId: 
+  - benchItem: Kit_TestTube_13
+    prefabName: TestTube
+    displayName: BromAnilineTube
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.15
+    startChemical:
+    bindings:
+    - reagentChemical: Aniline
+      taskId: test-bromination
+      requiredMl: 2
+      completesTask: 0
+    - reagentChemical: Distilled Water
+      taskId: test-bromination
+      requiredMl: 5
+      completesTask: 0
+    - reagentChemical: Hydrochloric Acid 0.1N
+      taskId: test-bromination
+      requiredMl: 1
+      completesTask: 0
+    - reagentChemical: Bromine Water
+      taskId: test-bromination
+      requiredMl: 2
+      completesTask: 0
+    rackGroup: bromination
+    heatToC: 0
+    fermentTaskId:
+    chillToC: 0
+    chillTaskId: 
+    litmusTaskId: 
