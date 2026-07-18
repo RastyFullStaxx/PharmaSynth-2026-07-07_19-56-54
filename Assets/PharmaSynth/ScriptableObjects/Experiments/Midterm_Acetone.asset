@@ -19,84 +19,56 @@ MonoBehaviour:
   - "Collect the 56 \xB0C fraction"
   - Confirm the ketone by Tollen's, Schiff's, iodoform and bisulfite tests
   materialReagents:
-  - "Silver Nitrate \u2014 50 ml"
-  - "Sodium Hypochlorite \u2014 50 ml"
-  - "Schiff's Reagent \u2014 50 ml"
-  - "Potassium Iodide 10% \u2014 50 ml"
+  - "Calcium Acetate \u2014 7 g (4 scoopula dips)"
+  - "Sodium Acetate \u2014 7 g (4 scoopula dips)"
+  - "Silver Nitrate \u2014 2 squeezes (Tollen's stand-in)"
+  - "Schiff's Reagent \u2014 5 squeezes"
+  - "Potassium Iodide 10% \u2014 10 squeezes"
+  - "Sodium Hypochlorite \u2014 10 squeezes"
+  - "Sodium Bisulfite \u2014 2 squeezes"
+  - "Ethanol \u2014 1 squeeze"
+  - "Distilled Water \u2014 5 squeezes (Tollen's tube)"
   materialApparatus:
-  - Weighing balance
-  - Hard-glass tube (dry distillation)
-  - Delivery tube
-  - "Test tubes \xD7 4"
-  - Burner
+  - "HARD-GLASS tube (the only open-flame glass)"
+  - "Balance (weigh the acetates live)"
+  - "Bunsen burner (open flame, 150 \u00B0C glow)"
+  - "Test tubes 14\u201318 (receiver + 4 tests)"
+  - "Water bath + burner (iodoform warm)"
+  - "Ice bucket (bisulfite freezing mixture)"
+  - "Scoopula + Dropper"
   tasks: []
   graphTasks:
-  - taskId: prep-koh
-    label: Prepare 10% KOH (10 g / 100 mL)
+  - taskId: weigh-acetates
+    label: "Weigh 7 g of each acetate into the hard-glass tube"
     phase: 0
     prerequisites: []
     progressWeight: 1
     skill: 0
     rubricCategory: 0
     required: 1
-    hint: Dissolve 10 g KOH in 100 mL purified water.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
-  - taskId: weigh-acetates
-    label: Weigh & mix 7 g calcium acetate + 7 g sodium acetate
-    phase: 0
-    prerequisites:
-    - prep-koh
-    progressWeight: 1
-    skill: 0
-    rubricCategory: 0
-    required: 1
-    hint: Mix the two dry acetate powders in a test tube.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
-  - taskId: setup-distill
-    label: Set the tube horizontal, connect the condenser
+    hint: "7 g calcium acetate + 7 g sodium acetate decompose on strong heat into acetone.\n\u2192 Set the HARD-GLASS tube on the balance, then scoop 4 scoopula dips of EACH acetate into it (watch the grams)."
+  - taskId: heat-glow
+    label: "Heat the tube over the open flame until the acetates glow"
     phase: 1
     prerequisites:
     - weigh-acetates
     progressWeight: 1
-    skill: 3
-    rubricCategory: 0
-    required: 1
-    hint: Tap a channel along the tube and connect it to a condenser.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
-  - taskId: heat-glow
-    label: Heat until the acetates glow, turning the tube
-    phase: 1
-    prerequisites:
-    - setup-distill
-    progressWeight: 1
     skill: 1
     rubricCategory: 0
     required: 1
-    hint: Heat strongly, rotating the tube for even decomposition.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Dry distillation needs REAL heat \u2014 far beyond the water bath. Only the hard-glass tube survives an open flame.\n\u2192 Light a burner and hold the tube over its flame until it reaches a red-glow 150 \u00B0C."
   - taskId: collect-56
-    label: "Distil and collect the fraction at 56 \xB0C"
+    label: "Collect the acetone distillate at 56 \u00B0C"
     phase: 1
     prerequisites:
     - heat-glow
     progressWeight: 1
-    skill: 1
+    skill: 4
     rubricCategory: 0
     required: 1
-    hint: "Acetone boils at 56 \xB0C \u2014 collect only that cut."
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Acetone boils at 56 \u00B0C \u2014 the vapour condenses in a cool receiver.\n\u2192 Keep Test Tube 14 close to the hot tube's mouth; the distillate collects there while the tube stays hot."
   - taskId: test-tollens
-    label: "Tollen's test (no silver mirror \u2014 ketone)"
+    label: "Tollen's test \u2014 NO silver mirror (ketone)"
     phase: 2
     prerequisites:
     - collect-56
@@ -104,12 +76,9 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: Ketones do not reduce Tollen's reagent, unlike aldehydes.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Ketones resist mild oxidation: Tollen's (ammoniacal silver nitrate) gives NO mirror \u2014 the negative IS the result.\n\u2192 Test Tube 15: 2 of your acetone + 5 water + 2 squeezes of silver nitrate."
   - taskId: test-schiff
-    label: Schiff's reagent
+    label: "Schiff's reagent \u2014 no magenta (ketone)"
     phase: 2
     prerequisites:
     - collect-56
@@ -117,12 +86,9 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: Note the colour after standing.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Schiff's reagent stays colourless with ketones \u2014 another deliberate negative.\n\u2192 Test Tube 16: 5 squeezes of Schiff's reagent + 2 of your acetone; let it stand."
   - taskId: test-iodoform
-    label: "Iodoform-type test (KI + NaOCl \u2192 yellow)"
+    label: "Iodoform test \u2014 yellow precipitate"
     phase: 2
     prerequisites:
     - collect-56
@@ -130,12 +96,9 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: Warm with KI and sodium hypochlorite; a yellow precipitate/odour is positive.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "A methyl ketone gives the yellow iodoform precipitate with KI + hypochlorite, warmed.\n\u2192 Test Tube 17: 10 of KI + 2 of your acetone + 10 of hypochlorite, then warm it at the water bath."
   - taskId: test-bisulfite
-    label: Bisulfite addition product
+    label: "Bisulfite addition product \u2014 in the freezing mixture"
     phase: 2
     prerequisites:
     - collect-56
@@ -143,12 +106,9 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: Shake acetone with saturated sodium bisulfite; a crystalline adduct forms.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Methyl ketones form a white crystalline adduct with saturated bisulfite, clearest when chilled.\n\u2192 Test Tube 18: 1 of ethanol + 2 of sodium bisulfite + 1 of your acetone, then set it in the ice bucket."
   - taskId: record-yield
-    label: Record % yield and observations
+    label: "Record % yield and observations"
     phase: 3
     prerequisites:
     - test-tollens
@@ -159,10 +119,8 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 5
     required: 1
-    hint: Enter distillate mass, % yield and test results.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Distillate mass, % yield and all four test results go on the data sheet.\n\u2192 Review the results, then answer on the tablet."
+    autoCompleteWhenOthersDone: 1
   assessmentMode: 0
   masteryThreshold: 0.9
   bkt:

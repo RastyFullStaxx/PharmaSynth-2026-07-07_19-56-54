@@ -13,150 +13,206 @@ MonoBehaviour:
   m_Name: Layout_Chloroform
   m_EditorClassIdentifier: Assembly-CSharp::ExperimentLayout
   moduleId: midterm-chloroform
-  stations:
-  - taskId: reflux-setup
-    label: 3. Set up reflux
-    requiredItemId: reflux-setup
-    pos: {x: -1.8, y: 0.91, z: -3.78}
-    sim: 0
-    simTargetC: 85
-  - taskId: add-dropwise
-    label: 4. Add acetone dropwise
-    requiredItemId: add-dropwise
-    pos: {x: -1.3, y: 0.91, z: -3.78}
-    sim: 0
-    simTargetC: 85
-  - taskId: distil
-    label: 5. Distil product
-    requiredItemId: distil
-    pos: {x: -0.79999995, y: 0.91, z: -3.78}
-    sim: 1
-    simTargetC: 78
-  - taskId: decant-wash
-    label: 6. Decant & wash
-    requiredItemId: decant-wash
-    pos: {x: -0.29999995, y: 0.91, z: -3.78}
-    sim: 3
-    simTargetC: 85
-  - taskId: dry-redistil
-    label: 7. Dry & redistil
-    requiredItemId: dry-redistil
-    pos: {x: 0.20000005, y: 0.91, z: -3.78}
-    sim: 1
-    simTargetC: 78
-  - taskId: test-flammability
-    label: 8. Flammability test
-    requiredItemId: test-flammability
-    pos: {x: 0.70000005, y: 0.91, z: -3.78}
-    sim: 0
-    simTargetC: 85
+  stations: []
   props:
-  - prefabName: Vial_Brown
-    itemId: prep-bleach
-    displayName: Bleaching Powder
-    pos: {x: 1.33, y: 0.91, z: -3.52}
-    targetHeight: 0.16
-    pourable: 1
-    fillChemical: Bleaching Powder
-    supplyMl: 0
-  - prefabName: Vial_Brown
-    itemId: prep-acetone-mix
-    displayName: Acetone
-    pos: {x: 1.33, y: 0.91, z: -3.33}
-    targetHeight: 0.16
-    pourable: 1
-    fillChemical: Acetone
-    supplyMl: 0
-  - prefabName: Vial_Brown
-    itemId: test-agno3
-    displayName: Silver Nitrate
-    pos: {x: 1.33, y: 0.91, z: -3.1399999}
-    targetHeight: 0.16
-    pourable: 1
-    fillChemical: Silver Nitrate
-    supplyMl: 0
-  - prefabName: RetortStand
-    itemId: reflux-setup
-    displayName: Retort Stand
-    pos: {x: -1.7, y: 0.91, z: -3.44}
-    targetHeight: 0.35
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
-  - prefabName: Dropper
-    itemId: add-dropwise
-    displayName: Dropper
-    pos: {x: -1.7, y: 0.91, z: -3.25}
-    targetHeight: 0.14
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
-  - prefabName: Beaker_100mL
-    itemId: distil
-    displayName: Distillate Beaker
-    pos: {x: -1.7, y: 0.91, z: -3.06}
-    targetHeight: 0.14
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
-  - prefabName: Funnel
-    itemId: decant-wash
-    displayName: Separating Funnel
-    pos: {x: -1.46, y: 0.91, z: -3.44}
-    targetHeight: 0.2
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
-  - prefabName: WatchGlass
-    itemId: dry-redistil
-    displayName: Watch Glass
-    pos: {x: -1.46, y: 0.91, z: -3.25}
-    targetHeight: 0.12
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
-  - prefabName: GlassRod
-    itemId: test-flammability
-    displayName: Lit Splint
-    pos: {x: -1.46, y: 0.91, z: -3.06}
-    targetHeight: 0.18
-    pourable: 0
-    fillChemical: 
-    supplyMl: 0
-  - prefabName: Vial_Brown
-    itemId: test-oxidation
-    displayName: Potassium Dichromate
-    pos: {x: 1.33, y: 0.91, z: -2.95}
-    targetHeight: 0.16
-    pourable: 1
-    fillChemical: Potassium Dichromate
-    supplyMl: 0
   vessels:
-  - prefabName: ErlenmeyerFlask_400mL
-    displayName: Reflux Flask
-    pos: {x: -0.25, y: 0.91, z: -3.18}
-    targetHeight: 0.22
-    startChemical: 
+  - benchItem: ErlenmeyerFlask_400mL_2
+    prefabName: ErlenmeyerFlask_400mL
+    displayName: ReactionFlask
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.15
+    startChemical:
     bindings:
     - reagentChemical: Bleaching Powder
       taskId: prep-bleach
-      requiredMl: 50
+      requiredMl: 10
+      completesTask: 1
+    - reagentChemical: Distilled Water
+      taskId: prep-bleach
+      requiredMl: 20
       completesTask: 1
     - reagentChemical: Acetone
-      taskId: prep-acetone-mix
-      requiredMl: 50
+      taskId: add-dropwise
+      requiredMl: 5
       completesTask: 1
-  - prefabName: TestTube_WithLiquid
-    displayName: AgNO3 Test Tube
-    pos: {x: 0.19999999, y: 0.91, z: -3.18}
-    targetHeight: 0.13
-    startChemical: Chloroform
+    rackGroup:
+    heatToC: 65
+    fermentTaskId:
+    chillToC: 0
+    chillTaskId: 
+    litmusTaskId: 
+    heatTaskId: distil
+    weighTaskId: 
+    vaporTaskId: collect-crude
+    flameTaskId: 
+  - benchItem: Eq_GraduatedCylinder_50mL
+    prefabName: GraduatedCylinder_50mL
+    displayName: MixCylinder
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.15
+    startChemical:
     bindings:
-    - reagentChemical: Silver Nitrate
-      taskId: test-agno3
-      requiredMl: 50
+    - reagentChemical: Acetone
+      taskId: prep-acetone-mix
+      requiredMl: 5
+      completesTask: 1
+    - reagentChemical: Distilled Water
+      taskId: prep-acetone-mix
+      requiredMl: 10
+      completesTask: 1
+    rackGroup:
+    heatToC: 0
+    fermentTaskId:
+    chillToC: 0
+    chillTaskId: 
+    litmusTaskId: 
+    heatTaskId: 
+    weighTaskId: 
+    vaporTaskId: 
+    flameTaskId: 
+  - benchItem: Eq_Beaker_100mL
+    prefabName: Beaker_100mL
+    displayName: CrudeBeaker
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.15
+    startChemical:
+    bindings:
+    - reagentChemical: Chloroform
+      taskId: collect-crude
+      requiredMl: 8
+      completesTask: 1
+    - reagentChemical: Distilled Water
+      taskId: decant-wash
+      requiredMl: 4
+      completesTask: 1
+    rackGroup:
+    heatToC: 0
+    fermentTaskId:
+    chillToC: 0
+    chillTaskId: 
+    litmusTaskId: 
+    heatTaskId: 
+    weighTaskId: 
+    vaporTaskId: 
+    flameTaskId: 
+  - benchItem: DistillingFlask
+    prefabName: DistillingFlask
+    displayName: DryFlask
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.15
+    startChemical:
+    bindings:
+    - reagentChemical: Chloroform
+      taskId: dry-cacl2
+      requiredMl: 8
+      completesTask: 0
+    - reagentChemical: Anhydrous Calcium Chloride
+      taskId: dry-cacl2
+      requiredMl: 2
+      completesTask: 0
+    rackGroup:
+    heatToC: 65
+    fermentTaskId:
+    chillToC: 0
+    chillTaskId: 
+    litmusTaskId: 
+    heatTaskId: 
+    weighTaskId: 
+    vaporTaskId: dry-redistil
+    flameTaskId: 
+  - benchItem: Kit_TestTube_14
+    prefabName: TestTube
+    displayName: FinalTube
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.15
+    startChemical:
+    bindings:
+    - reagentChemical: Chloroform
+      taskId: dry-redistil
+      requiredMl: 6
+      completesTask: 1
+    rackGroup:
+    heatToC: 0
+    fermentTaskId:
+    chillToC: 0
+    chillTaskId: 
+    litmusTaskId: 
+    heatTaskId: 
+    weighTaskId: weigh-product
+    vaporTaskId: 
+    flameTaskId: 
+  - benchItem: Eq_WatchGlass
+    prefabName: WatchGlass
+    displayName: FlameGlass
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.15
+    startChemical:
+    bindings:
+    - reagentChemical: Chloroform
+      taskId: test-flammability
+      requiredMl: 2
+      completesTask: 0
+    rackGroup:
+    heatToC: 0
+    fermentTaskId:
+    chillToC: 0
+    chillTaskId: 
+    litmusTaskId: 
+    heatTaskId: 
+    weighTaskId: 
+    vaporTaskId: 
+    flameTaskId: test-flammability
+  - benchItem: Kit_TestTube_15
+    prefabName: TestTube
+    displayName: OxTube
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.15
+    startChemical:
+    bindings:
+    - reagentChemical: Chloroform
+      taskId: test-oxidation
+      requiredMl: 1
       completesTask: 1
     - reagentChemical: Potassium Dichromate
       taskId: test-oxidation
-      requiredMl: 50
+      requiredMl: 0.4
       completesTask: 1
+    - reagentChemical: Sulfuric Acid
+      taskId: test-oxidation
+      requiredMl: 2
+      completesTask: 1
+    rackGroup:
+    heatToC: 0
+    fermentTaskId:
+    chillToC: 0
+    chillTaskId: 
+    litmusTaskId: 
+    heatTaskId: 
+    weighTaskId: 
+    vaporTaskId: 
+    flameTaskId: 
+  - benchItem: Kit_TestTube_16
+    prefabName: TestTube
+    displayName: AgTube
+    pos: {x: 0, y: 0.9, z: 0}
+    targetHeight: 0.15
+    startChemical:
+    bindings:
+    - reagentChemical: Alcoholic Silver Nitrate
+      taskId: test-agno3
+      requiredMl: 1
+      completesTask: 1
+    - reagentChemical: Chloroform
+      taskId: test-agno3
+      requiredMl: 1
+      completesTask: 1
+    rackGroup:
+    heatToC: 0
+    fermentTaskId:
+    chillToC: 0
+    chillTaskId: 
+    litmusTaskId: 
+    heatTaskId: 
+    weighTaskId: 
+    vaporTaskId: 
+    flameTaskId: 

@@ -16,6 +16,10 @@ public class VesselLedger
 
     public int Count => _order.Count;
 
+    /// Entry names in insertion order (read-only) — lets a caller reason about
+    /// the vessel's STORY ("product + wash water only" = decantable, Exp 7).
+    public System.Collections.Generic.IReadOnlyList<string> Names => _order;
+
     /// Record an accepted add of `ml` of `chemicalName`. `solid` switches the
     /// summary unit to grams — "Aspirin 0.5 g", not the int-rounded "0 ml" a
     /// spatula dip used to read as (2026-07-17).

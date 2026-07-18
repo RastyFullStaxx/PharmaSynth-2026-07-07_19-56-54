@@ -84,6 +84,18 @@ public class ExperimentLayout : ScriptableObject
 
         [Tooltip("LITMUS confirmation (Exp 4 test-litmus): the named task completes when this vessel is served its reagents AND a litmus strip touches it while the mixture reads acid (strip turns red). VesselLitmusTask; zone-free.")]
         public string litmusTaskId = "";
+
+        [Tooltip("EXPLICIT heat-task owner (Exp 6 heat-glow): when set, heatToC completes THIS task instead of the inferred first deferred binding — for heat steps with no reagents of their own. Empty = infer as before.")]
+        public string heatTaskId = "";
+
+        [Tooltip("WEIGH step on the bench balance (Exp 6 weigh-acetates): the named task completes when this vessel is served its solids AND rests settled on the balance pan (VesselWeighTask + the Eq_Balance WeighStation).")]
+        public string weighTaskId = "";
+
+        [Tooltip("VAPOR collection (Exp 6 collect-56): this vessel is the SOURCE — once the named task is available and the vessel is at heatToC, it converts its charge into the module's product, condensing into the nearest vessel whose binding expects it (VaporCollectController).")]
+        public string vaporTaskId = "";
+
+        [Tooltip("FLAME (non-)flammability confirmation (Exp 7 test-flammability): the named task completes when this vessel is served its sample AND a LIT match/burner flame is held within reach (VesselFlameTask; zone-free — the negative 'does not ignite' is the observation).")]
+        public string flameTaskId = "";
     }
 
     public string moduleId;

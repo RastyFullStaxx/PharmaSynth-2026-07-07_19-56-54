@@ -76,8 +76,13 @@ public class ExperimentSceneBuilder : MonoBehaviour
 
     /// Build the setup for a module. Returns the number of spawned root objects.
     /// Public + returns count so edit-mode self-tests can verify it.
+    /// The module currently being built — vessel wiring that needs the module's
+    /// identity (the vapor stream's product chemical) reads it here.
+    private string moduleBeingBuilt = "";
+
     public int Build(string moduleId)
     {
+        moduleBeingBuilt = moduleId;
         var stage = Stage();
         for (int i = stage.childCount - 1; i >= 0; i--) Kill(stage.GetChild(i).gameObject);
         // Bench-bound vessels wire task logic onto PERMANENT objects, which the line
@@ -712,16 +717,40 @@ public class ExperimentSceneBuilder : MonoBehaviour
         // ZONE-FREE heat step (2026-07-17): the vessel's deferred task completes
         // when it is served AND heated to heatToC — wherever the player does it.
         // Replaces the fixed Heat station (pad/label/teleport anchor all gone).
+        // An EXPLICIT heatTaskId (Exp 6's heat-glow) wins over the inferred
+        // first-deferred binding — for heat steps with no reagents of their own,
+        // where the binding gate is skipped (null binding = vacuously served).
         if (v.heatToC > 0f)
         {
-            string heatTask = null;
-            foreach (var b in v.bindings)
-                if (!b.completesTask && !string.IsNullOrEmpty(b.taskId)) { heatTask = b.taskId; break; }
-            if (heatTask != null)
+            string heatTask = v.heatTaskId;
+            if (string.IsNullOrEmpty(heatTask))
+                foreach (var b in v.bindings)
+                    if (!b.completesTask && !string.IsNullOrEmpty(b.taskId)) { heatTask = b.taskId; break; }
+            if (!string.IsNullOrEmpty(heatTask))
+            {
+                bool heatHasSteps = false;
+                foreach (var b in v.bindings) if (b.taskId == heatTask) heatHasSteps = true;
                 (inst.GetComponent<VesselHeatTask>() ?? inst.AddComponent<VesselHeatTask>())
-                    .Bind(runner, heatTask, v.heatToC, bind, lp);
+                    .Bind(runner, heatTask, v.heatToC, heatHasSteps ? bind : null, lp);
+            }
             else
                 Debug.LogWarning("[SceneBuilder] " + v.benchItem + " sets heatToC but has no deferred (completesTask:false) binding to own.");
+        }
+        // WEIGH step on the bench balance (Exp 6): served AND settled on the pan.
+        if (!string.IsNullOrEmpty(v.weighTaskId))
+        {
+            bool weighHasSteps = false;
+            foreach (var b in v.bindings) if (b.taskId == v.weighTaskId) weighHasSteps = true;
+            (inst.GetComponent<VesselWeighTask>() ?? inst.AddComponent<VesselWeighTask>())
+                .Bind(runner, v.weighTaskId, lp, weighHasSteps ? bind : null);
+        }
+        // VAPOR collection source (Exp 6): the hot tube condenses the module's
+        // product into the nearest vessel whose binding expects it.
+        if (!string.IsNullOrEmpty(v.vaporTaskId))
+        {
+            var productChem = assets.GetChemical(DemoMode.ProductFor(moduleBeingBuilt));
+            (inst.GetComponent<VaporCollectController>() ?? inst.AddComponent<VaporCollectController>())
+                .Bind(runner, lp, v.vaporTaskId, productChem, Mathf.Max(1f, v.heatToC));
         }
         // ZONE-FREE chill step (Exp 4): completes when the vessel holds product
         // AND has been cooled to chillToC — the ice bucket, anywhere in the lab.
@@ -739,6 +768,15 @@ public class ExperimentSceneBuilder : MonoBehaviour
         if (!string.IsNullOrEmpty(v.litmusTaskId))
             (inst.GetComponent<VesselLitmusTask>() ?? inst.AddComponent<VesselLitmusTask>())
                 .Bind(runner, v.litmusTaskId, bind, lp);
+        // FLAME confirmation (Exp 7): a lit match/burner flame held to the served
+        // sample completes the task — the NEGATIVE ("won't ignite") is the result.
+        if (!string.IsNullOrEmpty(v.flameTaskId))
+        {
+            bool flameHasSteps = false;
+            foreach (var b in v.bindings) if (b.taskId == v.flameTaskId) flameHasSteps = true;
+            (inst.GetComponent<VesselFlameTask>() ?? inst.AddComponent<VesselFlameTask>())
+                .Bind(runner, v.flameTaskId, flameHasSteps ? bind : null, lp);
+        }
         // FERMENTATION flask (Exp 3): evolves CO₂ into nearby limewater vessels.
         if (!string.IsNullOrEmpty(v.fermentTaskId))
         {
@@ -857,6 +895,24 @@ public class ExperimentSceneBuilder : MonoBehaviour
             if (lt == null || (_stage != null && lt.transform.IsChildOf(_stage))) continue;
             lt.Detach();
             Kill(lt);
+        }
+        foreach (var wt in FindObjectsByType<VesselWeighTask>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (wt == null || (_stage != null && wt.transform.IsChildOf(_stage))) continue;
+            wt.Detach();
+            Kill(wt);
+        }
+        foreach (var vc in FindObjectsByType<VaporCollectController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (vc == null || (_stage != null && vc.transform.IsChildOf(_stage))) continue;
+            vc.Detach();
+            Kill(vc);
+        }
+        foreach (var ft in FindObjectsByType<VesselFlameTask>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (ft == null || (_stage != null && ft.transform.IsChildOf(_stage))) continue;
+            ft.Detach();
+            Kill(ft);
         }
     }
 

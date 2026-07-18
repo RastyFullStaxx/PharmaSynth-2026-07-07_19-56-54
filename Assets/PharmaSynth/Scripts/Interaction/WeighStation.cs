@@ -28,7 +28,13 @@ public class WeighStation : MonoBehaviour
     private bool _panTimed;
 
     public LabItem OccupantItem => _occupantItem;
+    public LiquidPhysics OccupantVessel => _occupantVessel;
     public float SecondsOnPan => _occupants > 0 && _panTimed ? Time.time - _onPanSince : 0f;
+
+    /// True while THIS vessel rests settled on the pan — the zone-free weigh
+    /// condition (VesselWeighTask, Exp 6's bench balance; 2026-07-18).
+    public bool SettledWith(LiquidPhysics lp)
+        => lp != null && _occupantVessel == lp && WeighMath.PanSettled(SecondsOnPan);
 
     /// Builder seam.
     public void Bind(ExperimentRunner runner, string taskId, string requiredItemId,

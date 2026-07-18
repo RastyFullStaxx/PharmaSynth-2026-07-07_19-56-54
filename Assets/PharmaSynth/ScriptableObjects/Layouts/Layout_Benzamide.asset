@@ -147,6 +147,9 @@ MonoBehaviour:
     chillToC: 0
     chillTaskId: 
     litmusTaskId: 
+    heatTaskId: 
+    weighTaskId: 
+    vaporTaskId: 
   - benchItem: 
     prefabName: TestTube_WithLiquid
     displayName: Product Test Tube
@@ -172,3 +175,6 @@ MonoBehaviour:
     chillToC: 0
     chillTaskId: 
     litmusTaskId: 
+    heatTaskId: 
+    weighTaskId: 
+    vaporTaskId: 

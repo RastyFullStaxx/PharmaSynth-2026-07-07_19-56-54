@@ -19,71 +19,55 @@ MonoBehaviour:
   - Purify by decantation and distillation over CaCl2
   - Confirm by non-flammability and alcoholic silver-nitrate tests
   materialReagents:
-  - "Bleaching Powder \u2014 50 g"
-  - "Acetone \u2014 50 ml"
-  - "Silver Nitrate \u2014 50 ml"
-  - "Potassium Dichromate \u2014 50 g"
+  - "Bleaching Powder \u2014 150 g (5 scoopula dips)"
+  - "Distilled Water \u2014 flask 20 ml + cylinder 10 ml + wash 4 squeezes"
+  - "Acetone \u2014 12 g in 50 ml water (5 ml pour + 5 dropper squeezes)"
+  - "Anhydrous Calcium Chloride \u2014 1 scoopula"
+  - "Potassium Dichromate \u2014 4 spatula dips (fume hood)"
+  - "Sulfuric Acid (conc.) \u2014 2 squeezes"
+  - "Alcoholic Silver Nitrate \u2014 1 squeeze"
   materialApparatus:
-  - Distilling flask
-  - Beaker 100 mL
-  - "Test tubes \xD7 3"
-  - Burner
+  - "Erlenmeyer Flask 400 mL (the 1 L reaction flask)"
+  - "Graduated Cylinder 50 mL (the separatory-funnel stand-in)"
+  - "Beaker 100 mL (crude receiver + wash)"
+  - "Distilling Flask (CaCl2 dry + redistil)"
+  - "Test Tubes 14\u201316 (product, oxidation, AgNO3)"
+  - "Watch Glass (flammability sample)"
+  - "Water bath + burner \u00B7 Balance \u00B7 Fume hood"
+  - "Scoopula + spatula + dropper \u00B7 Matches"
   tasks: []
   graphTasks:
   - taskId: prep-bleach
-    label: Dissolve 150 g bleaching powder in 400 mL water (1 L flask)
+    label: "Dissolve 150 g bleaching powder in 400 mL water (1 L flask)"
     phase: 0
     prerequisites: []
     progressWeight: 1
     skill: 0
     rubricCategory: 0
     required: 1
-    hint: Shake until the bleaching powder dissolves.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "150 g of fresh bleaching powder shaken with 400 ml of water frees the hypochlorite for the haloform reaction.\n\u2192 Erlenmeyer Flask 400 mL: scoop 5 scoopula dips of bleaching powder in FIRST, then tilt-pour distilled water to 20 ml."
   - taskId: prep-acetone-mix
-    label: Mix 12 g acetone + 50 mL water in a separatory funnel
+    label: "Mix 12 g acetone + 50 mL water (the dropwise charge)"
     phase: 0
-    prerequisites:
-    - prep-bleach
+    prerequisites: []
     progressWeight: 1
     skill: 0
     rubricCategory: 0
     required: 1
-    hint: Prepare the acetone-water mixture for dropwise addition.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
-  - taskId: reflux-setup
-    label: Connect the flask to a reflux condenser
+    hint: "The manuscript dilutes 12 g of acetone with 50 ml of water so it can be added gently.\n\u2192 Graduated Cylinder 50 mL: tilt-pour acetone to 5 ml, then a 10 ml tilt-pour of distilled water."
+  - taskId: add-dropwise
+    label: "Add the acetone-water mixture drop by drop"
     phase: 1
     prerequisites:
     - prep-bleach
-    progressWeight: 1
-    skill: 3
-    rubricCategory: 0
-    required: 1
-    hint: Fit the reflux condenser before adding acetone.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
-  - taskId: add-dropwise
-    label: Add the acetone-water mixture dropwise
-    phase: 1
-    prerequisites:
-    - reflux-setup
     - prep-acetone-mix
     progressWeight: 1
     skill: 3
     rubricCategory: 0
     required: 1
-    hint: Add slowly through the condenser; the reaction is exothermic.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Drop by drop \u2014 the haloform reaction is exothermic; dumped in at once it boils over.\n\u2192 Dropper 5 squeezes of the acetone mix into the flask, then warm the flask to 40 \u00B0C at the water bath \u2014 watch the dense chloroform form."
   - taskId: distil
-    label: Distil off the crude chloroform
+    label: "Arrange for distillation \u2014 bring the flask to the boil"
     phase: 1
     prerequisites:
     - add-dropwise
@@ -91,91 +75,101 @@ MonoBehaviour:
     skill: 1
     rubricCategory: 0
     required: 1
-    hint: Rearrange for distillation and collect the dense chloroform layer.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
-  - taskId: decant-wash
-    label: "Wash by decantation with water (\xD72)"
+    hint: "Chloroform boils at 61 \u00B0C \u2014 comfortably under the bath's 100 \u00B0C cap.\n\u2192 Keep the flask in the water bath (lit burner beside it) until its label reads 65 \u00B0C."
+  - taskId: collect-crude
+    label: "Collect the crude chloroform distillate"
     phase: 1
     prerequisites:
     - distil
     progressWeight: 1
+    skill: 4
+    rubricCategory: 0
+    required: 1
+    hint: "At the boil the chloroform vapour condenses in any cool vessel held at the mouth.\n\u2192 Hold Beaker 100 mL beside the hot flask \u2014 8 ml of crude chloroform run over."
+  - taskId: decant-wash
+    label: "Wash the chloroform by decantation (\u00D72)"
+    phase: 1
+    prerequisites:
+    - collect-crude
+    progressWeight: 1
     skill: 2
     rubricCategory: 0
     required: 1
-    hint: Decant off the water twice to wash the chloroform.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
-  - taskId: dry-redistil
-    label: Dry over CaCl2 and redistil until clear
+    hint: "Water washes out lime and free alkali; chloroform is DENSER and settles under the wash. The manual repeats the wash twice.\n\u2192 Squeeze 4 of distilled water into Beaker 100 mL and swirl \u2014 the next step decants the bottom layer off."
+  - taskId: dry-cacl2
+    label: "Dry the washed chloroform over anhydrous CaCl2"
     phase: 1
     prerequisites:
     - decant-wash
     progressWeight: 1
-    skill: 1
+    skill: 2
     rubricCategory: 0
     required: 1
-    hint: Dry with anhydrous calcium chloride, then redistil to a clear liquid.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Anhydrous calcium chloride drinks up the last of the water before the final distillation.\n\u2192 Decant (tilt-pour) 8 ml of the dense chloroform into the Distilling Flask, add 1 scoopula of anhydrous calcium chloride, then warm it to 65 \u00B0C at the bath."
+  - taskId: dry-redistil
+    label: "Redistil until the liquid runs clear"
+    phase: 1
+    prerequisites:
+    - dry-cacl2
+    progressWeight: 1
+    skill: 4
+    rubricCategory: 0
+    required: 1
+    hint: "Redistilling off the drying agent leaves water-clear chloroform \u2014 no droplets on the glass.\n\u2192 Keep the Distilling Flask hot; hold Test Tube 14 at its mouth until 6 ml run over clear."
+  - taskId: weigh-product
+    label: "Weigh your chloroform distillate"
+    phase: 1
+    prerequisites:
+    - dry-redistil
+    progressWeight: 1
+    skill: 0
+    rubricCategory: 0
+    required: 1
+    hint: "The data sheet needs your distillate's mass for the percentage yield.\n\u2192 Set Test Tube 14 on the balance and let the reading settle."
   - taskId: test-flammability
-    label: Non-flammability test
+    label: "Non-flammability test (lit match)"
     phase: 2
     prerequisites:
-    - dry-redistil
+    - weigh-product
     progressWeight: 1
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Chloroform does not readily burn \u2014 unlike the acetone feedstock."
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Unlike its acetone feedstock, chloroform will NOT burn \u2014 the negative IS the result.\n\u2192 Pour 2 ml (4 tilt-pours) of your chloroform onto the Watch Glass, then strike a match and hold the flame to it."
   - taskId: test-oxidation
-    label: Oxidation test (dichromate + H2SO4)
+    label: "Oxidation test \u2014 dichromate + conc. H2SO4 (fume hood)"
     phase: 2
     prerequisites:
-    - dry-redistil
+    - weigh-product
     progressWeight: 1
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Warm chloroform with potassium dichromate and conc. H2SO4 \u2014 the pungent
-      phosgene-like odour confirms it. Fume hood!"
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Hot dichromate + concentrated sulfuric acid oxidise chloroform \u2014 the pungent phosgene-like odour is the tell. Toxic: work IN the fume hood.\n\u2192 Test Tube 15 in the hood: 2 tilt-pours of your chloroform, 4 spatula dips of potassium dichromate, 2 squeezes of sulfuric acid \u2014 then warm it at the water bath."
   - taskId: test-agno3
-    label: Alcoholic AgNO3 (no precipitate cold)
+    label: "Alcoholic AgNO3 \u2014 nothing cold, white AgCl warm"
     phase: 2
     prerequisites:
-    - dry-redistil
+    - weigh-product
     progressWeight: 1
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: Alcoholic silver nitrate gives no precipitate in the cold with chloroform.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Alcoholic silver nitrate shows NOTHING in the cold \u2014 only on warming does white silver chloride separate.\n\u2192 Test Tube 16: 1 squeeze of alcoholic silver nitrate FIRST, then 2 tilt-pours of your chloroform. Warm it at the water bath and watch for the white precipitate."
   - taskId: record-yield
-    label: Record % yield and observations
+    label: "Record % yield and observations"
     phase: 3
     prerequisites:
+    - weigh-product
     - test-flammability
-    - test-agno3
     - test-oxidation
+    - test-agno3
     progressWeight: 1
     skill: 0
     rubricCategory: 5
     required: 1
-    hint: Enter chloroform mass, % yield and test results.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Mass, % yield and all three test results go on the data sheet.\n\u2192 Review your observations, then answer on the tablet."
+    autoCompleteWhenOthersDone: 1
   assessmentMode: 0
   masteryThreshold: 0.9
   bkt:

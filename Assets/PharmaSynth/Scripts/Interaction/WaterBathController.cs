@@ -182,8 +182,12 @@ public class VesselHeatTask : MonoBehaviour
     private void Register()
     {
         if (_runner == null || _runner.Graph == null || string.IsNullOrEmpty(_taskId)) return;
+        // A null binding = the heat step has no reagents of its own (Exp 6's
+        // heat-glow: the acetates went in during the WEIGH step) — graph
+        // availability alone gates it, and served is vacuously true.
         _runner.Graph.RegisterCondition(_taskId, () =>
-            _binding != null && _lp != null
-            && ShouldComplete(_binding.ReadyFor(_taskId), _lp.currentTempC, _requiredC));
+            _lp != null
+            && ShouldComplete(_binding == null || _binding.ReadyFor(_taskId),
+                              _lp.currentTempC, _requiredC));
     }
 }

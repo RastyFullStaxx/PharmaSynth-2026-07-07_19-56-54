@@ -230,6 +230,62 @@ public static class W58VerbDataApplier
             sceneChanges += EnsureZoneAnchor(t, "FermentZone", FermentationMath.DeliveryRadius, new Color(0.7f, 1f, 0.5f, 0.9f));
         }
 
+        // NAKED FLAME (2026-07-18, Exp 6 dry distillation): every burner heats
+        // vessels held over its flame — the ONE heat source beyond the water
+        // bath's 100 °C cap. That is what the hard-glass tubes exist for.
+        foreach (var bc in Object.FindObjectsByType<BurnerController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (bc.GetComponent<NakedFlameHeat>() == null)
+            { bc.gameObject.AddComponent<NakedFlameHeat>().Bind(bc); sceneChanges++; }
+        }
+
+        // THE BENCH BALANCE becomes the live weigh tool (2026-07-18, Exp 6):
+        // grams display + a pan trigger whose occupancy VesselWeighTask reads.
+        foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (t.name != "Eq_Balance") continue;
+            Bounds BalBounds()
+            {
+                var rr = t.GetComponentsInChildren<Renderer>();
+                if (rr.Length == 0) return new Bounds(t.position, Vector3.one * 0.1f);
+                var bb = rr[0].bounds;
+                for (int i = 1; i < rr.Length; i++) bb.Encapsulate(rr[i].bounds);
+                return bb;
+            }
+            var scale = t.GetComponent<WeighingScaleController>();
+            if (scale == null) { scale = t.gameObject.AddComponent<WeighingScaleController>(); sceneChanges++; }
+            if (t.Find("MassDisplay") == null)
+            {
+                var b = BalBounds();
+                var dgo = new GameObject("MassDisplay");
+                dgo.transform.SetParent(t, false);
+                dgo.transform.position = new Vector3(b.center.x, b.max.y + 0.1f, b.center.z);
+                var tmp = dgo.AddComponent<TMPro.TextMeshPro>();
+                tmp.text = "0 g"; tmp.fontSize = 0.6f;
+                tmp.alignment = TMPro.TextAlignmentOptions.Center;
+                var mr = dgo.GetComponent<MeshRenderer>(); if (mr != null) mr.sortingOrder = 20000;
+                var rt2 = dgo.GetComponent<RectTransform>(); if (rt2 != null) rt2.sizeDelta = new Vector2(1.2f, 0.3f);
+                scale.Bind(tmp);
+                sceneChanges++;
+            }
+            if (t.Find("Pan") == null)
+            {
+                var b = BalBounds();
+                var pgo = new GameObject("Pan");
+                pgo.transform.SetParent(t, false);
+                pgo.transform.position = new Vector3(b.center.x, b.max.y + 0.05f, b.center.z);
+                var pcol = pgo.AddComponent<BoxCollider>();
+                pcol.isTrigger = true;
+                var pls = pgo.transform.lossyScale;
+                pcol.size = new Vector3(
+                    Mathf.Max(0.14f, b.size.x) / Mathf.Max(1e-4f, Mathf.Abs(pls.x)),
+                    0.12f / Mathf.Max(1e-4f, Mathf.Abs(pls.y)),
+                    Mathf.Max(0.14f, b.size.z) / Mathf.Max(1e-4f, Mathf.Abs(pls.z)));
+                pgo.AddComponent<WeighStation>().Bind(null, "", null, null, 0f, scale);
+                sceneChanges++;
+            }
+        }
+
         // The porcelain spatula is the FINE solids tool: Exp 2 weighs 0.1 g salicylic
         // and 0.5 g aspirin, both smaller than the scoopula's 2 g dip. Its charge is
         // ScoopMath.GramsPerSpatula; the scoopula keeps the coarse 2 g.

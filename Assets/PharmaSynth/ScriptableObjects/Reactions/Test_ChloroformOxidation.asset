@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ReactionRule
   inputChemicalA: {fileID: 11400000, guid: 72739e5d7ed8c37438a4124730da0006, type: 2}
   inputChemicalB: {fileID: 11400000, guid: 8640638550cd0764aae76f7db301330f, type: 2}
-  resultLiquid: {fileID: 0}
+  resultLiquid: {fileID: 11400000, guid: 72739e5d7ed8c37438a4124730da0006, type: 2}
   resultPrecipitate: {fileID: 0}
   hasPrecipitate: 0
-  minTemperatureC: 0
+  minTemperatureC: 60
   outcome: 4
   evolvesGas: 0
   expectedObservation: "Pungent, suffocating odour (phosgene-like) \u2014 oxidation

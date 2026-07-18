@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: Test_ChloroformAgNO3
   m_EditorClassIdentifier: Assembly-CSharp::ReactionRule
   inputChemicalA: {fileID: 11400000, guid: 72739e5d7ed8c37438a4124730da0006, type: 2}
-  inputChemicalB: {fileID: 11400000, guid: 45aa22e5e97871740afb9dabe6c960af, type: 2}
+  inputChemicalB: {fileID: 11400000, guid: 5923eb272c74cd74f8f0ace3c3be3006, type: 2}
   resultLiquid: {fileID: 11400000, guid: 72739e5d7ed8c37438a4124730da0006, type: 2}
-  resultPrecipitate: {fileID: 0}
+  resultPrecipitate: {fileID: 11400000, guid: c4d5e6f708192a3b4c5d6e7f80912a3b, type: 2}
   hasPrecipitate: 1
   minTemperatureC: 50
   outcome: 3
   evolvesGas: 0
-  expectedObservation: White precipitate (AgCl) forms on warming with alcoholic silver
-    nitrate (manual Exp 7).
+  expectedObservation: Nothing in the cold - on warming in the water bath a white
+    precipitate (AgCl) separates.

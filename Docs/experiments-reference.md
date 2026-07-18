@@ -167,7 +167,9 @@ Both were **game-authored** (Aspirin is named only in the manuscript's intro pro
 | **prelim-ethyl-alcohol** | Prelim | ✅ BUILT + simulated clean (8/8). Zone-free ferment→CO₂→limewater (`FermentationController`) + week time-skip + distillation + 3 warm tests. **The distill step DECANTS the fermented wash from the FlorenceFlask** (2026-07-18 — the old bench-Ethanol shorthand was unplayable: that bottle is HIDDEN during Exp 3 as its own end product). ⬜ Left: headset playtest; combustion could gain real match-ignition. |
 | **midterm-benzoic-acid** | Midterm | ✅ **BUILT + simulated clean 2026-07-18 (9/9)** — oxidise (heat-gated) → funnel-filter → acidify (white crystals) → **ice-bath crystallise** (time-skip) → litmus/FeCl3/ester tests drawing from the purified flask. New reusable: `IceBathController`+`VesselChillTask`, `VesselLitmusTask`+mixture pH, vessel pour-out, temp-goal tags. ⬜ Left: headset playtest. |
 | **midterm-acetanilide** | Midterm | ✅ **BUILT + simulated clean 2026-07-18 (8/8)** — the FUME-HOOD module: hood-sanctioned acylation (position-based check, finally wired) → heat-gated white plates → ice-water + chill crystallise → filter/wash/dry time-skip → hydrolysis boil + **two-tube bromination comparison** (rackGroup). ⬜ Left: headset playtest (hood carry feel). |
-| midterm-acetone → final-* | — | ⬜ not started. ⚠ Fix `StirController` tip-tracking before Exp 8's "stir & stand". |
+| **midterm-acetone** | Midterm | ✅ **BUILT + simulated clean 2026-07-18 (8/8)** — bench-balance WEIGH (live grams) → **NAKED-FLAME** dry distillation (150 °C glow, hard-glass) → **VAPOR collect** at 56 °C into the receiver → 4 tests (2 authored negatives, iodoform warm, bisulfite adduct in the ice). New reusable: `NakedFlameHeat`, `VaporCollectController`, `VesselWeighTask`+balance rig. ⬜ Left: headset playtest. |
+| **midterm-chloroform** | Midterm | ✅ **BUILT + simulated clean 2026-07-18 (13/13)** — two water-bath distillations (heat task + vapor collect ×2, 65 °C), decant wash, CaCl2 dry, balance weigh, then the **lit-match non-flammability confirm** (`VesselFlameTask`, new reusable), the hood-sanctioned dichromate oxidation and the warm AgNO3 white-ppt test. Rule fixes: oxidation resultLiquid-null trap + cold-fire, AgNO3 missing precipitate + plain-vs-alcoholic AgNO3. The legacy builder fixture is now SYNTHETIC (no module stages stations any more). ⬜ Left: headset playtest. |
+| final-* | Final | ⬜ not started. ⚠ Fix `StirController` tip-tracking before Exp 8's "stir & stand". |
 
 ### The METHANE FLOW — the template every module follows
 1. **Gate** — Pharmee → Campaign → pick module → don **all 3 PPE** (hard-gated: `GatekeeperModel.RequiresPPEToOpen`) → "I'm ready" → cross the threshold (timer starts).
@@ -196,11 +198,12 @@ Both were **game-authored** (Aspirin is named only in the manuscript's intro pro
 | **⛔ ZONE-FREE tool rule (user 2026-07-17, binding for every module pass)** | `WaterBathController` + `VesselHeatTask` (`ExperimentLayout.Vessel.heatToC`) | "The entire lab IS the zone — tools function when brought together ANYWHERE." NO fixed stations/pads/DynLabels/TeleAnchors for steps the tools can own: heating = the bench `WaterBath` (player pours distilled water in ≥5 ml, stands a LIT burner within 0.45 m; heats to a 100 °C cap, warms vessels within 0.32 m, label narrates its next need) + `heatToC` on the synthesis vessel (task completes when served AND hot, wherever); filtering = the funnel pour itself (destination binding completes on receiving the product). Exp 2's two stations are deleted; when polishing each next module, REPLACE its Heat/Filter stations the same way (Weigh/Stir/Collect stations remain until each gets its pass). |
 | **Ice-bath chill step** (Exp 4 crystallise; Exp 8's ice bath) | `IceBathController` on `Raw_IceBucket` + `VesselChillTask` (`Vessel.chillToC` + `chillTaskId`) | The water bath's cold twin, zone-free: any vessel within the chill zone is pulled to ~2 °C; the task completes only when the vessel HOLDS something AND is ≤ `chillToC` (ambient 25 °C can never self-complete). Pair with `longProcess` for the crystallise/dry time-skip. Wired by Apply W5.8. |
 | **User-scalable EFFECT-ZONE anchors** (2026-07-18) | `PlacementAnchor` children read by the tool controllers via `WaterBathMath.EffectRadius` | The wire-sphere gizmo's world **scale IS the diameter** of the tool's reach — scale it in the editor and the mechanic follows exactly. Four exist (created by Apply W5.8, centred on the rendered body): `WaterBath/HeatZone` (orange, vessels warm inside) · `WaterBath/BurnerZone` (red, a lit burner inside drives the bath) · `Raw_IceBucket/ChillZone` (blue, vessels chill inside) · `FlorenceFlask/FermentZone` (green, limewater clouds inside). Moving the anchor re-centres the zone; deleting it falls back to the coded constant. Add the same pattern to any future area-of-effect. |
+| **Flame (non-)flammability confirm** (Exp 7 test-flammability) | `VesselFlameTask` (`Vessel.flameTaskId`) + `FlameTestMath` | Zone-free: once the sample vessel is served, ANY lit match or burner flame held within 0.2 m confirms ("Won't ignite — NON-FLAMMABLE ✓" FloatingText) and completes the task. Resets on Retry. The sim lights the bench burner and holds the dish at its flame — the same `PollFlames` scan a play frame runs. |
 | **Litmus confirmation step** (Exp 4; pH checks in Exp 3/8) | `VesselLitmusTask` (`Vessel.litmusTaskId`) + `LiquidPhysics.CurrentPH` | A strip from the bench litmus box touched to the served tube completes the task when the MIXTURE reads acid (strip turns red + "acid confirmed" FloatingText). `CurrentPH` is mixture pH — the component farthest from 7 dominates (`LitmusMath.DominantPH`), so pour order can't soft-lock the read. ⚠ pH must be AUTHORED on the ChemicalData (most assets default 7 — benzoic 2.9 / HCl 6N 0.5 / H₂SO₄ 0.4 authored 2026-07-18; suite pins them). |
 | Live temp goal on the vessel itself | `VesselStatusMath.TempGoalLine` (auto via `VesselStatus`) | Heat/chill vessels append "25 C — warm to 50 C (water bath)" / "chill to 8 C (ice bath)" to their name tag until the goal is reached. No extra wiring — reads the vessel's VesselHeatTask/VesselChillTask. |
 | Vessels POUR OUT | `ShelfPourWiring.WireBottle` called by `BuildVessel` | Every task vessel (bench-bound or spawned) gets a `LiquidPourer`+spout+spill grading — the filter pour and draw-from-your-own-product steps were unplayable while only shelf bottles poured (2026-07-18; the sim's direct PourOut masked it). |
 | Pharmee's spoken guidance | `PharmeeBrain.InstructionFor` | Speaks ONLY the ACTION line (after the →) of a two-line hint — short, imperative, "do this now"; the fact line stays on the wrist panel. |
-| **Sim source honesty** (know when re-simulating) | `SimulatedRun.FindSource` | Sources rank: **pure-product vessel** (ledger collapsed to `DemoMode.ProductFor` — the dried crystals; the ONLY vessel scooped from) > chill (crude crystallising flask — decanted, not scooped) > heat (single-entry filtrates/distillates) > fermentation wash > shelf; the module's own hidden END PRODUCT bottle is never legal. This is what exposed Exp 3's hidden-bottle shorthand. |
+| **Sim source honesty** (know when re-simulating) | `SimulatedRun.FindSource` | Sources rank: **pure-product vessel** (ledger collapsed to `DemoMode.ProductFor` — the dried crystals; the ONLY vessel scooped from) > chill (crude crystallising flask — decanted, not scooped) > **washed product** (product + Distilled Water ONLY in the ledger — Exp 7's crude beaker under its wash; decantable, any other foreign entry = test residue) > heat (single-entry filtrates/distillates) > fermentation wash > shelf; the module's own hidden END PRODUCT bottle is never legal. This is what exposed Exp 3's hidden-bottle shorthand. |
 | **Fume hood step** (Exp 5 — the ONE hood module) | `LiquidTaskBinding.SetFumeHood` / `InFumeHood` + the hood's `WorkVolume` (`FumeHoodZone` + trigger BoxCollider) | A `requiresFumeHood` chem (Aniline, Acetyl Chloride) is only sanctioned while the RECEIVING VESSEL sits inside the hood volume — position-based (the old hand-occupancy trigger was never wired and ALWAYS violated; builder wires the zone into every binding now). The sim carries the vessel in, pours, returns it. Resize the WorkVolume BoxCollider to tune the sanctioned area. **The hood does NOT open** — it is an always-open alcove: `FumeHoodStatusLabel` narrates ("do aniline & acetyl chloride work IN here" → "<vessel> protected ✓"), and the **open-front collider shell** (`HoodShell_Back/Left/Right/Top/Counter`, hand-adjustable solid boxes) stops items passing through the walls while the open front stays the door. **Model = `FumeHoodOpen.prefab` (2026-07-18, Tripo P1 from `FumeHoodOpenRef.png`)** — genuinely hollow with a raised sash + interior counter; the old sealed `FumeHoodModel` is deactivated in the scene for hand-deletion; re-run `Swap In Open Fume Hood` + `Apply W5.8` after moving it — nothing can be trapped, and the Counter panel lets the vessel be SET DOWN inside while pouring. |
 | ⚠ Fixture rule: building a bench-bound layout in a SUITE fixture | teardown `builder.Build("tutorial-methane")` in `finally` | Build() attaches bindings to REAL bench items — destroying only the fixture LEAKS them into later tests (the leaked Acetanilide bindings demanded a shelf-less chemical and broke the deplete monitor, 2026-07-18). |
 
@@ -745,42 +748,35 @@ Zone-free, bench-bound; stations DELETED. **The one genuine FUME-HOOD module**: 
 **Manuscript Reagents:** 5% Sodium hypochlorite; Saturated sodium; bisulfite 10% Potassium hydroxide solution Schiff's reagent; Calcium acetate; Sodium acetate; Ethyl alcohol; Tollen's reagent
 
 
-### Task graph (play order)
+### ✅ BUILT + SIMULATED CLEAN 2026-07-18 (8/8 · 0 mistakes · 0 bugs · 0 warnings)
 
-| # | task | phase | label | prerequisites | hint |
-|---|------|-------|-------|---------------|------|
-| 1 | `prep-koh` | ReagentPrep | Prepare 10% KOH (10 g / 100 mL) | - | Dissolve 10 g KOH in 100 mL purified water. |
-| 2 | `weigh-acetates` | ReagentPrep | Weigh & mix 7 g calcium acetate + 7 g sodium acetate | prep-koh | Mix the two dry acetate powders in a test tube. |
-| 3 | `setup-distill` | Synthesis | Set the tube horizontal, connect the condenser | weigh-acetates | Tap a channel along the tube and connect it to a condenser. |
-| 4 | `heat-glow` | Synthesis | Heat until the acetates glow, turning the tube | setup-distill | Heat strongly, rotating the tube for even decomposition. |
-| 5 | `collect-56` | Synthesis | Distil and collect the fraction at 56 \xB0C | heat-glow | Acetone boils at 56 \xB0C - collect only that cut. |
-| 6 | `test-tollens` | ChemicalTests | Tollen's test (no silver mirror \u2014 ketone) | collect-56 | Ketones do not reduce Tollen's reagent, unlike aldehydes. |
-| 7 | `test-schiff` | ChemicalTests | Schiff's reagent | collect-56 | Note the colour after standing. |
-| 8 | `test-iodoform` | ChemicalTests | Iodoform-type test (KI + NaOCl \u2192 yellow) | collect-56 | Warm with KI and sodium hypochlorite; a yellow precipitate/odour is positive. |
-| 9 | `test-bisulfite` | ChemicalTests | Bisulfite addition product | collect-56 | Shake acetone with saturated sodium bisulfite; a crystalline adduct forms. |
-| 10 | `record-yield` | DataSheet | Record % yield and observations | test-tollens, test-schiff, test-iodoform, test-bisulfite | Enter distillate mass, % yield and test results. |
+Zone-free, bench-bound; stations DELETED (the LAST classic Weigh/Heat/Collect stations went with this pass — the suite's legacy-rig fixtures re-homed: builder fixture → Layout_Chloroform, simrig → a SYNTHETIC in-memory layout, immune to future polish). Generator: scratchpad `gen_acetone.py`.
 
-### Stage layout
+**New zone-free tools (reusable):** the **bench balance** (`Eq_Balance`: pan trigger + `WeighStation` + live grams TMP display, wired by Apply W5.8; `Vessel.weighTaskId` + `VesselWeighTask` = served AND settled on the pan) · **NAKED FLAME** (`NakedFlameHeat` on every burner: a LIT burner heats vessels within 0.18 m toward 400 °C — the ONE heat source beyond the bath's 100 °C cap; `Vessel.heatTaskId` names the owner explicitly for heat steps with no reagents of their own) · **VAPOR COLLECTION** (`Vessel.vaporTaskId` + `VaporCollectController`: once the task is available and the source is at heatToC, it converts its charge into the module's product, condensing into the nearest vessel whose binding expects it).
 
-**Stations:** `prep-koh` (zone-touch) ; `weigh-acetates` (Weigh) ; `setup-distill` (zone-touch) ; `heat-glow` (Heat to 150 C) ; `collect-56` (Collect) ; `test-schiff` (zone-touch) ; `test-bisulfite` (zone-touch)
+**VR adaptations (documented):** the 10% KOH prep preamble is unused by its own procedure (dropped — same class as Exp 5's 0.1N HCl); `setup-distill` folded into the heat/collect hints (the condenser was removed as VR-inappropriate; the receiver-by-the-mouth run IS the setup); Tollen's = the Silver Nitrate bottle (ammoniacal silver nitrate); ⚠ engine wake-rule: the SAMPLE pours FIRST in the iodoform/bisulfite tubes (FindReaction pairs against the first-poured chemical).
 
-**Reagents staged (pourable):** Silver Nitrate (Vial_Brown, auto-supply) ; Sodium Hypochlorite (Vial_Brown, auto-supply) ; Schiff's Reagent (Vial_Brown, auto-supply) ; Potassium Iodide 10% (Vial_Brown, auto-supply)
+### Task graph (play order — as built)
 
-**Tools staged:** KOH Spatula ; Acetate Scoop ; Retort Stand ; Bunsen Burner ; Collection Beaker ; Bisulfite Dish
+| # | task | phase | label | prereq | how it completes |
+|---|------|-------|-------|--------|------------------|
+| 1 | `weigh-acetates` | ReagentPrep | Weigh 7 g of each acetate into the hard-glass tube | - | `Kit_Hard-GlassTestTube_0` on the balance + 4 scoopula dips of EACH acetate (7 g min → 8 g landed, live grams display) → settled on the pan completes |
+| 2 | `heat-glow` | Synthesis | Heat the tube over the open flame until the acetates glow | 1 | hold the tube over a LIT burner to 150 °C (`heatTaskId`; open flame, no bath) |
+| 3 | `collect-56` | Synthesis | Collect the acetone distillate at 56 °C | 2 | keep `Kit_TestTube_14` by the hot tube's mouth — the vapor condenses ≥8 ml (`vaporTaskId`) |
+| 4 | `test-tollens` | ChemicalTests | Tollen's — NO silver mirror (deliberate negative) | 3 | Tube 15: 2 acetone + 5 water + 2 silver nitrate |
+| 5 | `test-schiff` | ChemicalTests | Schiff's — no magenta (deliberate negative) | 3 | Tube 16: 5 Schiff's + 2 acetone |
+| 6 | `test-iodoform` | ChemicalTests | Iodoform — yellow precipitate | 3 | Tube 17: 2 acetone + 10 KI + 10 hypochlorite, warm ≥60 °C at the bath |
+| 7 | `test-bisulfite` | ChemicalTests | Bisulfite adduct — in the freezing mixture | 3 | Tube 18: 2 bisulfite + 1 ethanol (NO adduct with an alcohol — the contrast) + 1 acetone → white `Bisulfite Adduct` ppt (new chem+rule) → chill ≤8 °C in the ice bucket |
+| 8 | `record-yield` | DataSheet | Record % yield and observations | 4–7 | auto-completes (wrap-up) |
 
-**Vessel ErlenmeyerFlask_400mL** (Distillation Flask) - starts EMPTY
-
-**Vessel TestTube_WithLiquid** (Product Test Tube) - starts with Acetone
-  - pour **Silver Nitrate** >= 50 ml -> completes `test-tollens`
-  - pour **Sodium Hypochlorite** >= 50 ml -> completes `test-iodoform`
-  - pour **Schiff's Reagent** >= 50 ml -> completes `test-schiff`
-  - pour **Potassium Iodide 10%** >= 50 ml -> completes `test-iodoform`
+**All test draws come from the RECEIVER tube** — the sim's pure-product rule now also rejects test tubes whose rule collapsed their ledger back to "Acetone" (the Tollens-residue masquerade caught on round one).
 
 ### Reactions & expected observations
 
-- **Test_AcetoneIodoform**: Acetone + Sodium Hypochlorite - "Yellow iodoform precipitate with antiseptic odour (haloform test, manual Exp 6)."
-- **Test_AcetoneSchiff**: Acetone + Schiff's Reagent -> Acetone - "No magenta colour restored — acetone is a ketone (negative"
-- **Test_AcetoneTollens**: Acetone + Silver Nitrate -> Acetone - "No silver mirror \u2014 acetone is a ketone (negative Tollen's"
+- **Test_AcetoneTollens** (negative, authored): Acetone + Silver Nitrate → "No silver mirror — ketone"
+- **Test_AcetoneSchiff** (negative, authored): Acetone + Schiff's → "No magenta restored — ketone"
+- **Test_AcetoneIodoform** (min 40 °C): Acetone + Hypochlorite → yellow iodoform ppt
+- **Test_AcetoneBisulfite** (new 2026-07-18): Acetone + Sodium Bisulfite → white `Bisulfite Adduct` ppt — clearest chilled
 
 ### Quiz (Documentation score)
 
@@ -816,44 +812,34 @@ Zone-free, bench-bound; stations DELETED. **The one genuine FUME-HOOD module**: 
 **Manuscript Reagents:** Concentrated sulfuric acid; Acetone; Potassium; Alcoholic silver nitrate; dichromate Bleaching powder
 
 
-### Task graph (play order)
+**VR adaptations (documented):** `reflux-setup` dissolved with the VR-removed condenser (the dropwise addition goes straight into the open flask); the separatory funnel became the bench **Graduated Cylinder 50 mL**; both distillations reuse Exp 6's heat-task + vapor-collect pairing at 65 \u00b0C (chloroform bp 61 \u2014 WATER BATH, never the open flame); the \u00d72 decantation wash is ONE wash water pour + swirl, and the "decant" IS the next step's tilt-pour of the dense bottom layer into the Distilling Flask; amounts are game-scaled (150 g \u2192 5 scoopula dips etc.) with the real quantities kept in the hint fact lines. \u26a0 engine wake-rule: bleaching powder pours FIRST into the flask, and alcoholic AgNO3 FIRST in tube 16 (FindReaction pairs against the first-poured chemical).
 
-| # | task | phase | label | prerequisites | hint |
-|---|------|-------|-------|---------------|------|
-| 1 | `prep-bleach` | ReagentPrep | Dissolve 150 g bleaching powder in 400 mL water (1 L flask) | - | Shake until the bleaching powder dissolves. |
-| 2 | `prep-acetone-mix` | ReagentPrep | Mix 12 g acetone + 50 mL water in a separatory funnel | prep-bleach | Prepare the acetone-water mixture for dropwise addition. |
-| 3 | `reflux-setup` | Synthesis | Connect the flask to a reflux condenser | prep-bleach | Fit the reflux condenser before adding acetone. |
-| 4 | `add-dropwise` | Synthesis | Add the acetone-water mixture dropwise | reflux-setup, prep-acetone-mix | Add slowly through the condenser; the reaction is exothermic. |
-| 5 | `distil` | Synthesis | Distil off the crude chloroform | add-dropwise | Rearrange for distillation and collect the dense chloroform layer. |
-| 6 | `decant-wash` | Synthesis | Wash by decantation with water (\xD72) | distil | Decant off the water twice to wash the chloroform. |
-| 7 | `dry-redistil` | Synthesis | Dry over CaCl2 and redistil until clear | decant-wash | Dry with anhydrous calcium chloride, then redistil to a clear liquid. |
-| 8 | `test-flammability` | ChemicalTests | Non-flammability test | dry-redistil | Chloroform does not readily burn - unlike the acetone feedstock. |
-| 9 | `test-oxidation` | ChemicalTests | Oxidation test (dichromate + H2SO4) | dry-redistil | Warm chloroform with potassium dichromate and conc. H2SO4 - the pungent phosgene-like odour confirms it. Fume hood! |
-| 10 | `test-agno3` | ChemicalTests | Alcoholic AgNO3 (no precipitate cold) | dry-redistil | Alcoholic silver nitrate gives no precipitate in the cold with chloroform. |
-| 11 | `record-yield` | DataSheet | Record % yield and observations | test-flammability, test-agno3, test-oxidation | Enter chloroform mass, % yield and test results. |
+### Task graph (play order \u2014 as built, 13 tasks)
 
-### Stage layout
+| # | task | phase | label | prereq | how it completes |
+|---|------|-------|-------|--------|------------------|
+| 1 | `prep-bleach` | ReagentPrep | Dissolve 150 g bleaching powder in 400 mL water (1 L flask) | - | `ErlenmeyerFlask_400mL_2`: 5 scoopula dips bleaching powder FIRST + 20 ml water tilt-pour |
+| 2 | `prep-acetone-mix` | ReagentPrep | Mix 12 g acetone + 50 mL water (the dropwise charge) | - | `Eq_GraduatedCylinder_50mL`: 5 ml acetone + 10 ml water |
+| 3 | `add-dropwise` | Synthesis | Add the acetone-water mixture drop by drop | 1, 2 | 5 dropper squeezes of acetone into the flask \u2192 `Chloroform` rule PENDS cold, fires \u226540 \u00b0C at the bath |
+| 4 | `distil` | Synthesis | Arrange for distillation \u2014 bring the flask to the boil | 3 | flask in the water bath to 65 \u00b0C (`heatTaskId`) |
+| 5 | `collect-crude` | Synthesis | Collect the crude chloroform distillate | 4 | hold `Eq_Beaker_100mL` by the hot flask's mouth \u2014 \u22658 ml condense (`vaporTaskId`) |
+| 6 | `decant-wash` | Synthesis | Wash the chloroform by decantation (\u00d72) | 5 | 4 squeezes of distilled water into the crude beaker + swirl |
+| 7 | `dry-cacl2` | Synthesis | Dry the washed chloroform over anhydrous CaCl2 | 6 | decant 8 ml chloroform into `DistillingFlask` + 1 scoopula CaCl2, warm to 65 \u00b0C (deferred binding + `heatToC`) |
+| 8 | `dry-redistil` | Synthesis | Redistil until the liquid runs clear | 7 | keep the flask hot; `Kit_TestTube_14` at the mouth collects \u22656 ml clear (`vaporTaskId`) |
+| 9 | `weigh-product` | Synthesis | Weigh your chloroform distillate | 8 | Tube 14 settled on the bench balance (`weighTaskId`, no pour steps of its own) |
+| 10 | `test-flammability` | ChemicalTests | Non-flammability test (lit match) | 9 | 2 ml chloroform onto `Eq_WatchGlass`, then a LIT match/burner flame held to it (`flameTaskId` \u2192 **VesselFlameTask**, new reusable) \u2014 "Won't ignite \u2713" |
+| 11 | `test-oxidation` | ChemicalTests | Oxidation \u2014 dichromate + conc. H2SO4 (fume hood) | 9 | Tube 15 IN THE HOOD: 1 ml chloroform + 0.4 g dichromate (hood-gated reagent) + 2 squeezes H2SO4, warm \u226560 \u00b0C at the bath |
+| 12 | `test-agno3` | ChemicalTests | Alcoholic AgNO3 \u2014 nothing cold, white AgCl warm | 9 | Tube 16: 1 squeeze alcoholic AgNO3 FIRST + 1 ml chloroform \u2192 pends cold, white AgCl ppt \u226550 \u00b0C at the bath |
+| 13 | `record-yield` | DataSheet | Record % yield and observations | 9\u201312 | auto-completes (wrap-up) |
 
-**Stations:** `reflux-setup` (zone-touch) ; `add-dropwise` (zone-touch) ; `distil` (Heat to 78 C) ; `decant-wash` (Filter) ; `dry-redistil` (Heat to 78 C) ; `test-flammability` (zone-touch)
-
-**Reagents staged (pourable):** Bleaching Powder (Vial_Brown, auto-supply) ; Acetone (Vial_Brown, auto-supply) ; Silver Nitrate (Vial_Brown, auto-supply) ; Potassium Dichromate (Vial_Brown, auto-supply)
-
-**Tools staged:** Retort Stand ; Dropper ; Distillate Beaker ; Separating Funnel ; Watch Glass ; Lit Splint
-
-**Vessel ErlenmeyerFlask_400mL** (Reflux Flask) - starts EMPTY
-  - pour **Bleaching Powder** >= 50 ml -> completes `prep-bleach`
-  - pour **Acetone** >= 50 ml -> completes `prep-acetone-mix`
-
-**Vessel TestTube_WithLiquid** (AgNO3 Test Tube) - starts with Chloroform
-  - pour **Silver Nitrate** >= 50 ml -> completes `test-agno3`
-  - pour **Potassium Dichromate** >= 50 ml -> completes `test-oxidation`
+**All test draws come from Test Tube 14** (the pure-product receiver). The wash beaker is the sim's new **washed-product source class** (product + Distilled Water only in the ledger = decantable; any other foreign entry marks test residue).
 
 ### Reactions & expected observations
 
-- **Chloroform**: Acetone + Bleaching Powder -> Chloroform - "Dense, sweet, non-flammable chloroform"
-- **Test_AcetoneTollens**: Acetone + Silver Nitrate -> Acetone - "No silver mirror \u2014 acetone is a ketone (negative Tollen's"
-- **Test_ChloroformAgNO3**: Chloroform + Silver Nitrate -> Chloroform - "White precipitate (AgCl) forms on warming with alcoholic silver"
-- **Test_ChloroformOxidation**: Chloroform + Potassium Dichromate - "Pungent, suffocating odour (phosgene-like) \u2014 oxidation"
+- **Chloroform** (min 40 \u00b0C): Acetone + Bleaching Powder \u2192 Chloroform \u2014 "Dense, sweet, non-flammable chloroform"
+- **Test_ChloroformOxidation** (min 60 \u00b0C, fixed 2026-07-18 \u2014 resultLiquid was NULL, the product trap, and it fired cold): Chloroform + Potassium Dichromate \u2192 Chloroform \u2014 "Pungent, suffocating odour (phosgene-like)". Potassium Dichromate is `requiresFumeHood` (only Exp 7 uses it).
+- **Test_ChloroformAgNO3** (min 50 \u00b0C, fixed 2026-07-18 \u2014 claimed a precipitate with resultPrecipitate NULL, and paired PLAIN silver nitrate): Chloroform + **Alcoholic Silver Nitrate** \u2192 white **Silver Chloride** ppt (new chem) \u2014 "Nothing in the cold - on warming in the water bath a white precipitate (AgCl) separates."
+- **Test_AcetoneTollens** stays authored for Exp 6 (Acetone + Silver Nitrate negative).
 
 ### Quiz (Documentation score)
 

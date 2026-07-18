@@ -201,7 +201,10 @@ public static class SimulatedRun
                 if (stepsByTask.TryGetValue(id, out var steps))
                 {
                     handled = true;
-                    if (SimulatePours(runner, id, steps, demand, pouredInto, res, log)
+                    // A vapor-collect task's "reagent" is PRODUCED by the hot
+                    // source tube, never poured from a bottle — own it first.
+                    if (SimulateVapor(runner, id, steps, pouredInto, res, log)) { }
+                    else if (SimulatePours(runner, id, steps, demand, pouredInto, res, log)
                         && !runner.Graph.IsComplete(id))
                     {
                         // Delivery done but completion belongs elsewhere: a rack
@@ -228,7 +231,9 @@ public static class SimulatedRun
                         else if (SimulateVesselHeat(runner, id, steps, res, log)) { }
                         else if (SimulateFermentation(runner, id, steps, res, log)) { }
                         else if (SimulateChillTask(runner, id, res, log)) { }   // chill WITH reagents (Exp 5's ice water)
+                        else if (SimulateWeigh(runner, id, steps, res, log)) { }
                         else if (SimulateLitmus(runner, id, steps, res, log)) { }
+                        else if (SimulateFlame(runner, id, steps, res, log)) { }   // flammability confirm (Exp 7)
                         else if (SimulateStation(runner, id, simStations, zoneStations, temps, labItems, res, log)) { }
                         else if (deferred)
                         {
@@ -246,7 +251,9 @@ public static class SimulatedRun
                 }
                 else
                     handled = SimulateStation(runner, id, simStations, zoneStations, temps, labItems, res, log)
-                              || SimulateChillTask(runner, id, res, log);
+                              || SimulateChillTask(runner, id, res, log)
+                              || SimulateVesselHeat(runner, id, null, res, log)   // heat with no reagents of its own (Exp 6's heat-glow)
+                              || SimulateWeigh(runner, id, null, res, log);       // weigh with no pours of its own (Exp 7's weigh-product)
 
                 if (!handled)
                 {
@@ -559,17 +566,56 @@ public static class SimulatedRun
     }
 
     /// The zone-free heat STEP: the vessel owning a VesselHeatTask is served,
-    /// then held in the bath until its task condition (served AND hot) trips.
+    /// then held at the right heat source until its task condition trips.
+    /// ≤100 °C = the water bath; beyond = the NAKED FLAME (Exp 6's dry
+    /// distillation — hold the hard-glass tube over a lit burner). steps may be
+    /// null for heat tasks with no reagents of their own (found by TaskId).
     static bool SimulateVesselHeat(ExperimentRunner runner, string id,
         List<(LiquidTaskBinding b, LiquidTaskBinding.ReagentStep s)> steps, Result res, StringBuilder log)
     {
         VesselHeatTask heat = null; LiquidPhysics tube = null;
-        foreach (var (b, _) in steps)
-        {
-            var h = b != null ? b.GetComponent<VesselHeatTask>() : null;
-            if (h != null && h.TaskId == id) { heat = h; tube = b.GetComponent<LiquidPhysics>(); break; }
-        }
+        if (steps != null)
+            foreach (var (b, _) in steps)
+            {
+                var h = b != null ? b.GetComponent<VesselHeatTask>() : null;
+                if (h != null && h.TaskId == id) { heat = h; tube = b.GetComponent<LiquidPhysics>(); break; }
+            }
+        if (heat == null)
+            foreach (var h in Object.FindObjectsByType<VesselHeatTask>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (h != null && h.TaskId == id) { heat = h; tube = h.GetComponent<LiquidPhysics>(); break; }
         if (heat == null || tube == null) return false;
+
+        if (heat.RequiredC > WaterBathMath.BathMaxC)
+        {
+            // OPEN FLAME: the bath tops out at 100 — hold the tube over a lit burner.
+            var flame = Object.FindAnyObjectByType<NakedFlameHeat>(FindObjectsInactive.Include);
+            var fburner = flame != null ? flame.GetComponent<BurnerController>() : null;
+            if (flame == null || fburner == null)
+            {
+                res.bugs.Add(id + ": needs " + heat.RequiredC.ToString("0")
+                             + " C (open flame) but no burner carries NakedFlameHeat (run Apply W5.8 Verb Data)");
+                runner.CompleteTask(id);
+                return true;
+            }
+            fburner.Ignite();
+            log.AppendLine("  (lit a burner — OPEN FLAME, no water bath)");
+            for (int i = 0; i < 600 && !runner.Graph.IsComplete(id); i++)
+            {
+                flame.HeatVessel(tube, 0.5f);
+                runner.Graph.Tick();
+            }
+            fburner.Extinguish();
+            if (runner.Graph.IsComplete(id))
+                log.AppendLine("  ✓ held " + tube.name + " over the flame to " + heat.RequiredC.ToString("0")
+                               + " C — the acetates glow (tube at " + tube.currentTempC.ToString("0") + " C)");
+            else
+            {
+                res.bugs.Add(id + ": open-flame heating never completed the step (tube "
+                             + tube.currentTempC.ToString("0") + " C / needs " + heat.RequiredC.ToString("0") + " C)");
+                runner.CompleteTask(id);
+            }
+            return true;
+        }
 
         var bath = PrepareBath(res, log);
         if (bath == null) return true;   // owned, but the tool chain is broken (bug already logged)
@@ -680,6 +726,137 @@ public static class SimulatedRun
         return true;
     }
 
+    /// The zone-free FLAMMABILITY confirmation (Exp 7): the sample is poured
+    /// onto its dish, then a LIT flame is brought to it — the sim lights the
+    /// bench burner and holds the dish at its flame (the match-strike stand-in),
+    /// driving the SAME PollFlames scan a play-mode frame runs. The task must
+    /// complete on the flame verb, never on the pour alone.
+    static bool SimulateFlame(ExperimentRunner runner, string id,
+        List<(LiquidTaskBinding b, LiquidTaskBinding.ReagentStep s)> steps, Result res, StringBuilder log)
+    {
+        VesselFlameTask flame = null; LiquidPhysics dish = null;
+        foreach (var (b, _) in steps)
+        {
+            var f = b != null ? b.GetComponent<VesselFlameTask>() : null;
+            if (f != null && f.TaskId == id) { flame = f; dish = b.GetComponent<LiquidPhysics>(); break; }
+        }
+        if (flame == null || dish == null) return false;
+
+        var burner = Object.FindAnyObjectByType<BurnerController>(FindObjectsInactive.Include);
+        if (burner == null)
+        {
+            res.bugs.Add(id + ": no bench burner to take a flame from — the flammability test is unplayable");
+            runner.CompleteTask(id);
+            return true;
+        }
+        Vector3 home = dish.transform.position;
+        burner.Ignite();
+        dish.transform.position = FlameTestMath.FlamePos(burner);   // hold the sample AT the flame
+        flame.PollFlames();
+        runner.Graph.Tick();
+        dish.transform.position = home;
+        burner.Extinguish();
+        if (runner.Graph.IsComplete(id))
+            log.AppendLine("  ✓ lit a burner and held " + dish.name
+                           + " to the flame — it refuses to ignite (non-flammable confirmed)");
+        else
+        {
+            res.bugs.Add(id + ": holding a lit flame to the served sample did not complete the flammability test");
+            runner.CompleteTask(id);
+        }
+        return true;
+    }
+
+    /// The DRY-DISTILLATION collect step (Exp 6): the hot source tube converts
+    /// its acetate charge into the product, condensing into the receiver — the
+    /// product is PRODUCED, never poured from a bottle. Played by keeping the
+    /// source over the flame and running the delivery ticks.
+    static bool SimulateVapor(ExperimentRunner runner, string id,
+        List<(LiquidTaskBinding b, LiquidTaskBinding.ReagentStep s)> steps,
+        Dictionary<LiquidTaskBinding, float> pouredInto, Result res, StringBuilder log)
+    {
+        VaporCollectController vapor = null;
+        foreach (var v in Object.FindObjectsByType<VaporCollectController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (v != null && v.VaporTaskId == id) { vapor = v; break; }
+        if (vapor == null) return false;
+
+        LiquidTaskBinding recvBind = steps.Count > 0 ? steps[0].b : null;
+        var receiver = recvBind != null ? recvBind.GetComponent<LiquidPhysics>() : null;
+        if (receiver == null)
+        {
+            res.bugs.Add(id + ": vapor task has no receiver vessel bound");
+            runner.CompleteTask(id);
+            return true;
+        }
+        // Keep the source at temperature (the flame again — the player leaves
+        // the tube over the burner while collecting).
+        var flame = Object.FindAnyObjectByType<NakedFlameHeat>(FindObjectsInactive.Include);
+        var fburner = flame != null ? flame.GetComponent<BurnerController>() : null;
+        if (fburner != null) fburner.Ignite();
+        float emitted = 0f;
+        for (int i = 0; i < 300 && !runner.Graph.IsComplete(id); i++)
+        {
+            if (flame != null && vapor.Source != null) flame.HeatVessel(vapor.Source, 0.5f);
+            if (vapor.EmitTick(receiver)) emitted += VaporMath.MlPerTick;
+            runner.Graph.Tick();
+        }
+        if (fburner != null) fburner.Extinguish();
+        pouredInto.TryGetValue(recvBind, out float pv2); pouredInto[recvBind] = pv2 + emitted;
+        if (runner.Graph.IsComplete(id))
+            log.AppendLine("  ✓ distillate ran over: " + emitted.ToString("0.#") + " ml condensed from "
+                           + (vapor.Source != null ? vapor.Source.name : "the source") + " → " + receiver.name);
+        else
+        {
+            res.bugs.Add(id + ": the vapor stream never filled the receiver (emitted "
+                         + emitted.ToString("0.#") + " ml; source "
+                         + (vapor.Source != null ? vapor.Source.currentTempC.ToString("0") + " C, " + vapor.Source.currentLiquidVolume.ToString("0.#") + " ml left" : "missing") + ")");
+            runner.CompleteTask(id);
+        }
+        return true;
+    }
+
+    /// The zone-free WEIGH step (Exp 6): the served vessel is set on the bench
+    /// balance's pan (ForceLoad — the sim's stand-in for placing it) until the
+    /// condition (served AND settled) trips. steps may be null for weigh tasks
+    /// with no pours of their own (Exp 7's "collect the distillate and weigh").
+    static bool SimulateWeigh(ExperimentRunner runner, string id,
+        List<(LiquidTaskBinding b, LiquidTaskBinding.ReagentStep s)> steps, Result res, StringBuilder log)
+    {
+        VesselWeighTask weigh = null; LiquidPhysics tube = null;
+        if (steps != null)
+            foreach (var (b, _) in steps)
+            {
+                var w = b != null ? b.GetComponent<VesselWeighTask>() : null;
+                if (w != null && w.TaskId == id) { weigh = w; tube = b.GetComponent<LiquidPhysics>(); break; }
+            }
+        if (weigh == null)
+            foreach (var w in Object.FindObjectsByType<VesselWeighTask>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (w != null && w.TaskId == id) { weigh = w; tube = w.GetComponent<LiquidPhysics>(); break; }
+        if (weigh == null || tube == null) return false;
+
+        var station = Object.FindAnyObjectByType<WeighStation>(FindObjectsInactive.Include);
+        if (station == null)
+        {
+            res.bugs.Add(id + ": no WeighStation on the bench balance — weigh steps are unplayable (run Apply W5.8 Verb Data)");
+            runner.CompleteTask(id);
+            return true;
+        }
+        station.ForceLoad(null, tube, 5f);   // rested + settled on the pan
+        runner.Graph.Tick();
+        bool done = runner.Graph.IsComplete(id);
+        station.ForceLoad(null, null, 0f);   // lift it back off
+        if (done)
+            log.AppendLine("  ✓ set " + tube.name + " on the balance — "
+                           + (tube.currentLiquidVolume + tube.currentPptVolume).ToString("0.#")
+                           + " g settled, step complete");
+        else
+        {
+            res.bugs.Add(id + ": resting the served vessel on the balance did not complete the step");
+            runner.CompleteTask(id);
+        }
+        return true;
+    }
+
     /// The filter pour, played honestly: source = a liquid-holding vessel bound
     /// to one of the filter task's PREREQUISITE tasks (the boiled tube);
     /// destination = the vessel bound to a task that lists the filter task as
@@ -731,10 +908,37 @@ public static class SimulatedRun
     static string s_moduleProduct;
 
     /// A bound vessel holding ONLY the module's product = the purified product
-    /// (Exp 4's crystallised flask, Exp 5's filtered-and-dried beaker).
+    /// (Exp 4's crystallised flask, Exp 5's dried-crystal beaker, Exp 6's
+    /// receiver tube). ⚠ A TEST tube whose rule collapsed its ledger back to
+    /// the product name (Tollens' resultLiquid = Acetone) can masquerade — so
+    /// any vessel that has already RECEIVED a non-product reagent is test
+    /// residue, never the product store (Exp 6 round one poured the Schiff
+    /// sample out of the silver-laced Tollens tube).
     static bool IsPureProductVessel(LiquidPhysics lp)
-        => lp != null && lp.Ledger.Count == 1 && lp.currentChemical != null
-           && lp.currentChemical.chemicalName == s_moduleProduct;
+    {
+        if (lp == null || lp.Ledger.Count != 1 || lp.currentChemical == null
+            || lp.currentChemical.chemicalName != s_moduleProduct) return false;
+        var b = lp.GetComponent<LiquidTaskBinding>();
+        if (b != null)
+            foreach (var s in b.ExpectedSteps)
+                if (s != null && s.reagent != null && s.reagent.chemicalName != s_moduleProduct
+                    && b.AccumulatedFor(s.taskId, s.reagent) > 0.01f) return false;
+        return true;
+    }
+
+    /// A bound vessel whose story is PRODUCT + WASH WATER only (Exp 7's crude
+    /// beaker after the decantation wash: dense chloroform under distilled
+    /// water) — decantable, because PourOut yields the dense product layer. Any
+    /// OTHER foreign ledger entry marks test residue, never a source.
+    static bool IsWashedProductVessel(LiquidPhysics lp)
+    {
+        if (lp == null || lp.Ledger.Count < 2 || lp.currentChemical == null
+            || lp.currentChemical.chemicalName != s_moduleProduct
+            || lp.GetComponent<LiquidTaskBinding>() == null) return false;
+        foreach (var name in lp.Ledger.Names)
+            if (name != s_moduleProduct && name != "Distilled Water") return false;
+        return true;
+    }
 
     /// The source a player would pour from. A TASK VESSEL that already holds the
     /// chemical wins over the shelf — that IS the filtrate pour (tube 17's
@@ -742,7 +946,7 @@ public static class SimulatedRun
     /// shelf bottle is the fallback for fresh reagents.
     static LiquidPhysics FindSource(ChemicalData chem, LiquidPhysics destination)
     {
-        LiquidPhysics product = null, chillV = null, vessel = null, wash = null, shelf = null;
+        LiquidPhysics product = null, chillV = null, washed = null, vessel = null, wash = null, shelf = null;
         foreach (var lp in Object.FindObjectsByType<LiquidPhysics>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             if (lp == null || lp == destination || lp.currentChemical != chem
@@ -765,6 +969,8 @@ public static class SimulatedRun
                 { if (product == null || lp.currentLiquidVolume > product.currentLiquidVolume) product = lp; }
                 else if (lp.GetComponent<VesselChillTask>() != null)
                 { if (chillV == null || lp.currentLiquidVolume > chillV.currentLiquidVolume) chillV = lp; }
+                else if (IsWashedProductVessel(lp))
+                { if (washed == null || lp.currentLiquidVolume > washed.currentLiquidVolume) washed = lp; }
                 else if (lp.GetComponent<VesselHeatTask>() != null && lp.Ledger.Count == 1)
                 { if (vessel == null || lp.currentLiquidVolume > vessel.currentLiquidVolume) vessel = lp; }
                 else if (lp.GetComponent<FermentationController>() != null)
@@ -782,6 +988,7 @@ public static class SimulatedRun
         }
         return product != null ? product
              : chillV != null ? chillV
+             : washed != null ? washed
              : vessel != null ? vessel
              : wash != null ? wash : shelf;
     }
@@ -948,3 +1155,5 @@ public static class SimulatedRun
     static string UnitFor(LiquidTaskBinding.ReagentStep s) => IsSolid(s) ? " g" : " ml";
 }
 #endif
+
+// touch 2026-07-18 suite-autorun trigger
