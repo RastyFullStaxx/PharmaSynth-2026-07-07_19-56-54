@@ -13,8 +13,14 @@ using UnityEngine;
 /// Tools ▸ PharmaSynth ▸ Build Lab Music Speaker (SampleScene, edit mode, idempotent).
 public static class MusicSpeakerBuilder
 {
-    const string LabDir = "Assets/Background_Music/Lab";
-    const string MenuTrack = "Assets/Background_Music/MenuRoom/music_1.mp3";
+    // ⛔ These paths were "Assets/Background_Music/..." — a folder that does not
+    // exist (the audio lives under Assets/PharmaSynth/Audio/). LoadClips silently
+    // returned ZERO clips, so the speaker was built with an EMPTY playlist and the
+    // lab has been SILENT ever since (user 2026-07-19: "ensure the background
+    // musics are working. currently, I dont hear them"). ResolveDir now also
+    // searches, so a future move can't re-break it the same way.
+    const string LabDir = "Assets/PharmaSynth/Audio/Background_Music/Lab";
+    const string MenuTrack = "Assets/PharmaSynth/Audio/Background_Music/MenuRoom/music_1.mp3";
     const string GroupName = "LabSpeaker";
 
     [MenuItem("Tools/PharmaSynth/Build Lab Music Speaker")]
@@ -23,8 +29,10 @@ public static class MusicSpeakerBuilder
         if (Application.isPlaying) { Debug.LogWarning("[MusicSpeaker] exit Play mode first."); return; }
 
         // ---- load the lab playlist ------------------------------------------------
-        var clips = LoadClips(LabDir);
-        if (clips.Count == 0) Debug.LogWarning("[MusicSpeaker] no clips in " + LabDir + " — speaker will be silent until tracks import.");
+        var clips = LoadClips(ResolveDir(LabDir, "Lab"));
+        if (clips.Count == 0)
+            Debug.LogError("[MusicSpeaker] NO lab tracks found — the speaker would be silent. Expected "
+                           + LabDir + " (checked the project for a Background_Music/Lab folder too).");
 
         // ---- place in the empty back-right corner, facing room centre -------------
         var old = GameObject.Find(GroupName);
@@ -59,6 +67,27 @@ public static class MusicSpeakerBuilder
                   " with " + clips.Count + " lab track(s)</color>; old LabMusicPlayer disabled.");
     }
 
+    /// The authored path if it exists, else the first folder in the project whose
+    /// path ends with Background_Music/&lt;leaf&gt; — so a moved audio tree degrades to
+    /// a warning instead of silent music.
+    static string ResolveDir(string authored, string leaf)
+    {
+        if (Directory.Exists(authored)) return authored;
+        foreach (var g in AssetDatabase.FindAssets("t:AudioClip"))
+        {
+            string p = AssetDatabase.GUIDToAssetPath(g).Replace('\\', '/');
+            int cut = p.LastIndexOf('/');
+            if (cut < 0) continue;
+            string folder = p.Substring(0, cut);
+            if (folder.EndsWith("Background_Music/" + leaf))
+            {
+                Debug.LogWarning("[MusicSpeaker] " + authored + " missing — using " + folder);
+                return folder;
+            }
+        }
+        return authored;
+    }
+
     static List<AudioClip> LoadClips(string dir)
     {
         var list = new List<AudioClip>();
@@ -77,12 +106,27 @@ public static class MusicSpeakerBuilder
     static void RepointMenuMusic()
     {
         var menu = AssetDatabase.LoadAssetAtPath<AudioClip>(MenuTrack);
+        if (menu == null)
+        {
+            string dir = ResolveDir("Assets/PharmaSynth/Audio/Background_Music/MenuRoom", "MenuRoom");
+            var found = LoadClips(dir);
+            if (found.Count > 0) menu = found[0];
+        }
         if (menu == null) { Debug.LogWarning("[MusicSpeaker] menu track not found: " + MenuTrack); return; }
+        // The lab's own SoundBank key was left with a NULL clip ("clip pending"),
+        // so anything routing music through the bank played nothing — point it at
+        // the first lab track alongside the positional speaker (2026-07-19).
+        var labClips = LoadClips(ResolveDir(LabDir, "Lab"));
         foreach (var g in AssetDatabase.FindAssets("t:SoundBank"))
         {
             var bank = AssetDatabase.LoadAssetAtPath<SoundBank>(AssetDatabase.GUIDToAssetPath(g));
-            var e = bank != null ? bank.Get("music-menu") : null;
-            if (e != null) { e.clip = menu; EditorUtility.SetDirty(bank); Debug.Log("[MusicSpeaker] music-menu -> " + menu.name); }
+            if (bank == null) continue;
+            var e = bank.Get("music-menu");
+            if (e != null) { e.clip = menu; Debug.Log("[MusicSpeaker] music-menu -> " + menu.name); }
+            var lab = bank.Get("music-lab");
+            if (lab != null && lab.clip == null && labClips.Count > 0)
+            { lab.clip = labClips[0]; Debug.Log("[MusicSpeaker] music-lab -> " + labClips[0].name + " (was NULL)"); }
+            EditorUtility.SetDirty(bank);
             break;
         }
     }

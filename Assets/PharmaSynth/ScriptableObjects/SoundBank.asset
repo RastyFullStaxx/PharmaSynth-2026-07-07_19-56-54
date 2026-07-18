@@ -142,7 +142,7 @@ MonoBehaviour:
     category: 0
     volume: 0.5
   - key: music-lab
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: dadbc0c9adef6e14caaba35a2a1d2e8f, type: 3}
     category: 3
     volume: 0.6
   - key: ac-hum

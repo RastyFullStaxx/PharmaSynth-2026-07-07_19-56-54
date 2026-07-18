@@ -80,7 +80,8 @@ public static class QuizNavButtonsBuilder
             rt.sizeDelta = trt.sizeDelta;
             rt.localRotation = trt.localRotation;
             rt.localScale = trt.localScale;
-            float step = Mathf.Max(1f, trt.rect.width) * 1.12f;   // clear of Submit, in canvas units
+            var prt = parent as RectTransform;
+            float step = StepFor(trt.rect.width, prt != null ? prt.rect.width : 0f, trt.anchoredPosition.x);
             rt.anchoredPosition = trt.anchoredPosition + new Vector2(dir * step, 0f);
         }
         else if (existing == null)   // non-RectTransform fallback
@@ -93,6 +94,24 @@ public static class QuizNavButtonsBuilder
         var tmp = go.GetComponentInChildren<TMP_Text>(true);
         if (tmp != null) tmp.text = label;
         return go.GetComponentInChildren<Button>(true);
+    }
+
+    /// How far from Submit each side button sits, in canvas units — CONTAINED
+    /// (user 2026-07-19: "contain the next and prev button, currently it's going
+    /// out of bounds"). The old flat 1.12x button-width step overflowed any panel
+    /// narrower than ~3.4 buttons: on the real 820-wide quiz panel a 300-wide
+    /// button stepped 336, putting its outer edge at 486 against a 410 half-width
+    /// — ~76 units off each side, exactly as the playtest screenshot showed.
+    /// Clamped so the button's OUTER edge stays inside the parent with a 4%
+    /// margin, and Submit's own offset is respected (it need not be centred).
+    /// parentWidth &lt;= 0 (unresolvable rect) keeps the preferred step. Pure + pinned.
+    public static float StepFor(float buttonWidth, float parentWidth, float submitOffsetX)
+    {
+        float w = Mathf.Max(1f, buttonWidth);
+        float preferred = w * 1.12f;
+        if (parentWidth <= 1f) return preferred;
+        float maxStep = (parentWidth * 0.5f) - (w * 0.5f) - (parentWidth * 0.04f) - Mathf.Abs(submitOffsetX);
+        return maxStep > 0f ? Mathf.Min(preferred, maxStep) : preferred;
     }
 
     /// Clear cloned listeners, then wire this button to the given method.

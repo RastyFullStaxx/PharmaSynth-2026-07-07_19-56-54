@@ -44,6 +44,10 @@ public class PharmeeGatekeeper : MonoBehaviour
     [Header("Review corner (post-experiment quiz flow, 2026-07-11)")]
     [SerializeField] private PostLabController postLab;   // the quiz tablet (autoOpen off in-scene)
     [SerializeField] private Transform reviewCornerSpawn; // lands the player facing Jimenez + tablet
+    [Tooltip("Pharmee's physical body (the robot). Leave empty when this component IS on the robot.")]
+    [SerializeField] private Transform pharmeeBody;
+    [Tooltip("How far to the player's LEFT of the tablet Pharmee parks during the review, so he never blocks it.")]
+    [SerializeField] private float pharmeeReviewOffset = 1.15f;
     [SerializeField] private ExaminerNPC examiner;        // Dr. Jimenez's voice channel
 
     [Header("Dialogue")]
@@ -422,7 +426,7 @@ public class PharmeeGatekeeper : MonoBehaviour
                     if (Model.State != GateState.QuizIntro) return;
                     // Stage Jimenez INSIDE the same fade as the teleport, so he is
                     // always back at his review spot facing the player when it lifts.
-                    DoFaded(() => { TeleportTo(reviewCornerSpawn); StageExaminerForReview(); });
+                    DoFaded(() => { TeleportTo(reviewCornerSpawn); StageExaminerForReview(); StagePharmeeForReview(); });
                     After(0.9f, () => SpeakJimenezBrief(0));
                 });
                 break;
@@ -528,6 +532,7 @@ public class PharmeeGatekeeper : MonoBehaviour
             ExperimentStationRegistry.Clear();
             launcher?.Launch(id, LaunchMode.StageOnly);   // props/bottles back to original spawns
             DropRespawn.ResetAllHome();                    // hand-placed apparatus + reagents back home too
+            RestorePharmeeHome();                          // a mid-review reset must not strand him by the tablet
             // Wearables back on their pegs (+ worn PPE stripped) so the next campaign is dressable.
             if (WearableReseat.Instance != null) WearableReseat.Instance.Reseat();
             else if (ppe != null) ppe.RemovePPE();        // wearables off
@@ -578,6 +583,50 @@ public class PharmeeGatekeeper : MonoBehaviour
         var cam = cameraOverride != null ? cameraOverride : Camera.main;
         roamer.ReturnHomeAndHold(cam != null ? cam.transform : playerRig);
     }
+
+    /// Pharmee stood squarely between the player and the quiz tablet during the
+    /// review (user 2026-07-19: "move pharmee about to the left so I could
+    /// clearly see the exam tablet"). Park him off to the PLAYER'S LEFT of the
+    /// tablet, still facing them so he reads as present, and remember where he
+    /// was so the lab reset puts him back on door duty.
+    private Vector3 _pharmeeHomePos;
+    private Quaternion _pharmeeHomeRot;
+    private bool _pharmeeParked;
+
+    private void StagePharmeeForReview()
+    {
+        var body = PharmeeBody();
+        if (body == null || reviewCornerSpawn == null || postLab == null) return;
+        if (!_pharmeeParked)
+        { _pharmeeHomePos = body.position; _pharmeeHomeRot = body.rotation; _pharmeeParked = true; }
+
+        Vector3 viewer = reviewCornerSpawn.position;
+        Vector3 tablet = postLab.transform.position;
+        Vector3 toTablet = tablet - viewer; toTablet.y = 0f;
+        if (toTablet.sqrMagnitude < 1e-4f) return;
+        toTablet.Normalize();
+        Vector3 left = new Vector3(-toTablet.z, 0f, toTablet.x);   // player's left of the sightline
+        // Beside the tablet and a touch nearer the player, well clear of the panel.
+        Vector3 spot = tablet + left * pharmeeReviewOffset - toTablet * 0.5f;
+        spot.y = body.position.y;
+        body.position = spot;
+        Vector3 face = viewer - spot; face.y = 0f;
+        if (face.sqrMagnitude > 1e-4f) body.rotation = Quaternion.LookRotation(face.normalized, Vector3.up);
+    }
+
+    /// Put him back on the door after the review (called by the lab reset).
+    private void RestorePharmeeHome()
+    {
+        var body = PharmeeBody();
+        if (body == null || !_pharmeeParked) return;
+        body.position = _pharmeeHomePos;
+        body.rotation = _pharmeeHomeRot;
+        _pharmeeParked = false;
+    }
+
+    /// Pharmee's physical body — the robot this gatekeeper drives. Serialized when
+    /// the gatekeeper lives elsewhere; otherwise this component's own transform.
+    private Transform PharmeeBody() => pharmeeBody != null ? pharmeeBody : transform;
 
     /// Jimenez's quiz briefing at the review corner, then the quiz opens.
     /// Beats 0-1 = the generic brief; then he RECAPS this module's manuscript
@@ -663,6 +712,7 @@ public class PharmeeGatekeeper : MonoBehaviour
         ExperimentStationRegistry.Clear();
         launcher?.Launch(id, LaunchMode.StageOnly);
         DropRespawn.ResetAllHome();                    // hand-placed apparatus + reagents back home
+        RestorePharmeeHome();                          // off the review spot, back on door duty
         if (WearableReseat.Instance != null) WearableReseat.Instance.Reseat();
         else if (ppe != null) ppe.RemovePPE();
         TeleportToFrontDoor();

@@ -1121,6 +1121,21 @@ public static class PharmaSelfTests
         A("narration: long line keeps a read hold", Near(NPCNarrationController.HoldSecondsAfterReveal(3.5f, 4.7f), 1.9f));
         A("narration: short line keeps authored dwell", Near(NPCNarrationController.HoldSecondsAfterReveal(3.5f, 1.0f), 2.5f));
 
+        // QUIZ NAV CONTAINMENT (2026-07-19): Back/Next used to overflow the quiz
+        // panel. The real geometry is a 300-wide button on an 820-wide panel:
+        // the preferred 336 step put the outer edge at 486 vs a 410 half-width.
+        {
+            float step = QuizNavButtonsBuilder.StepFor(300f, 820f, 0f);
+            A("quiznav: the side buttons stay INSIDE the panel",
+                step + 150f <= 410f && step > 0f);
+            A("quiznav: a roomy panel keeps the preferred spacing",
+                Near(QuizNavButtonsBuilder.StepFor(100f, 2000f, 0f), 112f));
+            A("quiznav: Submit's own offset is respected",
+                QuizNavButtonsBuilder.StepFor(300f, 820f, 60f) < QuizNavButtonsBuilder.StepFor(300f, 820f, 0f));
+            A("quiznav: an unresolvable parent keeps the preferred step",
+                Near(QuizNavButtonsBuilder.StepFor(300f, 0f, 0f), 336f));
+        }
+
         // Holo board scroll paging (W5.12: wrap + scrollable checklist).
         A("holo: page down moves toward the bottom", Near(HoloScroller.NextPage(1f, 0.6f, -1), 0.4f));
         A("holo: clamped at the bottom", HoloScroller.NextPage(0.2f, 0.6f, -1) == 0f);

@@ -97,7 +97,17 @@ public class PostLabController : MonoBehaviour
         if (titleText != null) titleText.text = "Data Sheet & Documentation";
         RefreshYield();
         Render();
+        // The tablet used to appear in SILENCE (user 2026-07-19: "add sound sfx
+        // for when the tablet for quiz appears to its direction"). Played 3D AT
+        // the tablet so it also tells the player WHERE to look — the review
+        // teleport drops them facing it, but it is easy to miss appearing.
+        AudioService.TryPlayFirstAt(TabletPosition(), 1f, "ui-confirm", "socket-snap", "ui-click");
     }
+
+    /// Where the tablet actually is, for positional audio: the visible root when
+    /// there is one (the panel the player reads), else this component.
+    private Vector3 TabletPosition()
+        => root != null ? root.transform.position : transform.position;
 
     /// Record the yield the player entered (percent). Optional for the grade.
     public void SetYield(float percent) { _yieldPercent = Mathf.Clamp(percent, 0f, 100f); RefreshYield(); }
