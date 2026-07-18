@@ -98,6 +98,12 @@ public static class SimulatedRun
         runner.SetModule(module);
         runner.StartExperiment();
 
+        // The module's own END PRODUCT is hidden from the bench during its run
+        // ("the player must craft it") — a shelf bottle of it therefore CANNOT
+        // be a source, however the edit-mode scene looks. Round one poured the
+        // litmus sample straight from the (play-mode-hidden) Raw_BenzoicAcid.
+        s_hiddenProduct = EndProductVisibility.HiddenProductFor(moduleId, false);
+
         var res = new Result { totalTasks = module.graphTasks.Count };
         log.AppendLine("=== Simulated run: " + moduleId + " (" + res.totalTasks + " tasks) ===");
 
@@ -364,9 +370,12 @@ public static class SimulatedRun
                 log.AppendLine("  ✗ binding heard nothing");
             }
 
-            demand.TryGetValue(s.reagent, out float d); demand[s.reagent] = d + Mathf.Max(inc * poured, 0f);
+            // Only SHELF draws feed the supply audit — a vessel-to-vessel pour
+            // (the filtrate, the product draws) consumes nothing from a bottle.
+            if (!vesselSource)
+            { demand.TryGetValue(s.reagent, out float d); demand[s.reagent] = d + Mathf.Max(inc * poured, 0f); }
             pouredInto.TryGetValue(b, out float pv); pouredInto[b] = pv + inc * poured;
-            log.AppendLine("  " + poured + "× " + (vesselSource ? "tilt-pour (through the funnel)" : VerbFor(s))
+            log.AppendLine("  " + poured + "× " + (vesselSource ? "tilt-pour (vessel to vessel)" : VerbFor(s))
                            + " " + s.reagent.chemicalName + " (from " + src.name + ") → " + b.name
                            + " (" + (inc * poured).ToString("0.#") + (vesselSource ? " ml" : UnitFor(s)) + ")");
         }
@@ -636,13 +645,16 @@ public static class SimulatedRun
                        + " through the funnel: " + src.name + " → " + dst.name);
     }
 
+    /// The module's own hidden end product (null when it has none) — set per run.
+    static string s_hiddenProduct;
+
     /// The source a player would pour from. A TASK VESSEL that already holds the
     /// chemical wins over the shelf — that IS the filtrate pour (tube 17's
     /// hydrolysate through the funnel into the beaker), the intended play; the
     /// shelf bottle is the fallback for fresh reagents.
     static LiquidPhysics FindSource(ChemicalData chem, LiquidPhysics destination)
     {
-        LiquidPhysics vessel = null, shelf = null;
+        LiquidPhysics product = null, vessel = null, wash = null, shelf = null;
         foreach (var lp in Object.FindObjectsByType<LiquidPhysics>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             if (lp == null || lp == destination || lp.currentChemical != chem
@@ -650,20 +662,37 @@ public static class SimulatedRun
             if (lp.GetComponent<LiquidTaskBinding>() != null)
             {
                 // A bound vessel is a source ONLY when it is a SYNTHESIS vessel
-                // (carries a VesselHeatTask — or a VesselChillTask: Exp 4's
-                // crystallising flask IS the product the tests draw from) that
-                // IS that substance (ledger collapsed to one product entry) —
-                // the hydrolysate pour. Round one drew "ethanol" out of the
-                // finished enol tube; round two tipped the beaker's violet TEST
-                // RESIDUE into the control tube.
-                if (lp.Ledger.Count != 1
-                    || (lp.GetComponent<VesselHeatTask>() == null && lp.GetComponent<VesselChillTask>() == null)) continue;
-                if (vessel == null || lp.currentLiquidVolume > vessel.currentLiquidVolume) vessel = lp;
+                // (heat / chill / fermentation task) — the hydrolysate pour, the
+                // decant. Round one drew "ethanol" out of the finished enol
+                // tube; round two tipped the beaker's violet TEST RESIDUE into
+                // the control tube — hence heat/chill also require the ledger
+                // collapsed to ONE product entry.
+                // The CHILL (crystallising) vessel is the FINISHED product and
+                // beats any upstream heat vessel: Exp 4's tests must draw from
+                // the purified flask, not the crude reaction beaker still full
+                // of MnO2 sludge (round one did exactly that).
+                if (lp.GetComponent<VesselChillTask>() != null && lp.Ledger.Count == 1)
+                { if (product == null || lp.currentLiquidVolume > product.currentLiquidVolume) product = lp; }
+                else if (lp.GetComponent<VesselHeatTask>() != null && lp.Ledger.Count == 1)
+                { if (vessel == null || lp.currentLiquidVolume > vessel.currentLiquidVolume) vessel = lp; }
+                // The FERMENTATION flask is the manuscript's WASH — decanted
+                // into the distilling flask as a real mixture (its ledger still
+                // lists yeast/nutrient/NaOH), so no single-entry requirement.
+                // Lowest vessel priority: the distillate beats the crude wash.
+                else if (lp.GetComponent<FermentationController>() != null)
+                { if (wash == null || lp.currentLiquidVolume > wash.currentLiquidVolume) wash = lp; }
             }
             else
-            { if (shelf == null || lp.currentLiquidVolume > shelf.currentLiquidVolume) shelf = lp; }
+            {
+                // A shelf bottle of the module's own END PRODUCT is hidden in
+                // play — the player cannot pour from it, so neither may the sim.
+                // (This exclusion is what exposed Exp 3's unplayable "wash =
+                // bench Ethanol" shorthand: that bottle is hidden during Exp 3.)
+                if (chem != null && chem.chemicalName == s_hiddenProduct) continue;
+                if (shelf == null || lp.currentLiquidVolume > shelf.currentLiquidVolume) shelf = lp;
+            }
         }
-        return vessel != null ? vessel : shelf;
+        return product != null ? product : vessel != null ? vessel : wash != null ? wash : shelf;
     }
 
     /// Sustained-verb (sim) and drop-zone stations. Returns false when no station
@@ -774,6 +803,7 @@ public static class SimulatedRun
             LiquidPhysics best = null;
             foreach (var lp in sources)
                 if (lp != null && lp.currentChemical == kv.Key
+                    && kv.Key.chemicalName != s_hiddenProduct   // hidden end product: not a supply
                     && (best == null || lp.currentLiquidVolume > best.currentLiquidVolume)
                     && !lp.name.StartsWith("Vessel_") && lp.GetComponent<LiquidTaskBinding>() == null)
                     best = lp;   // a task vessel is a destination, never the shelf supply

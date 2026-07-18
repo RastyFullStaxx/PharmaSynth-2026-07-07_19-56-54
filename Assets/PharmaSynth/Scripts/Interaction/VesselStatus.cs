@@ -42,6 +42,14 @@ public class VesselStatus : MonoBehaviour
             : VesselStatusMath.Compose(name,
                 _lp.currentChemical != null ? _lp.currentChemical.chemicalName : null,
                 _lp.currentLiquidVolume + _lp.currentPptVolume);
+        // Zone-free heat/chill steps get a live temperature goal on the tag
+        // itself (2026-07-18) — queried fresh each refresh because the builder's
+        // teardown strips these components between modules.
+        var heat = GetComponent<VesselHeatTask>();
+        var chill = GetComponent<VesselChillTask>();
+        string goal = heat != null ? VesselStatusMath.TempGoalLine(_lp.currentTempC, heat.RequiredC, false)
+                    : chill != null ? VesselStatusMath.TempGoalLine(_lp.currentTempC, chill.RequiredC, true) : "";
+        if (goal.Length > 0) s += "\n" + goal;
         if (s == _last) return;
         _last = s;
         _label.SetLabel(GlyphSafe.Sanitize(s), _showDist);

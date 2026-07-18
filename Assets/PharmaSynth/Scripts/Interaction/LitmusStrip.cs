@@ -101,7 +101,14 @@ public class VesselLitmusTask : MonoBehaviour
     /// Called by the strip that touched this vessel.
     public void NotifyRead(float pH)
     {
-        if (pH <= LitmusMath.AcidPH) _readAcidic = true;
+        if (pH <= LitmusMath.AcidPH && !_readAcidic)
+        {
+            _readAcidic = true;
+            // Assurance cue: the colour change is small — say what it means.
+            if (Application.isPlaying)
+                FloatingText.Show("Blue litmus turns RED — acid confirmed",
+                                  transform.position + Vector3.up * 0.15f, LitmusMath.AcidRed, 1f);
+        }
         if (_runner != null && _runner.Graph != null) _runner.Graph.Tick();
     }
 

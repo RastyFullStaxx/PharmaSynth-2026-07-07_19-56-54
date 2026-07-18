@@ -45,6 +45,18 @@ public static class VesselStatusMath
     public static string HeatLine(string baseLabel, float currentC, float targetC)
         => baseLabel + "\n" + Mathf.RoundToInt(currentC) + " C -> " + Mathf.RoundToInt(targetC) + " C";
 
+    /// Live temperature goal on a vessel that owns a zone-free heat/chill step
+    /// (2026-07-18, user: "ensure texts for monitoring of things such as temp
+    /// are there"): "25 C — warm to 50 C (water bath)" / "25 C — chill to 8 C
+    /// (ice bath)". Empty once the goal side is reached — the step's own
+    /// completion feedback takes over from there.
+    public static string TempGoalLine(float currentC, float targetC, bool chill)
+    {
+        if (chill ? currentC <= targetC : currentC >= targetC) return "";
+        return Mathf.RoundToInt(currentC) + " C — " + (chill ? "chill to " : "warm to ")
+               + Mathf.RoundToInt(targetC) + " C" + (chill ? " (ice bath)" : " (water bath)");
+    }
+
     /// Generic sim-progress billboard: "5. Filter\nFiltering 40%".
     public static string ProgressLine(string baseLabel, string verb, float frac01)
         => baseLabel + "\n" + verb + " " + Mathf.RoundToInt(Mathf.Clamp01(frac01) * 100f) + "%";

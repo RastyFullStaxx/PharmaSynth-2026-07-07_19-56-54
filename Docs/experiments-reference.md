@@ -164,8 +164,9 @@ Both were **game-authored** (Aspirin is named only in the manuscript's intro pro
 |---|---|---|
 | **tutorial-methane** | Tutorial | ✅ **DONE (2026-07-15)** — playable end-to-end: scoop → grind → load tube → heat → collect → match test → quiz → grade |
 | **prelim-chemical-compounding** | Prelim | 🔨 **PLAYABLE, awaiting headset playtest (2026-07-16)** — rebuilt to manuscript Exp 2. ✅ 13-task graph + ILOs + quiz. ✅ VR design SETTLED + BUILT: **dropper = counted squeezes**, **spatula 0.1 g/dip**, KMnO₄→liquid 0.1%, **RackTaskGroup** (a step waits for EVERY tube), layout rebuilt (20 vessels / 4 racks), 8 reactions, 13 two-line hints. ⬜ Left: two-step picker, `StirController` tip-tracking fix, headset pass. |
-| **prelim-ethyl-alcohol** | Prelim | ✅ BUILT + simulated clean 2026-07-17 (8/8). Zone-free ferment→CO₂→limewater (`FermentationController`) + week time-skip + distillation + 3 warm tests. ⬜ Left: headset playtest; combustion could gain real match-ignition; the "wash" is bench-Ethanol shorthand. |
-| midterm-* / final-* | — | ⬜ not started |
+| **prelim-ethyl-alcohol** | Prelim | ✅ BUILT + simulated clean (8/8). Zone-free ferment→CO₂→limewater (`FermentationController`) + week time-skip + distillation + 3 warm tests. **The distill step DECANTS the fermented wash from the FlorenceFlask** (2026-07-18 — the old bench-Ethanol shorthand was unplayable: that bottle is HIDDEN during Exp 3 as its own end product). ⬜ Left: headset playtest; combustion could gain real match-ignition. |
+| **midterm-benzoic-acid** | Midterm | ✅ **BUILT + simulated clean 2026-07-18 (9/9)** — oxidise (heat-gated) → funnel-filter → acidify (white crystals) → **ice-bath crystallise** (time-skip) → litmus/FeCl3/ester tests drawing from the purified flask. New reusable: `IceBathController`+`VesselChillTask`, `VesselLitmusTask`+mixture pH, vessel pour-out, temp-goal tags. ⬜ Left: headset playtest. |
+| midterm-acetanilide → final-* | — | ⬜ not started |
 
 ### The METHANE FLOW — the template every module follows
 1. **Gate** — Pharmee → Campaign → pick module → don **all 3 PPE** (hard-gated: `GatekeeperModel.RequiresPPEToOpen`) → "I'm ready" → cross the threshold (timer starts).
@@ -192,6 +193,12 @@ Both were **game-authored** (Aspirin is named only in the manuscript's intro pro
 | Closing beat with no physical verb | `ExperimentTask.autoCompleteWhenOthersDone` (wrap-up flag) | "Record your observations"-type steps auto-complete via `Graph.Tick()` once every other task is done. Exp 2's `record-observations` uses it. |
 | **Heat-gated reactions** (2026-07-17) | `ReactionRule.minTemperatureC` + `LiquidPhysics.SetTemperature`/`ReactionPending` | A cold mix of the right recipe HOLDS as pending — no early observation, no wrong-mix scold; MixFeedback shows "Needs heat — warm to N C (water bath)". 12 rules game-wide carry a threshold — every warm-bath test (Tollens, esters, iodoform, chloroform AgNO3, benzamide acid/alkali…) now happens WHEN the procedure says. `SetContents` clears pending. |
 | **⛔ ZONE-FREE tool rule (user 2026-07-17, binding for every module pass)** | `WaterBathController` + `VesselHeatTask` (`ExperimentLayout.Vessel.heatToC`) | "The entire lab IS the zone — tools function when brought together ANYWHERE." NO fixed stations/pads/DynLabels/TeleAnchors for steps the tools can own: heating = the bench `WaterBath` (player pours distilled water in ≥5 ml, stands a LIT burner within 0.45 m; heats to a 100 °C cap, warms vessels within 0.32 m, label narrates its next need) + `heatToC` on the synthesis vessel (task completes when served AND hot, wherever); filtering = the funnel pour itself (destination binding completes on receiving the product). Exp 2's two stations are deleted; when polishing each next module, REPLACE its Heat/Filter stations the same way (Weigh/Stir/Collect stations remain until each gets its pass). |
+| **Ice-bath chill step** (Exp 4 crystallise; Exp 8's ice bath) | `IceBathController` on `Raw_IceBucket` + `VesselChillTask` (`Vessel.chillToC` + `chillTaskId`) | The water bath's cold twin, zone-free: any vessel within 0.32 m of the bucket is pulled to ~2 °C; the task completes only when the vessel HOLDS something AND is ≤ `chillToC` (ambient 25 °C can never self-complete). Pair with `longProcess` for the crystallise/dry time-skip. Wired by Apply W5.8. |
+| **Litmus confirmation step** (Exp 4; pH checks in Exp 3/8) | `VesselLitmusTask` (`Vessel.litmusTaskId`) + `LiquidPhysics.CurrentPH` | A strip from the bench litmus box touched to the served tube completes the task when the MIXTURE reads acid (strip turns red + "acid confirmed" FloatingText). `CurrentPH` is mixture pH — the component farthest from 7 dominates (`LitmusMath.DominantPH`), so pour order can't soft-lock the read. ⚠ pH must be AUTHORED on the ChemicalData (most assets default 7 — benzoic 2.9 / HCl 6N 0.5 / H₂SO₄ 0.4 authored 2026-07-18; suite pins them). |
+| Live temp goal on the vessel itself | `VesselStatusMath.TempGoalLine` (auto via `VesselStatus`) | Heat/chill vessels append "25 C — warm to 50 C (water bath)" / "chill to 8 C (ice bath)" to their name tag until the goal is reached. No extra wiring — reads the vessel's VesselHeatTask/VesselChillTask. |
+| Vessels POUR OUT | `ShelfPourWiring.WireBottle` called by `BuildVessel` | Every task vessel (bench-bound or spawned) gets a `LiquidPourer`+spout+spill grading — the filter pour and draw-from-your-own-product steps were unplayable while only shelf bottles poured (2026-07-18; the sim's direct PourOut masked it). |
+| Pharmee's spoken guidance | `PharmeeBrain.InstructionFor` | Speaks ONLY the ACTION line (after the →) of a two-line hint — short, imperative, "do this now"; the fact line stays on the wrist panel. |
+| **Sim source honesty** (know when re-simulating) | `SimulatedRun.FindSource` | Sources rank: chill (purified product) > heat (synthesis) > fermentation wash (mixture allowed — the decant) > shelf; the module's own hidden END PRODUCT bottle is never legal. This is what exposed Exp 3's hidden-bottle shorthand. |
 
 ### ⚠ Hard-won gotchas — CHECK THESE FIRST on the next module
 - **`LiquidPhysics` on an opaque vessel makes the vessel VANISH in play.** `Start()` adopts the host's own renderer when `mainRenderer` is null, then disables it while empty (this hid the mortar for days). `ShouldAdoptHostRenderer` now only adopts a real `_Fill` surface — never point `mainRenderer` at a vessel's own mesh.
@@ -525,7 +532,7 @@ The chemistry apparatus (flasks, delivery tube, watch glass, graduated cylinder,
 The manuscript ferments **one full week**. VR compresses this: once the must is prepared and sealed, the completing task is authored `longProcess` → `TimeSkipController` **fades to black ~2 s and returns with a "time has passed" success message**. This is the standard treatment for every lengthy real-world wait in any module (overnight dries, hour-long crystallisations) — author the closing task `longProcess=true` + a message.
 
 ### ✅ BUILT + SIMULATED CLEAN 2026-07-17 (8/8 · 0 mistakes · 0 bugs)
-Zone-free, bench-bound (like Exp 2). **8 tasks**: prepare-must → ferment (CO₂/limewater + **week time-skip**) → adjust-ph → distill → test-combustion/iodoform/ester → record-yield (auto-completes). **Vessels:** `FlorenceFlask` (fermentation, `fermentTaskId`) · limewater `Kit_TestTube_5` · `DistillingFlask` (`heatToC 70`) · `Eq_WatchGlass` (combustion) · iodoform `Kit_TestTube_6` (`heatToC 60`) · ester `Kit_TestTube_7` (`heatToC 50`). **The CO₂→limewater mechanic** = `FermentationController` (zone-free, mirrors the water bath): once prepare-must is done the flask evolves CO₂ into any nearby limewater vessel → `Limewater_CO2` clouds it milky → ferment completes → time-skip. CO₂ is a REACTION DRIVER, added via `AddLiquid(notify:false)` so it drives the reaction without being graded a reagent. Distillation + warm tests reuse `heatToC` + the water bath. **VR simplifications** (documented): bulk solids use the scoopula (2 g), sub-gram the spatula; the "wash" poured into the distilling flask is bench Ethanol standing in for the decanted ferment; combustion completes on the ethanol-on-watch-glass pour (match = guidance). Generator: scratchpad `gen_ethyl.py`.
+Zone-free, bench-bound (like Exp 2). **8 tasks**: prepare-must → ferment (CO₂/limewater + **week time-skip**) → adjust-ph → distill → test-combustion/iodoform/ester → record-yield (auto-completes). **Vessels:** `FlorenceFlask` (fermentation, `fermentTaskId`) · limewater `Kit_TestTube_5` · `DistillingFlask` (`heatToC 70`) · `Eq_WatchGlass` (combustion) · iodoform `Kit_TestTube_6` (`heatToC 60`) · ester `Kit_TestTube_7` (`heatToC 50`). **The CO₂→limewater mechanic** = `FermentationController` (zone-free, mirrors the water bath): once prepare-must is done the flask evolves CO₂ into any nearby limewater vessel → `Limewater_CO2` clouds it milky → ferment completes → time-skip. CO₂ is a REACTION DRIVER, added via `AddLiquid(notify:false)` so it drives the reaction without being graded a reagent. Distillation + warm tests reuse `heatToC` + the water bath. **VR simplifications** (documented): bulk solids use the scoopula (2 g), sub-gram the spatula; **the distill step DECANTS the fermented wash from the FlorenceFlask into the distilling flask** (2026-07-18 — the manuscript's own step; the old bench-Ethanol shorthand was UNPLAYABLE because that bottle is hidden during Exp 3 as its own end product. The `Ferment` rule turns the must into Ethanol at the yeast pour, so the flask pours Ethanol; vessels can pour out since `WireBottle` runs in `BuildVessel`); combustion completes on the ethanol-on-watch-glass pour (match = guidance). Generator: scratchpad `gen_ethyl.py`.
 
 The pre-polish stub graph is retained below for history.
 
@@ -596,43 +603,44 @@ The pre-polish stub graph is retained below for history.
 **Manuscript Reagents:** Benzoic acid; 0.1% Potassium permanganate; Concentrated sulfuric acid; 6N Hydrochloric acid; Methanol; 6N Sodium hydroxide; Propyl; 10% Sodium hydroxide; alcohol Benzaldehyde
 
 
-### Task graph (play order)
+### \u2705 BUILT + SIMULATED CLEAN 2026-07-18 (9/9 \u00b7 0 mistakes \u00b7 0 bugs \u00b7 0 warnings)
 
-| # | task | phase | label | prerequisites | hint |
-|---|------|-------|-------|---------------|------|
-| 1 | `prepare-permanganate` | ReagentPrep | Prepare 0.1% KMnO4 solution (0.1 g / 100 mL) | - | Dissolve 0.1 g potassium permanganate in 100 mL purified water. |
-| 2 | `oxidise-benzaldehyde` | Synthesis | Add benzaldehyde to KMnO4 and warm to oxidise | prepare-permanganate | Add benzaldehyde to the permanganate; warm until the violet colour is discharged. |
-| 3 | `filter-mno2` | Synthesis | Filter off the brown MnO2 sludge | oxidise-benzaldehyde | Filter the hot mixture to remove the brown manganese dioxide. |
-| 4 | `acidify` | Synthesis | Acidify the filtrate with 6N HCl to precipitate benzoic acid | filter-mno2 | Add 6N HCl until acidic; white benzoic acid crystals separate. |
-| 5 | `crystallise` | Synthesis | Cool in an ice bath; recrystallise from hot water | acidify | Chill to complete crystallisation, then recrystallise from the minimum hot water. |
-| 6 | `test-litmus` | ChemicalTests | Litmus test: turns blue litmus red (acidic) | crystallise | Dissolve a little product; blue litmus turning red confirms a carboxylic acid. |
-| 7 | `test-fecl3` | ChemicalTests | FeCl3 test: buff / salmon precipitate | crystallise | Neutralise to sodium benzoate then add FeCl3; a buff precipitate confirms benzoate. |
-| 8 | `test-ester` | ChemicalTests | Ester test with propyl alcohol (fruity odour) | crystallise | Warm with propyl alcohol + a drop of H2SO4; a fruity ester odour confirms the acid. |
-| 9 | `record-yield` | DataSheet | Record yield and observations on the data sheet | test-litmus, test-fecl3, test-ester | Enter the crystal mass, % yield and each test result. |
+Zone-free, bench-bound (Exp 2/3 pattern), stations DELETED. The printed manuscript procedure is the confirmed errata (Exp 3 copy-paste) \u2014 the game route benzaldehyde + 0.1% KMnO\u2084 is correct-by-intent. Generator: scratchpad `gen_benzoic.py`.
 
-### Stage layout
+### Task graph (play order \u2014 labels/hints as built)
 
-**Stations:** `filter-mno2` (Filter) ; `crystallise` (Crystallise) ; `test-litmus` (zone-touch)
+| # | task | phase | label | prereq | how it completes |
+|---|------|-------|-------|--------|------------------|
+| 1 | `prepare-permanganate` | ReagentPrep | Prepare the 0.1% permanganate oxidising bath | - | tilt-pour ~40 ml KMnO\u2084 0.1% into `Eq_Beaker_500mL` (panel prints the real prep fact: 0.1 g / 100 ml) |
+| 2 | `oxidise-benzaldehyde` | Synthesis | Oxidise benzaldehyde with the warm permanganate | 1 | 2 dropper squeezes benzaldehyde + warm the beaker \u226540 \u00b0C at the water bath (`heatToC 40`; BenzoicOxidation is heat-gated at 40 \u2014 pending until warm, MixFeedback cues "Needs heat") |
+| 3 | `filter-mno2` | Synthesis | Filter off the brown MnO2 | 2 | funnel pour beaker \u2192 `ErlenmeyerFlask_400mL_2` (\u226520 ml Benzoic Acid received; the MnO\u2082 ppt stays behind \u2014 PourOut pours liquid only) |
+| 4 | `acidify` | Synthesis | Acidify the filtrate with 6N HCl | 3 | 5 squeezes HCl 6N \u2192 `Acidify_BenzoicPpt` drops white crystals per squeeze |
+| 5 | `crystallise` | Synthesis | Chill in the ice bath; crystallise | 4 | set the flask in `Raw_IceBucket` (`chillToC 8`, `VesselChillTask`) \u2192 **longProcess time-skip** ("crystals grew, recrystallised from hot water and dried") |
+| 6 | `test-litmus` | ChemicalTests | Litmus test \u2014 blue litmus turns red | 5 | Test Tube 8: 2 ml product + 2 ml distilled water, then TOUCH a litmus strip (`litmusTaskId`; mixture pH 2.9 \u2192 red + "acid confirmed" FloatingText) |
+| 7 | `test-fecl3` | ChemicalTests | Ferric chloride test \u2014 buff precipitate | 5 | Test Tube 9: 2 ml product + 2 squeezes NaOH 10% + 5 squeezes FeCl\u2083 \u2192 buff `Ferric Benzoate` ppt |
+| 8 | `test-ester` | ChemicalTests | Ester test \u2014 fruity odour with propyl alcohol | 5 | Test Tube 10: 2 ml product + 10 squeezes propyl + 1 squeeze H\u2082SO\u2084, warm \u226550 \u00b0C (`heatToC 50`; rule gated at 40) \u2014 odour shown on screen |
+| 9 | `record-yield` | DataSheet | Record yield and observations | 6,7,8 | auto-completes (wrap-up flag) |
 
-**Reagents staged (pourable):** Potassium Permanganate (Vial_Brown, auto-supply) ; Benzaldehyde (Vial_Brown, auto-supply) ; Hydrochloric Acid 6N (Vial_Brown, auto-supply) ; Ferric Chloride 10% (Vial_Brown, auto-supply) ; Sulfuric Acid (Vial_Brown, auto-supply) ; Propyl Alcohol (Vial_Brown, auto-supply)
+**All product draws come from the PURIFIED Erlenmeyer flask** (sim source rule: chill vessel > heat vessel), never the crude beaker and never the bench `Raw_BenzoicAcid` \u2014 that bottle is HIDDEN during this module (`EndProductVisibility`).
 
-**Tools staged:** Funnel ; Watch Glass ; Dropper
+### Stage layout (5 bench-bound vessels; stations: []; nothing spawned)
 
-**Vessel Beaker_500mL** (Reaction Beaker) - starts EMPTY
-  - pour **Potassium Permanganate** >= 50 ml -> completes `prepare-permanganate`
-  - pour **Benzaldehyde** >= 50 ml -> completes `oxidise-benzaldehyde`
-  - pour **Hydrochloric Acid 6N** >= 50 ml -> completes `acidify`
+- `Eq_Beaker_500mL` **ReactionBeaker** \u2014 KMnO\u2084 0.1% \u226540 (task 1, completes) \u00b7 Benzaldehyde \u22652 (task 2, deferred) \u00b7 `heatToC 40`
+- `ErlenmeyerFlask_400mL_2` **FiltrateFlask** \u2014 Benzoic Acid \u226520 (task 3, completes) \u00b7 HCl 6N \u22655 (task 4, completes) \u00b7 `chillToC 8` / `chillTaskId crystallise`
+- `Kit_TestTube_8` **LitmusTube** \u2014 Benzoic Acid \u22652 + Distilled Water \u22652 (deferred) \u00b7 `litmusTaskId test-litmus`
+- `Kit_TestTube_9` **FeCl3Tube** \u2014 Benzoic Acid \u22652 + NaOH 10% \u22652 + FeCl\u2083 10% \u22655 (all complete together)
+- `Kit_TestTube_10` **EsterTube** \u2014 Benzoic Acid \u22652 + Propyl \u226510 + H\u2082SO\u2084 \u22651 (deferred) \u00b7 `heatToC 50`
 
-**Vessel TestTube_WithLiquid** (Benzoate Test Tube) - starts with Benzoic Acid
-  - pour **Ferric Chloride 10%** >= 50 ml -> completes `test-fecl3`
-  - pour **Sulfuric Acid** >= 50 ml -> completes `test-ester`
-  - pour **Propyl Alcohol** >= 50 ml -> completes `test-ester`
+Tools used from the bench: funnel (LiquidPassthrough), droppers, water bath + burner, **ice bucket** (`IceBathController`), **litmus box** (`Raw_LitmusPaper` strips). Supply audit: worst draw is KMnO\u2084 40 of 150 ml \u2014 ample margin.
 
 ### Reactions & expected observations
 
-- **BenzoicOxidation**: Benzaldehyde + Potassium Permanganate -> Benzoic Acid - "Violet discharged; brown MnO2 forms"
-- **Draft_BenzoateFeCl3**: Benzoic Acid + Ferric Chloride 10% -> Benzoic Acid - "Buff / salmon precipitate confirms benzoate (standard FeCl3"
-- **Test_BenzoateEster**: Benzoic Acid + Propyl Alcohol -> Ethyl Ester - "Sweet aromatic ester odour \u2014 benzoic acid + propyl alcohol"
+- **BenzoicOxidation** (min 40 \u00b0C): Benzaldehyde + KMnO\u2084 0.1% \u2192 Benzoic Acid + MnO\u2082 ppt \u2014 "Violet discharged; brown MnO2 forms"
+- **Acidify_BenzoicPpt** (new 2026-07-18): Benzoic Acid + HCl 6N \u2192 white Benzoic Acid crystals \u2014 "White benzoic acid crystals separate as the filtrate turns acidic."
+- **Draft_BenzoateFeCl3**: Benzoic Acid + FeCl\u2083 10% \u2192 buff **Ferric Benzoate** ppt (real precipitate authored 2026-07-18; was a null ppt)
+- **Test_BenzoateEster** (min 40 \u00b0C): Benzoic Acid + Propyl Alcohol \u2192 Ethyl Ester \u2014 "Sweet aromatic ester odour"
+
+**pH data authored 2026-07-18** (litmus was dead on arrival \u2014 everything read 7): Benzoic Acid 2.9 \u00b7 HCl 6N 0.5 \u00b7 Sulfuric Acid 0.4; suite-pinned.
 
 ### Quiz (Documentation score)
 

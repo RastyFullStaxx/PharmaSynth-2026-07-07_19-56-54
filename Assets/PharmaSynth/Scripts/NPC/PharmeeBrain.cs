@@ -225,9 +225,21 @@ public class PharmeeBrain : MonoBehaviour
     }
 
     /// The spoken instruction for a step: its hint, or a fallback from the label.
+    /// Two-line watch hints are "fact\n→ action" (the verb contract, 2026-07-18):
+    /// Pharmee GUIDES, so he speaks only the ACTION — short and imperative, what
+    /// to do right now — while the fact line stays on the wrist panel to read.
+    /// Speaking the whole hint had him slowly typing out a paragraph the player
+    /// was already reading on their wrist.
     public static string InstructionFor(ExperimentTask task)
     {
         if (task == null) return "";
-        return !string.IsNullOrWhiteSpace(task.hint) ? task.hint : "Next: " + task.label;
+        if (string.IsNullOrWhiteSpace(task.hint)) return "Next: " + task.label;
+        int arrow = task.hint.IndexOf('→');
+        if (arrow >= 0 && arrow + 1 < task.hint.Length)
+        {
+            string act = task.hint.Substring(arrow + 1).Trim();
+            if (act.Length > 0) return act;
+        }
+        return task.hint;
     }
 }

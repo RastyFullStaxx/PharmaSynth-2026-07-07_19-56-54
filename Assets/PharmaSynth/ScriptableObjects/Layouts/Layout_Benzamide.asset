@@ -144,6 +144,9 @@ MonoBehaviour:
     rackGroup: 
     heatToC: 0
     fermentTaskId: 
+    chillToC: 0
+    chillTaskId: 
+    litmusTaskId: 
   - benchItem: 
     prefabName: TestTube_WithLiquid
     displayName: Product Test Tube
@@ -166,3 +169,6 @@ MonoBehaviour:
     rackGroup: 
     heatToC: 0
     fermentTaskId: 
+    chillToC: 0
+    chillTaskId: 
+    litmusTaskId: 

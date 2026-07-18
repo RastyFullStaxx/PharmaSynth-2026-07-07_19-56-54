@@ -1365,6 +1365,13 @@ public static class PharmaSelfTests
         A("ui: percent format", ExperimentHudController.FormatPercent(0.754f) == "75%");
         A("ui: progress drops on mistakes", Near(ExperimentHudController.DisplayedProgress(0.8f, 2, 0.05f), 0.7f));
         A("ui: instruction from hint", PharmeeBrain.InstructionFor(new ExperimentTask { label = "X", hint = "do x" }) == "do x");
+        // Two-line "fact\n→ action" hints: Pharmee speaks ONLY the action line —
+        // the fact stays on the wrist panel (he was reading whole paragraphs).
+        A("ui: pharmee speaks the ACTION line of a two-line hint",
+            PharmeeBrain.InstructionFor(new ExperimentTask { label = "X",
+                hint = "KMnO4 oxidises benzaldehyde.\n→ Squeeze 2 dropper-loads in." })
+            == "Squeeze 2 dropper-loads in."
+            && PharmeeBrain.InstructionFor(new ExperimentTask { label = "X", hint = "plain hint" }) == "plain hint");
     }
 
     static void W4Suite()
@@ -2477,6 +2484,8 @@ public static class PharmaSelfTests
                 foreach (var v in layout.vessels)
                 {
                     if (v.fermentTaskId == t.taskId) owned = true;   // FermentationController condition
+                    if (v.chillTaskId == t.taskId && v.chillToC > 0f) owned = true;   // VesselChillTask (ice bath)
+                    if (v.litmusTaskId == t.taskId) owned = true;    // VesselLitmusTask (strip touch)
                     foreach (var b in v.bindings)
                         if (b.taskId == t.taskId
                             && (b.completesTask || !string.IsNullOrEmpty(v.rackGroup) || v.heatToC > 0f))
