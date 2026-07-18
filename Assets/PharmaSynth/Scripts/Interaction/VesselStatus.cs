@@ -44,11 +44,15 @@ public class VesselStatus : MonoBehaviour
                 _lp.currentLiquidVolume + _lp.currentPptVolume);
         // Zone-free heat/chill steps get a live temperature goal on the tag
         // itself (2026-07-18) — queried fresh each refresh because the builder's
-        // teardown strips these components between modules.
+        // teardown strips these components between modules. Only while the
+        // owning step is the player's CURRENT concern (Relevant): Exp 5's flask
+        // used to read "chill to 8 C" from step 1.
         var heat = GetComponent<VesselHeatTask>();
         var chill = GetComponent<VesselChillTask>();
-        string goal = heat != null ? VesselStatusMath.TempGoalLine(_lp.currentTempC, heat.RequiredC, false)
-                    : chill != null ? VesselStatusMath.TempGoalLine(_lp.currentTempC, chill.RequiredC, true) : "";
+        string goal = heat != null && heat.Relevant
+                        ? VesselStatusMath.TempGoalLine(_lp.currentTempC, heat.RequiredC, false)
+                    : chill != null && chill.Relevant
+                        ? VesselStatusMath.TempGoalLine(_lp.currentTempC, chill.RequiredC, true) : "";
         if (goal.Length > 0) s += "\n" + goal;
         if (s == _last) return;
         _last = s;

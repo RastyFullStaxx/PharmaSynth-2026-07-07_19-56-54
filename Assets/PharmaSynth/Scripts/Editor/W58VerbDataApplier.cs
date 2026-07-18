@@ -180,6 +180,45 @@ public static class W58VerbDataApplier
                 if (hood.GetComponent<FumeHoodStatusLabel>() == null)
                 { hood.gameObject.AddComponent<FumeHoodStatusLabel>().Bind(hood, hlabel); sceneChanges++; }
                 hlabel.SetLabel(FumeHoodStatusLabel.StatusLine(null), 2.2f);
+
+                // PHYSICAL SHELL (2026-07-18, user: "suppose we grab something
+                // and it passes through to the fume hood — we won't get it
+                // back"): the Tripo hood model has ZERO colliders, so every
+                // wall was passable and a released item could vanish behind the
+                // panels. Five thin STATIC boxes hug the WorkVolume — back,
+                // left, right, top, and a COUNTER to set the vessel on — with
+                // the FRONT left open: that IS the door (reach in, work, take
+                // it back; nothing can ever be trapped). The open side faces
+                // the bench (where the Raw_ bottles live); hand-adjust the
+                // HoodShell_* children if the model's walls sit differently.
+                var wvCol = hood.GetComponent<BoxCollider>();
+                if (wvCol != null && hood.transform.Find("HoodShell") == null)
+                {
+                    var shell = new GameObject("HoodShell").transform;
+                    shell.SetParent(hood.transform, false);
+                    Vector3 sz = wvCol.size, cc = wvCol.center;
+                    const float th = 0.03f, pad = 0.02f;
+                    Vector3 benchCenter = Vector3.zero; int nb = 0;
+                    foreach (var tr in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                        if (tr.name.StartsWith("Raw_")) { benchCenter += tr.position; nb++; }
+                    if (nb > 0) benchCenter /= nb;
+                    float frontSign = Vector3.Dot(hood.transform.TransformDirection(Vector3.forward),
+                                                  (benchCenter - hood.transform.position).normalized) >= 0f ? 1f : -1f;
+                    void Panel(string pname, Vector3 center, Vector3 size)
+                    {
+                        var pgo = new GameObject(pname);
+                        pgo.transform.SetParent(shell, false);
+                        pgo.transform.localPosition = center;
+                        var bc = pgo.AddComponent<BoxCollider>();
+                        bc.size = size;   // SOLID (not a trigger): a wall
+                    }
+                    Panel("HoodShell_Back",    cc + new Vector3(0f, 0f, -frontSign * (sz.z * 0.5f + pad)), new Vector3(sz.x + 2f * pad, sz.y + 2f * pad, th));
+                    Panel("HoodShell_Left",    cc + new Vector3(-(sz.x * 0.5f + pad), 0f, 0f), new Vector3(th, sz.y + 2f * pad, sz.z + 2f * pad));
+                    Panel("HoodShell_Right",   cc + new Vector3( (sz.x * 0.5f + pad), 0f, 0f), new Vector3(th, sz.y + 2f * pad, sz.z + 2f * pad));
+                    Panel("HoodShell_Top",     cc + new Vector3(0f,  (sz.y * 0.5f + pad), 0f), new Vector3(sz.x + 2f * pad, th, sz.z + 2f * pad));
+                    Panel("HoodShell_Counter", cc + new Vector3(0f, -(sz.y * 0.5f + pad), 0f), new Vector3(sz.x + 2f * pad, th, sz.z + 2f * pad));
+                    sceneChanges++;
+                }
             }
         }
 

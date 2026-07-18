@@ -153,6 +153,12 @@ public class VesselHeatTask : MonoBehaviour
     public string TaskId => _taskId;
     public float RequiredC => _requiredC;
 
+    /// The step is the player's CURRENT concern: available and not yet done.
+    /// Gates the vessel tag's "warm to N C" line (2026-07-18 — it used to show
+    /// from the moment the module built, steps before heating was the task).
+    public bool Relevant => _runner != null && _runner.Graph != null
+        && _runner.Graph.IsAvailable(_taskId) && !_runner.Graph.IsComplete(_taskId);
+
     /// Pure (suite-pinned): served AND hot — never one without the other.
     public static bool ShouldComplete(bool allReagentsIn, float tempC, float requiredC)
         => allReagentsIn && tempC >= requiredC;

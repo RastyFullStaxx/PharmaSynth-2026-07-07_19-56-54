@@ -76,6 +76,12 @@ public class VesselChillTask : MonoBehaviour
     public string TaskId => _taskId;
     public float RequiredC => _requiredC;
 
+    /// The step is the player's CURRENT concern: available and not yet done.
+    /// Gates the vessel tag's "chill to N C" line (2026-07-18 — Exp 5's flask
+    /// showed "chill to 8 C" from step 1, while the panel said pour aniline).
+    public bool Relevant => _runner != null && _runner.Graph != null
+        && _runner.Graph.IsAvailable(_taskId) && !_runner.Graph.IsComplete(_taskId);
+
     /// Pure (suite-pinned): reagents served AND holding something AND cold —
     /// never one without the others. (Exp 5's ice-crystallise pours 20 ml of
     /// ice-cold water FIRST, then chills; Exp 4's crystallise has no reagent of

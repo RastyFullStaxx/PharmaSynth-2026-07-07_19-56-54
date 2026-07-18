@@ -2255,6 +2255,52 @@ public static class PharmaSelfTests
         A("fumehood: label guides idle and confirms protection",
             FumeHoodStatusLabel.StatusLine(null).Contains("IN here")
             && FumeHoodStatusLabel.StatusLine("Florence Flask") == "Fume Hood — Florence Flask protected ✓");
+        // The hood model has NO colliders of its own — the shell is what stops
+        // items passing through the walls; front stays OPEN (that's the door).
+        {
+            var hz = UnityEngine.Object.FindAnyObjectByType<FumeHoodZone>(FindObjectsInactive.Include);
+            var hshell = hz != null ? hz.transform.Find("HoodShell") : null;
+            int solidWalls = 0;
+            if (hshell != null)
+                foreach (var wc in hshell.GetComponentsInChildren<BoxCollider>(true))
+                    if (!wc.isTrigger) solidWalls++;
+            A("fumehood: open-front collider shell (5 solid walls, trigger volume intact)",
+                hshell != null && solidWalls == 5
+                && hz.GetComponent<BoxCollider>() != null && hz.GetComponent<BoxCollider>().isTrigger);
+        }
+        // The hood's TEETH (edge case, 2026-07-18): a toxic pour with the vessel
+        // at the open bench grades a FumeHoodViolation; the SAME pour with the
+        // vessel inside the hood volume is sanctioned. Drives the REAL scene
+        // hood through a probe vessel — position is the only variable.
+        {
+            var hz2 = UnityEngine.Object.FindAnyObjectByType<FumeHoodZone>(FindObjectsInactive.Include);
+            var hzCol = hz2 != null ? hz2.GetComponent<Collider>() : null;
+            var anilineChem = LoadChem("Chem_Aniline");
+            var fhRunnerGo = new GameObject("fh_runner");
+            var fhVesselGo = GameObject.CreatePrimitive(PrimitiveType.Cube);   // LiquidPhysics needs a Renderer host
+            try
+            {
+                var fhRunner = fhRunnerGo.AddComponent<ExperimentRunner>();
+                var fhMod = ScriptableObject.CreateInstance<ExperimentModuleDefinition>();
+                fhMod.moduleId = "fh-probe";
+                fhMod.graphTasks.Add(new ExperimentTask { taskId = "t", label = "T" });
+                fhRunner.SetModule(fhMod); fhRunner.StartExperiment();
+                var fhLp = fhVesselGo.AddComponent<LiquidPhysics>();
+                var fhBind = fhVesselGo.AddComponent<LiquidTaskBinding>();
+                fhBind.SetVesselAndRunner(fhLp, fhRunner);
+                fhBind.SetFumeHood(hz2);
+                fhBind.AddExpected(anilineChem, "t", 5f);
+                fhVesselGo.transform.position = new Vector3(500f, 0f, 500f);   // nowhere near the hood
+                fhBind.HandleReagent(anilineChem, 1f);
+                int afterOutside = fhRunner.MistakeCount;
+                if (hzCol != null) fhVesselGo.transform.position = hzCol.bounds.center;
+                fhBind.HandleReagent(anilineChem, 1f);
+                A("fumehood: outside pours violate, inside pours are sanctioned",
+                    anilineChem != null && hz2 != null && hzCol != null
+                    && afterOutside == 1 && fhRunner.MistakeCount == 1);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(fhRunnerGo); UnityEngine.Object.DestroyImmediate(fhVesselGo); }
+        }
 
         // Observation dedupe (2026-07-18): a burst of identical squeezes fires
         // ONE popup/sting; a different rule always announces.
