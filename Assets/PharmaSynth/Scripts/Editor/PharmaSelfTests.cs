@@ -971,7 +971,9 @@ public static class PharmaSelfTests
             // W5.9 manuscript fidelity: benzoic ester = PROPYL ALCOHOL (was the
             // inert sulfuric-acid pairing); benzamide acid test + ethanol ester
             // use the DILUTED acids; chloroform gains the dichromate oxidation.
-            ("Layout_BenzoicAcid",  "Benzoic Acid",   new[] { "Ferric Chloride 10%", "Propyl Alcohol" }),
+            // Benzoic (Exp 4) rebuilt zone-free 2026-07-18: no seeded vessel now
+            // (the player synthesises the acid and draws from the flask) — its
+            // FeCl3/ester rules are validated by the Exp 4 simrun firing them.
             ("Layout_Acetanilide",  "Acetanilide",    new[] { "Bromine Water" }),
             ("Layout_Benzamide",    "Benzamide",      new[] { "Sodium Hydroxide", "Sodium Nitrite", "Diluted Hydrochloric Acid" }),
             ("Layout_Chloroform",   "Chloroform",     new[] { "Silver Nitrate", "Potassium Dichromate" }),
@@ -2187,6 +2189,16 @@ public static class PharmaSelfTests
                 : sim3.Clean ? "" : "  [" + sim3.completedTasks + "/" + sim3.totalTasks + " tasks, "
                   + sim3.mistakes + " mistakes; " + string.Join(" | ", sim3.bugs) + "]";
             A("simrun: Exp 3 plays END-TO-END clean" + sim3Note, sim3 != null && sim3.Clean);
+
+            // Exp 4 (benzoic acid): oxidation heat-gate, the funnel filtration,
+            // acidify crystals, the ICE-BATH chill + time-skip and the LITMUS
+            // strip confirmation all played through the real wiring (2026-07-18).
+            var sim4Log = new System.Text.StringBuilder();
+            var sim4 = SimulatedRun.Run("midterm-benzoic-acid", sim4Log);
+            string sim4Note = sim4 == null ? "did not run"
+                : sim4.Clean ? "" : "  [" + sim4.completedTasks + "/" + sim4.totalTasks + " tasks, "
+                  + sim4.mistakes + " mistakes; " + string.Join(" | ", sim4.bugs) + "]";
+            A("simrun: Exp 4 plays END-TO-END clean" + sim4Note, sim4 != null && sim4.Clean);
         }
 
         // FERMENTATION (Exp 3): pure gates for the CO₂→limewater mechanic.
@@ -2196,6 +2208,36 @@ public static class PharmaSelfTests
                 && FermentationMath.IsFermenting(true, 40f));
             A("ferment: confirmed only once the limewater has actually clouded",
                 !FermentationMath.CO2Confirmed(0f) && FermentationMath.CO2Confirmed(2f));
+        }
+
+        // ICE BATH + CHILL (Exp 4, 2026-07-18): the water bath's cold twin — set
+        // a vessel in the bucket, anywhere, and the crystallise step completes
+        // only once it actually holds product AND has gone cold (ambient 25 °C
+        // can never satisfy it by standing around).
+        A("icebath: chills only within reach", IceBathMath.Chills(0.2f) && !IceBathMath.Chills(0.5f));
+        A("chill: completes only holding AND cold",
+            VesselChillTask.ShouldComplete(true, IceBathMath.IceWaterC, 8f)
+            && !VesselChillTask.ShouldComplete(false, IceBathMath.IceWaterC, 8f)
+            && !VesselChillTask.ShouldComplete(true, 25f, 8f));
+
+        // LITMUS (Exp 4, 2026-07-18): the strip reads the MIXTURE, not whichever
+        // chemical landed first — an acid dominates any amount of water, so
+        // "water first, then the product" can no longer soft-lock the test.
+        A("litmus: the extreme component dominates the mixture",
+            LitmusMath.DominantPH(7f, 2.9f) == 2.9f && LitmusMath.DominantPH(2.9f, 7f) == 2.9f
+            && LitmusMath.DominantPH(7f, 13.5f) == 13.5f);
+        A("litmus: task needs served AND an acid read",
+            VesselLitmusTask.ShouldComplete(true, true) && !VesselLitmusTask.ShouldComplete(true, false)
+            && !VesselLitmusTask.ShouldComplete(false, true));
+        {
+            // DATA pin: the litmus lesson dies silently if a re-import ever
+            // resets these pH values back to the un-authored 7.
+            var benzoicChem = LoadChem("Chem_BenzoicAcid");
+            var hcl6 = LoadChem("Chem_HydrochloricAcid6N");
+            A("litmus: benzoic acid + 6N HCl actually read ACID (authored pH)",
+                benzoicChem != null && benzoicChem.pH <= LitmusMath.AcidPH
+                && hcl6 != null && hcl6.pH <= LitmusMath.AcidPH
+                && LitmusMath.ColorForPH(benzoicChem.pH) == LitmusMath.AcidRed);
         }
 
         // RackMath (2026-07-16): a step shared by a SET of tubes is done only when

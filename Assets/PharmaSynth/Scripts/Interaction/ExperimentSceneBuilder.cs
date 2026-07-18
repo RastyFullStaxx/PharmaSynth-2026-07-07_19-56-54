@@ -719,6 +719,16 @@ public class ExperimentSceneBuilder : MonoBehaviour
             else
                 Debug.LogWarning("[SceneBuilder] " + v.benchItem + " sets heatToC but has no deferred (completesTask:false) binding to own.");
         }
+        // ZONE-FREE chill step (Exp 4): completes when the vessel holds product
+        // AND has been cooled to chillToC — the ice bucket, anywhere in the lab.
+        if (v.chillToC > 0f && !string.IsNullOrEmpty(v.chillTaskId))
+            (inst.GetComponent<VesselChillTask>() ?? inst.AddComponent<VesselChillTask>())
+                .Bind(runner, v.chillTaskId, v.chillToC, lp);
+        // LITMUS confirmation (Exp 4): a strip touching this vessel while the
+        // mixture reads acid completes the task — zone-free, no station.
+        if (!string.IsNullOrEmpty(v.litmusTaskId))
+            (inst.GetComponent<VesselLitmusTask>() ?? inst.AddComponent<VesselLitmusTask>())
+                .Bind(runner, v.litmusTaskId, bind, lp);
         // FERMENTATION flask (Exp 3): evolves CO₂ into nearby limewater vessels.
         if (!string.IsNullOrEmpty(v.fermentTaskId))
         {
@@ -741,6 +751,12 @@ public class ExperimentSceneBuilder : MonoBehaviour
         pl.SetLabel(labelName, 1.6f);
         (inst.GetComponent<VesselStatus>() ?? inst.AddComponent<VesselStatus>()).Bind(lp, pl, labelName, 1.6f);
         (inst.GetComponent<MixFeedback>() ?? inst.AddComponent<MixFeedback>()).Bind(lp);
+        // POUR-OUT ability (2026-07-18): a task vessel must also POUR — "tilt the
+        // beaker through the funnel" and every draw-from-your-own-product step
+        // were unplayable by hand because only shelf bottles carried a
+        // LiquidPourer (the sim's direct PourOut calls masked it). WireBottle is
+        // idempotent: pourer + spout + spill grading, only where missing.
+        ShelfPourWiring.WireBottle(inst, runner, registry);
     }
 
     /// Real capacity for an adopted bench vessel, keyed off the layout's prefab kind.
@@ -819,6 +835,18 @@ public class ExperimentSceneBuilder : MonoBehaviour
             if (fc == null || (_stage != null && fc.transform.IsChildOf(_stage))) continue;
             fc.Detach();
             Kill(fc);
+        }
+        foreach (var ct in FindObjectsByType<VesselChillTask>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (ct == null || (_stage != null && ct.transform.IsChildOf(_stage))) continue;
+            ct.Detach();
+            Kill(ct);
+        }
+        foreach (var lt in FindObjectsByType<VesselLitmusTask>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (lt == null || (_stage != null && lt.transform.IsChildOf(_stage))) continue;
+            lt.Detach();
+            Kill(lt);
         }
     }
 

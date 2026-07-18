@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c7ec9f7d9e755c8489d0b1555e5fad73, type: 3}
-  m_Name: Chem_SulfuricAcid
+  m_Name: Chem_FerricBenzoate
   m_EditorClassIdentifier: Assembly-CSharp::ChemicalData
-  chemicalName: Sulfuric Acid
-  state: 0
-  liquidColor: {r: 0.644, g: 0.602, b: 0.385, a: 1}
-  liquidTopColor: {r: 0.644, g: 0.602, b: 0.385, a: 1}
-  sceneColourAmount: 0.1
+  chemicalName: Ferric Benzoate
+  state: 1
+  liquidColor: {r: 0.93, g: 0.76, b: 0.56, a: 1}
+  liquidTopColor: {r: 0.93, g: 0.76, b: 0.56, a: 1}
+  sceneColourAmount: 0.12
   viscosity: 0.5
-  boilingPointC: 337
-  precipitateColor: {r: 1, g: 1, b: 1, a: 1}
-  pH: 0.4
+  boilingPointC: 100
+  precipitateColor: {r: 0.93, g: 0.76, b: 0.56, a: 1}
+  pH: 7
   evolvesGas: 0
-  hazard: 2
+  hazard: 0
   requiresFumeHood: 0
-  isDangerous: 1
+  isDangerous: 0
   isOxidizer: 0
-  isConcentratedAcid: 1
+  isConcentratedAcid: 0

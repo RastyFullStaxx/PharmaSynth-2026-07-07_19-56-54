@@ -151,6 +151,19 @@ public static class W58VerbDataApplier
             blabel.SetLabel(WaterBathMath.StatusLine(false, false, 25f), 1.6f);
         }
 
+        // The ICE BATH is the water bath's cold twin (2026-07-18, Exp 4's
+        // crystallisation): the hand-placed Raw_IceBucket chills any vessel
+        // brought to it — zone-free, needs nothing lit or poured.
+        foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (t.name != "Raw_IceBucket") continue;
+            var ilabel = t.GetComponent<ProximityLabel>() ?? t.gameObject.AddComponent<ProximityLabel>();
+            var ice = t.GetComponent<IceBathController>();
+            if (ice == null) { ice = t.gameObject.AddComponent<IceBathController>(); sceneChanges++; }
+            ice.Bind(ilabel);
+            ilabel.SetLabel(IceBathMath.StatusLine(), 1.4f);
+        }
+
         // The porcelain spatula is the FINE solids tool: Exp 2 weighs 0.1 g salicylic
         // and 0.5 g aspirin, both smaller than the scoopula's 2 g dip. Its charge is
         // ScoopMath.GramsPerSpatula; the scoopula keeps the coarse 2 g.

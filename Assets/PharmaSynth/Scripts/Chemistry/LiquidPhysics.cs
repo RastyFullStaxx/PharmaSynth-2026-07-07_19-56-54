@@ -68,6 +68,14 @@ public class LiquidPhysics : MonoBehaviour
     /// hover cards and mix feedback. Chemistry stays in the fields above.
     public VesselLedger Ledger { get; } = new VesselLedger();
 
+    // MIXTURE pH, not the first-poured chemical's (2026-07-18): the litmus strip
+    // used to read currentChemical.pH, so "water first, then the acid" read 7
+    // forever and soft-locked Exp 4's litmus test. The more extreme component
+    // dominates (LitmusMath.DominantPH) — an acid stays acidic under any amount
+    // of water, which is what a real strip dipped in the mixture reports.
+    private float _mixPH = 7f;
+    public float CurrentPH => _mixPH;
+
     /// Truly empty (nothing visible, wake branch armed).
     public bool IsEmpty => currentLiquidVolume <= 1f && currentPptVolume <= 1f;
 
@@ -80,6 +88,7 @@ public class LiquidPhysics : MonoBehaviour
         currentLiquidVolume = chem != null ? Mathf.Max(0f, ml) : 0f;
         _pendingRule = null; _pendingAmount = 0f;   // a reset vessel holds no half-done recipe
         currentTempC = 25f;
+        _mixPH = chem != null ? chem.pH : 7f;
         Ledger.Clear();
         if (chem != null && currentLiquidVolume > 0f)
             Ledger.Add(chem.chemicalName, currentLiquidVolume,
@@ -313,9 +322,11 @@ public class LiquidPhysics : MonoBehaviour
         {
             currentChemical = incomingChemical;
             currentLiquidVolume += amountToAdd;
+            _mixPH = incomingChemical.pH;
             UpdateAllVisuals();
             return;
         }
+        _mixPH = LitmusMath.DominantPH(_mixPH, incomingChemical.pH);
 
         if (currentChemical == incomingChemical)
         {
@@ -357,7 +368,7 @@ public class LiquidPhysics : MonoBehaviour
     /// liquid column; a precipitate result moves it over instead of doubling it.
     private void ApplyReaction(ReactionRule rule, float amount, bool alreadyAdded)
     {
-        if (rule.resultLiquid != null) currentChemical = rule.resultLiquid;
+        if (rule.resultLiquid != null) { currentChemical = rule.resultLiquid; _mixPH = rule.resultLiquid.pH; }
         if (rule.hasPrecipitate && rule.resultPrecipitate != null)
         {
             currentPptChemical = rule.resultPrecipitate;

@@ -194,6 +194,7 @@ public static class SimulatedRun
                         }
                         else if (SimulateVesselHeat(runner, id, steps, res, log)) { }
                         else if (SimulateFermentation(runner, id, steps, res, log)) { }
+                        else if (SimulateLitmus(runner, id, steps, res, log)) { }
                         else if (SimulateStation(runner, id, simStations, zoneStations, temps, labItems, res, log)) { }
                         else if (deferred)
                         {
@@ -210,7 +211,8 @@ public static class SimulatedRun
                     if (runner.Graph.IsComplete(id)) WarmAtBath(id, steps, res, log);
                 }
                 else
-                    handled = SimulateStation(runner, id, simStations, zoneStations, temps, labItems, res, log);
+                    handled = SimulateStation(runner, id, simStations, zoneStations, temps, labItems, res, log)
+                              || SimulateChillTask(runner, id, res, log);
 
                 if (!handled)
                 {
@@ -510,6 +512,86 @@ public static class SimulatedRun
         return true;
     }
 
+    /// The zone-free chill STEP (Exp 4 crystallise): the flask holding the
+    /// acidified product is set in the real ice bucket until its task condition
+    /// (holding something AND cold) trips. No binding of its own — the vessel is
+    /// found by its VesselChillTask.
+    static bool SimulateChillTask(ExperimentRunner runner, string id, Result res, StringBuilder log)
+    {
+        VesselChillTask chill = null;
+        foreach (var c in Object.FindObjectsByType<VesselChillTask>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (c != null && c.TaskId == id) { chill = c; break; }
+        if (chill == null) return false;
+
+        var lp = chill.GetComponent<LiquidPhysics>();
+        var ice = Object.FindAnyObjectByType<IceBathController>();
+        if (ice == null)
+        {
+            res.bugs.Add(id + ": no IceBathController in the scene — chill steps are unplayable (run Apply W5.8 Verb Data)");
+            runner.CompleteTask(id);
+            return true;
+        }
+        for (int i = 0; i < 40 && !runner.Graph.IsComplete(id); i++)
+        {
+            ice.ChillVessel(lp);
+            runner.Graph.Tick();
+        }
+        if (runner.Graph.IsComplete(id))
+            log.AppendLine("  ✓ set " + (lp != null ? lp.name : "the vessel") + " in the ice bath — chilled to "
+                           + (lp != null ? lp.currentTempC.ToString("0") : "?") + " C, crystals formed");
+        else
+        {
+            res.bugs.Add(id + ": ice bath never completed the chill (vessel "
+                         + (lp != null ? lp.currentTempC.ToString("0") + " C holding " + (lp.currentLiquidVolume + lp.currentPptVolume).ToString("0.#") + " ml" : "missing")
+                         + " / needs <= " + chill.RequiredC.ToString("0") + " C with contents)");
+            runner.CompleteTask(id);   // force past to keep exploring downstream
+        }
+        return true;
+    }
+
+    /// The zone-free LITMUS confirmation (Exp 4 test-litmus): once the tube is
+    /// served, a fresh strip is touched to it through the strip's real read path
+    /// (TouchVessel — the physics-free stand-in for the dip). The mixture must
+    /// actually read acid or the strip stays violet and the task must not pass.
+    static bool SimulateLitmus(ExperimentRunner runner, string id,
+        List<(LiquidTaskBinding b, LiquidTaskBinding.ReagentStep s)> steps, Result res, StringBuilder log)
+    {
+        VesselLitmusTask lt = null; LiquidPhysics tube = null;
+        foreach (var (b, _) in steps)
+        {
+            var l = b != null ? b.GetComponent<VesselLitmusTask>() : null;
+            if (l != null && l.TaskId == id) { lt = l; tube = b.GetComponent<LiquidPhysics>(); break; }
+        }
+        if (lt == null) return false;
+
+        // The player tears a strip off the bench litmus box — it must exist.
+        bool boxOnBench = false;
+        foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (t.name.StartsWith("Raw_LitmusPaper")) { boxOnBench = true; break; }
+        if (!boxOnBench)
+            res.bugs.Add(id + ": no Raw_LitmusPaper box on the bench — the player has no strip to test with");
+
+        var stripGo = new GameObject("SimLitmusStrip");
+        try
+        {
+            stripGo.AddComponent<LitmusStrip>().TouchVessel(tube);
+            runner.Graph.Tick();
+        }
+        finally { Object.DestroyImmediate(stripGo); }
+
+        if (runner.Graph.IsComplete(id))
+            log.AppendLine("  ✓ touched a litmus strip to " + tube.name + " — mixture pH "
+                           + tube.CurrentPH.ToString("0.#") + " read ACID, strip turned red");
+        else
+        {
+            res.bugs.Add(id + ": the litmus touch did not complete the task (mixture pH "
+                         + (tube != null ? tube.CurrentPH.ToString("0.#") : "?")
+                         + ", red needs <= " + LitmusMath.AcidPH + ")");
+            runner.CompleteTask(id);   // force past to keep exploring downstream
+        }
+        return true;
+    }
+
     /// The filter pour, played honestly: source = a liquid-holding vessel bound
     /// to one of the filter task's PREREQUISITE tasks (the boiled tube);
     /// destination = the vessel bound to a task that lists the filter task as
@@ -568,11 +650,14 @@ public static class SimulatedRun
             if (lp.GetComponent<LiquidTaskBinding>() != null)
             {
                 // A bound vessel is a source ONLY when it is a SYNTHESIS vessel
-                // (carries a VesselHeatTask) that IS that substance (ledger
-                // collapsed to one product entry) — the hydrolysate pour. Round
-                // one drew "ethanol" out of the finished enol tube; round two
-                // tipped the beaker's violet TEST RESIDUE into the control tube.
-                if (lp.Ledger.Count != 1 || lp.GetComponent<VesselHeatTask>() == null) continue;
+                // (carries a VesselHeatTask — or a VesselChillTask: Exp 4's
+                // crystallising flask IS the product the tests draw from) that
+                // IS that substance (ledger collapsed to one product entry) —
+                // the hydrolysate pour. Round one drew "ethanol" out of the
+                // finished enol tube; round two tipped the beaker's violet TEST
+                // RESIDUE into the control tube.
+                if (lp.Ledger.Count != 1
+                    || (lp.GetComponent<VesselHeatTask>() == null && lp.GetComponent<VesselChillTask>() == null)) continue;
                 if (vessel == null || lp.currentLiquidVolume > vessel.currentLiquidVolume) vessel = lp;
             }
             else

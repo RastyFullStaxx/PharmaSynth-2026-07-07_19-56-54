@@ -20,34 +20,36 @@ MonoBehaviour:
   - Purify crystals by recrystallisation from hot water
   - Confirm benzoic acid by litmus, FeCl3 and ester-formation tests
   materialReagents:
-  - "Potassium Permanganate 0.1% \u2014 50 ml"
-  - "Benzaldehyde \u2014 50 ml"
-  - "Hydrochloric Acid 6N \u2014 50 ml"
-  - "Ferric Chloride 10% \u2014 50 ml"
-  - "Sulfuric Acid \u2014 50 ml"
-  - "Propyl Alcohol \u2014 50 ml"
+  - "Potassium Permanganate 0.1% \u2014 ~40 ml"
+  - "Benzaldehyde \u2014 2 ml (2 squeezes)"
+  - "Hydrochloric Acid 6N \u2014 5 squeezes"
+  - "Distilled Water \u2014 a splash (litmus tube) + the water bath"
+  - "Sodium Hydroxide 10% \u2014 2 squeezes"
+  - "Ferric Chloride 10% \u2014 5 squeezes"
+  - "Propyl Alcohol \u2014 10 squeezes"
+  - "Sulfuric Acid \u2014 1 squeeze (a drop)"
   materialApparatus:
-  - Beaker 500 mL
-  - Funnel + filter paper
-  - "Test tubes \xD7 3"
-  - Burner
-  - Glass rod
+  - "Beaker 500 mL (reaction)"
+  - "Erlenmeyer flask (filtrate)"
+  - "Funnel"
+  - "Test tubes 8 / 9 / 10"
+  - "Dropper"
+  - "Water bath + burner"
+  - "Ice bucket"
+  - "Litmus paper"
   tasks: []
   graphTasks:
   - taskId: prepare-permanganate
-    label: Prepare 0.1% KMnO4 solution (0.1 g / 100 mL)
+    label: "Prepare the 0.1% permanganate oxidising bath"
     phase: 0
     prerequisites: []
     progressWeight: 1
     skill: 0
     rubricCategory: 0
     required: 1
-    hint: Dissolve 0.1 g potassium permanganate in 100 mL purified water.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "The manuscript dissolves 0.1 g KMnO4 in 100 ml purified water \u2014 the shelf bottle IS that 0.1% solution.\n\u2192 Tilt-pour about 40 ml of it into the Beaker 500 mL."
   - taskId: oxidise-benzaldehyde
-    label: Add benzaldehyde to KMnO4 and warm to oxidise
+    label: "Oxidise benzaldehyde with the warm permanganate"
     phase: 1
     prerequisites:
     - prepare-permanganate
@@ -55,12 +57,9 @@ MonoBehaviour:
     skill: 1
     rubricCategory: 0
     required: 1
-    hint: Add benzaldehyde to the permanganate; warm until the violet colour is discharged.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "KMnO4 oxidises benzaldehyde to benzoic acid \u2014 the violet discharges and brown MnO2 forms.\n\u2192 Squeeze 2 dropper-loads of benzaldehyde into the beaker, then warm the beaker at the water bath (pour distilled water in, lit burner beside it)."
   - taskId: filter-mno2
-    label: Filter off the brown MnO2 sludge
+    label: "Filter off the brown MnO2"
     phase: 1
     prerequisites:
     - oxidise-benzaldehyde
@@ -68,12 +67,9 @@ MonoBehaviour:
     skill: 2
     rubricCategory: 0
     required: 1
-    hint: Filter the hot mixture to remove the brown manganese dioxide.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "The benzoic acid stays dissolved; the brown manganese dioxide is sludge to remove.\n\u2192 Hold the funnel over the Erlenmeyer flask and tilt-pour the beaker through it (about 20 ml)."
   - taskId: acidify
-    label: Acidify the filtrate with 6N HCl to precipitate benzoic acid
+    label: "Acidify the filtrate with 6N HCl"
     phase: 1
     prerequisites:
     - filter-mno2
@@ -81,12 +77,9 @@ MonoBehaviour:
     skill: 3
     rubricCategory: 0
     required: 1
-    hint: Add 6N HCl until acidic; white benzoic acid crystals separate.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Acid turns the dissolved benzoate back into insoluble benzoic acid \u2014 white crystals separate.\n\u2192 Squeeze 5 dropper-loads of 6N hydrochloric acid into the flask."
   - taskId: crystallise
-    label: Cool in an ice bath; recrystallise from hot water
+    label: "Chill in the ice bath; crystallise"
     phase: 1
     prerequisites:
     - acidify
@@ -94,13 +87,11 @@ MonoBehaviour:
     skill: 2
     rubricCategory: 0
     required: 1
-    hint: Chill to complete crystallisation, then recrystallise from the minimum
-      hot water.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Cold completes the crystallisation; recrystallising from hot water then purifies the crystals.\n\u2192 Set the flask in the ice bucket and let it chill."
+    longProcess: 1
+    longProcessMessage: "The flask chilled in the ice \u2014 the crystals grew, were recrystallised from hot water and dried."
   - taskId: test-litmus
-    label: 'Litmus test: turns blue litmus red (acidic)'
+    label: "Litmus test \u2014 blue litmus turns red"
     phase: 2
     prerequisites:
     - crystallise
@@ -108,13 +99,9 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: Dissolve a little product; blue litmus turning red confirms a carboxylic
-      acid.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "A carboxylic acid turns blue litmus red.\n\u2192 Pour a splash of product and a splash of distilled water into Test Tube 8, then touch a litmus strip to it."
   - taskId: test-fecl3
-    label: 'FeCl3 test: buff / salmon precipitate'
+    label: "Ferric chloride test \u2014 buff precipitate"
     phase: 2
     prerequisites:
     - crystallise
@@ -122,13 +109,9 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: Neutralise to sodium benzoate then add FeCl3; a buff precipitate confirms
-      benzoate.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Neutralised to benzoate, ferric chloride drops a buff/salmon precipitate.\n\u2192 Into Test Tube 9: a splash of product, 2 squeezes of 10% NaOH, then 5 squeezes of ferric chloride."
   - taskId: test-ester
-    label: Ester test with propyl alcohol (fruity odour)
+    label: "Ester test \u2014 fruity odour with propyl alcohol"
     phase: 2
     prerequisites:
     - crystallise
@@ -136,13 +119,9 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: Warm with propyl alcohol + a drop of H2SO4; a fruity ester odour confirms
-      the acid.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Warmed with propyl alcohol and a drop of sulfuric acid, benzoic acid gives a sweet ester odour (shown on screen).\n\u2192 Into Test Tube 10: a splash of product, 10 squeezes of propyl alcohol, 1 of sulfuric acid \u2014 then warm it at the water bath."
   - taskId: record-yield
-    label: Record yield and observations on the data sheet
+    label: "Record yield and observations"
     phase: 3
     prerequisites:
     - test-litmus
@@ -152,10 +131,8 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 5
     required: 1
-    hint: Enter the crystal mass, % yield and each test result.
-    autoCompleteWhenOthersDone: 0
-    longProcess: 0
-    longProcessMessage: 
+    hint: "Crystal mass, % yield and each test result go on the data sheet.\n\u2192 Review the results, then answer on the tablet."
+    autoCompleteWhenOthersDone: 1
   assessmentMode: 0
   masteryThreshold: 0.9
   bkt:

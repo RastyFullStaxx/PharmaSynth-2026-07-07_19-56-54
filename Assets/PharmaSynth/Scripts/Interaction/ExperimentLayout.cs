@@ -76,6 +76,14 @@ public class ExperimentLayout : ScriptableObject
 
         [Tooltip("FERMENTATION flask (Exp 3): set to the ferment taskId. Once prepare-must is done, this flask evolves CO₂ into any nearby limewater vessel (turning it milky); the named task completes when that vessel clouds. FermentationController; zone-free like the water bath.")]
         public string fermentTaskId = "";
+
+        [Tooltip("ZONE-FREE chill step (Exp 4 crystallise): >0 = the chillTaskId task completes when this vessel holds something AND has been cooled to this temperature — set it in the ice bath, anywhere. VesselChillTask; ambient is 25 °C so it can never self-complete.")]
+        public float chillToC = 0f;
+        [Tooltip("The task chillToC completes (chill has no reagent binding of its own, so the owner is named explicitly).")]
+        public string chillTaskId = "";
+
+        [Tooltip("LITMUS confirmation (Exp 4 test-litmus): the named task completes when this vessel is served its reagents AND a litmus strip touches it while the mixture reads acid (strip turns red). VesselLitmusTask; zone-free.")]
+        public string litmusTaskId = "";
     }
 
     public string moduleId;
