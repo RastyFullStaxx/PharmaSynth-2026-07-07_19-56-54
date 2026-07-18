@@ -128,7 +128,9 @@ MonoBehaviour:
     pTransit: 0.2
     pSlip: 0.1
     pGuess: 0.2
-  trackedSkills: 
+  trackedSkills:
+  - 5
+  - 0
   rubricWeights:
     procedure: 0.4
     chemicalTests: 0.2

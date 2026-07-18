@@ -4285,6 +4285,23 @@ public static class PharmaSelfTests
             // The scoring/mastery spine must build from the authored data.
             A("content: " + file + " builds mastery model", m.BuildMasteryModel() != null);
             A("content: " + file + " builds score calculator", m.BuildScoreCalculator() != null);
+
+            // BEATABLE (2026-07-19, found by SimulatedCampaign): a PERFECT run —
+            // every task completed, zero mistakes, all quiz answers right — must
+            // clear the BKT mastery gate. With the default parameters a skill
+            // observed ONCE caps at 0.68, so a module whose tracked set holds
+            // several single-task skills can NEVER reach the 0.90 mean: Exp 3
+            // graded a flawless play "TRY AGAIN" (mastery 0.83), Exp 2 passed by
+            // 0.0001, and Exp 4-9 + the TUTORIAL were all unwinnable. Each
+            // module's trackedSkills now names its SIGNATURE skills (>=2
+            // observations on a perfect run); this replays the exact runner
+            // observation walk purely so no module ever ships unbeatable again.
+            var mastery = m.BuildMasteryModel();
+            foreach (var t in m.graphTasks)
+                if (mastery.IsTracked(t.skill)) mastery.Observe(t.skill, true);
+            A("content: " + file + " is BEATABLE (perfect run clears the mastery gate: "
+                + mastery.OverallMastery().ToString("0.000") + ")",
+                mastery.OverallMastery() >= m.masteryThreshold);
         }
     }
 
@@ -4371,6 +4388,17 @@ public static class PharmaSelfTests
         int shuf = MusicSpeaker.NextIndex(0, 5, true, 0.99f);
         A("music: shuffle in range", shuf >= 0 && shuf < 5);
         A("music: empty safe", MusicSpeaker.NextIndex(0, 0, true, 0.5f) == 0);
+
+        // Speaker LED blink envelope (user 2026-07-19) — period 1.15 s, 22% lit.
+        const float P = 1.15f, ON = 0.22f, E = 0.05f, DIM = 0.12f;
+        A("led: peak mid-pulse", Mathf.Approximately(SpeakerLedBlink.Level01(P * ON * 0.5f, P, ON, E, DIM), 1f));
+        A("led: dim in the gap", Mathf.Approximately(SpeakerLedBlink.Level01(P * 0.6f, P, ON, E, DIM), DIM));
+        A("led: ramps from dim", SpeakerLedBlink.Level01(0f, P, ON, E, DIM) < 0.2f);
+        A("led: cycles", Mathf.Approximately(SpeakerLedBlink.Level01(P * 0.6f, P, ON, E, DIM),
+                                             SpeakerLedBlink.Level01(P * 1.6f, P, ON, E, DIM)));
+        A("led: contrast is noticeable", SpeakerLedBlink.Level01(P * ON * 0.5f, P, ON, E, DIM)
+                                       - SpeakerLedBlink.Level01(P * 0.9f, P, ON, E, DIM) > 0.5f);
+        A("led: zero period safe", Mathf.Approximately(SpeakerLedBlink.Level01(3f, 0f, ON, E, DIM), 1f));
     }
 
     // Font-safe glyph sanitiser for the lab pads / holo board (user 2026-07-10).

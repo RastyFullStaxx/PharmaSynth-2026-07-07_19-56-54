@@ -110,14 +110,16 @@ public static class MusicSpeakerBuilder
         Driver(parent, "Woofer", drvMat, new Vector3(0f, 0.16f, 0.152f), 0.20f);
         Driver(parent, "Tweeter", drvMat, new Vector3(0f, 0.34f, 0.152f), 0.075f);
 
-        // Cyan power LED (emissive).
+        // Cyan power LED (emissive) — blinks like a machine's standby light rather
+        // than sitting flat-on (user 2026-07-19); driven via MPB off the shared mat.
         var led = GameObject.CreatePrimitive(PrimitiveType.Cube);
         led.name = "LED";
         Object.DestroyImmediate(led.GetComponent<Collider>());
         led.transform.SetParent(parent, false);
         led.transform.localPosition = new Vector3(0.10f, 0.42f, 0.152f);
-        led.transform.localScale = new Vector3(0.022f, 0.022f, 0.01f);
+        led.transform.localScale = new Vector3(0.026f, 0.026f, 0.012f);
         led.GetComponent<Renderer>().sharedMaterial = ledMat;
+        led.AddComponent<SpeakerLedBlink>().Bind(new Color(0.3f, 0.85f, 1f), 1.15f, 0.22f, 6f);
     }
 
     static void Driver(Transform parent, string name, Material mat, Vector3 localPos, float diameter)
