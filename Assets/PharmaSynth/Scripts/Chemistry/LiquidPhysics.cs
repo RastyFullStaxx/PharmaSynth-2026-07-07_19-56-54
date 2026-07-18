@@ -76,6 +76,10 @@ public class LiquidPhysics : MonoBehaviour
     private float _mixPH = 7f;
     public float CurrentPH => _mixPH;
 
+    // Reaction-sting dedupe (2026-07-18): see ApplyReaction.
+    private ReactionRule _lastCueRule;
+    private float _lastCueAt = -999f;
+
     /// Truly empty (nothing visible, wake branch armed).
     public bool IsEmpty => currentLiquidVolume <= 1f && currentPptVolume <= 1f;
 
@@ -381,8 +385,12 @@ public class LiquidPhysics : MonoBehaviour
         }
         UpdateAllVisuals(); // Update Color only on reaction
         Ledger.React(currentChemical != null ? currentChemical.chemicalName : null);
+        // The same rule re-firing within a burst (each of 5 acid squeezes) plays
+        // ONE sting, not five — mirrors MixFeedback's observation dedupe.
         string cue = Mishandling.SfxForOutcome(rule.outcome);
-        if (cue.Length > 0) AudioService.TryPlay(cue);
+        if (cue.Length > 0 && (rule != _lastCueRule || Time.time - _lastCueAt >= 4f))
+            AudioService.TryPlay(cue);
+        _lastCueRule = rule; _lastCueAt = Time.time;
         ReactionOccurred?.Invoke(rule);
     }
 

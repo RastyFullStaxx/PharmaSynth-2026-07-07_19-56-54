@@ -10,10 +10,19 @@ public class MixFeedback : MonoBehaviour
 {
     private LiquidPhysics _lp;
     private float _quietUntil;   // throttle chatty events (per-vessel)
+    private ReactionRule _lastRule;
+    private float _lastReactionAt = -999f;
 
     /// Pure policy the suite pins: only non-hazardous no-rule mixes announce.
     public static bool ShouldAnnounceWrongMix(HazardousMix.HazardOutcome outcome)
         => outcome == HazardousMix.HazardOutcome.None;
+
+    /// Pure (suite-pinned): the SAME rule re-firing within the window stays
+    /// quiet — Exp 4's five HCl squeezes each re-fired "white crystals
+    /// separate" (5 popups + 5 stings for one action burst, user 2026-07-18).
+    /// A different rule always announces.
+    public static bool ShouldShowObservation(bool sameRule, float now, float lastAt, float window = 4f)
+        => !sameRule || now - lastAt >= window;
 
     /// Builder seam.
     public void Bind(LiquidPhysics lp)
@@ -57,6 +66,10 @@ public class MixFeedback : MonoBehaviour
     private void OnReaction(ReactionRule rule)
     {
         if (rule == null) return;
+        bool same = rule == _lastRule;
+        bool show = ShouldShowObservation(same, Time.time, _lastReactionAt);
+        _lastRule = rule; _lastReactionAt = Time.time;   // a burst keeps refreshing the window
+        if (!show) return;
         string text = !string.IsNullOrEmpty(rule.expectedObservation)
             ? rule.expectedObservation
             : "Reaction: " + (rule.resultLiquid != null ? rule.resultLiquid.chemicalName : "product formed");

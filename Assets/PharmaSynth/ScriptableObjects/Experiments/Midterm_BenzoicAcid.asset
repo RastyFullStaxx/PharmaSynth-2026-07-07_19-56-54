@@ -34,6 +34,7 @@ MonoBehaviour:
   - "Funnel"
   - "Test tubes 8 / 9 / 10"
   - "Dropper"
+  - "Scoopula (scoop your crystals)"
   - "Water bath + burner"
   - "Ice bucket"
   - "Litmus paper"
@@ -99,7 +100,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "A carboxylic acid turns blue litmus red.\n\u2192 Pour a splash of product and a splash of distilled water into Test Tube 8, then touch a litmus strip to it."
+    hint: "A carboxylic acid turns blue litmus red.\n\u2192 Scoop 1 scoopula of your crystals (2 g) into Test Tube 8, add 2 squeezes of distilled water, then touch a litmus strip to it."
   - taskId: test-fecl3
     label: "Ferric chloride test \u2014 buff precipitate"
     phase: 2
@@ -109,7 +110,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Neutralised to benzoate, ferric chloride drops a buff/salmon precipitate.\n\u2192 Into Test Tube 9: a splash of product, 2 squeezes of 10% NaOH, then 5 squeezes of ferric chloride."
+    hint: "Neutralised to benzoate, ferric chloride drops a buff/salmon precipitate.\n\u2192 Into Test Tube 9: 1 scoopula of crystals, 2 squeezes of 10% NaOH, then 5 squeezes of ferric chloride."
   - taskId: test-ester
     label: "Ester test \u2014 fruity odour with propyl alcohol"
     phase: 2
@@ -119,7 +120,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Warmed with propyl alcohol and a drop of sulfuric acid, benzoic acid gives a sweet ester odour (shown on screen).\n\u2192 Into Test Tube 10: a splash of product, 10 squeezes of propyl alcohol, 1 of sulfuric acid \u2014 then warm it at the water bath."
+    hint: "Warmed with propyl alcohol and a drop of sulfuric acid, benzoic acid gives a sweet ester odour (shown on screen).\n\u2192 Into Test Tube 10: 1 scoopula of crystals, 10 squeezes of propyl alcohol, 1 of sulfuric acid \u2014 then warm it at the water bath."
   - taskId: record-yield
     label: "Record yield and observations"
     phase: 3

@@ -21,6 +21,14 @@ public static class WaterBathMath
 
     public static bool IsHeating(bool hasWater, bool litBurnerNear) => hasWater && litBurnerNear;
 
+    /// Effect radius from a user-scalable ZONE ANCHOR (user 2026-07-18: "add
+    /// anchors I can manually scale perfectly"): the anchor's wire-sphere
+    /// gizmo diameter == its world scale (PlacementAnchor.previewsScale
+    /// convention), so radius = half its X scale — what you see in the editor
+    /// IS the area of effect. Falls back to the coded constant with no anchor.
+    public static float EffectRadius(float anchorScaleX, float fallback)
+        => anchorScaleX > 0.0001f ? anchorScaleX * 0.5f : fallback;
+
     /// The bath's own live label — always tells the player the NEXT thing it needs.
     public static string StatusLine(bool hasWater, bool litBurnerNear, float bathC)
         => !hasWater ? "Water Bath — pour in distilled water"
@@ -44,6 +52,22 @@ public class WaterBathController : MonoBehaviour
     [SerializeField] private TemperatureSim _temp;
     [SerializeField] private ProximityLabel _label;
     private float _nextScan;
+    private Transform _heatZone, _burnerZone;   // user-scalable effect zones (children)
+
+    /// The vessel-warming zone: centre + radius from the hand-scaled "HeatZone"
+    /// child when present, else the bath pivot + the coded constant.
+    public Vector3 HeatZoneCenter
+    { get { FindZones(); return _heatZone != null ? _heatZone.position : transform.position; } }
+    public float HeatZoneRadius
+    { get { FindZones(); return WaterBathMath.EffectRadius(_heatZone != null ? Mathf.Abs(_heatZone.lossyScale.x) : 0f, WaterBathMath.VesselRadius); } }
+    public float BurnerZoneRadius
+    { get { FindZones(); return WaterBathMath.EffectRadius(_burnerZone != null ? Mathf.Abs(_burnerZone.lossyScale.x) : 0f, WaterBathMath.BurnerRadius); } }
+
+    private void FindZones()
+    {
+        if (_heatZone == null) _heatZone = transform.Find("HeatZone");
+        if (_burnerZone == null) _burnerZone = transform.Find("BurnerZone");
+    }
 
     public float BathC { get { EnsureRefs(); return _temp != null ? Mathf.Min(_temp.CurrentC, WaterBathMath.BathMaxC) : 25f; } }
     public bool HasWater { get { EnsureRefs(); return _lp != null && WaterBathMath.HasWater(_lp.currentLiquidVolume); } }
@@ -80,16 +104,17 @@ public class WaterBathController : MonoBehaviour
 
     private bool AnyLitBurnerNear()
     {
+        var center = _burnerZone != null ? _burnerZone.position : transform.position;
         foreach (var b in FindObjectsByType<BurnerController>(FindObjectsSortMode.None))
             if (b != null && b.IsLit
-                && Vector3.Distance(b.transform.position, transform.position) <= WaterBathMath.BurnerRadius)
+                && Vector3.Distance(b.transform.position, center) <= BurnerZoneRadius)
                 return true;
         return false;
     }
 
     private void PushHeat()
     {
-        foreach (var col in Physics.OverlapSphere(transform.position, WaterBathMath.VesselRadius,
+        foreach (var col in Physics.OverlapSphere(HeatZoneCenter, HeatZoneRadius,
                                                   ~0, QueryTriggerInteraction.Ignore))
         {
             var lp = col != null ? col.GetComponentInParent<LiquidPhysics>() : null;

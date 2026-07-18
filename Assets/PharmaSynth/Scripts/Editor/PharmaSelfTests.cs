@@ -2222,6 +2222,27 @@ public static class PharmaSelfTests
         // only once it actually holds product AND has gone cold (ambient 25 °C
         // can never satisfy it by standing around).
         A("icebath: chills only within reach", IceBathMath.Chills(0.2f) && !IceBathMath.Chills(0.5f));
+        // User-scalable zone anchors (2026-07-18): the wire-sphere gizmo's world
+        // scale IS the diameter — half the X scale drives the tool's reach; no
+        // anchor falls back to the coded constant.
+        A("zone: anchor scale drives the effect radius",
+            WaterBathMath.EffectRadius(1f, 0.32f) == 0.5f
+            && WaterBathMath.EffectRadius(0f, 0.32f) == 0.32f
+            && WaterBathMath.EffectRadius(0.64f, 0.99f) == 0.32f);
+        {
+            var bathT = GameObject.Find("WaterBath");
+            var iceT = GameObject.Find("Raw_IceBucket");
+            A("wired: bath + ice bucket carry user-scalable zone anchors",
+                bathT != null && bathT.transform.Find("HeatZone") != null
+                && bathT.transform.Find("BurnerZone") != null
+                && iceT != null && iceT.transform.Find("ChillZone") != null);
+        }
+        // Observation dedupe (2026-07-18): a burst of identical squeezes fires
+        // ONE popup/sting; a different rule always announces.
+        A("mixfx: repeated identical observation stays quiet",
+            !MixFeedback.ShouldShowObservation(true, 10f, 9f)
+            && MixFeedback.ShouldShowObservation(true, 14f, 9f)
+            && MixFeedback.ShouldShowObservation(false, 10f, 9.9f));
         A("chill: completes only holding AND cold",
             VesselChillTask.ShouldComplete(true, IceBathMath.IceWaterC, 8f)
             && !VesselChillTask.ShouldComplete(false, IceBathMath.IceWaterC, 8f)
@@ -3136,6 +3157,12 @@ public static class PharmaSelfTests
             A("builder: sim stations get live status labels", bgo.GetComponentsInChildren<StationStatusLabel>().Length >= 1);
             A("builder: vessels get live status + mix feedback",
                 bgo.GetComponentsInChildren<VesselStatus>().Length >= 2 && bgo.GetComponentsInChildren<MixFeedback>().Length >= 2);
+            // Precipitate layer (2026-07-18): without it, "white crystals
+            // separate" fired with nothing visible in adopted/spawned glass.
+            bool allPpt = true;
+            foreach (var vlp in bgo.GetComponentsInChildren<LiquidPhysics>())
+                if (vlp.GetComponent<LiquidTaskBinding>() != null && vlp.precipitateRenderer == null) allPpt = false;
+            A("builder: task vessels get a precipitate layer", allPpt);
 
             builder.Build("tutorial-methane");   // teardown to a clean stage
             int m = builder.Build("tutorial-methane");

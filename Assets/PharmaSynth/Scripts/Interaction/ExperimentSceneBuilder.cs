@@ -870,39 +870,63 @@ public class ExperimentSceneBuilder : MonoBehaviour
                       // LiquidPhysics keeps it off the opaque vessel mesh.
         }
 
-        if (lp.mainRenderer != null && lp.mainRenderer.sharedMaterial != null
-            && lp.mainRenderer.sharedMaterial.HasProperty("_Fill")) return;   // authored setup (e.g. _WithLiquid twin)
-
-        // Reuse an existing child named "Liquid" when present but unwired.
-        Renderer liquidR = null;
-        foreach (var r in inst.GetComponentsInChildren<Renderer>(true))
-            if (r.name == "Liquid" && r.sharedMaterial != null && r.sharedMaterial.HasProperty("_Fill")) { liquidR = r; break; }
-
-        if (liquidR == null)
+        bool authoredFill = lp.mainRenderer != null && lp.mainRenderer.sharedMaterial != null
+            && lp.mainRenderer.sharedMaterial.HasProperty("_Fill");   // authored setup (e.g. _WithLiquid twin)
+        if (!authoredFill)
         {
-            var shader = Shader.Find("PharmaSynth/Liquid");
-            if (shader == null) return;   // shader stripped — leave numeric-only rather than magenta
-            var b = WB(inst);
-            var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            go.name = "Liquid";
-            var col = go.GetComponent<Collider>();
-            if (col != null) { if (Application.isPlaying) Destroy(col); else DestroyImmediate(col); }
-            go.transform.SetParent(inst.transform, true);
-            // Inset cylinder ~72% of the glass footprint, floor to just under the rim.
-            float w = Mathf.Min(b.size.x, b.size.z) * 0.72f;
-            float h = Mathf.Max(0.01f, b.size.y * 0.86f);
-            go.transform.position = new Vector3(b.center.x, b.min.y + h * 0.5f + b.size.y * 0.04f, b.center.z);
-            go.transform.rotation = inst.transform.rotation;
-            var ls = inst.transform.lossyScale;
-            go.transform.localScale = new Vector3(
-                w / Mathf.Max(1e-4f, Mathf.Abs(ls.x)),
-                h * 0.5f / Mathf.Max(1e-4f, Mathf.Abs(ls.y)),   // cylinder mesh is 2 units tall
-                w / Mathf.Max(1e-4f, Mathf.Abs(ls.z)));
-            liquidR = go.GetComponent<Renderer>();
-            liquidR.sharedMaterial = new Material(shader) { name = "PharmaLiquid_Runtime" };
-            liquidR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            // Reuse an existing child named "Liquid" when present but unwired.
+            Renderer liquidR = null;
+            foreach (var r in inst.GetComponentsInChildren<Renderer>(true))
+                if (r.name == "Liquid" && r.sharedMaterial != null && r.sharedMaterial.HasProperty("_Fill")) { liquidR = r; break; }
+
+            if (liquidR == null)
+                liquidR = BuildFillChild(inst, "Liquid", 0.72f);
+            lp.mainRenderer = liquidR;
         }
-        lp.mainRenderer = liquidR;
+
+        // PRECIPITATE layer (2026-07-18): bench-adopted glass had NO
+        // precipitateRenderer — only the authored _WithLiquid twins carry one —
+        // so Exp 4's MnO2 sludge, white benzoic crystals and buff ferric
+        // benzoate fired their observation text with NOTHING visible in the
+        // vessel. Same inset-cylinder trick, slightly wider so the settled
+        // layer reads at the bottom through the liquid.
+        if (lp.precipitateRenderer == null)
+        {
+            Renderer pptR = null;
+            foreach (var r in inst.GetComponentsInChildren<Renderer>(true))
+                if (r.name == "Precipitate" && r.sharedMaterial != null && r.sharedMaterial.HasProperty("_Fill")) { pptR = r; break; }
+            if (pptR == null) pptR = BuildFillChild(inst, "Precipitate", 0.76f);
+            if (pptR != null) pptR.enabled = false;   // LiquidPhysics enables it while ppt volume > 1 ml
+            lp.precipitateRenderer = pptR;
+        }
+    }
+
+    /// Inset PharmaLiquid cylinder fitted to the vessel's glass bounds — the
+    /// runtime fill surface for adopted bench glass (Liquid + Precipitate layers).
+    private static Renderer BuildFillChild(GameObject inst, string childName, float widthFrac)
+    {
+        var shader = Shader.Find("PharmaSynth/Liquid");
+        if (shader == null) return null;   // shader stripped — leave numeric-only rather than magenta
+        var b = WB(inst);
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        go.name = childName;
+        var col = go.GetComponent<Collider>();
+        if (col != null) { if (Application.isPlaying) Destroy(col); else DestroyImmediate(col); }
+        go.transform.SetParent(inst.transform, true);
+        // Inset cylinder, floor to just under the rim.
+        float w = Mathf.Min(b.size.x, b.size.z) * widthFrac;
+        float h = Mathf.Max(0.01f, b.size.y * 0.86f);
+        go.transform.position = new Vector3(b.center.x, b.min.y + h * 0.5f + b.size.y * 0.04f, b.center.z);
+        go.transform.rotation = inst.transform.rotation;
+        var ls = inst.transform.lossyScale;
+        go.transform.localScale = new Vector3(
+            w / Mathf.Max(1e-4f, Mathf.Abs(ls.x)),
+            h * 0.5f / Mathf.Max(1e-4f, Mathf.Abs(ls.y)),   // cylinder mesh is 2 units tall
+            w / Mathf.Max(1e-4f, Mathf.Abs(ls.z)));
+        var r2 = go.GetComponent<Renderer>();
+        r2.sharedMaterial = new Material(shader) { name = "PharmaLiquid_Runtime" };
+        r2.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        return r2;
     }
 
     // ---- vessel fitting (local space) ---------------------------------------

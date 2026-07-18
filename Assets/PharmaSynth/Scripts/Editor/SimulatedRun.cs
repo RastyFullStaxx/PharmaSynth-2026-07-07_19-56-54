@@ -296,7 +296,7 @@ public static class SimulatedRun
         // executing tilt-pours made 10/10 look like 10/50; overshoot pours are
         // OPTIONAL (a player stops when the ✓ shows), so only completion BELOW
         // the minimum is a bug.
-        var plan = new List<(LiquidTaskBinding b, LiquidTaskBinding.ReagentStep s, LiquidPhysics src, bool vesselSource, float inc, int n)>();
+        var plan = new List<(LiquidTaskBinding b, LiquidTaskBinding.ReagentStep s, LiquidPhysics src, bool vesselSource, bool scoopDraw, float inc, int n)>();
         int minTotal = 0;
         foreach (var (b, s) in steps)
         {
@@ -318,19 +318,24 @@ public static class SimulatedRun
             // Pouring FROM another vessel (the filtrate through the funnel) is a
             // tilt-pour of the solution — never spatula dips, whatever the
             // chemical's dry state says (round one dipped the hydrolysate 50×).
+            // EXCEPT crystals (user 2026-07-18: "if it's solid, shouldn't we use
+            // porcelain spatula or scoopula?"): a solid-state product drawn from
+            // the CHILL (crystallising) flask is a scoop dip — heat vessels hold
+            // liquid filtrates/distillates and stay pours.
             bool pv = psrc.GetComponent<LiquidTaskBinding>() != null;
-            float pinc = pv ? 0.5f : IncrementFor(s);
+            bool scoopDraw = pv && IsSolid(s) && psrc.GetComponent<VesselChillTask>() != null;
+            float pinc = pv && !scoopDraw ? 0.5f : IncrementFor(s);
             int pmin = s.requiredMl <= 0f ? 1 : Mathf.CeilToInt(s.requiredMl / pinc - 0.0001f);
             int pn = pmin;
             // Human overshoot on bulk tilt-pours only — squeezes and dips are counted.
-            if ((pv || !IsSolid(s)) && s.requiredMl > 4f) pn = Mathf.CeilToInt(pn * 1.2f);
-            plan.Add((b, s, psrc, pv, pinc, pn));
+            if (((pv && !scoopDraw) || !IsSolid(s)) && s.requiredMl > 4f) pn = Mathf.CeilToInt(pn * 1.2f);
+            plan.Add((b, s, psrc, pv, scoopDraw, pinc, pn));
             minTotal += pmin;
         }
 
         int doneActions = 0;
 
-        foreach (var (b, s, src, vesselSource, inc, n) in plan)
+        foreach (var (b, s, src, vesselSource, scoopDraw, inc, n) in plan)
         {
             var lp = b.GetComponent<LiquidPhysics>();
 
@@ -375,9 +380,11 @@ public static class SimulatedRun
             if (!vesselSource)
             { demand.TryGetValue(s.reagent, out float d); demand[s.reagent] = d + Mathf.Max(inc * poured, 0f); }
             pouredInto.TryGetValue(b, out float pv); pouredInto[b] = pv + inc * poured;
-            log.AppendLine("  " + poured + "× " + (vesselSource ? "tilt-pour (vessel to vessel)" : VerbFor(s))
+            string verb = scoopDraw ? "scoopula-dip (crystals)"
+                        : vesselSource ? "tilt-pour (vessel to vessel)" : VerbFor(s);
+            log.AppendLine("  " + poured + "× " + verb
                            + " " + s.reagent.chemicalName + " (from " + src.name + ") → " + b.name
-                           + " (" + (inc * poured).ToString("0.#") + (vesselSource ? " ml" : UnitFor(s)) + ")");
+                           + " (" + (inc * poured).ToString("0.#") + (vesselSource && !scoopDraw ? " ml" : UnitFor(s)) + ")");
         }
         return true;
     }
@@ -546,7 +553,8 @@ public static class SimulatedRun
             runner.Graph.Tick();
         }
         if (runner.Graph.IsComplete(id))
-            log.AppendLine("  ✓ set " + (lp != null ? lp.name : "the vessel") + " in the ice bath — chilled to "
+            log.AppendLine("  ✓ set " + (lp != null ? lp.name : "the vessel") + " in the ice bath (zone r="
+                           + ice.ChillZoneRadius.ToString("0.00") + " m) — chilled to "
                            + (lp != null ? lp.currentTempC.ToString("0") : "?") + " C, crystals formed");
         else
         {
@@ -573,12 +581,19 @@ public static class SimulatedRun
         }
         if (lt == null) return false;
 
-        // The player tears a strip off the bench litmus box — it must exist.
+        // The player tears a strip off the bench litmus box — it must exist,
+        // and at least one dispensable strip must CARRY the LitmusStrip
+        // component with a collider, or a real touch can never register.
         bool boxOnBench = false;
         foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             if (t.name.StartsWith("Raw_LitmusPaper")) { boxOnBench = true; break; }
         if (!boxOnBench)
             res.bugs.Add(id + ": no Raw_LitmusPaper box on the bench — the player has no strip to test with");
+        bool stripWired = false;
+        foreach (var st in Object.FindObjectsByType<LitmusStrip>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (st != null && st.GetComponentInChildren<Collider>(true) != null) { stripWired = true; break; }
+        if (!stripWired)
+            res.bugs.Add(id + ": no litmus strip in the scene carries a Collider — a physical touch can never register in play");
 
         var stripGo = new GameObject("SimLitmusStrip");
         try

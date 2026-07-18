@@ -149,6 +149,10 @@ public static class W58VerbDataApplier
             if (wbc == null) { wbc = t.gameObject.AddComponent<WaterBathController>(); sceneChanges++; }
             wbc.Bind(blp, bts, blabel);
             blabel.SetLabel(WaterBathMath.StatusLine(false, false, 25f), 1.6f);
+            // User-scalable effect zones (2026-07-18): scale the wire sphere in
+            // the editor and that IS the reach — the controller reads it.
+            sceneChanges += EnsureZoneAnchor(t, "HeatZone", WaterBathMath.VesselRadius, new Color(1f, 0.55f, 0.15f, 0.9f));
+            sceneChanges += EnsureZoneAnchor(t, "BurnerZone", WaterBathMath.BurnerRadius, new Color(1f, 0.3f, 0.15f, 0.9f));
         }
 
         // The ICE BATH is the water bath's cold twin (2026-07-18, Exp 4's
@@ -162,6 +166,15 @@ public static class W58VerbDataApplier
             if (ice == null) { ice = t.gameObject.AddComponent<IceBathController>(); sceneChanges++; }
             ice.Bind(ilabel);
             ilabel.SetLabel(IceBathMath.StatusLine(), 1.4f);
+            sceneChanges += EnsureZoneAnchor(t, "ChillZone", IceBathMath.VesselRadius, new Color(0.45f, 0.75f, 1f, 0.9f));
+        }
+
+        // Exp 3's CO₂ delivery reach gets the same user-scalable zone anchor
+        // (flask → limewater tube; FermentationController reads it).
+        foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (t.name != "FlorenceFlask") continue;
+            sceneChanges += EnsureZoneAnchor(t, "FermentZone", FermentationMath.DeliveryRadius, new Color(0.7f, 1f, 0.5f, 0.9f));
         }
 
         // The porcelain spatula is the FINE solids tool: Exp 2 weighs 0.1 g salicylic
@@ -187,6 +200,33 @@ public static class W58VerbDataApplier
             EditorSceneManager.SaveOpenScenes();
         }
         Debug.Log($"[W58VerbData] {changes} layout changes, {sceneChanges} scene changes applied (idempotent).");
+    }
+
+    /// A user-scalable EFFECT-ZONE anchor child (user 2026-07-18: "add anchors
+    /// I can manually scale perfectly"): a PlacementAnchor whose wire-sphere
+    /// gizmo diameter == its world scale; the tool controller reads half that
+    /// scale as its reach. Centred on the object's rendered body, not its pivot.
+    static int EnsureZoneAnchor(Transform parent, string name, float radius, Color colour)
+    {
+        if (parent.Find(name) != null) return 0;
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        var rends = parent.GetComponentsInChildren<Renderer>();
+        if (rends.Length > 0)
+        {
+            var b = rends[0].bounds;
+            for (int i = 1; i < rends.Length; i++) b.Encapsulate(rends[i].bounds);
+            go.transform.position = b.center;
+        }
+        var ls = parent.lossyScale;   // compensate a scaled parent so world scale == diameter
+        go.transform.localScale = new Vector3(
+            radius * 2f / Mathf.Max(1e-4f, Mathf.Abs(ls.x)),
+            radius * 2f / Mathf.Max(1e-4f, Mathf.Abs(ls.y)),
+            radius * 2f / Mathf.Max(1e-4f, Mathf.Abs(ls.z)));
+        var pa = go.AddComponent<PlacementAnchor>();
+        pa.previewsScale = true;
+        pa.gizmoColor = colour;
+        return 1;
     }
 }
 #endif

@@ -116,12 +116,26 @@ public class FermentationController : MonoBehaviour
         EmitCO2();
     }
 
+    /// CO₂ delivery reach: the hand-scaled "FermentZone" child on the flask
+    /// when present (wire-sphere diameter == world scale, user 2026-07-18),
+    /// else the coded constant. The zone anchor survives on the bench flask.
+    private Transform _fermentZone;
+    public float DeliveryRadius
+    {
+        get
+        {
+            if (_fermentZone == null && flask != null) _fermentZone = flask.transform.Find("FermentZone");
+            return WaterBathMath.EffectRadius(_fermentZone != null ? Mathf.Abs(_fermentZone.lossyScale.x) : 0f,
+                                              FermentationMath.DeliveryRadius);
+        }
+    }
+
     /// Push a little CO₂ into every nearby limewater vessel — the registered
     /// Limewater_CO2 reaction turns it milky (CaCO₃). Public so the sim drives it.
     public void EmitCO2()
     {
         if (flask == null || co2 == null) return;
-        foreach (var col in Physics.OverlapSphere(flask.transform.position, FermentationMath.DeliveryRadius,
+        foreach (var col in Physics.OverlapSphere(flask.transform.position, DeliveryRadius,
                                                   ~0, QueryTriggerInteraction.Ignore))
         {
             var lp = col != null ? col.GetComponentInParent<LiquidPhysics>() : null;
@@ -136,7 +150,7 @@ public class FermentationController : MonoBehaviour
     private bool AnyLimewaterClouded()
     {
         if (flask == null) return false;
-        foreach (var col in Physics.OverlapSphere(flask.transform.position, FermentationMath.DeliveryRadius,
+        foreach (var col in Physics.OverlapSphere(flask.transform.position, DeliveryRadius,
                                                   ~0, QueryTriggerInteraction.Ignore))
         {
             var lp = col != null ? col.GetComponentInParent<LiquidPhysics>() : null;
