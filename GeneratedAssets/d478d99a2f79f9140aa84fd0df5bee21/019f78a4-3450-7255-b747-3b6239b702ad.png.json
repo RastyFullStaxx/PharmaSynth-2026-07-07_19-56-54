@@ -1,0 +1,31 @@
+{
+    "asset": "d478d99a2f79f9140aa84fd0df5bee21",
+    "fileName": "019f78a4-3450-7255-b747-3b6239b702ad.png",
+    "prompt": "A squat dark laboratory bottle of red-orange liquid: very dark amber almost black translucent glass, heavy ground-glass stopper, short wide body, a hint of red-orange liquid visible through the glass, blank white label panel. Clean stylized 3D render for a VR game, simple geometry, soft studio lighting, plain light-grey background, single object centred, no text, no watermark.",
+    "negativePrompt": "",
+    "model": "gemini-3.1-flash",
+    "modelName": "Gemini 3.1 Nano Banana 2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0,
+    "dynamicParams": {
+        "serializedData": []
+    }
+}

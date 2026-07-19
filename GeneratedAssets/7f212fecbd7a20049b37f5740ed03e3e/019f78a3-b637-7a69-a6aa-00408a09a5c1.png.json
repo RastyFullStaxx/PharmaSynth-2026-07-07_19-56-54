@@ -1,0 +1,31 @@
+{
+    "asset": "7f212fecbd7a20049b37f5740ed03e3e",
+    "fileName": "019f78a3-b637-7a69-a6aa-00408a09a5c1.png",
+    "prompt": "A small laboratory amber glass bottle for a fuming corrosive liquid: dark amber translucent glass, chunky ORANGE safety screw cap with vertical grip ribs, short wide neck, an orange warning band moulded around the shoulder with no lettering, blank white label panel. Clean stylized 3D render for a VR game, simple geometry, soft studio lighting, plain light-grey background, single object centred, no text, no watermark.",
+    "negativePrompt": "",
+    "model": "gemini-3.1-flash",
+    "modelName": "Gemini 3.1 Nano Banana 2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0,
+    "dynamicParams": {
+        "serializedData": []
+    }
+}

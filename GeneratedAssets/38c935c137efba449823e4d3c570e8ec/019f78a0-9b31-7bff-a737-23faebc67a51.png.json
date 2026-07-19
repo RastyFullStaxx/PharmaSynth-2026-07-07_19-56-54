@@ -1,0 +1,31 @@
+{
+    "asset": "38c935c137efba449823e4d3c570e8ec",
+    "fileName": "019f78a0-9b31-7bff-a737-23faebc67a51.png",
+    "prompt": "A small laboratory bottle for dilute acid: slim clear glass bottle, WHITE screw cap, blank white label panel, translucent glass showing pale liquid inside. Clean stylized 3D render for a VR game, simple geometry, soft studio lighting, plain light-grey background, single object centred, no text, no watermark.",
+    "negativePrompt": "",
+    "model": "gemini-3.1-flash",
+    "modelName": "Gemini 3.1 Nano Banana 2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0,
+    "dynamicParams": {
+        "serializedData": []
+    }
+}

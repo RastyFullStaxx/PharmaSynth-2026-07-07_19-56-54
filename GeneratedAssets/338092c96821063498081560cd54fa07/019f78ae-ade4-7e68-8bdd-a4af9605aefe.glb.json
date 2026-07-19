@@ -1,0 +1,23 @@
+{
+    "asset": "338092c96821063498081560cd54fa07",
+    "fileName": "019f78ae-ade4-7e68-8bdd-a4af9605aefe.glb",
+    "prompt": "A laboratory concentrated-acid bottle: narrow-mouth clear glass boston round bottle, RED screw cap with a safety pour ring, wide shoulder, blank white label panel on the body, faint amber-tinted glass rendered translucent. Clean stylized 3D render for a VR game, simple geometry, soft studio lighting, plain light-grey background, single object centred, no text, no watermark.",
+    "negativePrompt": "",
+    "model": "model3d-tripo-p1",
+    "modelName": "Tripo P1",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "promptImageReferenceGuid": "526ef0315ff61104795bc5d7ff8fb840",
+    "modelReferenceGuid": "",
+    "multiviewFrontGuid": "",
+    "multiviewBackGuid": "",
+    "multiviewLeftGuid": "",
+    "multiviewRightGuid": "",
+    "multiviewTopGuid": "",
+    "multiviewBottomGuid": "",
+    "multiviewLeftFrontGuid": "",
+    "multiviewRightFrontGuid": "",
+    "faceLimit": -1
+}

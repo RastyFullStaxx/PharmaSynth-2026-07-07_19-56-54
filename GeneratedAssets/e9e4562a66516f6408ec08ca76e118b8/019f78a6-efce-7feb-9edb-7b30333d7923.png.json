@@ -1,0 +1,31 @@
+{
+    "asset": "e9e4562a66516f6408ec08ca76e118b8",
+    "fileName": "019f78a6-efce-7feb-9edb-7b30333d7923.png",
+    "prompt": "A kitchen glass juice jug: clear glass pitcher with a simple handle and a small pouring lip, filled two-thirds with deep red-purple fruit juice, blank white label panel. Clean stylized 3D render for a VR game, simple geometry, soft studio lighting, plain light-grey background, single object centred, no text, no watermark.",
+    "negativePrompt": "",
+    "model": "gemini-3.1-flash",
+    "modelName": "Gemini 3.1 Nano Banana 2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0,
+    "dynamicParams": {
+        "serializedData": []
+    }
+}
