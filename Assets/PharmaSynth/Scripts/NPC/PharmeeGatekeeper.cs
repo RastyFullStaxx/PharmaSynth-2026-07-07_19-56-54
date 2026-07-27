@@ -10,12 +10,20 @@ public class PharmeeGatekeeper : MonoBehaviour
     [Serializable]
     public class GateLines
     {
-        [TextArea] public string approach = "Hold on! You can't enter the lab just yet. What would you like to do today?";
+        // "Episode" was legacy vocabulary (2026-07-27): the picker actually shows
+        // PERIODS and the EXPERIMENTS inside them, and every other line in the game
+        // says "experiment". Hearing a third word for the same thing at the one
+        // moment the player is choosing is exactly where it confuses.
+        [TextArea] public string approach = "Not so fast — the lab's still locked! What would you like to do today?";
         [TextArea] public string labTour = "Lab Tour it is! Roam freely and try the tools and reagents. Come back to me when you want to take on a campaign.";
-        [TextArea] public string campaignExplain = "The Campaign takes you through the class periods. Pass every experiment with 90% or better to unlock the next. Ready to pick your episode?";
-        [TextArea] public string episodePrompt = "Which episode will it be?";
-        [TextArea] public string lockedEpisode = "That episode is still locked — clear the earlier ones first!";
-        [TextArea] public string coatPrompt = "Safety first! Gear up at the locker — lab coat, goggles, AND gloves — before we begin.";
+        [TextArea] public string campaignExplain = "The Campaign takes you through the class periods. Pass every experiment with 90% or better to unlock the next. Ready to pick one?";
+        [TextArea] public string episodePrompt = "Which experiment will it be?";
+        [TextArea] public string lockedEpisode = "That one's still locked — clear the earlier experiments first!";
+        // No ALL-CAPS in spoken copy (2026-07-27): TTS reads capitalised words as
+        // shouting, so "AND" came out as a jarring bark in the middle of the one
+        // line every player hears before every experiment. "all three" carries the
+        // same emphasis in the subtitle without the artefact.
+        [TextArea] public string coatPrompt = "Safety first! Gear up at the locker — lab coat, goggles and gloves, all three — before we begin.";
         [TextArea] public string readyPrompt = "All geared up! Are you prepared to begin?";
         [TextArea] public string thresholdWarn = "The period will start as soon as you walk in. Step through when you're ready!";
         [TextArea] public string congrats = "Congratulations! You handled that experiment brilliantly. Let's head back outside.";
@@ -52,6 +60,10 @@ public class PharmeeGatekeeper : MonoBehaviour
 
     [Header("Dialogue")]
     [SerializeField] private GateLines lines = new GateLines();
+
+    /// Read seam: the ACTUAL lines this gate speaks (Inspector overrides included),
+    /// so tooling auditions exactly what the player will hear.
+    public GateLines Lines => lines;
     [SerializeField] private float lineSeconds = 4f;
 
     public GatekeeperModel Model { get; } = new GatekeeperModel();

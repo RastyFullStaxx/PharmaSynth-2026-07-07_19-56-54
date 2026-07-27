@@ -233,8 +233,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Test Tube
-  showDistance: 1.4
+  label: Test Tube 10
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &4915983
@@ -3949,8 +3949,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Test Tube
-  showDistance: 1.4
+  label: Test Tube 7
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &67005261
@@ -19029,8 +19029,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Test Tube
-  showDistance: 1.4
+  label: Test Tube 3
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &213232033
@@ -19708,8 +19708,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Test Tube
-  showDistance: 1.4
+  label: Test Tube 15
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &221467670
@@ -40147,8 +40147,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Hard-Glass Test Tube
-  showDistance: 1.4
+  label: Hard-Glass Test Tube 0
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &555728985
@@ -41336,8 +41336,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Test Tube
-  showDistance: 1.4
+  label: Test Tube 17
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &584554771
@@ -53179,8 +53179,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Test Tube
-  showDistance: 1.4
+  label: Test Tube 2
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &789961428
@@ -56629,8 +56629,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Erlenmeyer Flask
-  showDistance: 1.4
+  label: ErlenmeyerFlask 400 mL 2
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &830640204
@@ -61041,8 +61041,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Test Tube
-  showDistance: 1.4
+  label: Test Tube 16
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &907719873
@@ -62722,8 +62722,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Distilling Flask
-  showDistance: 1.4
+  label: DistillingFlask
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &928424390
@@ -73817,7 +73817,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Beaker 500 mL
-  showDistance: 1.4
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &1011918169
@@ -84385,8 +84385,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Test Tube
-  showDistance: 1.4
+  label: Test Tube 12
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &1208812571
@@ -88034,8 +88034,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Test Tube
-  showDistance: 1.4
+  label: Test Tube 0
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &1264258576
@@ -99000,8 +99000,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Test Tube
-  showDistance: 1.4
+  label: Test Tube 4
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &1437483400
@@ -104294,8 +104294,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Test Tube
-  showDistance: 1.4
+  label: Test Tube 11
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &1499334561
@@ -106626,8 +106626,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Test Tube
-  showDistance: 1.4
+  label: Test Tube 13
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &1532858684
@@ -122293,8 +122293,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Test Tube
-  showDistance: 1.4
+  label: Test Tube 9
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &1602863376
@@ -123791,8 +123791,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Test Tube
-  showDistance: 1.4
+  label: Test Tube 18
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &1627670734
@@ -126497,8 +126497,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Florence Flask
-  showDistance: 1.4
+  label: FlorenceFlask
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &1675597915
@@ -126984,8 +126984,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Test Tube
-  showDistance: 1.4
+  label: Test Tube 6
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &1679835063
@@ -148139,8 +148139,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Watch Glass
-  showDistance: 1.4
+  label: WatchGlass
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &1866820288
@@ -150589,7 +150589,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6598815579406187037, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -158253,8 +158253,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Test Tube
-  showDistance: 1.4
+  label: Test Tube 14
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &1963647728
@@ -159664,7 +159664,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
   label: Beaker 100 mL
-  showDistance: 1.4
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &1976658256
@@ -160036,8 +160036,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Test Tube
-  showDistance: 1.4
+  label: Test Tube 8
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &1978937719
@@ -163282,8 +163282,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Graduated Cylinder
-  showDistance: 1.4
+  label: Graduated Cylinder 50 mL
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &2025786409
@@ -163661,8 +163661,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Test Tube
-  showDistance: 1.4
+  label: Test Tube 5
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &2034075316
@@ -166170,8 +166170,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b81ceaf34aa151e44b712e38d41b78f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityLabel
-  label: Test Tube
-  showDistance: 1.4
+  label: Test Tube 1
+  showDistance: 1.6
   heightOffset: 0.14
   fontSize: 5.5
 --- !u!114 &2074160278

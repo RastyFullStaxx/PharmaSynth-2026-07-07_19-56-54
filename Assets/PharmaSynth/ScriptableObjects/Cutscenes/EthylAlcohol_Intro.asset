@@ -27,8 +27,8 @@ MonoBehaviour:
   - subtitle: 'Objective 2: Determine its identity through chemical tests.'
     seconds: 3.6875
     face: 0
-  - subtitle: Ferment sugar to ethanol, confirm CO2 with limewater, then distil the
-      70-80 degree fraction.
+  - subtitle: Ferment sugar to ethanol, confirm carbon dioxide with limewater, then
+      distil the fraction that comes over between 70 and 80 degrees.
     seconds: 4.5
     face: 0
   - subtitle: Check your data sheet on the tablet, then follow the glowing markers.

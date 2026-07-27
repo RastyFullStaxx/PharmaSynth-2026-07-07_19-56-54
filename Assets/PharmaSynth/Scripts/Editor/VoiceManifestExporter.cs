@@ -14,7 +14,7 @@ public static class VoiceManifestExporter
     const string OutPath = "Assets/PharmaSynth/Audio/Voice/voice-manifest.json";
 
     [System.Serializable]
-    public class ManifestLine { public string id; public string speaker; public string text; public int chars; }
+    public class ManifestLine { public string id; public string speaker; public string text; public int chars; public string group; }
 
     /// Generation ORDER (user 2026-07-27: "prioritize dr jimenez before we generate
     /// pharmee. stop only when we ran out of tokens"). The PowerShell generator
@@ -33,7 +33,7 @@ public static class VoiceManifestExporter
         var manifest = new Manifest();
         var seen = new HashSet<string>();
 
-        void Add(VoiceSpeaker speaker, string text)
+        void Add(VoiceSpeaker speaker, string text, string group)
         {
             if (string.IsNullOrWhiteSpace(text)) return;
             string id = VoiceLineId.For(text);
@@ -45,10 +45,11 @@ public static class VoiceManifestExporter
                 speaker = speaker.ToString(),
                 text = VoiceLineId.Normalize(text),
                 chars = VoiceLineId.Normalize(text).Length,
+                group = group,
             });
         }
 
-        foreach (var l in VoiceCorpus.CodeLines()) Add(l.speaker, l.text);
+        foreach (var l in VoiceCorpus.CodeLines()) Add(l.speaker, l.text, l.group);
 
         // Cutscene beats (Pharmee narrates all four cutscenes per module).
         int beats = 0;
@@ -57,7 +58,7 @@ public static class VoiceManifestExporter
             var cs = AssetDatabase.LoadAssetAtPath<CutsceneData>(AssetDatabase.GUIDToAssetPath(guid));
             if (cs == null || cs.beats == null) continue;
             foreach (var b in cs.beats)
-                if (b != null) { Add(VoiceSpeaker.Pharmee, b.subtitle); beats++; }
+                if (b != null) { Add(VoiceSpeaker.Pharmee, b.subtitle, "Cutscene"); beats++; }
         }
 
         // Jimenez first (stable within each speaker — OrderBy is a stable sort, so
@@ -76,10 +77,24 @@ public static class VoiceManifestExporter
             if (l.speaker == "Pharmee") pharmee++; else { jimenez++; jChars += l.chars; }
         }
         // eleven_flash_v2_5 ≈ 0.5 credits per character.
+        // Per-group cost, so a scene can be bought one at a time (-Group on the script).
+        var byGroup = new Dictionary<string, (int n, int c)>();
+        foreach (var l in manifest.lines)
+        {
+            string g = string.IsNullOrEmpty(l.group) ? "Misc" : l.group;
+            byGroup.TryGetValue(g, out var cur);
+            byGroup[g] = (cur.n + 1, cur.c + l.chars);
+        }
+        var groupLines = new List<string>();
+        foreach (var kv in byGroup)
+            groupLines.Add($"    {kv.Key,-11} {kv.Value.n,3} lines  {kv.Value.c,6:n0} chars  ~{kv.Value.c / 2,5:n0} credits");
+        groupLines.Sort();
+
         Debug.Log($"[VoiceManifest] {manifest.lines.Count} unique lines ({jimenez} Jimenez FIRST, {pharmee} Pharmee, "
                   + $"{beats} cutscene beats folded in), {chars:n0} characters ≈ {chars / 2:n0} ElevenLabs credits "
-                  + $"on eleven_flash_v2_5. Jimenez alone: {jChars:n0} characters ≈ {jChars / 2:n0} credits — "
-                  + $"generate him first and the run can stop anywhere. Wrote {OutPath}.");
+                  + $"on eleven_flash_v2_5. Jimenez alone: {jChars:n0} characters ≈ {jChars / 2:n0} credits.\n"
+                  + "  Per group (generate-voice.ps1 -Group <name>):\n" + string.Join("\n", groupLines)
+                  + $"\n  Wrote {OutPath}.");
     }
 }
 #endif

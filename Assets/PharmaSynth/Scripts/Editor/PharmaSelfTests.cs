@@ -1224,9 +1224,42 @@ public static class PharmaSelfTests
             WeighingScaleController.Reading(0.01f, 5f, 0.4f, 0.12f) >= 0f);
         A("scale: format is two decimals + unit", WeighingScaleController.Format(12.4f, "g") == "12.40 g");
 
+        // Pharmee's robot colouring: a blend, never a replacement, so speech stays
+        // intelligible in an educational game (user 2026-07-27).
+        A("robot: zero mix leaves the voice untouched", Near(RobotVoiceFx.RingSample(0.5f, -1f, 0f), 0.5f));
+        A("robot: full mix is pure ring product", Near(RobotVoiceFx.RingSample(0.5f, 1f, 1f), 0.5f)
+            && Near(RobotVoiceFx.RingSample(0.5f, -1f, 1f), -0.5f));
+        A("robot: a blend keeps some dry signal", RobotVoiceFx.RingSample(1f, 0f, 0.38f) > 0.5f);
+        A("robot: silence stays silent", Near(RobotVoiceFx.RingSample(0f, 1f, 0.5f), 0f));
+        A("robot: mix is clamped", Near(RobotVoiceFx.RingSample(0.5f, -1f, 5f), -0.5f));
+
         // Voice budget order: Jimenez's rows are generated first (user 2026-07-27).
         A("voice: Jimenez sorts before Pharmee",
             VoiceManifestExporter.SpeakerPriority("Jimenez") < VoiceManifestExporter.SpeakerPriority("Pharmee"));
+
+        // Recording-safety of the spoken corpus. A subtitle can read perfectly and
+        // still be spoken wrong — these are the artefacts that survive to the ear.
+        A("voice: a formula subscript is not recording-safe",
+            !VoicePolish.IsRecordingSafe("filter the MnO2, acidify"));
+        A("voice: a hyphenated range is not recording-safe",
+            !VoicePolish.IsRecordingSafe("the 70-80 degree fraction"));
+        A("voice: shouted caps are not recording-safe",
+            !VoicePolish.IsRecordingSafe("lab coat, goggles, AND gloves"));
+        A("voice: ordinary copy is recording-safe",
+            VoicePolish.IsRecordingSafe("Hold the cut steady between 70 and 80 degrees."));
+        A("voice: the polish rules clean what they target",
+            VoicePolish.IsRecordingSafe(VoicePolish.ApplyRules("filter the MnO2, acidify"))
+            && VoicePolish.IsRecordingSafe(VoicePolish.ApplyRules("the 70-80 degree fraction")));
+        A("voice: the deleted thermometer is no longer named",
+            !VoicePolish.ApplyRules("Watch the thermometer through the 70-80 degree window.")
+                 .Contains("thermometer"));
+        // The whole live corpus must be recording-safe before credits are spent.
+        {
+            int unsafeLines = 0;
+            foreach (var l in VoiceCorpus.CodeLines())
+                if (!VoicePolish.IsRecordingSafe(l.text)) unsafeLines++;
+            A("voice: every code-authored line is recording-safe", unsafeLines == 0);
+        }
 
         // Holo board scroll paging (W5.12: wrap + scrollable checklist).
         A("holo: page down moves toward the bottom", Near(HoloScroller.NextPage(1f, 0.6f, -1), 0.4f));

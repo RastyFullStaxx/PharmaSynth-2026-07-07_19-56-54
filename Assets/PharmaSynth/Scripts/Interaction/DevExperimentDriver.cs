@@ -5,6 +5,8 @@ using UnityEngine.InputSystem;
 /// full XR interaction. Lets you watch the HUD, Pharmee, and grade screen react.
 ///   B = begin/restart · 1-5 = complete step N · F = finish · R = retry
 ///   P = pour-debug overlay (floating "hit/target" text at every pouring mouth)
+///   V = replay Pharmee's test voice line (tune RobotVoiceFx by ear without
+///       walking back to the door for every slider tweak — 2026-07-27)
 /// Disabled in builds unless enableInBuild is set.
 public class DevExperimentDriver : MonoBehaviour
 {
@@ -42,6 +44,32 @@ public class DevExperimentDriver : MonoBehaviour
             LiquidPourer.DebugOverlay = !LiquidPourer.DebugOverlay;
             Debug.Log("[Dev] Pour debug overlay " + (LiquidPourer.DebugOverlay ? "ON" : "OFF"));
         }
+        if (kb.vKey.wasPressedThisFrame) ReplayVoiceLine();
+    }
+
+    /// Speak the generated Lab Tour line through Pharmee's own channel, on demand.
+    /// The robot colouring lives on that AudioSource, so this is the audition loop:
+    /// press V, nudge ringHz/ringMix in the Inspector, press V again.
+    private void ReplayVoiceLine()
+    {
+        var gate = FindAnyObjectByType<PharmeeGatekeeper>();
+        string line = gate != null ? gate.Lines.labTour : new PharmeeGatekeeper.GateLines().labTour;
+
+        foreach (var n in FindObjectsByType<NPCNarrationController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (n == null) continue;
+            bool isJimenez = false;
+            for (var p = n.transform; p != null; p = p.parent)
+            {
+                string nm = p.name.ToLowerInvariant();
+                if (nm.Contains("jimenez") || nm.Contains("examiner") || nm.Contains("proctor")) { isJimenez = true; break; }
+            }
+            if (isJimenez) continue;
+            n.Say(line, n.SecondsFor(line, 4f), n.ResolveVoice(line));
+            Debug.Log("[Dev] Replaying Pharmee voice line" + (n.ResolveVoice(line) != null ? " (voiced clip)" : " (NO CLIP — blips only; run Import & Wire Voice Clips)"));
+            return;
+        }
+        Debug.LogWarning("[Dev] no Pharmee narration channel found.");
     }
 
     private void CompleteIndex(int i)

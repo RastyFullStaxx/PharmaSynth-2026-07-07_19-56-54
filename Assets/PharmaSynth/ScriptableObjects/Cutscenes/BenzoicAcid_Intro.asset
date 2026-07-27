@@ -27,8 +27,8 @@ MonoBehaviour:
   - subtitle: 'Objective 2: Determine its identity through chemical tests.'
     seconds: 3.6875
     face: 0
-  - subtitle: Oxidise benzaldehyde with dilute permanganate, filter the MnO2, acidify,
-      then recrystallise.
+  - subtitle: Oxidise benzaldehyde with dilute permanganate, filter off the manganese
+      dioxide, acidify, then recrystallise.
     seconds: 4.5
     face: 0
   - subtitle: Check your data sheet on the tablet, then follow the glowing markers.

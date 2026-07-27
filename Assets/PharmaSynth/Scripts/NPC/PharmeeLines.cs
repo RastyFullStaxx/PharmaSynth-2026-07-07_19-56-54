@@ -19,6 +19,8 @@ public static class PharmeeLines
     {
         "Nice work!", "Perfect.", "That's the way!", "Excellent technique.",
         "Spot on.", "You're getting the hang of this!", "Cleanly done.",
+        "Textbook.", "Lovely control.", "That's the one.",
+        "Good hands.", "Just right.",
     };
 
     public static readonly string[] Celebrate =
@@ -37,6 +39,11 @@ public static class PharmeeLines
         "So close! Tighten up the tricky steps and you'll pass next time.",
     };
 
+    // Pharmee's ambient channel is the game's only TEACHING voice for the
+    // zone-free tools (2026-07-27): there are no station pads or labels telling
+    // you the bath needs water and a flame, or that the two scoops carry
+    // different charges, so if he never mentions them the player has to guess.
+    // Every line below describes a mechanic that is really in the build.
     public static readonly string[] Idle =
     {
         "Take your time — precision beats speed in here.",
@@ -46,13 +53,33 @@ public static class PharmeeLines
         "The fume hood is there for the smelly stuff. Use it!",
         "Doing great. Steady hands.",
         "If a bottle runs dry, I can reset the period for you.",
+        // Tool teaching — the zone-free verbs, in plain language.
+        "The water bath only works once there's water in it and a lit burner beside it. Then it warms anything you rest nearby.",
+        "Need something chilled? Stand it in the ice bucket and watch its temperature drop.",
+        "To stir, just take a glass rod and circle it inside the vessel. Anywhere in the lab works.",
+        "The scoopula lifts a couple of grams a dip. For the really small weighings, use the little porcelain spatula instead.",
+        "Strike a match on the side of the matchbox, then bring it to the burner.",
+        "Rest anything on the balance and it reads out the weight — vessel included.",
+        "Dip a litmus strip into a mixture to test whether it's acid or base.",
+        "Pour through the funnel and the liquid runs straight into whatever sits underneath.",
+        "Every tool you need is already out on the bench — picking the right one is half the skill.",
     };
 
+    // ERROR POOLS. These fire more often than any others, so they need the most
+    // variety — three lines repeated across a whole experiment stops sounding
+    // like a mentor and starts sounding like an alarm (user 2026-07-27: "error
+    // handlings... are the best"). Pharmee CORRECTS, never scolds: he names what
+    // is wrong and points at where the answer is, and he never gives the answer
+    // away — that is the assessment's job.
     public static readonly string[] WrongReagent =
     {
         "Hmm, that isn't the reagent this step needs — check your wrist checklist.",
         "Wrong bottle! Look again at the procedure for the right reagent.",
         "That's not it. The step calls for a different chemical.",
+        "Close, but not the one. Read the step again and check the label.",
+        "That bottle isn't part of this step — put it back and have another look.",
+        "Careful, that's a different chemical. Your checklist names the one you want.",
+        "Not that one. Check the label against your wrist before you pour.",
     };
 
     public static readonly string[] WrongStep =
@@ -60,6 +87,9 @@ public static class PharmeeLines
         "Let's not skip ahead — finish the current step first.",
         "One step at a time; that one comes later.",
         "Hold on — complete what's in front of you before moving on.",
+        "That comes further down the procedure. Finish this one first.",
+        "Not yet — there's a step still open above that one.",
+        "Patience! The order matters in this experiment.",
     };
 
     public static readonly string[] Overheat =
@@ -67,14 +97,20 @@ public static class PharmeeLines
         "Careful — it's overheating! Ease off the heat.",
         "Too hot! Back off the burner before it boils over.",
         "Watch the temperature — lower the flame.",
+        "That's running away from you — pull it off the heat for a moment.",
+        "Gently! Too much heat will ruin the batch.",
     };
 
     public static readonly string[] Safety =
     {
-        "Safety first! Mind the hazard and keep your PPE on.",
+        "Safety first! Mind the hazard and keep your protective gear on.",
         "Easy — handle the glassware gently, please.",
         "Careful there. Let's keep the bench clean and safe.",
         "Mind that spill — clean as you go.",
+        "Whoa! Let's slow down before something breaks.",
+        "Keep that away from the flame, please.",
+        "Set it down gently — glass doesn't forgive a knock.",
+        "That belongs in the fume hood. Let's not breathe it in.",
     };
 
     // ---- Dr. Jimenez (stern examiner, gives NO hints) ------------------------
@@ -146,6 +182,8 @@ public static class PharmeeLines
         "This attempt falls short of the requirement. I expect better on your retry.",
         "The chemistry was not at fault here. The method was. Run it again.",
         "I have seen you work more carefully than this. Try once more.",
+        "A chemist who cannot repeat a result has not yet obtained one. Again, please.",
+        "You have the knowledge. Today you did not apply it. That is correctable.",
     };
 
     public static readonly string[] DebriefCongrats =

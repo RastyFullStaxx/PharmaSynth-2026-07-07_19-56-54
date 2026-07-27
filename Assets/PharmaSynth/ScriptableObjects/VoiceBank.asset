@@ -12,4 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea03639ee9e144e4aac90901843ac955, type: 3}
   m_Name: VoiceBank
   m_EditorClassIdentifier: Assembly-CSharp::VoiceBank
-  entries: []
+  entries:
+  - speaker: 0
+    id: 041b3092a9afc5a1
+    clip: {fileID: 8300000, guid: 4b45aa7cf9cbd8343b982e743b0dd4a2, type: 3}

@@ -18,8 +18,8 @@ MonoBehaviour:
   - subtitle: Outstanding work!
     seconds: 2.5
     face: 1
-  - subtitle: "A volatile distillate, negative Tollen's, positive iodoform \u2014
-      that's acetone!"
+  - subtitle: "A volatile distillate, a negative Tollens test, positive iodoform
+      \u2014 that's acetone!"
     seconds: 4.5
     face: 1
   - subtitle: Your results are recorded. Dr. Jimenez will be impressed.

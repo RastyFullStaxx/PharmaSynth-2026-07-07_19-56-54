@@ -204,3 +204,17 @@ two items that need a headset to judge (feel, not correctness).
 **Open (needs a headset, not a fix):**
 - [ ] Feel pass on the newly grabbable distillation apparatus (mass/pose of the water bath + stoppers).
 - [ ] §13e pour session (dev key P overlay) — unchanged.
+
+## §15 Voice-over — COMPLETE (2026-07-27, W5.33d)
+
+- [x] **All 219 lines generated** — Pharmee 182 · Jimenez 37, ~7,254 ElevenLabs credits, `eleven_flash_v2_5`. Verified: 0 missing against the manifest, 0 undersized/corrupt files. Voices: Pharmee = "Lily", Jimenez = "Daniel".
+- [x] **Staged generation** — every manifest row carries the pool it came from (`group`), and `generate-voice.ps1 -Group <name>` buys one scene at a time. `-WhatIf` costs nothing and prints the character/credit total; `-TextMatch` auditions a single line. Order used: Gate → Exam → Review → Celebrate → Encourage → the rest.
+- [x] **Pharmee reads as a ROBOT, not a lady** — text-to-speech is trained toward human naturalness, so no voice id fixes this; the character is a runtime filter on his AudioSource (`RobotVoiceFx`: ring modulation, the ingredient that actually reads as machine, plus stock band-limit/chorus/distortion). **Deliberately NOT baked into the clips** — retuning would otherwise mean regenerating all 219 at ~7.3k credits a pass. One shared `RobotVoiceProfile.asset` drives every Pharmee channel; edits during Play persist because it is a ScriptableObject. Dr. Jimenez is excluded by design — he is human, and the contrast is the point.
+- [x] **Dev key V** replays Pharmee's test line on demand so the profile can be tuned by ear without walking to the door each time.
+
+**Three bugs the generation surfaced — all in the script, all silent:**
+1. **The .ps1 had never been runnable.** Saved as UTF-8 without a BOM, so PowerShell 5.1 parsed it as CP1252; every em-dash broke a string literal and it died on a wall of parse errors. Must keep its BOM.
+2. **Latin-1 request bodies.** `Invoke-RestMethod` with a *string* body encodes per the ContentType charset, defaulting to Latin-1 — every em-dash became invalid UTF-8 and earned a flat 400. That is 55 of 219 lines (25% of the corpus) failing. Fixed by sending UTF-8 **bytes** with an explicit charset.
+3. **Mojibake sent to be SPOKEN.** `Get-Content -Raw` without `-Encoding UTF8` read the BOM-less manifest as ANSI, turning every em-dash into the three chars "a-euro-quote" — which the API happily accepted and voiced. This one succeeds silently; caught by comparing char codes (`8212` vs `226,8364,8221`). The 4 affected clips were deleted and regenerated.
+
+**Open:** listen pass on all 219 (nobody has heard most of them); tune `RobotVoiceProfile` by ear; commercial-use licence check on the ElevenLabs plan before client delivery.

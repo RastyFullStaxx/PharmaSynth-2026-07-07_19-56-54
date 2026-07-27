@@ -1,4 +1,4 @@
-# PharmaSynth NPC voice generation (user-approved ElevenLabs TTS, 2026-07-11).
+﻿# PharmaSynth NPC voice generation (user-approved ElevenLabs TTS, 2026-07-11).
 #
 # Reads Assets/PharmaSynth/Audio/Voice/voice-manifest.json (from the Unity menu
 # Tools > PharmaSynth > Voice > Export Voice Manifest) and generates one MP3 per
@@ -23,25 +23,66 @@ param(
     # a plain run spends the budget on him before it reaches Pharmee; -Speaker is
     # the belt-and-braces version (user 2026-07-27: "prioritize dr jimenez").
     [ValidateSet("All", "Jimenez", "Pharmee")]
-    [string]$Speaker = "All"
+    [string]$Speaker = "All",
+    # Generate ONE scene's worth of lines. The manifest tags every row with the
+    # pool it came from, so you can buy the game a scene at a time and replace
+    # Pharmee's placeholder chirps incrementally (user 2026-07-27). Names:
+    #   Gate       - the whole front door flow: welcome, mode choice, experiment
+    #                pick, PPE prompt, threshold, congrats, supply warning
+    #   Greeting Praise Celebrate Encourage Idle Error Tour Review Exam
+    #   Objectives Unlock Cutscene
+    [string]$Group = "",
+    # Generate only lines whose TEXT contains this substring — for auditioning a
+    # single specific line before committing to a whole group.
+    [string]$TextMatch = "",
+    # Print what WOULD be generated, with the character cost, and exit. Free.
+    [switch]$WhatIf
 )
 
 $ErrorActionPreference = "Stop"
-if (-not $env:ELEVENLABS_API_KEY) { throw "Set ELEVENLABS_API_KEY first (your ElevenLabs API key)." }
+# Fall back to the PERSISTED user-scope value: a process started before the
+# variable was set inherits a stale environment block, which looks exactly like
+# "the key isn't set" (2026-07-27).
+if (-not $env:ELEVENLABS_API_KEY) {
+    $env:ELEVENLABS_API_KEY = [Environment]::GetEnvironmentVariable("ELEVENLABS_API_KEY", "User")
+}
+# -WhatIf costs nothing and touches no API, so it must not demand a key.
+if (-not $env:ELEVENLABS_API_KEY -and -not $WhatIf) {
+    throw "Set ELEVENLABS_API_KEY first (your ElevenLabs API key)."
+}
 
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $manifestPath = Join-Path $root "Assets/PharmaSynth/Audio/Voice/voice-manifest.json"
 if (-not (Test-Path $manifestPath)) { throw "Manifest not found — run Tools > PharmaSynth > Voice > Export Voice Manifest in Unity first." }
 
-$manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
+# -Encoding UTF8 is REQUIRED (2026-07-27): Unity writes the manifest as UTF-8
+# with NO BOM, and PowerShell 5.1 then falls back to the ANSI codepage — turning
+# every em-dash into the three chars "a-euro-quote", which were duly sent to the
+# API to be PRONOUNCED. The request succeeds, so this fails silently in the audio.
+$manifest = Get-Content $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $log = @()
 $done = 0; $skipped = 0; $failed = 0
 $sampleCount = @{ Pharmee = 0; Jimenez = 0 }
+
+if ($WhatIf) {
+    $sel = $manifest.lines | Where-Object {
+        ($Speaker -eq "All" -or $_.speaker -eq $Speaker) -and
+        ($Group -eq "" -or $_.group -eq $Group) -and
+        ($TextMatch -eq "" -or $_.text -like "*$TextMatch*")
+    }
+    $chars = ($sel | Measure-Object -Property chars -Sum).Sum
+    Write-Host ("WhatIf: {0} line(s), {1} characters, ~{2} ElevenLabs credits. Nothing generated." -f `
+        $sel.Count, $chars, [int]($chars / 2)) -ForegroundColor Cyan
+    foreach ($l in $sel) { Write-Host ("  [{0}/{1}] {2}" -f $l.speaker, $l.group, $l.text) }
+    return
+}
 
 $quotaOut = $false
 foreach ($line in $manifest.lines) {
     if ($quotaOut) { break }
     if ($Speaker -ne "All" -and $line.speaker -ne $Speaker) { continue }
+    if ($Group -ne "" -and $line.group -ne $Group) { continue }
+    if ($TextMatch -ne "" -and $line.text -notlike "*$TextMatch*") { continue }
     if ($SampleOnly) {
         if ($sampleCount[$line.speaker] -ge 2) { continue }
         $sampleCount[$line.speaker]++
@@ -57,7 +98,14 @@ foreach ($line in $manifest.lines) {
     $uri = "https://api.elevenlabs.io/v1/text-to-speech/$voiceId`?output_format=mp3_44100_128"
 
     try {
-        Invoke-RestMethod -Method Post -Uri $uri -Body $body -ContentType "application/json" `
+        # UTF-8 BYTES, not a string (2026-07-27): Windows PowerShell 5.1 encodes a
+        # string body with the ContentType's charset, defaulting to Latin-1 — which
+        # mangles every em-dash into invalid UTF-8 and earns a flat 400 from the API.
+        # A quarter of this corpus contains an em-dash, so it silently ate 25% of
+        # the run. Sending bytes with an explicit charset is the fix.
+        $bodyBytes = [System.Text.Encoding]::UTF8.GetBytes($body)
+        Invoke-RestMethod -Method Post -Uri $uri -Body $bodyBytes `
+            -ContentType "application/json; charset=utf-8" `
             -Headers @{ "xi-api-key" = $env:ELEVENLABS_API_KEY } -OutFile $file
         $done++
         $log += "$($line.speaker),$($line.id),$($line.chars),ok"

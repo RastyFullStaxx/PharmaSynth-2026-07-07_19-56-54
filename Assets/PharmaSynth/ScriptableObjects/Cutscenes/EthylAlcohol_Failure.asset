@@ -18,8 +18,8 @@ MonoBehaviour:
   - subtitle: "Hmm \u2014 that didn't go to plan."
     seconds: 3
     face: 2
-  - subtitle: The cut was off-temperature or a test failed. Watch the thermometer
-      through the 70-80 degree window.
+  - subtitle: The cut was off-temperature or a test failed. Hold the cut steady between
+      70 and 80 degrees.
     seconds: 4.5
     face: 2
   - subtitle: "No harm done \u2014 that's what practice is for. Let's reset and try

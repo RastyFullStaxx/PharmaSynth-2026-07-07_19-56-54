@@ -26,8 +26,8 @@ MonoBehaviour:
       any household kitchen.'
     seconds: 6
     face: 0
-  - subtitle: Prepare a fruit must, ferment it, confirm CO2, then rack and evaluate
-      your wine.
+  - subtitle: Prepare a fruit must, ferment it, confirm carbon dioxide, then rack
+      and evaluate your wine.
     seconds: 4.5
     face: 0
   - subtitle: Check your data sheet on the tablet, then follow the glowing markers.
