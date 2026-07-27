@@ -193,6 +193,12 @@ public class NPCNarrationController : MonoBehaviour
         if (panelRoot != null) panelRoot.SetActive(false);
         if (skipButton != null) skipButton.SetActive(false);
         IsRevealing = false; VisibleCount = int.MaxValue;
+        // An INTERRUPTED line must stop talking too — otherwise the cleared bubble
+        // keeps speaking over whoever interrupted it, which is the overlap again
+        // wearing a different hat.
+        if (_voiceActive && narratorAudioSource != null && narratorAudioSource.isPlaying)
+            narratorAudioSource.Stop();
+        _voiceActive = false;
         if (s_floor == this) s_floor = null;         // release the floor
         if (!IsSpeaking) return; // idempotent — visuals reset above either way
         IsSpeaking = false;
@@ -204,6 +210,7 @@ public class NPCNarrationController : MonoBehaviour
         if (clip == null) clip = ResolveVoice(subtitle);   // voice-over by text hash
         float waitSeconds = Mathf.Max(0.1f, seconds);
         _voiceActive = false;
+        ClaimFloor();                                      // own the floor for the WHOLE line
         if (narratorAudioSource != null && clip != null)
         {
             narratorAudioSource.clip = clip;
@@ -238,8 +245,24 @@ public class NPCNarrationController : MonoBehaviour
     // read hold is interruptible, so conversation still feels responsive.
     private static NPCNarrationController s_floor;
 
-    /// True while ANY narrator is still typing a line out.
-    public static bool FloorBusy => s_floor != null && s_floor.IsRevealing;
+    /// True while THIS narrator's actual voice clip is still sounding.
+    ///
+    /// Before voice-over, a line's typewriter reveal and its spoken length were
+    /// effectively the same thing, so holding the floor for the reveal was enough.
+    /// A real clip runs LONGER than the reveal, so the floor was released while
+    /// the audio was still playing and the other NPC started talking over it
+    /// (user 2026-07-27: "Pharmee and Dr speak at the same time").
+    public bool IsVoicing => _voiceActive && narratorAudioSource != null && narratorAudioSource.isPlaying;
+
+    /// True while ANY narrator is still typing OR still audibly speaking.
+    public static bool FloorBusy => s_floor != null && (s_floor.IsRevealing || s_floor.IsVoicing);
+
+    /// True while anyone is speaking at all — the signal the music ducks against.
+    public static bool AnySpeaking => FloorBusy;
+
+    /// Claim the spoken floor. Called the moment a line starts (voice or reveal),
+    /// not just when the typewriter begins, so a clip can never be talked over.
+    private void ClaimFloor() => s_floor = this;
 
     /// The longest another speaker will be made to wait before going anyway —
     /// a safety valve so a stuck reveal can never mute the game.

@@ -1304,6 +1304,35 @@ public static class PharmaSelfTests
             }
         }
 
+        // MUSIC DUCKING under dialogue (user 2026-07-27).
+        A("duck: music drops while someone speaks", Near(MusicDucker.TargetVolume(1f, 0.25f, true), 0.25f));
+        A("duck: music returns to full when silent", Near(MusicDucker.TargetVolume(1f, 0.25f, false), 1f));
+        A("duck: a quiet setting stays proportional", Near(MusicDucker.TargetVolume(0.4f, 0.5f, true), 0.2f));
+        A("duck: never negative", MusicDucker.TargetVolume(-1f, 0.25f, true) >= 0f);
+
+        // VOICE AUDIBILITY: heard room-wide, louder up close (user 2026-07-27).
+        A("voice: partial spatial blend — audible everywhere AND positional",
+            VoiceAudioBuilder.VoiceSpatialBlend > 0.1f && VoiceAudioBuilder.VoiceSpatialBlend < 1f);
+        A("voice: stays audible across the whole lab", VoiceAudioBuilder.VoiceMaxDistance >= 20f);
+        A("voice: full volume out to the bench area",
+            VoiceAudioBuilder.VoiceMinDistance >= 2f
+            && VoiceAudioBuilder.VoiceMinDistance < VoiceAudioBuilder.VoiceMaxDistance);
+
+        // Both NPCs must be able to SPEAK at all, and never at the same time.
+        {
+            int mute = 0, channels = 0;
+            foreach (var n in UnityEngine.Object.FindObjectsByType<NPCNarrationController>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (n == null) continue;
+                channels++;
+                var nso = new SerializedObject(n);
+                if (nso.FindProperty("narratorAudioSource")?.objectReferenceValue == null) mute++;
+            }
+            A("voice: every narration channel has an AudioSource (" + mute + " of " + channels + " mute)",
+              channels == 0 || mute == 0);
+        }
+
         // Voice budget order: Jimenez's rows are generated first (user 2026-07-27).
         A("voice: Jimenez sorts before Pharmee",
             VoiceManifestExporter.SpeakerPriority("Jimenez") < VoiceManifestExporter.SpeakerPriority("Pharmee"));
