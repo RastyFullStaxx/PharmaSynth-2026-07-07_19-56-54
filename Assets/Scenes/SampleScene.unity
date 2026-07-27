@@ -101970,6 +101970,21 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4467159820709882772, guid: 70b989489405b6f4da587631e978a478, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1688781737}
+    - targetCorrespondingSourceObject: {fileID: 4467159820709882772, guid: 70b989489405b6f4da587631e978a478, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1688781738}
+    - targetCorrespondingSourceObject: {fileID: 4467159820709882772, guid: 70b989489405b6f4da587631e978a478, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1688781742}
+    - targetCorrespondingSourceObject: {fileID: 4467159820709882772, guid: 70b989489405b6f4da587631e978a478, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1688781741}
+    - targetCorrespondingSourceObject: {fileID: 4467159820709882772, guid: 70b989489405b6f4da587631e978a478, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1688781740}
+    - targetCorrespondingSourceObject: {fileID: 4467159820709882772, guid: 70b989489405b6f4da587631e978a478, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1688781739}
     - targetCorrespondingSourceObject: {fileID: 2404794717661024943, guid: 70b989489405b6f4da587631e978a478, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1041731699}
@@ -127929,15 +127944,17 @@ MonoBehaviour:
   pharmeeReviewOffset: 1.15
   examiner: {fileID: 195455184}
   lines:
-    approach: Hold on! You can't enter the lab just yet. What would you like to do
-      today?
+    approach: "Not so fast \u2014 the lab's still locked! What would you like to
+      do today?"
     labTour: Lab Tour it is! Roam freely and try the tools and reagents. Come back
       to me when you want to take on a campaign.
     campaignExplain: The Campaign takes you through the class periods. Pass every
-      experiment with 90% or better to unlock the next. Ready to pick your episode?
-    episodePrompt: Which episode will it be?
-    lockedEpisode: "That episode is still locked \u2014 clear the earlier ones first!"
-    coatPrompt: Safety first! Put on your lab coat at the locker before we begin.
+      experiment with 90% or better to unlock the next. Ready to pick one?
+    episodePrompt: Which experiment will it be?
+    lockedEpisode: "That one's still locked \u2014 clear the earlier experiments
+      first!"
+    coatPrompt: "Safety first! Gear up at the locker \u2014 lab coat, goggles and
+      gloves, all three \u2014 before we begin."
     readyPrompt: All geared up! Are you prepared to begin?
     thresholdWarn: The period will start as soon as you walk in. Step through when
       you're ready!
@@ -128053,18 +128070,94 @@ MonoBehaviour:
       The progress bar and timer up top track your pace."
     radius: 2.2
   - landmarkName: EquipmentShelf
-    beat: "The equipment cabinet \u2014 open it and pick the apparatus your procedures
-      board calls for. Flick your wrist anytime to check the next step."
+    beat: "Every instrument stays out on this bench, every experiment \u2014 picking
+      the right one is part of the work. Flick your wrist anytime to check the next
+      step."
     radius: 2
-  - landmarkName: ReagentShelf
-    beat: "The reagent shelf holds your chemicals \u2014 take only what each step
+  - landmarkName: ReagentCabinets
+    beat: "The reagent cabinets hold your chemicals \u2014 take only what each step
       needs. And Settings up top lets you tune audio, text size and comfort whenever
       you like."
-    radius: 2
+    radius: 2.4
   introBeat: "Welcome! Let's take a quick tour. The bench in the middle is your main
     workspace \u2014 walk around and I'll point out the rest as you reach them."
   closerBeat: That's the tour! Follow the glowing markers during a run, and poke
     me whenever you're ready to take on a graded campaign.
+--- !u!114 &1688781738
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1579804411}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 667bff87f27d1fe4fac42096100196b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RobotVoiceFx
+  profile: {fileID: 11400000, guid: 5b827426fc16a1f4e9fc02b01d4d4f82, type: 2}
+  ringHz: 62
+  ringMix: 0.38
+  active: 1
+--- !u!170 &1688781739
+AudioDistortionFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1579804411}
+  m_Enabled: 1
+  m_DistortionLevel: 0.12
+--- !u!166 &1688781740
+AudioChorusFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1579804411}
+  m_Enabled: 1
+  m_DryMix: 0.62
+  m_WetMix1: 0.38
+  m_WetMix2: 0.18
+  m_WetMix3: 0
+  m_Delay: 20
+  m_Rate: 0.9
+  m_Depth: 0.16
+--- !u!169 &1688781741
+AudioLowPassFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1579804411}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_LowpassResonanceQ: 1
+  lowpassLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.22692133
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!165 &1688781742
+AudioHighPassFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1579804411}
+  m_Enabled: 1
+  m_CutoffFrequency: 260
+  m_HighpassResonanceQ: 1
 --- !u!1 &1689067698
 GameObject:
   m_ObjectHideFlags: 0

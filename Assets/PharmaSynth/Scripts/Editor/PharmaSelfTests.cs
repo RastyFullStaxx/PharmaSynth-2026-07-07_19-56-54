@@ -1233,6 +1233,77 @@ public static class PharmaSelfTests
         A("robot: silence stays silent", Near(RobotVoiceFx.RingSample(0f, 1f, 0.5f), 0f));
         A("robot: mix is clamped", Near(RobotVoiceFx.RingSample(0.5f, -1f, 5f), -0.5f));
 
+        // ⛔ SCENE-vs-CODE DIALOGUE DRIFT (user 2026-07-27: "some dialogs of Pharmee
+        // are still the robot beep"). The gate's lines are a [SerializeField], so
+        // the SCENE holds the copy the player actually hears. Editing the code
+        // defaults does NOT reach the game, and since the voice manifest is built
+        // from the CODE, the spoken text silently stops matching any clip and drops
+        // to placeholder blips. The scene copy had also drifted to asking for a lab
+        // coat ALONE while the door demands coat + goggles + gloves.
+        // Pin what the player HEARS, not what the code says.
+        {
+            var gateGo = UnityEngine.Object.FindFirstObjectByType<PharmeeGatekeeper>(FindObjectsInactive.Include);
+            if (gateGo != null)
+            {
+                var def = new PharmeeGatekeeper.GateLines();
+                var live = gateGo.Lines;
+                var drift = new List<string>();
+                foreach (var f in typeof(PharmeeGatekeeper.GateLines).GetFields())
+                {
+                    if (f.FieldType != typeof(string)) continue;
+                    if ((string)f.GetValue(live) != (string)f.GetValue(def)) drift.Add(f.Name);
+                }
+                A("voice: scene gate dialogue matches the code (else it plays unvoiced) — "
+                  + (drift.Count == 0 ? "in sync" : "DRIFTED: " + string.Join(",", drift)),
+                  drift.Count == 0);
+
+                // The PPE prompt must name every item the door actually requires,
+                // or the player is told to do the wrong thing and gets stuck.
+                string coat = live.coatPrompt.ToLowerInvariant();
+                A("voice: the PPE prompt names coat, goggles AND gloves",
+                  coat.Contains("coat") && coat.Contains("goggle") && coat.Contains("glove"));
+
+                // Every line the gate can speak must resolve to a real clip.
+                var bank = AssetDatabase.LoadAssetAtPath<VoiceBank>(
+                    "Assets/PharmaSynth/ScriptableObjects/VoiceBank.asset");
+                if (bank != null && bank.entries.Count > 0)
+                {
+                    int unvoiced = 0;
+                    foreach (var f in typeof(PharmeeGatekeeper.GateLines).GetFields())
+                    {
+                        if (f.FieldType != typeof(string)) continue;
+                        string text = (string)f.GetValue(live);
+                        if (string.IsNullOrWhiteSpace(text)) continue;
+                        if (bank.Get(VoiceSpeaker.Pharmee, VoiceLineId.For(text)) == null) unvoiced++;
+                    }
+                    A("voice: every gate line the player hears has a clip (" + unvoiced + " unvoiced)", unvoiced == 0);
+
+                    // The guided tour is the SECOND scene-serialized dialogue source
+                    // and drifted the same way — it still sent players to an
+                    // "equipment cabinet" and to the emptied reagent shelf.
+                    var tour = UnityEngine.Object.FindFirstObjectByType<LabTourGuide>(FindObjectsInactive.Include);
+                    if (tour != null)
+                    {
+                        var tso = new SerializedObject(tour);
+                        var st = tso.FindProperty("stops");
+                        int tourUnvoiced = 0, badMark = 0;
+                        for (int i = 0; st != null && i < st.arraySize; i++)
+                        {
+                            var el = st.GetArrayElementAtIndex(i);
+                            string beat = el.FindPropertyRelative("beat")?.stringValue ?? "";
+                            string mark = el.FindPropertyRelative("landmarkName")?.stringValue ?? "";
+                            if (!string.IsNullOrWhiteSpace(beat)
+                                && bank.Get(VoiceSpeaker.Pharmee, VoiceLineId.For(beat)) == null) tourUnvoiced++;
+                            // A stop whose landmark no longer exists never fires at all.
+                            if (!string.IsNullOrEmpty(mark) && GameObject.Find(mark) == null) badMark++;
+                        }
+                        A("voice: every lab-tour beat has a clip (" + tourUnvoiced + " unvoiced)", tourUnvoiced == 0);
+                        A("tour: every stop's landmark exists in the scene (" + badMark + " dangling)", badMark == 0);
+                    }
+                }
+            }
+        }
+
         // Voice budget order: Jimenez's rows are generated first (user 2026-07-27).
         A("voice: Jimenez sorts before Pharmee",
             VoiceManifestExporter.SpeakerPriority("Jimenez") < VoiceManifestExporter.SpeakerPriority("Pharmee"));

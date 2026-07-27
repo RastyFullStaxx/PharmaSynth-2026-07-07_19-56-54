@@ -17,6 +17,26 @@ public static class RobotVoiceBuilder
     const string Menu = "Tools/PharmaSynth/Voice/";
     const string ProfilePath = "Assets/PharmaSynth/ScriptableObjects/RobotVoiceProfile.asset";
 
+    /// Get-or-add, done the way Unity actually requires.
+    ///
+    /// ⛔ NEVER write `GetComponent&lt;T&gt;() ?? AddComponent&lt;T&gt;()`. The `??` and `?.`
+    /// operators use the CLR's reference null, which bypasses UnityEngine.Object's
+    /// overloaded `==`. A destroyed-or-broken component comes back as a "fake null"
+    /// that is not reference-null, so `??` happily hands it back and the very next
+    /// property write throws a NullReferenceException — which is exactly what this
+    /// builder did on RobotNPC, a GameObject carrying missing-script references
+    /// (2026-07-27). An explicit `== null` check uses Unity's operator and is correct.
+    static T Ensure<T>(GameObject go) where T : Component
+    {
+        var existing = go.GetComponent<T>();
+        if (existing != null) return existing;          // Unity's ==, not the CLR's
+        var added = go.AddComponent<T>();
+        if (added == null)
+            Debug.LogWarning("[RobotVoice] could not add " + typeof(T).Name + " to " + go.name
+                           + " — that channel keeps its unprocessed voice.");
+        return added;
+    }
+
     /// Load-or-create the ONE shared tuning asset every Pharmee channel reads.
     static RobotVoiceProfile EnsureProfile()
     {
@@ -39,25 +59,28 @@ public static class RobotVoiceBuilder
         {
             Undo.RegisterFullObjectHierarchyUndo(src.gameObject, "Robotise Pharmee");
 
-            var fx = src.GetComponent<RobotVoiceFx>() ?? src.gameObject.AddComponent<RobotVoiceFx>();
-            fx.profile = profile;   // every channel reads the SAME asset
+            var fx = Ensure<RobotVoiceFx>(src.gameObject);
+            if (fx != null) fx.profile = profile;   // every channel reads the SAME asset
 
             // Speaker-grille band. Keeping the top at 5 kHz preserves sibilance,
             // which is what carries consonants — cut lower and he gets muddy.
-            var hp = src.GetComponent<AudioHighPassFilter>() ?? src.gameObject.AddComponent<AudioHighPassFilter>();
-            hp.cutoffFrequency = 260f;
-            var lp = src.GetComponent<AudioLowPassFilter>() ?? src.gameObject.AddComponent<AudioLowPassFilter>();
-            lp.cutoffFrequency = 5000f;
+            var hp = Ensure<AudioHighPassFilter>(src.gameObject);
+            if (hp != null) hp.cutoffFrequency = 260f;
+            var lp = Ensure<AudioLowPassFilter>(src.gameObject);
+            if (lp != null) lp.cutoffFrequency = 5000f;
 
             // Metallic doubling. Short delay + shallow depth: a long/deep chorus
             // sounds like a choir, not a machine.
-            var ch = src.GetComponent<AudioChorusFilter>() ?? src.gameObject.AddComponent<AudioChorusFilter>();
-            ch.delay = 20f; ch.rate = 0.9f; ch.depth = 0.16f;
-            ch.dryMix = 0.62f; ch.wetMix1 = 0.38f; ch.wetMix2 = 0.18f; ch.wetMix3 = 0f;
+            var ch = Ensure<AudioChorusFilter>(src.gameObject);
+            if (ch != null)
+            {
+                ch.delay = 20f; ch.rate = 0.9f; ch.depth = 0.16f;
+                ch.dryMix = 0.62f; ch.wetMix1 = 0.38f; ch.wetMix2 = 0.18f; ch.wetMix3 = 0f;
+            }
 
             // A whisper of grit. Past ~0.2 it turns to fuzz and eats consonants.
-            var dist = src.GetComponent<AudioDistortionFilter>() ?? src.gameObject.AddComponent<AudioDistortionFilter>();
-            dist.distortionLevel = 0.12f;
+            var dist = Ensure<AudioDistortionFilter>(src.gameObject);
+            if (dist != null) dist.distortionLevel = 0.12f;
 
             // NEVER pitch-shift speech on an AudioSource: Unity's pitch also changes
             // SPEED, so it would make him gabble rather than sound synthetic.

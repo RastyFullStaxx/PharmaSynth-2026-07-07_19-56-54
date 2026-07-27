@@ -81,6 +81,134 @@ public static class VoicePolish
                       + "\n\nRE-EXPORT the voice manifest now — these lines have new ids.");
     }
 
+    /// The gate's dialogue is a [SerializeField], so the SCENE keeps its own copy
+    /// of every line and that copy is what the player actually hears. Any edit to
+    /// the code defaults silently fails to reach the game, and — because the voice
+    /// manifest is built from the CODE — the spoken text stops matching any clip
+    /// and the line drops back to placeholder blips (user 2026-07-27: "some
+    /// dialogs of Pharmee are still the robot beep, that 'Hold on...' one").
+    ///
+    /// The scene copy had drifted badly: it still asked for a lab coat ALONE, while
+    /// the door has required coat + goggles + gloves for weeks. So this is not only
+    /// a voice fix — it was telling players to do the wrong thing.
+    ///
+    /// Code is the source of truth: it is reviewed, version-controlled, and what the
+    /// manifest and the generated audio were built from. Every change is logged.
+    [MenuItem("Tools/PharmaSynth/Voice/Sync Gate Dialogue to Code")]
+    public static void SyncGateLines()
+    {
+        if (Application.isPlaying) { Debug.LogWarning("[GateSync] exit Play mode first."); return; }
+
+        var gate = Object.FindFirstObjectByType<PharmeeGatekeeper>(FindObjectsInactive.Include);
+        if (gate == null) { Debug.LogError("[GateSync] no PharmeeGatekeeper in the open scene."); return; }
+
+        var defaults = new PharmeeGatekeeper.GateLines();
+        var so = new SerializedObject(gate);
+        var lines = so.FindProperty("lines");
+        if (lines == null) { Debug.LogError("[GateSync] 'lines' not found on the gatekeeper."); return; }
+
+        var changes = new List<string>();
+        foreach (var field in new[]
+        {
+            "approach", "labTour", "campaignExplain", "episodePrompt", "lockedEpisode",
+            "coatPrompt", "readyPrompt", "thresholdWarn", "congrats", "supplyWarn", "welcome",
+        })
+        {
+            var prop = lines.FindPropertyRelative(field);
+            if (prop == null) continue;
+            string want = (string)typeof(PharmeeGatekeeper.GateLines)
+                .GetField(field).GetValue(defaults);
+            if (prop.stringValue == want) continue;
+            changes.Add(field + "\n    scene was: " + prop.stringValue + "\n    now      : " + want);
+            prop.stringValue = want;
+        }
+
+        // NO early return here: the TOUR guide is a second, independent source of
+        // scene-serialized dialogue, and an in-sync gate must not skip checking it.
+        if (changes.Count > 0)
+        {
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(gate);
+        }
+
+        changes.AddRange(SyncTourBeats());
+
+        if (changes.Count == 0) { Debug.Log("<color=#4CD07D>[GateSync] scene dialogue already matches the code — nothing to do.</color>"); return; }
+
+        UnityEditor.SceneManagement.EditorSceneManager.MarkAllScenesDirty();
+        UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
+        Debug.Log($"<color=#4CD07D>[GateSync] {changes.Count} stale line(s) re-synced from code:</color>\n"
+                  + string.Join("\n", changes)
+                  + "\n\nThese now match the generated clips — no regeneration needed.");
+    }
+
+    /// The guided tour has the SAME [SerializeField] trap as the gate: its stops
+    /// carry their own beat text, which had drifted to copy that is now simply
+    /// untrue — it still sends the player to "the equipment cabinet" (every
+    /// instrument lives permanently on the bench) and to "the reagent shelf"
+    /// (emptied into the wall cabinets on 2026-07-16), with the trigger landmark
+    /// still pointing at the emptied shelf. Reseeding fixes the words, the
+    /// landmark, and the missing voice clips in one go.
+    static List<string> SyncTourBeats()
+    {
+        var changes = new List<string>();
+        var guide = Object.FindFirstObjectByType<LabTourGuide>(FindObjectsInactive.Include);
+        if (guide == null) return changes;
+
+        var so = new SerializedObject(guide);
+
+        // Capture the stops BEFORE reseeding (the field is private — read it the
+        // serialized way rather than reaching through the class).
+        var stops = so.FindProperty("stops");
+        var beforeBeat = new List<string>();
+        var beforeMark = new List<string>();
+        for (int i = 0; stops != null && i < stops.arraySize; i++)
+        {
+            var el = stops.GetArrayElementAtIndex(i);
+            beforeBeat.Add(el.FindPropertyRelative("beat")?.stringValue ?? "");
+            beforeMark.Add(el.FindPropertyRelative("landmarkName")?.stringValue ?? "");
+        }
+
+        guide.SeedDefaults();          // writes the private field directly
+        so.Update();                   // pull the new values back into the SerializedObject
+
+        stops = so.FindProperty("stops");
+        for (int i = 0; stops != null && i < stops.arraySize; i++)
+        {
+            var el = stops.GetArrayElementAtIndex(i);
+            string beat = el.FindPropertyRelative("beat")?.stringValue ?? "";
+            string mark = el.FindPropertyRelative("landmarkName")?.stringValue ?? "";
+            string wasBeat = i < beforeBeat.Count ? beforeBeat[i] : "(no stop)";
+            string wasMark = i < beforeMark.Count ? beforeMark[i] : "(none)";
+            if (wasBeat == beat && wasMark == mark) continue;
+            changes.Add("tour stop " + i + " [" + wasMark + " -> " + mark + "]"
+                        + "\n    scene was: " + wasBeat + "\n    now      : " + beat);
+        }
+
+        // The intro and closer are separate private fields, so they drift too.
+        // DefaultBeatTexts is the single source: [0] opens the tour, [last] closes it.
+        var texts = LabTourGuide.DefaultBeatTexts;
+        foreach (var pair in new[]
+        {
+            new[] { "introBeat", texts.Length > 0 ? texts[0] : null },
+            new[] { "closerBeat", texts.Length > 0 ? texts[texts.Length - 1] : null },
+        })
+        {
+            if (pair[1] == null) continue;
+            var prop = so.FindProperty(pair[0]);
+            if (prop == null || prop.stringValue == pair[1]) continue;
+            changes.Add("tour " + pair[0] + "\n    scene was: " + prop.stringValue + "\n    now      : " + pair[1]);
+            prop.stringValue = pair[1];
+        }
+
+        if (changes.Count > 0)
+        {
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(guide);
+        }
+        return changes;
+    }
+
     /// Pure (suite): every rule must actually change the text it targets, and the
     /// result must be free of the artefacts we are removing. Guards against a rule
     /// silently going stale when someone rewrites a beat by hand.
