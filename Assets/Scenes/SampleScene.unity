@@ -62026,7 +62026,7 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 0
   DopplerLevel: 0
-  MinDistance: 4
+  MinDistance: 8
   MaxDistance: 30
   Pan2D: 0
   rolloffMode: 1
@@ -62062,7 +62062,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0.65
+      value: 0.55
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -65090,9 +65090,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MusicDucker
   music: {fileID: 950603427}
-  duckTo: 0.25
-  attackPerSecond: 4
-  releasePerSecond: 0.6
+  duckTo: 0.06
+  attackPerSecond: 3.5
+  releasePerSecond: 0.55
 --- !u!1 &957469781
 GameObject:
   m_ObjectHideFlags: 0
@@ -121160,7 +121160,7 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 0
   DopplerLevel: 0
-  MinDistance: 4
+  MinDistance: 8
   MaxDistance: 30
   Pan2D: 0
   rolloffMode: 1
@@ -121196,7 +121196,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0.65
+      value: 0.55
       inSlope: 0
       outSlope: 0
       tangentMode: 0

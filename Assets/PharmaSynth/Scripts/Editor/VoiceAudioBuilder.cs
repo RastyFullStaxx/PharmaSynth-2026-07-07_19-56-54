@@ -19,12 +19,19 @@ public static class VoiceAudioBuilder
 {
     /// Blend of 2D (always audible) and 3D (positional). 1 = fully positional,
     /// which is what made them inaudible across the lab; 0 would kill the sense of
-    /// where the speaker is. 0.65 keeps a clear floor everywhere AND a real swell.
-    public const float VoiceSpatialBlend = 0.65f;
-    /// Full volume out to here, then rolls off — covers the bench area.
-    public const float VoiceMinDistance = 4f;
+    /// where the speaker is. Lowered 0.65 -> 0.55 (2026-07-27) to lift the overall
+    /// level a step while keeping a clear walk-closer swell.
+    public const float VoiceSpatialBlend = 0.55f;
+    /// Full volume out to here, then rolls off. Raised 4 -> 8 m so the NPCs are at
+    /// FULL level across essentially the whole working area — an AudioSource's own
+    /// volume is already hard-capped at 1, so pushing the falloff out (and ducking
+    /// the music harder) is the only real way to make them louder.
+    public const float VoiceMinDistance = 8f;
     /// Still audible at the far wall; the lab is ~12 m.
     public const float VoiceMaxDistance = 30f;
+    /// The music all but disappears under dialogue and eases back once it is clear
+    /// (user 2026-07-27: "fades out... and fades in once clear").
+    public const float MusicDuckTo = 0.06f;
 
     [MenuItem("Tools/PharmaSynth/Voice/Fix Voice Audibility + Music Ducking")]
     public static void Apply()
@@ -75,7 +82,9 @@ public static class VoiceAudioBuilder
             var d = src.GetComponent<MusicDucker>();
             if (d == null) d = src.gameObject.AddComponent<MusicDucker>();
             d.Bind(src);
-            d.duckTo = 0.25f;
+            d.duckTo = MusicDuckTo;
+            d.attackPerSecond = 3.5f;    // ~0.27 s fade OUT — quick, never clips a syllable
+            d.releasePerSecond = 0.55f;  // ~1.7 s fade IN — unhurried, no pumping between lines
             EditorUtility.SetDirty(src.gameObject);
             duckers++;
             notes.Add("music ducking on '" + src.gameObject.name + "'");
@@ -84,8 +93,9 @@ public static class VoiceAudioBuilder
         EditorSceneManager.MarkAllScenesDirty();
         EditorSceneManager.SaveOpenScenes();
         Debug.Log($"<color=#4CD07D>[VoiceAudio] {channels} narration channel(s) made audible room-wide "
-                  + $"(blend {VoiceSpatialBlend}, full to {VoiceMinDistance} m, audible to {VoiceMaxDistance} m), "
-                  + $"{duckers} music source(s) ducking to 25% under dialogue.</color>\n  "
+                  + $"(blend {VoiceSpatialBlend}, FULL volume to {VoiceMinDistance} m, audible to {VoiceMaxDistance} m), "
+                  + $"{duckers} music source(s) fading to {Mathf.RoundToInt(MusicDuckTo * 100f)}% under dialogue "
+                  + "and back up once it is clear.</color>\n  "
                   + string.Join("\n  ", notes));
     }
 

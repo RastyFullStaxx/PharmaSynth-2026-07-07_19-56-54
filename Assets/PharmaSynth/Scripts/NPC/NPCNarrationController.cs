@@ -87,10 +87,16 @@ public class NPCNarrationController : MonoBehaviour
     /// Edit-mode/test binding for the auto-hidden bubble panel.
     public void SetPanelRoot(GameObject g) => panelRoot = g;
 
+    private void OnEnable()
+    {
+        if (!s_live.Contains(this)) s_live.Add(this);
+    }
+
     // Coroutines die on disable — reset the reveal flag and drop queued lines
     // so a re-enabled narrator can't deadlock queueing behind a dead reveal.
     private void OnDisable()
     {
+        s_live.Remove(this);                   // a dead narrator must not hold the music down
         IsRevealing = false;
         if (s_floor == this) s_floor = null;   // never strand the floor on a dead narrator
         _queued.Clear();
@@ -257,8 +263,28 @@ public class NPCNarrationController : MonoBehaviour
     /// True while ANY narrator is still typing OR still audibly speaking.
     public static bool FloorBusy => s_floor != null && (s_floor.IsRevealing || s_floor.IsVoicing);
 
-    /// True while anyone is speaking at all — the signal the music ducks against.
-    public static bool AnySpeaking => FloorBusy;
+    /// Every live narrator. The music must duck WHENEVER either NPC has something
+    /// to say (user 2026-07-27), and keying that off the floor-holder alone missed
+    /// two cases: a line started through BeginLine (the cutscene staging path never
+    /// claims the floor) and the brief window where a second speaker has begun
+    /// while the first still owns it. Registering the channels catches all of it.
+    private static readonly List<NPCNarrationController> s_live = new List<NPCNarrationController>();
+
+    /// True while ANY narrator is mid-line — revealing, holding, or sounding.
+    /// This is the signal the music ducks against.
+    public static bool AnySpeaking
+    {
+        get
+        {
+            for (int i = 0; i < s_live.Count; i++)
+            {
+                var n = s_live[i];
+                if (n == null) continue;
+                if (n.IsSpeaking || n.IsRevealing || n.IsVoicing) return true;
+            }
+            return false;
+        }
+    }
 
     /// Claim the spoken floor. Called the moment a line starts (voice or reveal),
     /// not just when the typewriter begins, so a clip can never be talked over.

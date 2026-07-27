@@ -1306,6 +1306,8 @@ public static class PharmaSelfTests
 
         // MUSIC DUCKING under dialogue (user 2026-07-27).
         A("duck: music drops while someone speaks", Near(MusicDucker.TargetVolume(1f, 0.25f, true), 0.25f));
+        A("duck: the configured depth is a real fade-out, not a dip",
+            VoiceAudioBuilder.MusicDuckTo <= 0.12f && VoiceAudioBuilder.MusicDuckTo >= 0f);
         A("duck: music returns to full when silent", Near(MusicDucker.TargetVolume(1f, 0.25f, false), 1f));
         A("duck: a quiet setting stays proportional", Near(MusicDucker.TargetVolume(0.4f, 0.5f, true), 0.2f));
         A("duck: never negative", MusicDucker.TargetVolume(-1f, 0.25f, true) >= 0f);
