@@ -104,9 +104,12 @@ public class ReagentSupplyMonitor : MonoBehaviour
         var bottles = UnityEngine.Object.FindObjectsByType<LiquidPhysics>(FindObjectsSortMode.None);
         foreach (var lp in bottles)
         {
-            if (lp.currentChemical == null) continue;
+            // A bottle poured DRY clears its contents, so restock from what it last
+            // dispensed — otherwise demo mode silently skipped every empty bottle.
+            var stock = lp.currentChemical != null ? lp.currentChemical : lp.LastChemical;
+            if (stock == null) continue;
             if (lp.GetComponent<LiquidTaskBinding>() != null) continue;
-            if (lp.currentLiquidVolume < 150f) { lp.currentLiquidVolume = 150f; refilled++; }
+            if (lp.currentLiquidVolume < 150f) { lp.SetContents(stock, 150f); refilled++; }
         }
         return refilled;
     }

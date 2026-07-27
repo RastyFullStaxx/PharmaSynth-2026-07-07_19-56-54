@@ -57,6 +57,21 @@ public static class ReagentCabinetBuilder
     {
         if (Application.isPlaying) { Debug.LogWarning("[ReagentCabinets] exit Play mode first."); return; }
 
+        // HARD GUARD (user 2026-07-27: "ensure this shelf hard saves the current
+        // position I place them at, because sometimes when you work you move these
+        // raw reagent cabinets over and over"). This menu DESTROYS and recreates
+        // every stocked item — it has already eaten hand placement and mounted
+        // labels more than once. Once the layout is adopted as manual it is
+        // one-shot-done, exactly like the shelf/kits/distillation builders.
+        if (ManualLayoutAdopter.LayoutIsManual())
+        {
+            Debug.LogError("[ReagentCabinets] the scene layout is HAND-PLACED (ManualLayout_W512 marker) — "
+                + "re-running would destroy and re-place every bottle you moved. The cabinets are already built. "
+                + "To restock deliberately: delete the marker, run this, then immediately re-run "
+                + "'Adopt Manual Layout' + 'Generate Reagent Labels'.");
+            return;
+        }
+
         var lib = AssetDatabase.LoadAssetAtPath<SceneAssetLibrary>("Assets/PharmaSynth/ScriptableObjects/SceneAssetLibrary.asset");
         var registry = AssetDatabase.LoadAssetAtPath<ReactionRegistry>("Assets/PharmaSynth/ScriptableObjects/Reactions/MasterReactionRegistry.asset");
         var runner = Object.FindAnyObjectByType<ExperimentRunner>();
@@ -135,10 +150,16 @@ public static class ReagentCabinetBuilder
 
         RelocatePrinter();
 
+        // Stocking recreates every bottle, which takes its mounted NameLabel quad
+        // with it — that is why the shelf ended up with no name tags at all (user
+        // 2026-07-27). Re-mount them in the SAME pass so they can never go missing
+        // again, instead of relying on someone remembering the second menu.
+        LabelForge.Run();
+
         EditorSceneManager.MarkAllScenesDirty();
         EditorSceneManager.SaveOpenScenes();
         Debug.Log($"[ReagentCabinets] built {groups.Length} units at x={ux:F2} (base y={RootY}): {stocked} materials stocked, " +
-                  $"{skipped} already on the ReagentShelf. Run Re-Home Scene Items next.");
+                  $"{skipped} already on the ReagentShelf, name labels re-mounted. Run Re-Home Scene Items next.");
     }
 
     /// The copier ('Environment/Printe') sat inside the old unit-1 footprint. Move

@@ -124,8 +124,8 @@ public class LabTourGuide : MonoBehaviour
     {
         "Welcome! Let's take a quick tour. The bench in the middle is your main workspace — walk around and I'll point out the rest as you reach them.",
         "This bench is your main workspace. Flick your wrist face-up and glance at it — your holographic procedures board appears with every step, live. The progress bar and timer up top track your pace.",
-        "The equipment cabinet — open it and pick the apparatus your procedures board calls for. Flick your wrist anytime to check the next step.",
-        "The reagent shelf holds your chemicals — take only what each step needs. And Settings up top lets you tune audio, text size and comfort whenever you like.",
+        "Every instrument stays out on this bench, every experiment — picking the right one is part of the work. Flick your wrist anytime to check the next step.",
+        "The reagent cabinets hold your chemicals — take only what each step needs. And Settings up top lets you tune audio, text size and comfort whenever you like.",
         "That's the tour! Follow the glowing markers during a run, and poke me whenever you're ready to take on a graded campaign.",
     };
 
@@ -137,7 +137,9 @@ public class LabTourGuide : MonoBehaviour
         {
             new Stop { landmarkName = "DynamicStage", radius = 2.2f, beat = DefaultBeatTexts[1] },
             new Stop { landmarkName = "EquipmentShelf", radius = 2.0f, beat = DefaultBeatTexts[2] },
-            new Stop { landmarkName = "ReagentShelf", radius = 2.0f, beat = DefaultBeatTexts[3] },
+            // The west ReagentShelf cubby was emptied into the east cabinets
+            // (2026-07-16) — the tour must stop where the bottles actually are.
+            new Stop { landmarkName = "ReagentCabinets", radius = 2.4f, beat = DefaultBeatTexts[3] },
         };
     }
 }

@@ -21,6 +21,15 @@ public static class PharmaSelfTests
     }
     static bool Near(float a, float b, float e = 0.01f) => Math.Abs(a - b) < e;
 
+    /// One-entry ledger scaled by `frac`, as its summary string (pour-out story).
+    static string LedgerScaled(float ml, float frac)
+    {
+        var led = new VesselLedger();
+        led.Add("PG_A", ml);
+        led.Scale(frac);
+        return led.Summary();
+    }
+
     [MenuItem("Tools/PharmaSynth/Run Self-Tests")]
     public static void Run()
     {
@@ -1141,16 +1150,83 @@ public static class PharmaSelfTests
         // panel. The real geometry is a 300-wide button on an 820-wide panel:
         // the preferred 336 step put the outer edge at 486 vs a 410 half-width.
         {
+            // Real geometry: a 300-wide Submit on an 820-wide quiz panel. Three of
+            // those need 900 units, so containment ALONE pulled Back/Next 73 units
+            // on top of Submit (user 2026-07-27) — they have to shrink first.
+            float w = QuizNavButtonsBuilder.WidthFor(300f, 820f);
             float step = QuizNavButtonsBuilder.StepFor(300f, 820f, 0f);
-            A("quiznav: the side buttons stay INSIDE the panel",
-                step + 150f <= 410f && step > 0f);
-            A("quiznav: a roomy panel keeps the preferred spacing",
-                Near(QuizNavButtonsBuilder.StepFor(100f, 2000f, 0f), 112f));
+            A("quiznav: three buttons SHRINK to fit the row", Near(w, 820f * 0.92f / 3f));
+            A("quiznav: the side buttons stay INSIDE the panel", step + w * 0.5f <= 410f && step > 0f);
+            A("quiznav: the side buttons never OVERLAP Submit", step >= w);
+            A("quiznav: a roomy panel keeps the authored width and spacing",
+                Near(QuizNavButtonsBuilder.WidthFor(100f, 2000f), 100f)
+                && Near(QuizNavButtonsBuilder.StepFor(100f, 2000f, 0f), 112f));
             A("quiznav: Submit's own offset is respected",
-                QuizNavButtonsBuilder.StepFor(300f, 820f, 60f) < QuizNavButtonsBuilder.StepFor(300f, 820f, 0f));
-            A("quiznav: an unresolvable parent keeps the preferred step",
-                Near(QuizNavButtonsBuilder.StepFor(300f, 0f, 0f), 336f));
+                QuizNavButtonsBuilder.StepFor(300f, 820f, 60f) <= QuizNavButtonsBuilder.StepFor(300f, 820f, 0f));
+            A("quiznav: an unresolvable parent keeps the authored width + preferred step",
+                Near(QuizNavButtonsBuilder.WidthFor(300f, 0f), 300f)
+                && Near(QuizNavButtonsBuilder.StepFor(300f, 0f, 0f), 336f));
         }
+
+        // W5.33 PLAYTEST BATCH (user 2026-07-27) --------------------------------
+
+        // Vessel axis: a tube is long, a watch glass and a mortar are WIDE. The
+        // mound must lie along the round bore either way, not the longest side.
+        A("axis: an upright tube runs along Y", ExperimentSceneBuilder.VesselAxis(new Vector3(0.016f, 0.13f, 0.016f)) == 1);
+        A("axis: a tube lying on X runs along X", ExperimentSceneBuilder.VesselAxis(new Vector3(0.13f, 0.016f, 0.016f)) == 0);
+        A("axis: a watch glass is a shallow DISH, not a lying tube",
+            ExperimentSceneBuilder.VesselAxis(new Vector3(0.09f, 0.015f, 0.09f)) == 1
+            && ExperimentSceneBuilder.LongestAxis(new Vector3(0.09f, 0.015f, 0.09f)) != 1);
+        A("axis: a mortar bowl is upright too", ExperimentSceneBuilder.VesselAxis(new Vector3(0.12f, 0.06f, 0.12f)) == 1);
+        A("axis: a cube falls back to Y", ExperimentSceneBuilder.VesselAxis(Vector3.one * 0.05f) == 1);
+
+        // Mound growth: every scoop must read as MORE, and the first dips move most.
+        A("mound: an empty vessel shows no heap", Near(ScoopController.MoundFill(0f), 0f));
+        A("mound: consecutive scoops visibly grow",
+            ScoopController.MoundFill(2f) < ScoopController.MoundFill(4f)
+            && ScoopController.MoundFill(4f) < ScoopController.MoundFill(6f));
+        A("mound: one scoop is already clearly visible", ScoopController.MoundFill(2f) > 0.25f);
+        A("mound: a sub-gram spatula dip still shows", ScoopController.MoundFill(0.1f) >= 0.15f);
+        A("mound: full at the reference charge", Near(ScoopController.MoundFill(20f), 1f));
+
+        // Round-bottom glassware gets a bulb of liquid, not a beaker's column.
+        A("fill: the Florence flask is round-bottomed", ExperimentSceneBuilder.IsRoundBottom("FlorenceFlask"));
+        A("fill: so is the distilling flask", ExperimentSceneBuilder.IsRoundBottom("DistillingFlask_2"));
+        A("fill: a beaker is not", !ExperimentSceneBuilder.IsRoundBottom("Eq_Beaker_500mL"));
+        A("fill: a null name is not", !ExperimentSceneBuilder.IsRoundBottom(null));
+
+        // Effect children must never count toward a vessel's bounds — a world-space
+        // pour StreamLine left racked tubes floating a metre in the air.
+        A("bounds: the pour effects are effect children",
+            ExperimentSceneBuilder.IsEffectChild("StreamLine") && ExperimentSceneBuilder.IsEffectChild("PourStream"));
+        A("bounds: the fill layers are effect children",
+            ExperimentSceneBuilder.IsEffectChild("Liquid") && ExperimentSceneBuilder.IsEffectChild("Precipitate")
+            && ExperimentSceneBuilder.IsEffectChild("Powder"));
+        A("bounds: the glass body is NOT an effect child", !ExperimentSceneBuilder.IsEffectChild("Beaker"));
+
+        // The balance reads GROSS (auto-taring to 0.00 g is why it looked dead).
+        A("scale: a loaded beaker reads vessel + contents", Near(WeighMath.PanMass(120f, 0.18f), 300f));
+        A("scale: an EMPTY beaker still moves the needle", WeighMath.PanMass(0f, 0.18f) > 0f);
+        A("scale: a body-less load still reads a token mass", Near(WeighMath.PanMass(0f, 0f), 5f));
+        A("scale: the graded weigh condition still ignores the tare",
+            WeighMath.Satisfied(true, "Ethanol", "Ethanol", 50f, 50f, null, null));
+
+        // Digital readout: types in, wobbles while settling, locks on arrival.
+        A("scale: a new reading types in left to right",
+            WeighingScaleController.Typed("12.40 g", 0.08f, 26f) == "12" );
+        A("scale: the whole reading shows once typed",
+            WeighingScaleController.Typed("12.40 g", 5f, 26f) == "12.40 g");
+        A("scale: a settled pan shows the exact mass",
+            Near(WeighingScaleController.Reading(12.4f, 12.4f, 0.4f, 3f), 12.4f));
+        A("scale: a settling pan hunts around the value",
+            !Near(WeighingScaleController.Reading(9f, 12.4f, 0.4f, 0.04f), 9f));
+        A("scale: the reading is never negative",
+            WeighingScaleController.Reading(0.01f, 5f, 0.4f, 0.12f) >= 0f);
+        A("scale: format is two decimals + unit", WeighingScaleController.Format(12.4f, "g") == "12.40 g");
+
+        // Voice budget order: Jimenez's rows are generated first (user 2026-07-27).
+        A("voice: Jimenez sorts before Pharmee",
+            VoiceManifestExporter.SpeakerPriority("Jimenez") < VoiceManifestExporter.SpeakerPriority("Pharmee"));
 
         // Holo board scroll paging (W5.12: wrap + scrollable checklist).
         A("holo: page down moves toward the bottom", Near(HoloScroller.NextPage(1f, 0.6f, -1), 0.4f));
@@ -1767,8 +1843,27 @@ public static class PharmaSelfTests
             A("setcontents: explicit fill", lp.currentChemical == chemA && Near(lp.currentLiquidVolume, 40f) && lp.Ledger.Count == 1);
             lp.SetContents(null, 123f);
             A("setcontents: blank arms empty regardless of ml", lp.IsEmpty && lp.currentChemical == null && lp.Ledger.Count == 0);
+
+            // SPILL → REFILL (user 2026-07-27: "the measurement still remains there
+            // from the spilled reagents"). A partial pour shrinks the story; a pour
+            // to dry erases it, so the refill starts clean instead of stacking.
+            lp.SetContents(chemA, 100f);
+            lp.PourOut(50f);
+            A("spill: a partial pour shrinks the story with the contents",
+                lp.Ledger.Summary() == "PG_A 50 ml" && Near(lp.currentLiquidVolume, 50f));
+            lp.PourOut(60f);
+            A("spill: poured DRY forgets the contents entirely",
+                lp.IsEmpty && lp.currentChemical == null && lp.Ledger.Count == 0);
+            A("spill: a dry bottle still knows what it dispenses", lp.LastChemical == chemA);
+            lp.AddLiquid(chemA, 20f);
+            A("spill: the refill starts a CLEAN story, not a stacked one",
+                lp.Ledger.Summary() == "PG_A 20 ml" && Near(lp.currentLiquidVolume, 20f));
         }
         finally { UnityEngine.Object.DestroyImmediate(wgo); }
+
+        A("ledger: Scale is a no-op at full", LedgerScaled(100f, 1f) == "PG_A 100 ml");
+        A("ledger: Scale halves every entry", LedgerScaled(100f, 0.5f) == "PG_A 50 ml");
+        A("ledger: Scale to nothing clears", LedgerScaled(100f, 0f) == "");
 
         // ResolveTarget vs REAL colliders: self skipped, triggers ignored,
         // nearest other vessel wins; then a full PourTick transfer.

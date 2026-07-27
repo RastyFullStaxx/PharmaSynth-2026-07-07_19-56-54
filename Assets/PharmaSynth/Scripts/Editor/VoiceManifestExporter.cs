@@ -16,6 +16,14 @@ public static class VoiceManifestExporter
     [System.Serializable]
     public class ManifestLine { public string id; public string speaker; public string text; public int chars; }
 
+    /// Generation ORDER (user 2026-07-27: "prioritize dr jimenez before we generate
+    /// pharmee. stop only when we ran out of tokens"). The PowerShell generator
+    /// walks the manifest top-to-bottom and skips what already exists, so writing
+    /// Jimenez's rows first means a run that dies on an exhausted quota has spent
+    /// every credit on him — no ordering logic needed in the script itself.
+    /// Pure + pinned: lower sorts first.
+    public static int SpeakerPriority(string speaker) => speaker == "Jimenez" ? 0 : 1;
+
     [System.Serializable]
     public class Manifest { public List<ManifestLine> lines = new List<ManifestLine>(); }
 
@@ -52,20 +60,26 @@ public static class VoiceManifestExporter
                 if (b != null) { Add(VoiceSpeaker.Pharmee, b.subtitle); beats++; }
         }
 
+        // Jimenez first (stable within each speaker — OrderBy is a stable sort, so
+        // the corpus order is preserved and re-exports don't shuffle the queue).
+        manifest.lines = new List<ManifestLine>(
+            System.Linq.Enumerable.OrderBy(manifest.lines, l => SpeakerPriority(l.speaker)));
+
         Directory.CreateDirectory(Path.GetDirectoryName(OutPath));
         File.WriteAllText(OutPath, JsonUtility.ToJson(manifest, true), new UTF8Encoding(false));
         AssetDatabase.ImportAsset(OutPath);
 
-        int chars = 0, pharmee = 0, jimenez = 0;
+        int chars = 0, pharmee = 0, jimenez = 0, jChars = 0;
         foreach (var l in manifest.lines)
         {
             chars += l.chars;
-            if (l.speaker == "Pharmee") pharmee++; else jimenez++;
+            if (l.speaker == "Pharmee") pharmee++; else { jimenez++; jChars += l.chars; }
         }
         // eleven_flash_v2_5 ≈ 0.5 credits per character.
-        Debug.Log($"[VoiceManifest] {manifest.lines.Count} unique lines ({pharmee} Pharmee, {jimenez} Jimenez, "
+        Debug.Log($"[VoiceManifest] {manifest.lines.Count} unique lines ({jimenez} Jimenez FIRST, {pharmee} Pharmee, "
                   + $"{beats} cutscene beats folded in), {chars:n0} characters ≈ {chars / 2:n0} ElevenLabs credits "
-                  + $"on eleven_flash_v2_5 (~${chars / 2 / 1000f * 0.22f:F0}-ish of a Creator plan). Wrote {OutPath}.");
+                  + $"on eleven_flash_v2_5. Jimenez alone: {jChars:n0} characters ≈ {jChars / 2:n0} credits — "
+                  + $"generate him first and the run can stop anywhere. Wrote {OutPath}.");
     }
 }
 #endif

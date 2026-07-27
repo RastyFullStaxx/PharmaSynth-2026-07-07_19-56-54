@@ -23,18 +23,21 @@ public static class LabelForge
         if (baseTex == null) { Debug.LogError("[LabelForge] missing base " + BasePath); return; }
         Directory.CreateDirectory(OutDir);
 
-        var shelf = GameObject.Find("ReagentShelf");
-        if (shelf == null) { Debug.LogError("[LabelForge] no ReagentShelf"); return; }
-
         int made = 0;
-        foreach (Transform bottle in shelf.transform)
-        {
-            var lp = bottle.GetComponent<LiquidPhysics>();
-            string chem = lp != null && lp.currentChemical != null ? lp.currentChemical.chemicalName : null;
-            if (string.IsNullOrEmpty(chem)) continue;
-            MountQuad(bottle, EnsureLabelMat(baseTex, chem), RoomOutward(bottle.position));
-            made++;
-        }
+        // The legacy west cubby was emptied into the east cabinets (2026-07-16), so
+        // a missing/empty ReagentShelf is now NORMAL — it must not abort the run
+        // before the cabinets below get their labels (that early return is part of
+        // why the shelf ended up with no name tags at all, user 2026-07-27).
+        var shelf = GameObject.Find("ReagentShelf");
+        if (shelf != null)
+            foreach (Transform bottle in shelf.transform)
+            {
+                var lp = bottle.GetComponent<LiquidPhysics>();
+                string chem = lp != null && lp.currentChemical != null ? lp.currentChemical.chemicalName : null;
+                if (string.IsNullOrEmpty(chem)) continue;
+                MountQuad(bottle, EnsureLabelMat(baseTex, chem), RoomOutward(bottle.position));
+                made++;
+            }
 
         // Raw-reagent cabinets (user 2026-07-11): the same crisp labels on every
         // stocked bottle/jar; boxes and the ice bucket (not tubular) get a FLAT

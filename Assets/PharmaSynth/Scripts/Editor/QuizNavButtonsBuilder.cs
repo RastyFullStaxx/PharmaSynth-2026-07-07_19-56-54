@@ -27,6 +27,8 @@ public static class QuizNavButtonsBuilder
         if (submit == null) { Debug.LogError("[QuizNav] submitButton not wired — nothing to clone for styling."); return; }
 
         var parent = submit.transform.parent;
+        // Submit shrinks with its neighbours — three equal buttons across the row.
+        Narrow(submit.GetComponent<RectTransform>(), parent as RectTransform);
         // Offset by the button's own WIDTH, in CANVAS units — a hardcoded 0.16 was
         // ~zero on a canvas whose buttons are hundreds of units wide, so Back and
         // Next landed exactly on top of each other (user 2026-07-15).
@@ -81,7 +83,9 @@ public static class QuizNavButtonsBuilder
             rt.localRotation = trt.localRotation;
             rt.localScale = trt.localScale;
             var prt = parent as RectTransform;
-            float step = StepFor(trt.rect.width, prt != null ? prt.rect.width : 0f, trt.anchoredPosition.x);
+            float pw = prt != null ? prt.rect.width : 0f;
+            Narrow(rt, prt);
+            float step = StepFor(trt.rect.width, pw, trt.anchoredPosition.x);
             rt.anchoredPosition = trt.anchoredPosition + new Vector2(dir * step, 0f);
         }
         else if (existing == null)   // non-RectTransform fallback
@@ -96,22 +100,44 @@ public static class QuizNavButtonsBuilder
         return go.GetComponentInChildren<Button>(true);
     }
 
-    /// How far from Submit each side button sits, in canvas units — CONTAINED
-    /// (user 2026-07-19: "contain the next and prev button, currently it's going
-    /// out of bounds"). The old flat 1.12x button-width step overflowed any panel
-    /// narrower than ~3.4 buttons: on the real 820-wide quiz panel a 300-wide
-    /// button stepped 336, putting its outer edge at 486 against a 410 half-width
-    /// — ~76 units off each side, exactly as the playtest screenshot showed.
-    /// Clamped so the button's OUTER edge stays inside the parent with a 4%
-    /// margin, and Submit's own offset is respected (it need not be centred).
-    /// parentWidth &lt;= 0 (unresolvable rect) keeps the preferred step. Pure + pinned.
-    public static float StepFor(float buttonWidth, float parentWidth, float submitOffsetX)
+    /// The width the three bottom buttons must SHRINK to so Back | Submit | Next
+    /// fit side by side inside the panel. Containment alone was not enough: on the
+    /// real 820-wide quiz panel three 300-wide buttons need 900, so clamping only
+    /// the STEP pulled Back and Next inward until they sat 73 units ON TOP of
+    /// Submit ("some buttons are still overlapping in the quiz's submit", user
+    /// 2026-07-27). Shrinking first is what actually removes the overlap.
+    /// parentWidth &lt;= 1 (unresolvable rect) keeps the authored width. Pure + pinned.
+    public static float WidthFor(float buttonWidth, float parentWidth)
     {
         float w = Mathf.Max(1f, buttonWidth);
+        if (parentWidth <= 1f) return w;
+        return Mathf.Min(w, (parentWidth * 0.92f) / 3f);   // 4% margin each side
+    }
+
+    /// How far from Submit each side button sits, in canvas units — CONTAINED
+    /// (user 2026-07-19: "contain the next and prev button, currently it's going
+    /// out of bounds") and NON-OVERLAPPING (user 2026-07-27). Measured from the
+    /// SHRUNK width, and floored at that width plus a hair so the clamp can never
+    /// push a neighbour under Submit. Pure + pinned.
+    public static float StepFor(float buttonWidth, float parentWidth, float submitOffsetX)
+    {
+        float w = WidthFor(buttonWidth, parentWidth);
         float preferred = w * 1.12f;
         if (parentWidth <= 1f) return preferred;
         float maxStep = (parentWidth * 0.5f) - (w * 0.5f) - (parentWidth * 0.04f) - Mathf.Abs(submitOffsetX);
-        return maxStep > 0f ? Mathf.Min(preferred, maxStep) : preferred;
+        return maxStep > 0f ? Mathf.Max(w * 1.02f, Mathf.Min(preferred, maxStep)) : preferred;
+    }
+
+    /// Shrink a bottom-row button (and its label child) to the fitting width.
+    static void Narrow(RectTransform rt, RectTransform parent)
+    {
+        if (rt == null || parent == null) return;
+        float w = WidthFor(rt.rect.width, parent.rect.width);
+        if (w >= rt.rect.width - 0.5f) return;
+        float shrink = rt.rect.width - w;
+        rt.sizeDelta = new Vector2(rt.sizeDelta.x - shrink, rt.sizeDelta.y);
+        foreach (RectTransform child in rt)
+            child.sizeDelta = new Vector2(child.sizeDelta.x - shrink, child.sizeDelta.y);
     }
 
     /// Clear cloned listeners, then wire this button to the given method.

@@ -983,25 +983,40 @@ public class ExperimentSceneBuilder : MonoBehaviour
 
     /// Inset PharmaLiquid cylinder fitted to the vessel's glass bounds — the
     /// runtime fill surface for adopted bench glass (Liquid + Precipitate layers).
+    /// Round-bottom glassware: the fill must take the BULB's shape, not a beaker's
+    /// straight column (user 2026-07-27: "the liquid poured inside takes the shape
+    /// of a cylinder similar to the beakers"). A sphere clipped by the same _Fill
+    /// height gives exactly the spherical cap a round bottom holds. Pure + pinned.
+    public static bool IsRoundBottom(string objectName)
+    {
+        if (string.IsNullOrEmpty(objectName)) return false;
+        string n = objectName.ToLowerInvariant();
+        return n.Contains("florence") || n.Contains("distillingflask") || n.Contains("distilling_flask")
+            || n.Contains("distillationflask") || n.Contains("roundbottom") || n.Contains("boilingflask");
+    }
+
     private static Renderer BuildFillChild(GameObject inst, string childName, float widthFrac)
     {
         var shader = Shader.Find("PharmaSynth/Liquid");
         if (shader == null) return null;   // shader stripped — leave numeric-only rather than magenta
         var b = WB(inst);
-        var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        bool round = IsRoundBottom(inst.name);
+        var go = GameObject.CreatePrimitive(round ? PrimitiveType.Sphere : PrimitiveType.Cylinder);
         go.name = childName;
         var col = go.GetComponent<Collider>();
         if (col != null) { if (Application.isPlaying) Destroy(col); else DestroyImmediate(col); }
         go.transform.SetParent(inst.transform, true);
-        // Inset cylinder, floor to just under the rim.
+        // Inset body, floor to just under the rim — or, for a round bottom, a
+        // sphere seated in the bulb (as wide as it is tall).
         float w = Mathf.Min(b.size.x, b.size.z) * widthFrac;
-        float h = Mathf.Max(0.01f, b.size.y * 0.86f);
-        go.transform.position = new Vector3(b.center.x, b.min.y + h * 0.5f + b.size.y * 0.04f, b.center.z);
+        float h = round ? w : Mathf.Max(0.01f, b.size.y * 0.86f);
+        go.transform.position = new Vector3(
+            b.center.x, b.min.y + h * 0.5f + b.size.y * (round ? 0.02f : 0.04f), b.center.z);
         go.transform.rotation = inst.transform.rotation;
         var ls = inst.transform.lossyScale;
         go.transform.localScale = new Vector3(
             w / Mathf.Max(1e-4f, Mathf.Abs(ls.x)),
-            h * 0.5f / Mathf.Max(1e-4f, Mathf.Abs(ls.y)),   // cylinder mesh is 2 units tall
+            (round ? h : h * 0.5f) / Mathf.Max(1e-4f, Mathf.Abs(ls.y)),   // cylinder mesh is 2 units tall, sphere 1
             w / Mathf.Max(1e-4f, Mathf.Abs(ls.z)));
         var r2 = go.GetComponent<Renderer>();
         r2.sharedMaterial = new Material(shader) { name = "PharmaLiquid_Runtime" };
@@ -1042,6 +1057,29 @@ public class ExperimentSceneBuilder : MonoBehaviour
     /// Index of the longest axis (0=x, 1=y, 2=z) — a vessel's "up" from its base.
     public static int LongestAxis(Vector3 size)
         => (size.y >= size.x && size.y >= size.z) ? 1 : (size.z >= size.x ? 2 : 0);
+
+    /// The vessel's own UP axis: the one whose two PERPENDICULAR extents are most
+    /// nearly EQUAL, i.e. the axis the round bore runs along.
+    ///
+    /// LongestAxis is right for a tube and wrong for anything wide and shallow. A
+    /// watch glass (90 x 15 x 90 mm) and a mortar are LONGEST across, so the mound
+    /// was laid along a horizontal axis: sized from a 15 mm "bore" and parked at
+    /// the RIM — "a very tiny dot that isn't even centered and doesn't grow" (user
+    /// 2026-07-27). Measuring roundness instead picks Y for both, and still picks
+    /// the long axis of a tube lying on X or Z. Ties (a cube) go to Y.
+    public static int VesselAxis(Vector3 size)
+    {
+        int best = 1; float bestScore = float.MaxValue;
+        for (int a = 0; a < 3; a++)
+        {
+            float p = Mathf.Abs(size[(a + 1) % 3]), q = Mathf.Abs(size[(a + 2) % 3]);
+            float m = Mathf.Max(p, q);
+            float score = m <= 1e-6f ? 0f : Mathf.Abs(p - q) / m;
+            if (score < bestScore - 1e-4f || (a == 1 && score <= bestScore + 1e-4f))
+            { bestScore = score; best = a; }
+        }
+        return best;
+    }
 
     /// Rotation mapping a primitive's +Y onto the given local axis.
     public static Quaternion AxisAlign(int axis)
@@ -1096,15 +1134,21 @@ public class ExperimentSceneBuilder : MonoBehaviour
         // held vessel (e.g. the hard-glass tube) keeps its contents aligned and
         // contained instead of a world-vertical blob poking out (user 2026-07-15).
         var lb = LocalMeshBounds(inst.transform, "Powder", "Liquid", "CollectedGas");
-        int ax = LongestAxis(lb.size);
+        int ax = VesselAxis(lb.size);
         float bore = BoreOf(lb.size, ax);
         // Size PURELY as a fraction of the vessel's own local bounds — never mix in
         // absolute metres. lb is in LOCAL units, so a metre cap here becomes
         // microscopic on an import-scaled prefab (user 2026-07-15: the powder was
         // invisible inside the glass tube). Fractions stay contained at any scale.
+        //
+        // Width stays half the bore (it must never poke through the glass wall);
+        // HEIGHT is now scaled off the BORE and only capped by the vessel's own
+        // depth. The old min(depth * 0.22, bore * 0.6) took the depth term on any
+        // shallow dish and collapsed the mound to a film — combined with the wrong
+        // axis that is what made a scoop on a watch glass a dot.
         float w = bore * 0.5f * Mathf.Lerp(0.6f, 1f, fill01);                       // half the bore
-        float h = Mathf.Min(lb.size[ax] * 0.22f, bore * 0.6f) * Mathf.Lerp(0.4f, 1f, fill01);
-        h = Mathf.Max(lb.size[ax] * 0.03f, h);                                      // always a little visible
+        float h = Mathf.Min(bore * Mathf.Lerp(0.10f, 0.34f, fill01), lb.size[ax] * 0.6f);
+        h = Mathf.Max(bore * 0.06f, h);                                             // always a little visible
 
         // A hand-placed anchor wins for placement — and, ONLY if it is a size-setting
         // anchor, for size too (user 2026-07-15: "set its size manually").
@@ -1160,12 +1204,48 @@ public class ExperimentSceneBuilder : MonoBehaviour
         return needed > 0f ? Mathf.Max(120f, needed * 2.5f) : 600f;
     }
 
-    private static Bounds WB(GameObject g)
+    private static Bounds WB(GameObject g) => SolidWorldBounds(g);
+
+    /// Names of the runtime children that RIDE a vessel but are not part of its
+    /// body: the fill/mound layers, the collected-gas column, the mounted label,
+    /// and the pour effects. Pure so the suite can pin the list.
+    public static bool IsEffectChild(string childName)
+        => childName == "Liquid" || childName == "Precipitate" || childName == "Powder"
+        || childName == "CollectedGas" || childName == "NameLabel"
+        || childName == "StreamLine" || childName == "PourStream" || childName == "ScoopHeap";
+
+    /// World bounds of a vessel's SOLID meshes only.
+    ///
+    /// Every effect child must be excluded, because two of them are authored in
+    /// WORLD space and outlive the pour that made them: LiquidPourer's StreamLine
+    /// (a world-space LineRenderer still holding the arc's last floor point) and
+    /// its PourStream particles. Encapsulating those dragged a poured-from test
+    /// tube's bounds down to the floor, so seating it in a rack lifted it a metre
+    /// into the air — "positioned so high above that I thought they disappeared"
+    /// (user 2026-07-27). Same poison mis-sized every bounds-fitted child.
+    public static Bounds SolidWorldBounds(GameObject g)
     {
-        var rs = g.GetComponentsInChildren<Renderer>();
-        Bounds b = rs.Length > 0 ? rs[0].bounds : new Bounds(g.transform.position, Vector3.one * 0.1f);
-        for (int i = 1; i < rs.Length; i++) b.Encapsulate(rs[i].bounds);
-        return b;
+        if (g == null) return new Bounds(Vector3.zero, Vector3.one * 0.05f);
+        Bounds b = default; bool has = false;
+        foreach (var mf in g.GetComponentsInChildren<MeshFilter>(true))
+        {
+            if (mf == null || mf.sharedMesh == null) continue;
+            if (IsEffectChild(mf.gameObject.name)) continue;
+            if (mf.GetComponent<TMPro.TMP_Text>() != null) continue;
+            var r = mf.GetComponent<Renderer>();
+            if (r == null) continue;
+            if (!has) { b = r.bounds; has = true; } else b.Encapsulate(r.bounds);
+        }
+        // Skinned/effect-only hosts still need SOME extent to work with.
+        if (!has)
+        {
+            foreach (var r in g.GetComponentsInChildren<Renderer>(true))
+            {
+                if (r == null || IsEffectChild(r.gameObject.name)) continue;
+                if (!has) { b = r.bounds; has = true; } else b.Encapsulate(r.bounds);
+            }
+        }
+        return has ? b : new Bounds(g.transform.position, Vector3.one * 0.1f);
     }
 
     /// World bounds of a prop's SOLID mesh only — skips the given child names

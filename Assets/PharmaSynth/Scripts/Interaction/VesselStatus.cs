@@ -21,6 +21,22 @@ public class VesselStatus : MonoBehaviour
         Refresh();
     }
 
+    /// Every ref here is PRIVATE and unserialized, so a hand-placed bench vessel
+    /// that nobody calls Bind() on stayed mute forever — the contents text simply
+    /// "wasn't showing at all in some test tubes" (user 2026-07-27). Adopt the
+    /// vessel's own components at Awake; a later Bind() still wins.
+    private void Awake()
+    {
+        if (_lp != null) return;
+        var lp = GetComponent<LiquidPhysics>();
+        var label = GetComponent<ProximityLabel>();
+        if (lp == null || label == null) return;
+        var item = GetComponent<LabItem>();
+        string name = item != null && !string.IsNullOrEmpty(item.displayName)
+            ? item.displayName : Mishandling.DisplayNameFor(gameObject);
+        Bind(lp, label, name, _showDist);
+    }
+
     private void Update()
     {
         if (Time.unscaledTime < _nextAt) return;

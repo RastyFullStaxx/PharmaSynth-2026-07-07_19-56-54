@@ -56,6 +56,18 @@ public class VesselLedger
         _solid.Clear();
     }
 
+    /// A PARTIAL pour-out: a mixture leaves evenly, so every entry shrinks by the
+    /// same fraction. Without this the name tag kept quoting the volumes that were
+    /// poured IN, so a half-spilled tube still read "Ethanol 20 ml" (user
+    /// 2026-07-27: "the measurement still continues or remains there from the
+    /// spilled reagents"). frac >= 1 is a no-op; frac <= 0 empties the story.
+    public void Scale(float frac)
+    {
+        if (frac >= 0.999f) return;
+        if (frac <= 0.001f) { Clear(); return; }
+        for (int i = 0; i < _order.Count; i++) _ml[_order[i]] *= frac;
+    }
+
     /// "Ethanol 120 ml + NaOH 50 ml" (insertion order, at most `max` entries,
     /// "+ n more" tail beyond that). Sub-ml amounts keep one decimal; solids
     /// read in grams. Empty ledger -> "".

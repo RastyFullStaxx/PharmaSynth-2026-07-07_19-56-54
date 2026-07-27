@@ -83,12 +83,18 @@ public class LiquidPhysics : MonoBehaviour
     /// Truly empty (nothing visible, wake branch armed).
     public bool IsEmpty => currentLiquidVolume <= 1f && currentPptVolume <= 1f;
 
+    /// The last chemical this vessel actually held. A vessel poured DRY forgets its
+    /// CONTENTS (so a refill starts a clean story) but a labelled source bottle still
+    /// knows what it dispenses — the demo top-up restocks from this.
+    public ChemicalData LastChemical { get; private set; }
+
     /// Builder/test seam: set the vessel's contents explicitly WITHOUT touching
     /// materials (edit-mode safe — visuals catch up in Update once playing).
     /// Blank contents = chem null + 0 ml arms the wake-from-empty branch.
     public void SetContents(ChemicalData chem, float ml)
     {
         currentChemical = chem;
+        if (chem != null) LastChemical = chem;
         currentLiquidVolume = chem != null ? Mathf.Max(0f, ml) : 0f;
         _pendingRule = null; _pendingAmount = 0f;   // a reset vessel holds no half-done recipe
         currentTempC = 25f;
@@ -318,18 +324,25 @@ public class LiquidPhysics : MonoBehaviour
         }
 
         if (notify) LiquidAdded?.Invoke(incomingChemical, amountToAdd);
-        Ledger.Add(incomingChemical.chemicalName, amountToAdd,
-                   incomingChemical.state == PhysicalState.Solid || incomingChemical.state == PhysicalState.Powder);
+        LastChemical = incomingChemical;
+        bool solid = incomingChemical.state == PhysicalState.Solid || incomingChemical.state == PhysicalState.Powder;
 
-        // If waking up from empty, ensure visuals update
+        // If waking up from empty, ensure visuals update. The ledger is CLEARED
+        // first and only then given the incoming pour: recording before the wake
+        // check let a vessel the player had spilled empty carry its old story into
+        // the refill, so the name tag kept naming reagents that were no longer in
+        // there (user 2026-07-27).
         if (currentLiquidVolume <= 0.1f && currentPptVolume <= 0.1f)
         {
+            Ledger.Clear();
+            Ledger.Add(incomingChemical.chemicalName, amountToAdd, solid);
             currentChemical = incomingChemical;
             currentLiquidVolume += amountToAdd;
             _mixPH = incomingChemical.pH;
             UpdateAllVisuals();
             return;
         }
+        Ledger.Add(incomingChemical.chemicalName, amountToAdd, solid);
         _mixPH = LitmusMath.DominantPH(_mixPH, incomingChemical.pH);
 
         if (currentChemical == incomingChemical)
@@ -458,14 +471,42 @@ public class LiquidPhysics : MonoBehaviour
         }
     }
 
+    /// Volume below which a vessel counts as poured DRY and forgets its contents.
+    /// Above VesselStatusMath's 1 ml "empty" threshold would leave the tag saying
+    /// "empty" while the ledger still held a story; below it, a rounding crumb
+    /// would keep a phantom chemical alive forever.
+    private const float DryMl = 0.5f;
+
+    /// Pour/scoop the vessel out. The ledger follows the liquid: a PARTIAL pour
+    /// shrinks every entry proportionally, and a vessel taken to dry forgets what
+    /// it held entirely — so spilling a tube and refilling it starts a clean story
+    /// instead of stacking the old amounts onto the new ones (user 2026-07-27).
     public ChemicalData PourOut(float amountToRemove)
     {
         if (currentLiquidVolume <= 0) return null;
 
+        float before = currentLiquidVolume;
         currentLiquidVolume -= amountToRemove;
         if (currentLiquidVolume < 0) currentLiquidVolume = 0;
 
-        return currentChemical;
+        var poured = currentChemical;
+        if (currentLiquidVolume <= DryMl && currentPptVolume <= DryMl) ClearContents();
+        else if (before > 0.001f) Ledger.Scale(currentLiquidVolume / before);
+        return poured;
+    }
+
+    /// Take the vessel back to truly empty: no chemical, no story, no half-armed
+    /// recipe, neutral pH. The wake-from-empty branch in AddLiquid can then adopt
+    /// the next pour cleanly. (SetContents(null, 0) does the same for builders.)
+    public void ClearContents()
+    {
+        currentLiquidVolume = 0f;
+        currentPptVolume = 0f;
+        currentChemical = null;
+        currentPptChemical = null;
+        _pendingRule = null; _pendingAmount = 0f;
+        _mixPH = 7f;
+        Ledger.Clear();
     }
 }
 

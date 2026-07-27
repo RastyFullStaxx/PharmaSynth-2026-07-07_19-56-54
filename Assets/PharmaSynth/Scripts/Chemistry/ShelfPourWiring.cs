@@ -42,15 +42,14 @@ public static class ShelfPourWiring
         {
             // Mouth at the TOP of the bottle's real bounds (the old fixed 0.12 m
             // guess sat mid-body on tall bottles).
-            var rends = bottle.GetComponentsInChildren<Renderer>(true);
+            // SOLID meshes only: a bottle that has poured before carries a
+            // world-space StreamLine child, and encapsulating it walked the spout
+            // out to wherever the last arc landed.
             var spout = new GameObject("Spout").transform;
             spout.SetParent(bottle.transform, false);
-            if (rends.Length > 0)
-            {
-                var b = rends[0].bounds;
-                for (int i = 1; i < rends.Length; i++) b.Encapsulate(rends[i].bounds);
+            var b = ExperimentSceneBuilder.SolidWorldBounds(bottle);
+            if (b.size.sqrMagnitude > 1e-8f)
                 spout.position = new Vector3(b.center.x, b.max.y - 0.005f, b.center.z);
-            }
             else spout.localPosition = new Vector3(0f, 0.12f, 0f);
             pourer.spout = spout;
             added++;

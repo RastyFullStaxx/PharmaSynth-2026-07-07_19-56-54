@@ -20,6 +20,7 @@ public class WeighStation : MonoBehaviour
 
     private LabItem _occupantItem;
     private LiquidPhysics _occupantVessel;
+    private Rigidbody _occupantBody;
     private int _occupants;
     private float _onPanSince = -1f;
     // Explicit vacancy flag: the old "-1 = vacant" timestamp sentinel misread a
@@ -94,6 +95,8 @@ public class WeighStation : MonoBehaviour
         _occupants++;
         if (item != null) _occupantItem = item;
         if (lp != null) _occupantVessel = lp;
+        var rb = other.attachedRigidbody;
+        if (rb != null) _occupantBody = rb;
         if (_occupants == 1) { _onPanSince = Time.time; _panTimed = true; }
     }
 
@@ -105,17 +108,21 @@ public class WeighStation : MonoBehaviour
         _occupants = Mathf.Max(0, _occupants - 1);
         if (item != null && _occupantItem == item) _occupantItem = null;
         if (lp != null && _occupantVessel == lp) _occupantVessel = null;
-        if (_occupants == 0) { _onPanSince = -1f; _panTimed = false; }
+        if (_occupants == 0) { _onPanSince = -1f; _panTimed = false; _occupantBody = null; }
     }
 
     private void Update()
     {
-        // Live display: auto-tared contents of whatever rests on the pan.
+        // Live display: the GROSS reading — whatever rests on the pan plus its
+        // contents. It updates for a bare beaker, an empty tube, the mortar and a
+        // watch glass, which auto-taring to the contents alone never did.
         if (_scale != null)
         {
-            float grams = _occupantVessel != null
-                ? WeighMath.MassOf(_occupantVessel.currentLiquidVolume + _occupantVessel.currentPptVolume)
-                : (_occupants > 0 ? WeighMath.MassOf(0f, 5f) : 0f);   // bare tool: a token few grams
+            float contents = _occupantVessel != null
+                ? _occupantVessel.currentLiquidVolume + _occupantVessel.currentPptVolume : 0f;
+            float grams = _occupants > 0
+                ? WeighMath.PanMass(contents, _occupantBody != null ? _occupantBody.mass : 0f)
+                : 0f;
             _scale.SetTargetMass(grams);
         }
 

@@ -194,9 +194,17 @@ public class LiquidPourer : MonoBehaviour
     /// target; anything else = the waste/puddle surface. Static + real-collider
     /// friendly so the self-test suite can exercise it in edit mode.
     public static LiquidPhysics ResolveTarget(RaycastHit[] hits, LiquidPhysics source, out RaycastHit firstHit)
+        => ResolveTarget(hits, source, out firstHit, out _);
+
+    /// Overload that also reports the funnel the stream passed THROUGH, so the
+    /// pour can show liquid leaving its stem (user 2026-07-27).
+    public static LiquidPhysics ResolveTarget(RaycastHit[] hits, LiquidPhysics source,
+                                              out RaycastHit firstHit, out LiquidPassthrough through)
     {
         firstHit = default;
+        through = null;
         float bestDist = float.MaxValue;
+        float throughDist = float.MaxValue;
         Collider bestCol = null;
         for (int i = 0; i < hits.Length; i++)
         {
@@ -209,7 +217,13 @@ public class LiquidPourer : MonoBehaviour
             // Funnels pass the stream through to whatever sits underneath —
             // treating their collider as the landing surface wasted the
             // hydrolysate as a puddle ON the funnel (2026-07-17).
-            if (col.GetComponentInParent<LiquidPassthrough>() != null) continue;
+            var pass = col.GetComponentInParent<LiquidPassthrough>();
+            if (pass != null)
+            {
+                // Nearest funnel wins: the stream enters the FIRST cone it meets.
+                if (hits[i].distance < throughDist) { throughDist = hits[i].distance; through = pass; }
+                continue;
+            }
             if (hits[i].distance < bestDist)
             {
                 bestDist = hits[i].distance;
@@ -258,13 +272,14 @@ public class LiquidPourer : MonoBehaviour
         // (distance-0 hits), which the thin ray can slip past entirely.
         var hits = Physics.RaycastAll(Mouth.position, Vector3.down, 2.0f, ~0, QueryTriggerInteraction.Ignore);
         RaycastHit hit;
-        LiquidPhysics target = ResolveTarget(hits, sourceContainer, out hit);
+        LiquidPhysics target = ResolveTarget(hits, sourceContainer, out hit, out var funnel);
         if (target == null)
         {
             var sweep = Physics.SphereCastAll(Mouth.position, assistRadius, Vector3.down, 2.0f, ~0,
                                               QueryTriggerInteraction.Ignore);
             RaycastHit sweepHit;
-            var sweepTarget = ResolveTarget(sweep, sourceContainer, out sweepHit);
+            var sweepTarget = ResolveTarget(sweep, sourceContainer, out sweepHit, out var sweepFunnel);
+            if (funnel == null) funnel = sweepFunnel;
             if (sweepTarget != null)
             {
                 target = sweepTarget;
@@ -287,9 +302,24 @@ public class LiquidPourer : MonoBehaviour
                 Mouth.position + Vector3.up * 0.06f,
                 target != null ? new Color(0.5f, 1f, 0.6f) : new Color(1f, 0.6f, 0.5f), 0.8f);
         }
+        // The stream vanished into a funnel: show it leaving the STEM, and end the
+        // visible arc at the cone's mouth so it reads as flowing through the hole
+        // below rather than straight past the glass (user 2026-07-27).
+        if (funnel != null)
+        {
+            funnel.Flow(sourceContainer.currentChemical != null
+                        ? sourceContainer.currentChemical.liquidColor : new Color(0.6f, 0.75f, 0.9f));
+            if (streamLine)
+            {
+                var cone = ExperimentSceneBuilder.SolidWorldBounds(funnel.gameObject);
+                DrawCurvedStream(Mouth.position, new Vector3(cone.center.x, cone.max.y, cone.center.z), smoothedFlow01);
+                streamLine.enabled = true;
+            }
+        }
+
         if (hit.collider != null)
         {
-            if (streamLine) DrawCurvedStream(Mouth.position, hit.point, smoothedFlow01);
+            if (streamLine && funnel == null) DrawCurvedStream(Mouth.position, hit.point, smoothedFlow01);
 
             if (target != null)
             {
@@ -320,7 +350,7 @@ public class LiquidPourer : MonoBehaviour
         else
         {
             // Poured into void
-            if (streamLine) DrawCurvedStream(Mouth.position, Mouth.position + Vector3.down * 0.5f, smoothedFlow01);
+            if (streamLine && funnel == null) DrawCurvedStream(Mouth.position, Mouth.position + Vector3.down * 0.5f, smoothedFlow01);
             sourceContainer.PourOut(amountToPour);
         }
     }

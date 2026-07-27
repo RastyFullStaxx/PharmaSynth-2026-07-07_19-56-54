@@ -18,7 +18,12 @@ param(
     [string]$PharmeeVoiceId = "pFZP5JQG7iQjIQuC4Bku",   # "Lily" — bright, crisp
     [string]$JimenezVoiceId = "onwK4e9ZLuTAKqWW03F9",   # "Daniel" — stern, older male
     [string]$ModelId = "eleven_flash_v2_5",              # 0.5 credits/char
-    [switch]$SampleOnly
+    [switch]$SampleOnly,
+    # Generate ONE speaker only. The manifest is already written Jimenez-first, so
+    # a plain run spends the budget on him before it reaches Pharmee; -Speaker is
+    # the belt-and-braces version (user 2026-07-27: "prioritize dr jimenez").
+    [ValidateSet("All", "Jimenez", "Pharmee")]
+    [string]$Speaker = "All"
 )
 
 $ErrorActionPreference = "Stop"
@@ -33,7 +38,10 @@ $log = @()
 $done = 0; $skipped = 0; $failed = 0
 $sampleCount = @{ Pharmee = 0; Jimenez = 0 }
 
+$quotaOut = $false
 foreach ($line in $manifest.lines) {
+    if ($quotaOut) { break }
+    if ($Speaker -ne "All" -and $line.speaker -ne $Speaker) { continue }
     if ($SampleOnly) {
         if ($sampleCount[$line.speaker] -ge 2) { continue }
         $sampleCount[$line.speaker]++
@@ -58,8 +66,18 @@ foreach ($line in $manifest.lines) {
     }
     catch {
         $failed++
-        $log += "$($line.speaker),$($line.id),$($line.chars),FAILED: $($_.Exception.Message)"
-        Write-Warning ("FAILED {0}: {1}" -f $line.id, $_.Exception.Message)
+        $msg = $_.Exception.Message
+        $log += "$($line.speaker),$($line.id),$($line.chars),FAILED: $msg"
+        Write-Warning ("FAILED {0}: {1}" -f $line.id, $msg)
+        # A partial/zero file from a failed call would be "already done" on the next
+        # run and never regenerate — delete it.
+        if (Test-Path $file) { Remove-Item $file -Force }
+        # Out of credits: stop cleanly rather than hammering the API for every
+        # remaining line (user 2026-07-27: "stop only when we ran out of tokens").
+        if ($msg -match "quota|401|402|429|credit") {
+            $quotaOut = $true
+            Write-Host "Credits exhausted (or rate-limited) — stopping here. Re-run later to resume; finished lines are skipped." -ForegroundColor Yellow
+        }
     }
 }
 

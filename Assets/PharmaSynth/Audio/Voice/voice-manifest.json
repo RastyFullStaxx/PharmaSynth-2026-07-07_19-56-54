@@ -1,10 +1,220 @@
 {
     "lines": [
         {
-            "id": "48d82c5747edd805",
+            "id": "2c1433a72dfaeaec",
+            "speaker": "Jimenez",
+            "text": "I am Doctor Jimenez. I will be observing this assessment. Proceed.",
+            "chars": 66
+        },
+        {
+            "id": "a261942223f1b1a4",
+            "speaker": "Jimenez",
+            "text": "This is a graded exercise. Work carefully. I am watching your technique.",
+            "chars": 72
+        },
+        {
+            "id": "8feb51b7f8a17364",
+            "speaker": "Jimenez",
+            "text": "Begin when you are ready. I evaluate method, safety, and results.",
+            "chars": 65
+        },
+        {
+            "id": "b2f7b687cff9b62c",
+            "speaker": "Jimenez",
+            "text": "Your procedure is on your wrist. My assessment is my own. Start when you wish.",
+            "chars": 78
+        },
+        {
+            "id": "153a46d33ffbe39c",
+            "speaker": "Jimenez",
+            "text": "I will not be assisting you today. Show me what you have learned.",
+            "chars": 65
+        },
+        {
+            "id": "66db675d8e5fcd49",
+            "speaker": "Jimenez",
+            "text": "Mind your procedure.",
+            "chars": 20
+        },
+        {
+            "id": "baaa61fac8bafab8",
+            "speaker": "Jimenez",
+            "text": "I am noting your technique.",
+            "chars": 27
+        },
+        {
+            "id": "c1d29edee704ff42",
+            "speaker": "Jimenez",
+            "text": "Observe your safety protocol.",
+            "chars": 29
+        },
+        {
+            "id": "10fb2af524877021",
+            "speaker": "Jimenez",
+            "text": "Efficiency counts toward your grade.",
+            "chars": 36
+        },
+        {
+            "id": "9f13b7e0aefe4759",
+            "speaker": "Jimenez",
+            "text": "Precision, please.",
+            "chars": 18
+        },
+        {
+            "id": "30f8087665ca6007",
+            "speaker": "Jimenez",
+            "text": "I expect proper use of the fume hood.",
+            "chars": 37
+        },
+        {
+            "id": "d9ab290dd5f2c4b1",
+            "speaker": "Jimenez",
+            "text": "Keep your workspace orderly.",
+            "chars": 28
+        },
+        {
+            "id": "8504d6c43d481476",
+            "speaker": "Jimenez",
+            "text": "Measure twice. Pour once.",
+            "chars": 25
+        },
+        {
+            "id": "22c5d89d4f18541b",
+            "speaker": "Jimenez",
+            "text": "A careful chemist is never a hurried one.",
+            "chars": 41
+        },
+        {
+            "id": "aa1005359d1876e0",
+            "speaker": "Jimenez",
+            "text": "Your protective equipment stays on until the bench is clear.",
+            "chars": 60
+        },
+        {
+            "id": "b6c725871771d643",
+            "speaker": "Jimenez",
+            "text": "Read the step before you reach for the glass.",
+            "chars": 45
+        },
+        {
+            "id": "78a65ef884888f11",
+            "speaker": "Jimenez",
+            "text": "Waste is a mark against you. Take only what the step requires.",
+            "chars": 62
+        },
+        {
+            "id": "faef8a684d094b1d",
+            "speaker": "Jimenez",
+            "text": "I have seen that shortcut before. It rarely ends well.",
+            "chars": 54
+        },
+        {
+            "id": "1d1c61be3e8b7e68",
+            "speaker": "Jimenez",
+            "text": "Steady hands, please. The glassware is not replaceable.",
+            "chars": 55
+        },
+        {
+            "id": "9714ac89eafc8eff",
+            "speaker": "Jimenez",
+            "text": "Well done reaching this stage. Before your grade is final, you will document your work.",
+            "chars": 87
+        },
+        {
+            "id": "662c006adf56d816",
+            "speaker": "Jimenez",
+            "text": "Answer the questions on the tablet. Your documentation counts toward your final grade. Begin.",
+            "chars": 93
+        },
+        {
+            "id": "a0dbe26beb72624a",
+            "speaker": "Jimenez",
+            "text": "Take your time. Accuracy over speed. The tablet is ready for you.",
+            "chars": 65
+        },
+        {
+            "id": "d33367831c08b9cb",
+            "speaker": "Jimenez",
+            "text": "The bench work is finished. The record is not. Complete your data sheet.",
+            "chars": 72
+        },
+        {
+            "id": "c56513dc8e786785",
+            "speaker": "Jimenez",
+            "text": "A result you cannot document is a result I cannot credit. Proceed to the tablet.",
+            "chars": 80
+        },
+        {
+            "id": "77dd282d726d49ee",
+            "speaker": "Jimenez",
+            "text": "A commendable performance. Your technique meets the standard.",
+            "chars": 61
+        },
+        {
+            "id": "9c875d80b7b149fc",
+            "speaker": "Jimenez",
+            "text": "Satisfactory work. Your method was sound and your record is complete.",
+            "chars": 69
+        },
+        {
+            "id": "e7cd8bc62d82ff8f",
+            "speaker": "Jimenez",
+            "text": "You have met the requirements of this assessment. Well executed.",
+            "chars": 64
+        },
+        {
+            "id": "3906e0ea6bc7e24e",
+            "speaker": "Jimenez",
+            "text": "Precise and orderly. I am marking this assessment as passed.",
+            "chars": 60
+        },
+        {
+            "id": "8e82e268ccaf09ad",
+            "speaker": "Jimenez",
+            "text": "That is how the procedure is meant to be run. My compliments.",
+            "chars": 61
+        },
+        {
+            "id": "161ea65c89acf8fb",
+            "speaker": "Jimenez",
+            "text": "Clean work, clean bench, clean record. You have passed.",
+            "chars": 55
+        },
+        {
+            "id": "13ad1309f64f8697",
+            "speaker": "Jimenez",
+            "text": "Not yet to standard. Review your procedure and attempt it again.",
+            "chars": 64
+        },
+        {
+            "id": "ec6a69cd2083533e",
+            "speaker": "Jimenez",
+            "text": "Your record shows gaps. Repeat the exercise with more care.",
+            "chars": 59
+        },
+        {
+            "id": "fadd47edf0c11a6d",
+            "speaker": "Jimenez",
+            "text": "This attempt falls short of the requirement. I expect better on your retry.",
+            "chars": 75
+        },
+        {
+            "id": "e8d12261f381c06a",
+            "speaker": "Jimenez",
+            "text": "The chemistry was not at fault here. The method was. Run it again.",
+            "chars": 66
+        },
+        {
+            "id": "ad3430e73757b743",
+            "speaker": "Jimenez",
+            "text": "I have seen you work more carefully than this. Try once more.",
+            "chars": 61
+        },
+        {
+            "id": "7084ac8853fac6c0",
             "speaker": "Pharmee",
-            "text": "Welcome back to the lab! I'm Pharmee — follow your tablet and I'll be right here.",
-            "chars": 81
+            "text": "Welcome back to the lab! I'm Pharmee — follow your wrist checklist and I'll be right here.",
+            "chars": 90
         },
         {
             "id": "87b4f553feaa21f6",
@@ -157,10 +367,10 @@
             "chars": 53
         },
         {
-            "id": "0fa1b85955bd28e4",
+            "id": "63f046a13df5024d",
             "speaker": "Pharmee",
-            "text": "Hmm, that isn't the reagent this step needs — check your tablet.",
-            "chars": 64
+            "text": "Hmm, that isn't the reagent this step needs — check your wrist checklist.",
+            "chars": 73
         },
         {
             "id": "f2106b9a3d2eeb2f",
@@ -253,16 +463,16 @@
             "chars": 114
         },
         {
-            "id": "f9ed92621fb0fd06",
+            "id": "4d751d0ba408326e",
             "speaker": "Pharmee",
-            "text": "Over there is the equipment cabinet — open it and pick the apparatus your tablet calls for.",
-            "chars": 91
+            "text": "Every instrument in this lab stays out on the bench, all the time — choosing the right one is part of the work. Reach for whatever your checklist calls for.",
+            "chars": 156
         },
         {
-            "id": "95edb505a8a2a15c",
+            "id": "4b396e93d9fa3898",
             "speaker": "Pharmee",
-            "text": "The reagent shelf holds your chemicals. Take only what each step needs — the bottles are limited!",
-            "chars": 97
+            "text": "The reagent cabinets along the wall hold your chemicals. Take only what each step needs — the bottles are limited!",
+            "chars": 114
         },
         {
             "id": "58f45c4a4492e204",
@@ -317,126 +527,6 @@
             "speaker": "Pharmee",
             "text": "That's a full experiment, tests, and documentation finished. Great job!",
             "chars": 71
-        },
-        {
-            "id": "1b125efaad89304d",
-            "speaker": "Jimenez",
-            "text": "I am Dr. Jimenez. I will be observing this assessment. Proceed.",
-            "chars": 63
-        },
-        {
-            "id": "e0fc2642d11f6fdc",
-            "speaker": "Jimenez",
-            "text": "This is a graded exercise. Work carefully — I am watching your technique.",
-            "chars": 73
-        },
-        {
-            "id": "3d8cfe1d11ae81ff",
-            "speaker": "Jimenez",
-            "text": "Begin when ready. I evaluate method, safety, and results.",
-            "chars": 57
-        },
-        {
-            "id": "66db675d8e5fcd49",
-            "speaker": "Jimenez",
-            "text": "Mind your procedure.",
-            "chars": 20
-        },
-        {
-            "id": "bb1327b15e566976",
-            "speaker": "Jimenez",
-            "text": "I'm noting your technique.",
-            "chars": 26
-        },
-        {
-            "id": "c1d29edee704ff42",
-            "speaker": "Jimenez",
-            "text": "Observe your safety protocol.",
-            "chars": 29
-        },
-        {
-            "id": "10fb2af524877021",
-            "speaker": "Jimenez",
-            "text": "Efficiency counts toward your grade.",
-            "chars": 36
-        },
-        {
-            "id": "9f13b7e0aefe4759",
-            "speaker": "Jimenez",
-            "text": "Precision, please.",
-            "chars": 18
-        },
-        {
-            "id": "30f8087665ca6007",
-            "speaker": "Jimenez",
-            "text": "I expect proper use of the fume hood.",
-            "chars": 37
-        },
-        {
-            "id": "d9ab290dd5f2c4b1",
-            "speaker": "Jimenez",
-            "text": "Keep your workspace orderly.",
-            "chars": 28
-        },
-        {
-            "id": "9714ac89eafc8eff",
-            "speaker": "Jimenez",
-            "text": "Well done reaching this stage. Before your grade is final, you will document your work.",
-            "chars": 87
-        },
-        {
-            "id": "662c006adf56d816",
-            "speaker": "Jimenez",
-            "text": "Answer the questions on the tablet. Your documentation counts toward your final grade. Begin.",
-            "chars": 93
-        },
-        {
-            "id": "f8e84f6ef8932c38",
-            "speaker": "Jimenez",
-            "text": "Take your time — accuracy over speed. The tablet is ready for you.",
-            "chars": 66
-        },
-        {
-            "id": "77dd282d726d49ee",
-            "speaker": "Jimenez",
-            "text": "A commendable performance. Your technique meets the standard.",
-            "chars": 61
-        },
-        {
-            "id": "9c875d80b7b149fc",
-            "speaker": "Jimenez",
-            "text": "Satisfactory work. Your method was sound and your record is complete.",
-            "chars": 69
-        },
-        {
-            "id": "e7cd8bc62d82ff8f",
-            "speaker": "Jimenez",
-            "text": "You have met the requirements of this assessment. Well executed.",
-            "chars": 64
-        },
-        {
-            "id": "3906e0ea6bc7e24e",
-            "speaker": "Jimenez",
-            "text": "Precise and orderly. I am marking this assessment as passed.",
-            "chars": 60
-        },
-        {
-            "id": "13ad1309f64f8697",
-            "speaker": "Jimenez",
-            "text": "Not yet to standard. Review your procedure and attempt it again.",
-            "chars": 64
-        },
-        {
-            "id": "ec6a69cd2083533e",
-            "speaker": "Jimenez",
-            "text": "Your record shows gaps. Repeat the exercise with more care.",
-            "chars": 59
-        },
-        {
-            "id": "fadd47edf0c11a6d",
-            "speaker": "Jimenez",
-            "text": "This attempt falls short of the requirement. I expect better on your retry.",
-            "chars": 75
         },
         {
             "id": "00f6abf3dc62695c",
@@ -535,16 +625,16 @@
             "chars": 194
         },
         {
-            "id": "6077a0c99e38a635",
+            "id": "ae0b96f65583e9d7",
             "speaker": "Pharmee",
-            "text": "The equipment cabinet — open it and pick the apparatus your procedures board calls for. Flick your wrist anytime to check the next step.",
-            "chars": 136
+            "text": "Every instrument stays out on this bench, every experiment — picking the right one is part of the work. Flick your wrist anytime to check the next step.",
+            "chars": 152
         },
         {
-            "id": "ab297a5604809415",
+            "id": "4938476a297586bd",
             "speaker": "Pharmee",
-            "text": "The reagent shelf holds your chemicals — take only what each step needs. And Settings up top lets you tune audio, text size and comfort whenever you like.",
-            "chars": 154
+            "text": "The reagent cabinets hold your chemicals — take only what each step needs. And Settings up top lets you tune audio, text size and comfort whenever you like.",
+            "chars": 156
         },
         {
             "id": "1794511ecb78d5fa",
@@ -625,18 +715,6 @@
             "chars": 34
         },
         {
-            "id": "b4c79bc687370d8b",
-            "speaker": "Pharmee",
-            "text": "Objective 1: Synthesize aspirin — acetylsalicylic acid — from salicylic acid.",
-            "chars": 77
-        },
-        {
-            "id": "74fbf2e5f54d51bd",
-            "speaker": "Pharmee",
-            "text": "Objective 1: Extract and purify caffeine.",
-            "chars": 41
-        },
-        {
             "id": "0d1999a17c58bd7b",
             "speaker": "Pharmee",
             "text": "Objective: Learn the basic methodology in preparation and synthesis of alcohol using the fermentation technique, with basic ingredients found in any household kitchen.",
@@ -713,18 +791,6 @@
             "speaker": "Pharmee",
             "text": "You've unlocked a new experiment: Final: Benzamide!",
             "chars": 51
-        },
-        {
-            "id": "f78779cfb526359e",
-            "speaker": "Pharmee",
-            "text": "You've unlocked a new experiment: Final: Aspirin!",
-            "chars": 49
-        },
-        {
-            "id": "e5e759f1564ccd2d",
-            "speaker": "Pharmee",
-            "text": "You've unlocked a new experiment: Final: Caffeine!",
-            "chars": 50
         },
         {
             "id": "066a0f11b843b9e4",
@@ -841,36 +907,6 @@
             "chars": 77
         },
         {
-            "id": "a639f3732a774a67",
-            "speaker": "Pharmee",
-            "text": "The water bath overheated and charred the batch — a classic aspirin mistake. Keep it low and slow.",
-            "chars": 98
-        },
-        {
-            "id": "ebb047f166027d94",
-            "speaker": "Pharmee",
-            "text": "Welcome back! Today: Aspirin.",
-            "chars": 29
-        },
-        {
-            "id": "d8dba3be28c317eb",
-            "speaker": "Pharmee",
-            "text": "Acetylate salicylic acid with acetic anhydride, then crystallise on ice and Buchner-filter.",
-            "chars": 91
-        },
-        {
-            "id": "41c1244e71961bac",
-            "speaker": "Pharmee",
-            "text": "Salicylic acid is weighed with the anhydride and acid catalyst. Warm the bath GENTLY.",
-            "chars": 85
-        },
-        {
-            "id": "3ad91de580686fa3",
-            "speaker": "Pharmee",
-            "text": "No purple with ferric chloride — the phenol is fully acetylated. Pure aspirin!",
-            "chars": 78
-        },
-        {
             "id": "ca31d3ad6b9d85b2",
             "speaker": "Pharmee",
             "text": "The flask warmed up or benzoyl chloride went in too fast. Keep it iced and gentle.",
@@ -929,36 +965,6 @@
             "speaker": "Pharmee",
             "text": "Bright white crystals, sharp melting point — beautifully pure benzoic acid.",
             "chars": 75
-        },
-        {
-            "id": "921b4356a55bf480",
-            "speaker": "Pharmee",
-            "text": "The layers were mixed up or the sublimation ran too hot. Separate carefully and heat gently.",
-            "chars": 92
-        },
-        {
-            "id": "dcd77049e4f4b5ad",
-            "speaker": "Pharmee",
-            "text": "Welcome back! Today: Caffeine from Tea.",
-            "chars": 39
-        },
-        {
-            "id": "cbe9e2621971b18b",
-            "speaker": "Pharmee",
-            "text": "Extract caffeine from tea with sodium carbonate and solvent, then purify by sublimation.",
-            "chars": 88
-        },
-        {
-            "id": "7310133eeee3b233",
-            "speaker": "Pharmee",
-            "text": "The tea is brewed with base. Handle the dichloromethane in the hood during extraction.",
-            "chars": 86
-        },
-        {
-            "id": "f3ae0d55875b3a50",
-            "speaker": "Pharmee",
-            "text": "Glistening white caffeine needles, sharp melting point, positive murexide test. Beautiful.",
-            "chars": 90
         },
         {
             "id": "eaa080397db1e6d5",

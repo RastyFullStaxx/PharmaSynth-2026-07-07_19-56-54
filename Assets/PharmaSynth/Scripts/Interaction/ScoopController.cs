@@ -146,10 +146,9 @@ public class ScoopController : MonoBehaviour
         // 2026-07-14) — otherwise use the far end of the tool's longest axis.
         var anchor = transform.Find("ScoopAnchor");
         if (anchor != null) return anchor.position;
-        var rs = GetComponentsInChildren<Renderer>();
-        if (rs.Length == 0) return transform.position;
-        var b = rs[0].bounds;
-        for (int i = 1; i < rs.Length; i++) b.Encapsulate(rs[i].bounds);
+        // SOLID meshes only — the carried ScoopHeap is a child, and including it
+        // walked the probe off the blade a little further with every dip.
+        var b = ExperimentSceneBuilder.SolidWorldBounds(gameObject);
         Vector3 axis = Matchstick.LongestLocalAxis(transform, b, out float halfLen);
         return b.center + axis * (halfLen * (bladeAtPositiveEnd ? 1f : -1f));
     }
@@ -189,9 +188,24 @@ public class ScoopController : MonoBehaviour
     {
         if (lp == null) return;
         var c = lp.currentChemical;
-        if (c == null || (c.state != PhysicalState.Solid && c.state != PhysicalState.Powder)) return;
-        float fill = Mathf.Clamp01(lp.currentLiquidVolume / 20f);
-        if (lp.currentLiquidVolume > 0.01f) fill = Mathf.Max(0.28f, fill);   // one scoop is still visible
-        ExperimentSceneBuilder.EnsurePowderVisual(lp.gameObject, c, fill);
+        // Scooped DRY: LiquidPhysics clears its contents, so hide the mound from
+        // what it last held instead of leaving the old heap sitting in an empty jar.
+        if (c == null)
+        {
+            if (lp.LastChemical != null) ExperimentSceneBuilder.EnsurePowderVisual(lp.gameObject, lp.LastChemical, 0f);
+            return;
+        }
+        if (c.state != PhysicalState.Solid && c.state != PhysicalState.Powder) return;
+        ExperimentSceneBuilder.EnsurePowderVisual(lp.gameObject, c, MoundFill(lp.currentLiquidVolume));
+    }
+
+    /// Pure (suite): how full the mound reads for `grams` in the vessel. Square-root
+    /// so the FIRST dips show the biggest visible jump — a linear grams/20 with a
+    /// 0.28 floor made scoops 1-5 look identical ("doesn't even grow when I scoop
+    /// more into it", user 2026-07-27). 0 g stays 0 so an emptied jar hides its heap.
+    public static float MoundFill(float grams, float fullAtG = 20f)
+    {
+        if (grams <= 0.001f) return 0f;
+        return Mathf.Max(0.15f, Mathf.Clamp01(Mathf.Sqrt(grams / Mathf.Max(0.01f, fullAtG))));
     }
 }

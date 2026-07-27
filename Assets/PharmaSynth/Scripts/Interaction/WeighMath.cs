@@ -9,6 +9,15 @@ public static class WeighMath
     public static float MassOf(float liquidMl, float solidG = 0f)
         => Mathf.Max(0f, liquidMl) + Mathf.Max(0f, solidG);
 
+    /// What the pan actually READS: the load's own mass PLUS its contents. A real
+    /// bench balance is not auto-taring, and reading 0.00 g for an empty beaker or
+    /// a bare mortar is exactly why the scale looked broken (user 2026-07-27:
+    /// "I am putting things like the beaker... the text dont update"). The graded
+    /// weigh condition still looks only at the CONTENTS (Satisfied, below).
+    /// rbMassKg &lt;= 0 (no rigidbody) falls back to a token 5 g so the head still moves.
+    public static float PanMass(float contentsMlOrG, float rbMassKg)
+        => Mathf.Max(0f, contentsMlOrG) + (rbMassKg > 0.0001f ? rbMassKg * 1000f : 5f);
+
     /// Close enough to the target measure (default ±10% with a 1 g floor).
     public static bool WithinTolerance(float massG, float targetG, float tolFrac = 0.1f)
         => Mathf.Abs(massG - targetG) <= Mathf.Max(1f, targetG * Mathf.Max(0f, tolFrac));

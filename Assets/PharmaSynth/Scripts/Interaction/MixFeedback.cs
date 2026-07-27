@@ -56,10 +56,9 @@ public class MixFeedback : MonoBehaviour
 
     private Vector3 PopupPos()
     {
-        var rends = GetComponentsInChildren<Renderer>();
-        if (rends.Length == 0) return transform.position + Vector3.up * 0.2f;
-        var b = rends[0].bounds;
-        for (int i = 1; i < rends.Length; i++) b.Encapsulate(rends[i].bounds);
+        // SOLID meshes only — a leftover world-space pour StreamLine would put the
+        // popup wherever the arc last landed instead of over the vessel.
+        var b = ExperimentSceneBuilder.SolidWorldBounds(gameObject);
         return new Vector3(b.center.x, b.max.y + 0.08f, b.center.z);
     }
 

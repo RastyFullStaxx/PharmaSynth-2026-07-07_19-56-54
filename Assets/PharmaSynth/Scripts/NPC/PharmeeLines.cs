@@ -78,22 +78,36 @@ public static class PharmeeLines
     };
 
     // ---- Dr. Jimenez (stern examiner, gives NO hints) ------------------------
+    // Voice direction (2026-07-27, for the ElevenLabs pass): measured, unhurried,
+    // lower register. Full sentences, no contractions, no exclamation marks — the
+    // authority comes from restraint. He never names a reagent, a step or a tool,
+    // because naming one would be a hint. Every line stands alone so the pools can
+    // be spoken in any order.
     public static readonly string[] ExamGreeting =
     {
-        "I am Dr. Jimenez. I will be observing this assessment. Proceed.",
-        "This is a graded exercise. Work carefully — I am watching your technique.",
-        "Begin when ready. I evaluate method, safety, and results.",
+        "I am Doctor Jimenez. I will be observing this assessment. Proceed.",
+        "This is a graded exercise. Work carefully. I am watching your technique.",
+        "Begin when you are ready. I evaluate method, safety, and results.",
+        "Your procedure is on your wrist. My assessment is my own. Start when you wish.",
+        "I will not be assisting you today. Show me what you have learned.",
     };
 
     public static readonly string[] ExamRemarks =
     {
         "Mind your procedure.",
-        "I'm noting your technique.",
+        "I am noting your technique.",
         "Observe your safety protocol.",
         "Efficiency counts toward your grade.",
         "Precision, please.",
         "I expect proper use of the fume hood.",
         "Keep your workspace orderly.",
+        "Measure twice. Pour once.",
+        "A careful chemist is never a hurried one.",
+        "Your protective equipment stays on until the bench is clear.",
+        "Read the step before you reach for the glass.",
+        "Waste is a mark against you. Take only what the step requires.",
+        "I have seen that shortcut before. It rarely ends well.",
+        "Steady hands, please. The glassware is not replaceable.",
     };
 
     // ---- Post-experiment review flow (user 2026-07-11: congrats → Jimenez quiz
@@ -110,7 +124,9 @@ public static class PharmeeLines
     {
         "Well done reaching this stage. Before your grade is final, you will document your work.",
         "Answer the questions on the tablet. Your documentation counts toward your final grade. Begin.",
-        "Take your time — accuracy over speed. The tablet is ready for you.",
+        "Take your time. Accuracy over speed. The tablet is ready for you.",
+        "The bench work is finished. The record is not. Complete your data sheet.",
+        "A result you cannot document is a result I cannot credit. Proceed to the tablet.",
     };
 
     public static readonly string[] JimenezPassRemarks =
@@ -119,6 +135,8 @@ public static class PharmeeLines
         "Satisfactory work. Your method was sound and your record is complete.",
         "You have met the requirements of this assessment. Well executed.",
         "Precise and orderly. I am marking this assessment as passed.",
+        "That is how the procedure is meant to be run. My compliments.",
+        "Clean work, clean bench, clean record. You have passed.",
     };
 
     public static readonly string[] JimenezFailRemarks =
@@ -126,6 +144,8 @@ public static class PharmeeLines
         "Not yet to standard. Review your procedure and attempt it again.",
         "Your record shows gaps. Repeat the exercise with more care.",
         "This attempt falls short of the requirement. I expect better on your retry.",
+        "The chemistry was not at fault here. The method was. Run it again.",
+        "I have seen you work more carefully than this. Try once more.",
     };
 
     public static readonly string[] DebriefCongrats =
@@ -154,7 +174,9 @@ public static class PharmeeLines
     }
 
     /// Whole-campaign completion celebration (W5.9): spoken at the entrance
-    /// instead of the unlock announcement once all 11 experiments are passed.
+    /// instead of the unlock announcement once every catalog experiment is passed
+    /// (the chain is 9 since Aspirin + Caffeine were dropped, 2026-07-16 — the copy
+    /// deliberately names no count so it survives a roster change).
     public static readonly string[] CampaignComplete =
     {
         "Congratulations, graduate! You've passed every experiment in the campaign — Tutorial, Prelims, Midterms and Finals. This lab is yours!",
@@ -170,8 +192,8 @@ public static class PharmeeLines
         "Welcome to the lab! Let's take a quick tour so you feel right at home before any graded work.",
         "Flick your wrist face-up and glance at it — your holographic procedures board lays out every step of the experiment, live.",
         "The bench in front of you is your main workspace: prepare reagents, run your reactions, and handle glassware here.",
-        "Over there is the equipment cabinet — open it and pick the apparatus your checklist calls for.",
-        "The reagent shelf holds your chemicals. Take only what each step needs — the bottles are limited!",
+        "Every instrument in this lab stays out on the bench, all the time — choosing the right one is part of the work. Reach for whatever your checklist calls for.",
+        "The reagent cabinets along the wall hold your chemicals. Take only what each step needs — the bottles are limited!",
         "Flick your wrist anytime for the live checklist, and watch the progress bar and timer up top to track how you're doing.",
         "The Settings button up top lets you tune audio, text size and comfort options whenever you like.",
         "Follow the glowing markers to each step. Poke me whenever you're ready to take on a graded campaign!",

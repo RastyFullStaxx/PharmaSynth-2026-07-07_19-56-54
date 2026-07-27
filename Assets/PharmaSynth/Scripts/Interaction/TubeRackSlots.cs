@@ -151,13 +151,13 @@ public class TubeRackSlots : MonoBehaviour
         // Stand it upright first, THEN measure: rotation changes where the mesh
         // bottom lands. Bottom-align by bounds, never the pivot (see BottomAlignDelta).
         tube.SetPositionAndRotation(_slots[slot].position, _slots[slot].rotation);
-        var rs = tube.GetComponentsInChildren<Renderer>();
-        if (rs.Length > 0)
-        {
-            var b = rs[0].bounds;
-            for (int i = 1; i < rs.Length; i++) b.Encapsulate(rs[i].bounds);
-            tube.position += Vector3.up * TubeSlotMath.BottomAlignDelta(_slots[slot].position.y, b.min.y);
-        }
+        // SOLID meshes only. A tube that has been poured from keeps a world-space
+        // StreamLine / PourStream child pointing at wherever the arc last landed,
+        // so encapsulating every renderer put b.min.y on the FLOOR and the
+        // bottom-align shoved the tube a metre into the air — the "racked tubes
+        // with reagents float above the rack" report (user 2026-07-27).
+        var b = ExperimentSceneBuilder.SolidWorldBounds(tube.gameObject);
+        tube.position += Vector3.up * TubeSlotMath.BottomAlignDelta(_slots[slot].position.y, b.min.y);
         if (rb != null)
         {
             rb.linearVelocity = Vector3.zero;
