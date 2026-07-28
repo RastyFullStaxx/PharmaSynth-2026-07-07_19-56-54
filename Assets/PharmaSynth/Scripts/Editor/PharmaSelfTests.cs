@@ -1233,6 +1233,26 @@ public static class PharmaSelfTests
         A("robot: silence stays silent", Near(RobotVoiceFx.RingSample(0f, 1f, 0.5f), 0f));
         A("robot: mix is clamped", Near(RobotVoiceFx.RingSample(0.5f, -1f, 5f), -0.5f));
 
+        // CLARITY (user 2026-07-27: "sounds a bit muffled"). The grit must come
+        // from bit-crushing, which brightens, not distortion, which dulls.
+        A("robot: no crush mix leaves the sample alone", Near(RobotVoiceFx.Crush(0.3f, 10f, 0f), 0.3f));
+        // 0.28 sits BETWEEN 5-bit steps (which are 0.0625 apart) so the quantiser
+        // has something to move. The first version of this probed 0.3123, which is
+        // 0.0002 off a step — the test failed while the code was perfectly correct.
+        A("robot: crushing quantises the sample", !Near(RobotVoiceFx.Crush(0.28f, 5f, 1f), 0.28f, 0.005f));
+        A("robot: a coarser depth quantises harder",
+            Mathf.Abs(RobotVoiceFx.Crush(0.28f, 4f, 1f) - 0.28f)
+            > Mathf.Abs(RobotVoiceFx.Crush(0.28f, 12f, 1f) - 0.28f));
+        A("robot: 16-bit crush is effectively transparent",
+            Near(RobotVoiceFx.Crush(0.28f, 16f, 1f), 0.28f, 0.001f));
+        A("robot: silence stays silent through the crush", Near(RobotVoiceFx.Crush(0f, 8f, 1f), 0f));
+        // The presence shelf must actually sit in the consonant band.
+        A("robot: presence alpha rises with frequency",
+            RobotVoiceFx.OnePoleAlpha(3000f, 48000) > RobotVoiceFx.OnePoleAlpha(500f, 48000));
+        A("robot: presence alpha stays a valid coefficient",
+            RobotVoiceFx.OnePoleAlpha(3000f, 48000) > 0f && RobotVoiceFx.OnePoleAlpha(3000f, 48000) < 1f);
+        A("robot: a bad sample rate cannot produce NaN", RobotVoiceFx.OnePoleAlpha(3000f, 0) > 0f);
+
         // ⛔ SCENE-vs-CODE DIALOGUE DRIFT (user 2026-07-27: "some dialogs of Pharmee
         // are still the robot beep"). The gate's lines are a [SerializeField], so
         // the SCENE holds the copy the player actually hears. Editing the code

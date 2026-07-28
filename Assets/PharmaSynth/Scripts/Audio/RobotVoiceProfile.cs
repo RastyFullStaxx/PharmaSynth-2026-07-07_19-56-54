@@ -23,6 +23,23 @@ public class RobotVoiceProfile : ScriptableObject
              "game and the guide explains procedure, so comprehension outranks character.")]
     [Range(0f, 1f)] public float ringMix = 0.38f;
 
+    [Header("Clarity (2026-07-27 — he was coming out muffled)")]
+    [Tooltip("Presence lift: how much of the HIGH band above presenceHz is added back. " +
+             "This is what keeps consonants crisp — a robot should sound like a machine, " +
+             "not like someone talking through a blanket. 0 = off, 0.6-1.2 = bright.")]
+    [Range(0f, 2f)] public float presenceBoost = 0.85f;
+
+    [Tooltip("Where the presence lift starts, in Hz. 2500-3500 is the consonant band.")]
+    [Range(500f, 8000f)] public float presenceHz = 3000f;
+
+    [Tooltip("Bit-crush depth. Quantisation grit reads as DIGITAL and, unlike distortion, " +
+             "it adds high-frequency content instead of dulling — so it makes him more " +
+             "machine AND more crisp at the same time. 16 = clean, 8-10 = characterful.")]
+    [Range(4f, 16f)] public float crushBits = 10f;
+
+    [Tooltip("How much crushed signal is blended in. 0 = off.")]
+    [Range(0f, 1f)] public float crushMix = 0.35f;
+
     [Tooltip("Off = hear the raw text-to-speech read, for A/B comparison.")]
     public bool active = true;
 }

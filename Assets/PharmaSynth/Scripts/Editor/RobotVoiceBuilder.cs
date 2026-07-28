@@ -62,25 +62,44 @@ public static class RobotVoiceBuilder
             var fx = Ensure<RobotVoiceFx>(src.gameObject);
             if (fx != null) fx.profile = profile;   // every channel reads the SAME asset
 
-            // Speaker-grille band. Keeping the top at 5 kHz preserves sibilance,
-            // which is what carries consonants — cut lower and he gets muddy.
-            var hp = Ensure<AudioHighPassFilter>(src.gameObject);
-            if (hp != null) hp.cutoffFrequency = 260f;
-            var lp = Ensure<AudioLowPassFilter>(src.gameObject);
-            if (lp != null) lp.cutoffFrequency = 5000f;
+            // Re-assert the clarity defaults on the shared asset. An existing
+            // profile from the muffled build would otherwise keep its old values
+            // and the "improve it" run would appear to do nothing.
+            if (profile != null && profile.presenceBoost <= 0.0001f && profile.crushMix <= 0.0001f)
+            {
+                profile.presenceBoost = 0.85f;
+                profile.presenceHz = 3000f;
+                profile.crushBits = 10f;
+                profile.crushMix = 0.35f;
+                EditorUtility.SetDirty(profile);
+            }
 
-            // Metallic doubling. Short delay + shallow depth: a long/deep chorus
-            // sounds like a choir, not a machine.
+            // ⚠ THE MUFFLING CULPRIT (user 2026-07-27: "sounds a bit muffled").
+            // The band was 260 Hz - 5 kHz. Consonants — s, t, f, th — live between
+            // 5 and 10 kHz, so a 5 kHz ceiling removes exactly the detail that makes
+            // speech sound crisp, and what is left reads as "talking through a
+            // blanket". Opened the top right up to 11 kHz (still suggests a speaker
+            // grille without eating sibilance) and dropped the bottom to 180 Hz so
+            // he has some body instead of sounding thin as well as dull.
+            var hp = Ensure<AudioHighPassFilter>(src.gameObject);
+            if (hp != null) hp.cutoffFrequency = 180f;
+            var lp = Ensure<AudioLowPassFilter>(src.gameObject);
+            if (lp != null) lp.cutoffFrequency = 11000f;
+
+            // Chorus SMEARS transients — it was the second thing dulling him. Kept
+            // only as a hint of metal, much drier and shorter than before.
             var ch = Ensure<AudioChorusFilter>(src.gameObject);
             if (ch != null)
             {
-                ch.delay = 20f; ch.rate = 0.9f; ch.depth = 0.16f;
-                ch.dryMix = 0.62f; ch.wetMix1 = 0.38f; ch.wetMix2 = 0.18f; ch.wetMix3 = 0f;
+                ch.delay = 12f; ch.rate = 1.2f; ch.depth = 0.10f;
+                ch.dryMix = 0.85f; ch.wetMix1 = 0.15f; ch.wetMix2 = 0.05f; ch.wetMix3 = 0f;
             }
 
-            // A whisper of grit. Past ~0.2 it turns to fuzz and eats consonants.
-            var dist = Ensure<AudioDistortionFilter>(src.gameObject);
-            if (dist != null) dist.distortionLevel = 0.12f;
+            // Distortion DULLS. Its job is now done by the bit-crush in RobotVoiceFx,
+            // which adds grit by BRIGHTENING instead. Remove any earlier one so a
+            // re-run actually undoes the muffled build rather than layering on it.
+            var stale = src.GetComponent<AudioDistortionFilter>();
+            if (stale != null) Object.DestroyImmediate(stale);
 
             // NEVER pitch-shift speech on an AudioSource: Unity's pitch also changes
             // SPEED, so it would make him gabble rather than sound synthetic.

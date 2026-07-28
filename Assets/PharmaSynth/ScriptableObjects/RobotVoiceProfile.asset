@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RobotVoiceProfile
   ringHz: 62
   ringMix: 0.38
+  presenceBoost: 0.85
+  presenceHz: 3000
+  crushBits: 10
+  crushMix: 0.35
   active: 1
