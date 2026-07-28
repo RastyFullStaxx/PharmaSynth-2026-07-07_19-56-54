@@ -1253,6 +1253,44 @@ public static class PharmaSelfTests
             RobotVoiceFx.OnePoleAlpha(3000f, 48000) > 0f && RobotVoiceFx.OnePoleAlpha(3000f, 48000) < 1f);
         A("robot: a bad sample rate cannot produce NaN", RobotVoiceFx.OnePoleAlpha(3000f, 0) > 0f);
 
+        // The character must come from DECIMATION + COMB, not from a low-frequency
+        // ring-mod drone — that layered a hum under an untouched human voice and
+        // read as "a woman speaking against an electric fan" (user 2026-07-27).
+        A("robot: decimation holds each sample for several frames", RobotVoiceFx.HoldFrames(3f) == 3);
+        A("robot: a factor of 1 means no decimation", RobotVoiceFx.HoldFrames(1f) == 1);
+        A("robot: decimation never stalls or runs away",
+            RobotVoiceFx.HoldFrames(0f) >= 1 && RobotVoiceFx.HoldFrames(999f) <= 16);
+        A("robot: a short comb rings in the low hundreds of Hz",
+            RobotVoiceFx.CombDelaySamples(3.2f, 48000, 1024) == 154);
+        A("robot: comb delay always fits its buffer",
+            RobotVoiceFx.CombDelaySamples(500f, 48000, 1024) < 1024
+            && RobotVoiceFx.CombDelaySamples(0f, 48000, 1024) >= 1);
+        A("robot: comb feedback can never self-oscillate",
+            RobotVoiceFx.SafeFeedback(1.5f) <= 0.9f && RobotVoiceFx.SafeFeedback(-1f) >= 0f);
+
+        // VOCODER (user 2026-07-28: "sounds so human"). Filtering recolours a voice;
+        // only replacing the EXCITATION removes the human pitch contour.
+        A("vocoder: bands span low to high", Near(RobotVocoder.BandCenter(0, 14, 150f, 6500f), 150f)
+            && Near(RobotVocoder.BandCenter(13, 14, 150f, 6500f), 6500f, 1f));
+        A("vocoder: bands are LOG spaced, not linear — speech energy is not uniform",
+            RobotVocoder.BandCenter(7, 14, 150f, 6500f) < (150f + 6500f) * 0.5f);
+        A("vocoder: bands ascend", RobotVocoder.BandCenter(3, 14, 150f, 6500f)
+            < RobotVocoder.BandCenter(4, 14, 150f, 6500f));
+        A("vocoder: a degenerate band count is safe", Near(RobotVocoder.BandCenter(0, 1, 150f, 6500f), 150f));
+        A("vocoder: envelope coefficient is a valid smoothing factor",
+            RobotVocoder.EnvelopeCoeff(12f, 48000) > 0f && RobotVocoder.EnvelopeCoeff(12f, 48000) < 1f);
+        A("vocoder: a faster release smooths less",
+            RobotVocoder.EnvelopeCoeff(4f, 48000) > RobotVocoder.EnvelopeCoeff(40f, 48000));
+        A("vocoder: a bad sample rate cannot produce NaN", RobotVocoder.EnvelopeCoeff(12f, 0) > 0f);
+        // The carrier must be harmonically DENSE — a sine would vocode to silence,
+        // because a filter bank can only shape harmonics that are already there.
+        A("vocoder: carrier sweeps the full range across its phase",
+            Near(RobotVoiceFx.Carrier(0f, 0f, 0f), -1f) && Near(RobotVoiceFx.Carrier(1f, 0f, 0f), 1f));
+        A("vocoder: noise blend restores unvoiced consonants",
+            Near(RobotVoiceFx.Carrier(0.5f, 1f, 1f), 1f));
+        A("vocoder: carrier noise mix is clamped",
+            Near(RobotVoiceFx.Carrier(0.5f, 1f, 5f), 1f));
+
         // ⛔ SCENE-vs-CODE DIALOGUE DRIFT (user 2026-07-27: "some dialogs of Pharmee
         // are still the robot beep"). The gate's lines are a [SerializeField], so
         // the SCENE holds the copy the player actually hears. Editing the code

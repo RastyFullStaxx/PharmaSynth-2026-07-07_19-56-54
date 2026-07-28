@@ -38,6 +38,9 @@ public static class RobotVoiceBuilder
     }
 
     /// Load-or-create the ONE shared tuning asset every Pharmee channel reads.
+    /// An EXISTING asset is returned untouched — its values are the user's tuning,
+    /// and this builder must never overwrite them. Only a brand-new asset gets the
+    /// class defaults (which are the chosen ring-mod character).
     static RobotVoiceProfile EnsureProfile()
     {
         var p = AssetDatabase.LoadAssetAtPath<RobotVoiceProfile>(ProfilePath);
@@ -54,6 +57,7 @@ public static class RobotVoiceBuilder
         if (Application.isPlaying) { Debug.LogWarning("[RobotVoice] exit Play mode first."); return; }
 
         var profile = EnsureProfile();
+        var notes = new System.Collections.Generic.List<string>();
         int done = 0;
         foreach (var src in PharmeeVoiceSources())
         {
@@ -62,17 +66,11 @@ public static class RobotVoiceBuilder
             var fx = Ensure<RobotVoiceFx>(src.gameObject);
             if (fx != null) fx.profile = profile;   // every channel reads the SAME asset
 
-            // Re-assert the clarity defaults on the shared asset. An existing
-            // profile from the muffled build would otherwise keep its old values
-            // and the "improve it" run would appear to do nothing.
-            if (profile != null && profile.presenceBoost <= 0.0001f && profile.crushMix <= 0.0001f)
-            {
-                profile.presenceBoost = 0.85f;
-                profile.presenceHz = 3000f;
-                profile.crushBits = 10f;
-                profile.crushMix = 0.35f;
-                EditorUtility.SetDirty(profile);
-            }
+            // ⛔ DO NOT re-tune an existing profile here. An earlier version of this
+            // builder "helpfully" overwrote the shared asset whenever its values did
+            // not match the latest defaults — which meant every run silently threw
+            // away the tuning the user had settled on. Defaults belong at CREATION
+            // only (see EnsureProfile); after that the asset is the user's.
 
             // ⚠ THE MUFFLING CULPRIT (user 2026-07-27: "sounds a bit muffled").
             // The band was 260 Hz - 5 kHz. Consonants — s, t, f, th — live between
@@ -117,9 +115,10 @@ public static class RobotVoiceBuilder
         }
         Save();
         Debug.Log($"<color=#4CD07D>[RobotVoice] robot colouring applied to {done} Pharmee voice source(s), all reading "
-                  + $"the ONE shared profile at {ProfilePath}. Select that asset and tune ringHz / ringMix — during Play "
-                  + "if you like, the values stick. It reaches every Pharmee line, generated or not. "
-                  + "Dr. Jimenez untouched.</color>");
+                  + $"the ONE shared profile at {ProfilePath}. Character = RING MODULATION (ringMix is the "
+                  + "'fan' strength). An existing profile is left ALONE — your tuning is never overwritten. "
+                  + "Tune it by ear during Play; the values stick. Dr. Jimenez untouched.</color>"
+                  + (notes.Count > 0 ? "\n  " + string.Join("\n  ", notes) : ""));
     }
 
     [MenuItem(Menu + "Remove Pharmee Robot Voice (A/B)")]

@@ -12,10 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f2c82a19e42123408cf40f5e9822dd8, type: 3}
   m_Name: RobotVoiceProfile
   m_EditorClassIdentifier: Assembly-CSharp::RobotVoiceProfile
+  ringMix: 0.27
   ringHz: 62
-  ringMix: 0.38
-  presenceBoost: 0.85
+  presenceBoost: 0.9
   presenceHz: 3000
   crushBits: 10
   crushMix: 0.35
+  vocoderMix: 0
+  carrierHz: 205
+  carrierNoise: 0.18
+  vocoderBands: 14
+  vocoderQ: 4.5
+  downsample: 1
+  combMix: 0
+  combMs: 3.2
+  combFeedback: 0.72
   active: 1

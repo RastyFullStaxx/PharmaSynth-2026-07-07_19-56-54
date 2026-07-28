@@ -128208,12 +128208,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RobotVoiceFx
   profile: {fileID: 11400000, guid: 5b827426fc16a1f4e9fc02b01d4d4f82, type: 2}
+  vocoderMix: 0.92
+  carrierHz: 205
+  carrierNoise: 0.18
+  vocoderBands: 14
+  vocoderQ: 4.5
+  downsample: 3
+  combMs: 3.2
+  combFeedback: 0.72
+  combMix: 0.5
+  crushBits: 10
+  crushMix: 0.35
   ringHz: 62
   ringMix: 0.38
   presenceBoost: 0.85
   presenceHz: 3000
-  crushBits: 10
-  crushMix: 0.35
   active: 1
 --- !u!166 &1688781740
 AudioChorusFilter:

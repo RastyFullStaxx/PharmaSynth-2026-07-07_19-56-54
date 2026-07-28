@@ -3,43 +3,73 @@ using UnityEngine;
 /// ONE shared tuning for Pharmee's robot voice (user 2026-07-27: "make it one
 /// reusable effect so once we tune it, it applies to other voices of Pharmee").
 ///
-/// Every RobotVoiceFx in the scene reads this asset, so there is a single place
-/// to dial the character and it reaches every line Pharmee will ever speak —
-/// the ones already generated and the ones not generated yet. Tuning never costs
-/// a credit and never requires regenerating audio.
+/// Every RobotVoiceFx reads this asset, so there is a single place to dial the
+/// character and it reaches every line she will ever speak — generated or not.
+/// Tuning never costs a credit and never requires regenerating audio.
 ///
 /// It is a ScriptableObject on purpose: values changed while PLAY is running are
 /// written to the asset and SURVIVE exiting play mode, unlike edits to a scene
-/// component, which are discarded. So you can tune it by ear in a live session
-/// and keep what you land on.
+/// component. So you can tune by ear in a live session and keep what you land on.
+///
+/// ⭐ THE CHOSEN CHARACTER (user 2026-07-28, after hearing all the alternatives):
+/// RING MODULATION at a LOW carrier, blended with dry signal. The user describes
+/// it as "speaking against an electric fan" and WANTS that — just not too strong.
+/// This was arrived at by elimination, so do not "improve" it away:
+///   • Heavier band-limiting  -> "muffled"           (rejected)
+///   • Decimation + comb      -> "sounds so human"   (rejected — it recolours
+///                                timbre but leaves the human pitch contour)
+///   • Full VOCODER           -> "so much worse"     (rejected outright, even
+///                                though it is the textbook robot technique)
+/// The vocoder, decimation and comb code all still exist and are simply switched
+/// off here. Turning them back on is a values change, not a code change — but ask
+/// first, because every one of them has already been auditioned and refused.
 [CreateAssetMenu(menuName = "PharmaSynth/Robot Voice Profile", fileName = "RobotVoiceProfile")]
 public class RobotVoiceProfile : ScriptableObject
 {
-    [Tooltip("Ring-mod carrier in Hz. 40-60 = heavy machine; 70-110 = lighter synthetic chirp.")]
-    [Range(20f, 200f)] public float ringHz = 62f;
+    [Header("⭐ THE CHARACTER — ring modulation")]
+    [Tooltip("How strong the 'fan' is. THIS is the knob for Pharmee's robot character. " +
+             "0.38 was judged too strong, 0.27 is the current setting. Lower = more human, " +
+             "higher = more machine drone.")]
+    [Range(0f, 1f)] public float ringMix = 0.27f;
 
-    [Tooltip("Blend of ring-modulated signal. 0 = untouched human read, 1 = full Dalek. " +
-             "0.3-0.45 reads as robot while staying intelligible — this is an educational " +
-             "game and the guide explains procedure, so comprehension outranks character.")]
-    [Range(0f, 1f)] public float ringMix = 0.38f;
+    [Tooltip("Carrier frequency in Hz — the PITCH of the fan. 62 is the chosen sound. " +
+             "Lower = slower, heavier motor; higher stops reading as a fan and starts " +
+             "sounding like a dissonant ring.")]
+    [Range(20f, 800f)] public float ringHz = 62f;
 
-    [Header("Clarity (2026-07-27 — he was coming out muffled)")]
-    [Tooltip("Presence lift: how much of the HIGH band above presenceHz is added back. " +
-             "This is what keeps consonants crisp — a robot should sound like a machine, " +
-             "not like someone talking through a blanket. 0 = off, 0.6-1.2 = bright.")]
-    [Range(0f, 2f)] public float presenceBoost = 0.85f;
+    [Header("Clarity — keeps her intelligible")]
+    [Tooltip("Lift of the band above presenceHz. This is what fixed the earlier 'muffled' " +
+             "complaint — consonants live at 3 kHz and up.")]
+    [Range(0f, 2f)] public float presenceBoost = 0.9f;
 
-    [Tooltip("Where the presence lift starts, in Hz. 2500-3500 is the consonant band.")]
     [Range(500f, 8000f)] public float presenceHz = 3000f;
 
-    [Tooltip("Bit-crush depth. Quantisation grit reads as DIGITAL and, unlike distortion, " +
-             "it adds high-frequency content instead of dulling — so it makes him more " +
-             "machine AND more crisp at the same time. 16 = clean, 8-10 = characterful.")]
+    [Tooltip("Bit depth. Digital grit that BRIGHTENS (unlike distortion, which dulls).")]
     [Range(4f, 16f)] public float crushBits = 10f;
 
-    [Tooltip("How much crushed signal is blended in. 0 = off.")]
     [Range(0f, 1f)] public float crushMix = 0.35f;
 
-    [Tooltip("Off = hear the raw text-to-speech read, for A/B comparison.")]
+    [Header("OFF — auditioned and rejected. Ask before enabling.")]
+    [Tooltip("Vocoder blend. Textbook robot technique — rebuilds the words on a synthetic " +
+             "monotone carrier. User verdict 2026-07-28: 'so much worse'. Left at 0.")]
+    [Range(0f, 1f)] public float vocoderMix = 0f;
+
+    [Range(60f, 400f)] public float carrierHz = 205f;
+    [Range(0f, 0.6f)] public float carrierNoise = 0.18f;
+    [Range(6f, 20f)] public float vocoderBands = 14f;
+    [Range(1f, 12f)] public float vocoderQ = 4.5f;
+
+    [Tooltip("Sample-and-hold decimation. Strong 'computer' cue, but the user found the " +
+             "result still read as human. 1 = off.")]
+    [Range(1f, 8f)] public float downsample = 1f;
+
+    [Tooltip("Comb resonance mix. Hollow/metallic. Rejected with decimation. 0 = off.")]
+    [Range(0f, 1f)] public float combMix = 0f;
+
+    [Range(0.5f, 10f)] public float combMs = 3.2f;
+    [Range(0f, 0.95f)] public float combFeedback = 0.72f;
+
+    [Header("A/B")]
+    [Tooltip("Off = hear the raw text-to-speech read, for comparison.")]
     public bool active = true;
 }
