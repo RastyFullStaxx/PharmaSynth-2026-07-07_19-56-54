@@ -40,12 +40,17 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-# Fall back to the PERSISTED user-scope value: a process started before the
-# variable was set inherits a stale environment block, which looks exactly like
-# "the key isn't set" (2026-07-27).
-if (-not $env:ELEVENLABS_API_KEY) {
-    $env:ELEVENLABS_API_KEY = [Environment]::GetEnvironmentVariable("ELEVENLABS_API_KEY", "User")
-}
+# The PERSISTED user-scope value WINS over whatever this process inherited.
+#
+# Windows hands each process a copy of the environment at launch, so a long-lived
+# parent (an editor, a tool host, an old terminal) keeps serving the key that was
+# current when IT started. After the user swapped accounts, that stale copy meant
+# every request still went to the exhausted key and returned 401 — while a direct
+# read of the user scope worked fine (2026-07-29). Whatever was last written with
+# SetEnvironmentVariable(...,"User") is the user's actual intent, so read it first.
+# A session-only $env: override still works when no user-scope value exists.
+$persisted = [Environment]::GetEnvironmentVariable("ELEVENLABS_API_KEY", "User")
+if ($persisted) { $env:ELEVENLABS_API_KEY = $persisted }
 # -WhatIf costs nothing and touches no API, so it must not demand a key.
 if (-not $env:ELEVENLABS_API_KEY -and -not $WhatIf) {
     throw "Set ELEVENLABS_API_KEY first (your ElevenLabs API key)."
