@@ -1,0 +1,15 @@
+{
+    "asset": "b4c6fcf28804b9a47938c0f4ce5686f2",
+    "fileName": "019facd9-9e10-7f54-8a29-e0a9f07ca33d.wav",
+    "prompt": "A digital laboratory balance settling on a reading. Two quick soft electronic beeps confirming a stable weight measurement. Clean, small, precise. No music, no voice.",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 0.699999988079071,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

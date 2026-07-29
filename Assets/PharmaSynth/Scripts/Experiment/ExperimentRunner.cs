@@ -137,7 +137,13 @@ public class ExperimentRunner : MonoBehaviour
         ProgressChanged?.Invoke(_graph.Progress01);
     }
 
-    private void OnGraphPhaseCompleted(TaskPhase p) => PhaseCompleted?.Invoke(p);
+    private void OnGraphPhaseCompleted(TaskPhase p)
+    {
+        // Finishing a whole PHASE was quieter than finishing one step inside it —
+        // `task-complete` had a clip and no caller at all (2026-07-29 audit).
+        AudioService.TryPlay("task-complete");
+        PhaseCompleted?.Invoke(p);
+    }
     private void OnMistakeRecorded(LabErrorType t, string m) => MistakeRecorded?.Invoke(t, m);
 
     /// Complete a task (from a trigger/UI/auto-check). An out-of-order attempt is

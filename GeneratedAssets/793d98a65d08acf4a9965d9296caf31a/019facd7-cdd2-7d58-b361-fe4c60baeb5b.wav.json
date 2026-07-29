@@ -1,0 +1,15 @@
+{
+    "asset": "793d98a65d08acf4a9965d9296caf31a",
+    "fileName": "019facd7-cdd2-7d58-b361-fe4c60baeb5b.wav",
+    "prompt": "A stone pestle grinding dry crystals against a ceramic mortar. Gritty circular scraping, stone on stone, coarse powder crushing. Dry close-mic, no reverb, no music.",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 1.5,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

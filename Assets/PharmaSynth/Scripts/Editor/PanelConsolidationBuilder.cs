@@ -211,6 +211,10 @@ public static class PanelConsolidationBuilder
         colors.highlightedColor = new Color(0.25f, 0.55f, 0.85f, 1f);
         colors.pressedColor = new Color(0.15f, 0.35f, 0.6f, 1f);
         btn.colors = colors;
+        // These two were the ONLY buttons in the game with no hover/click cue —
+        // this builder never added UiButtonSounds, unlike every other button
+        // factory (2026-07-29 audit).
+        if (go.GetComponent<UiButtonSounds>() == null) go.AddComponent<UiButtonSounds>();
 
         var labelT = go.transform.Find("Label");
         TextMeshProUGUI label;

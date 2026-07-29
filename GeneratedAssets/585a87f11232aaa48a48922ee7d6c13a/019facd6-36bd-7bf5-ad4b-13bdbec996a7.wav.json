@@ -1,0 +1,15 @@
+{
+    "asset": "585a87f11232aaa48a48922ee7d6c13a",
+    "fileName": "019facd6-36bd-7bf5-ad4b-13bdbec996a7.wav",
+    "prompt": "A short, soft release of a hand letting go of a small object. Subtle cloth-and-skin shift, a faint low thud as weight transfers away. Very short, dry, close-mic, no reverb, no music.",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 0.5,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

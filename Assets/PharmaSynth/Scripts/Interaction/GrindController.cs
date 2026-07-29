@@ -207,7 +207,7 @@ public class GrindController : MonoBehaviour
         {
             _nextDustAt = Time.time + 0.25f;
             EffectVfx.Smoke(BowlCenter(), new Color(0.82f, 0.72f, 0.55f, 0.45f));
-            if (Time.time >= _nextSfxAt) { _nextSfxAt = Time.time + 0.35f; AudioService.TryPlayAt("stir", transform.position, 0.6f); }
+            if (Time.time >= _nextSfxAt) { _nextSfxAt = Time.time + 0.35f; AudioService.TryPlayFirstAt(transform.position, 0.6f, "grind", "stir"); }
         }
 
         int pct = Mathf.RoundToInt(progress * 100f);

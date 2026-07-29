@@ -89,6 +89,11 @@ public class ExperimentHudController : MonoBehaviour
         _mistakes++;
         RefreshProgress();          // visible bar dips
         ShowToast(message);
+        // A mistake costs score and dips the bar, but said nothing — while the
+        // sibling task-completed path chimed. `ui-error` had a clip and NO caller
+        // anywhere in the project (2026-07-29 audit); in VR the toast is easy to
+        // miss if you are looking at your hands.
+        AudioService.TryPlay("ui-error");
     }
 
     private void RefreshProgress()

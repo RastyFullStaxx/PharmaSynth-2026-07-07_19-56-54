@@ -1,0 +1,15 @@
+{
+    "asset": "89d68e4b8098f344d9f9e4f8accedc62",
+    "fileName": "019facd7-5234-77f8-9e8b-ae9574b2f6dc.wav",
+    "prompt": "A soft futuristic holographic interface opening. Gentle rising synthetic shimmer with a light digital chime, clean and friendly, sci-fi UI. Very short, no music, no voice.",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 0.800000011920929,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

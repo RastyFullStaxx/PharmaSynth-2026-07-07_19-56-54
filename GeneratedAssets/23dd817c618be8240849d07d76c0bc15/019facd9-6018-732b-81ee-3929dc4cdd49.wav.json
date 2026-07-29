@@ -1,0 +1,15 @@
+{
+    "asset": "23dd817c618be8240849d07d76c0bc15",
+    "fileName": "019facd9-6018-732b-81ee-3929dc4cdd49.wav",
+    "prompt": "Dry granular powder pouring in a steady stream from a jar into a glass vessel. Continuous fine sandy hiss, seamless loop, no start or end transient. No music, no voice.",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 2.0,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

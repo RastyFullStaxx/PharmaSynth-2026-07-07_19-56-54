@@ -165,3 +165,51 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: 0947cd1a6a6eaae4e99d1eefc38f926b, type: 3}
     category: 0
     volume: 0.7
+  - key: release
+    clip: {fileID: 8300000, guid: 585a87f11232aaa48a48922ee7d6c13a, type: 3}
+    category: 0
+    volume: 0.45
+  - key: set-down-soft
+    clip: {fileID: 8300000, guid: 3ac95e00a9dd00b4f8da80c5fbc61f5f, type: 3}
+    category: 0
+    volume: 0.55
+  - key: glass-set
+    clip: {fileID: 8300000, guid: 7ff58487f54062c49a12fceb59b5b215, type: 3}
+    category: 0
+    volume: 0.6
+  - key: holo-open
+    clip: {fileID: 8300000, guid: 89d68e4b8098f344d9f9e4f8accedc62, type: 3}
+    category: 0
+    volume: 0.6
+  - key: holo-close
+    clip: {fileID: 8300000, guid: a34c36395bfe3994cb0e7133b8fc9437, type: 3}
+    category: 0
+    volume: 0.5
+  - key: grind
+    clip: {fileID: 8300000, guid: 793d98a65d08acf4a9965d9296caf31a, type: 3}
+    category: 0
+    volume: 0.7
+  - key: scrub
+    clip: {fileID: 8300000, guid: 85aad40a374d06c44b745c701b3c8918, type: 3}
+    category: 0
+    volume: 0.65
+  - key: drip
+    clip: {fileID: 8300000, guid: 9f06423bd68c3de4bac3a7377b1528ca, type: 3}
+    category: 0
+    volume: 0.55
+  - key: teleport-whoosh
+    clip: {fileID: 8300000, guid: 8ee8dd03f31034d4b9764b702eb70368, type: 3}
+    category: 0
+    volume: 0.6
+  - key: powder-pour-loop
+    clip: {fileID: 8300000, guid: 23dd817c618be8240849d07d76c0bc15, type: 3}
+    category: 0
+    volume: 0.5
+  - key: scale-settle
+    clip: {fileID: 8300000, guid: b4c6fcf28804b9a47938c0f4ce5686f2, type: 3}
+    category: 0
+    volume: 0.55
+  - key: flame-out
+    clip: {fileID: 8300000, guid: e4381da228a68c449be018a5b8d800a2, type: 3}
+    category: 0
+    volume: 0.55

@@ -50,7 +50,9 @@ public class TimerController : MonoBehaviour
 
     void OnTimerEnd()
     {
-        Debug.Log("Time is up!");
-        // Add game over or event logic here
+        // Was a Debug.Log and a comment — the countdown simply expired in silence
+        // (2026-07-29 audit). The clock is score-relevant (Time Management is a
+        // rubric criterion), so its expiry has to be audible.
+        AudioService.TryPlayFirst("alarm", "ui-error");
     }
 }

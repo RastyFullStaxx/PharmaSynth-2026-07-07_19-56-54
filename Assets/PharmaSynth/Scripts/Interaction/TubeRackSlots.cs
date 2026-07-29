@@ -166,6 +166,6 @@ public class TubeRackSlots : MonoBehaviour
         }
         _occupants[slot] = tube;
         _seatPos[slot] = tube.position;
-        AudioService.TryPlayFirstAt(tube.position, 0.4f, "glass-set", "scoop");
+        AudioService.TryPlayFirstAt(tube.position, 0.5f, "glass-set", "glass-clink");
     }
 }

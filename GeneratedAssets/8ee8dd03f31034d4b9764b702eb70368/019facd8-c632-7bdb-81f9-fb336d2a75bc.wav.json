@@ -1,0 +1,15 @@
+{
+    "asset": "8ee8dd03f31034d4b9764b702eb70368",
+    "fileName": "019facd8-c632-7bdb-81f9-fb336d2a75bc.wav",
+    "prompt": "A short clean sci-fi teleport whoosh. Quick airy swoosh with a soft synthetic tail, weightless and smooth, not aggressive. No music, no voice.",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 0.8999999761581421,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

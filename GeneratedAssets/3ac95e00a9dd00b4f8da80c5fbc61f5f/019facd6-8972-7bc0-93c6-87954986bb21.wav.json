@@ -1,0 +1,15 @@
+{
+    "asset": "3ac95e00a9dd00b4f8da80c5fbc61f5f",
+    "fileName": "019facd6-8972-7bc0-93c6-87954986bb21.wav",
+    "prompt": "A single piece of laboratory glassware being set down very gently on a wooden bench. Soft, muted contact, barely audible tap, no rattle, no ring. Dry close-mic recording, no reverb, no music.",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 0.6000000238418579,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

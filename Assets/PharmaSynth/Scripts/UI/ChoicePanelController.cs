@@ -43,7 +43,12 @@ public class ChoicePanelController : MonoBehaviour
             if (used && i < optionLabels.Length && optionLabels[i] != null)
                 optionLabels[i].text = options[i];
         }
+        bool wasHidden = root != null && !root.activeSelf;
         if (root != null) root.SetActive(true);
+        // The panel appeared in total silence — the quiz tablet got an arrival cue
+        // but this one never did, and it is the panel that gates the whole door
+        // flow. Only on a genuine show, so re-rendering options stays quiet.
+        if (wasHidden) AudioService.TryPlayFirst("ui-confirm", "ui-click");
     }
 
     /// Single-option message ("Continue" / "Back").

@@ -188,6 +188,24 @@ public class AudioService : MonoBehaviour
         }
     }
 
+    /// Non-positional twin of TryPlayFirstAt, for UI/2D cues (a HUD toast or a
+    /// panel has no world position). Same degrade-gracefully rule: name the ideal
+    /// key first, fall back to a stand-in, stay silent rather than play the wrong
+    /// thing. Added 2026-07-29 so newly-wired UI cues can name a not-yet-authored
+    /// sound without erroring.
+    public static void TryPlayFirst(params string[] keys)
+    {
+        if (Instance == null || keys == null) return;
+        var bank = Instance.bank;
+        foreach (var k in keys)
+        {
+            if (string.IsNullOrEmpty(k)) continue;
+            if (bank != null && !bank.HasClip(k)) continue;
+            Instance.Play(k);
+            return;
+        }
+    }
+
     public void StopAmbient() { if (ambientSource != null) ambientSource.Stop(); }
 
     // One-arg void wrappers for UI slider onValueChanged persistent listeners.

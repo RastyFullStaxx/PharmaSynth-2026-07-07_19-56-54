@@ -1,0 +1,15 @@
+{
+    "asset": "e4381da228a68c449be018a5b8d800a2",
+    "fileName": "019facd9-dbf3-785f-adbf-d6d8d9a9c1cd.wav",
+    "prompt": "A small gas flame being snuffed out. Brief soft whump as the flame extinguishes, faint puff of air, then silence. Dry close-mic, no reverb, no music.",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 0.6000000238418579,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

@@ -122,7 +122,8 @@ public class BrushController : MonoBehaviour
             {
                 _travel = 0f;
                 _target.Scrub();
-                AudioService.TryPlayAt("stir", transform.position, 0.35f);
+                // Bristle-on-glass, not the liquid swirl it used to borrow.
+                AudioService.TryPlayFirstAt(transform.position, 0.35f, "scrub", "stir");
             }
         }
         _lastPos = transform.position;

@@ -195,8 +195,11 @@ public class PostLabController : MonoBehaviour
     /// to leave the tablet floating). The attempt is NOT finished here.
     public void Close()
     {
+        bool wasOpen = _open;
         _open = false;
         if (root != null) root.SetActive(false);
+        // Opening the tablet had a cue; dismissing it had no counterpart.
+        if (wasOpen) AudioService.TryPlay("ui-click");
     }
 
     /// Every answer correct.
@@ -223,7 +226,14 @@ public class PostLabController : MonoBehaviour
     /// perfect it) or Complete Experiment (user 2026-07-15).
     public void Submit()
     {
-        if (!AllAnswered) { SetFeedback("Answer every question before submitting."); return; }
+        // A refused submit sounded EXACTLY like an accepted one (the button's own
+        // click), so the rejection was invisible unless you were reading the text.
+        if (!AllAnswered)
+        {
+            SetFeedback("Answer every question before submitting.");
+            AudioService.TryPlay("ui-error");
+            return;
+        }
         SetFeedback(ScoreLine(CorrectCount, _bank != null ? _bank.Count : 0));
         SubmitAndFinish();
     }

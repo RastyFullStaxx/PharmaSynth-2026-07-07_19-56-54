@@ -786,6 +786,9 @@ public class PharmeeGatekeeper : MonoBehaviour
     private void TeleportTo(Transform marker)
     {
         if (marker == null || playerRig == null) return;
+        // Being moved across the room with no sound is disorienting in VR — the
+        // fade covered it visually but nothing covered it audibly (2026-07-29).
+        AudioService.TryPlayFirst("teleport-whoosh", "socket-snap");
         var cam = cameraOverride != null ? cameraOverride : Camera.main;
         Vector3 camPos = cam != null ? cam.transform.position : playerRig.position;
         float camYaw = cam != null ? cam.transform.eulerAngles.y : playerRig.eulerAngles.y;

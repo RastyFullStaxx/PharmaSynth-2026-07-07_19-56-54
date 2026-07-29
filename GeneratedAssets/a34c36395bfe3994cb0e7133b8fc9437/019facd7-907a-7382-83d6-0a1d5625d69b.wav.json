@@ -1,0 +1,15 @@
+{
+    "asset": "a34c36395bfe3994cb0e7133b8fc9437",
+    "fileName": "019facd7-907a-7382-83d6-0a1d5625d69b.wav",
+    "prompt": "A soft futuristic holographic interface closing. Gentle descending synthetic shimmer powering down, clean sci-fi UI dismiss. Very short, no music, no voice.",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 0.699999988079071,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

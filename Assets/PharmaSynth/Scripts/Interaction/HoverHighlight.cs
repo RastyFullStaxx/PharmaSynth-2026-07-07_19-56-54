@@ -36,6 +36,7 @@ public class HoverHighlight : MonoBehaviour
             _grab.hoverEntered.RemoveListener(OnHoverEnter);
             _grab.hoverExited.RemoveListener(OnHoverExit);
             _grab.selectEntered.RemoveListener(OnSelect);
+            _grab.selectExited.RemoveListener(OnRelease);
         }
         _grab = grab;
         if (_grab != null)
@@ -43,6 +44,7 @@ public class HoverHighlight : MonoBehaviour
             _grab.hoverEntered.AddListener(OnHoverEnter);
             _grab.hoverExited.AddListener(OnHoverExit);
             _grab.selectEntered.AddListener(OnSelect);
+            _grab.selectExited.AddListener(OnRelease);
         }
         Cache();
     }
@@ -54,6 +56,7 @@ public class HoverHighlight : MonoBehaviour
             _grab.hoverEntered.RemoveListener(OnHoverEnter);
             _grab.hoverExited.RemoveListener(OnHoverExit);
             _grab.selectEntered.RemoveListener(OnSelect);
+            _grab.selectExited.RemoveListener(OnRelease);
         }
     }
 
@@ -96,6 +99,16 @@ public class HoverHighlight : MonoBehaviour
     {
         SetHighlight(false);                       // grabbed → drop the glow
         if (Application.isPlaying) AudioService.TryPlay("grab");   // universal grab/hold cue
+    }
+
+    /// The universal RELEASE cue. `selectExited` had no listener anywhere in the
+    /// project, so letting go of anything — every grab in the game has one — was
+    /// completely silent while picking it up chirped (2026-07-29 audit). Played
+    /// centrally here for the same reason "grab" is: exactly once, on everything
+    /// grabbable, without each verb having to remember.
+    private void OnRelease(SelectExitEventArgs _)
+    {
+        if (Application.isPlaying) AudioService.TryPlayFirst("release", "grab");
     }
 
     /// Pure scale rule (self-tested): grow by factor while lit, back to base otherwise.

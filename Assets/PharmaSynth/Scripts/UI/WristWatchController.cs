@@ -119,7 +119,15 @@ public class WristWatchController : MonoBehaviour
                 _scroller = holoPanel.GetComponentInChildren<HoloScroller>(true);
         }
         _lastShow = show;
-        if (holoPanel != null && holoPanel.activeSelf != show) holoPanel.SetActive(show);
+        // The wrist gesture is the most-used interaction in the game and it opened
+        // and closed in total silence (2026-07-29 audit) — nothing confirmed the
+        // flick registered, which in VR reads as an unresponsive control.
+        if (holoPanel != null && holoPanel.activeSelf != show)
+        {
+            holoPanel.SetActive(show);
+            if (Application.isPlaying)
+                AudioService.TryPlayFirst(show ? "holo-open" : "holo-close", "ui-click");
+        }
         if (show && runner != null)
         {
             if (holoTitle != null) holoTitle.text = runner.Module != null ? runner.Module.moduleTitle : "Procedures";

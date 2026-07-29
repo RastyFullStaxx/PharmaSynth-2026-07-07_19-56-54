@@ -1,0 +1,15 @@
+{
+    "asset": "85aad40a374d06c44b745c701b3c8918",
+    "fileName": "019facd8-3806-7873-a4a6-a65a9a56c3b2.wav",
+    "prompt": "A stiff bristle brush scrubbing the inside of a glass test tube. Rapid squeaky bristle-on-glass friction, wet soapy edge. Dry close-mic, no reverb, no music.",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 1.2000000476837159,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

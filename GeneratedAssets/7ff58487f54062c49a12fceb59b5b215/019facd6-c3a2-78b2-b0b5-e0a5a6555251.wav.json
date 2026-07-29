@@ -1,0 +1,15 @@
+{
+    "asset": "7ff58487f54062c49a12fceb59b5b215",
+    "fileName": "019facd6-c3a2-78b2-b0b5-e0a5a6555251.wav",
+    "prompt": "A glass test tube sliding into a wooden rack hole and seating at the bottom. Short glass-on-wood slide then a soft definite click as it settles. Dry, close, no reverb, no music.",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 0.699999988079071,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

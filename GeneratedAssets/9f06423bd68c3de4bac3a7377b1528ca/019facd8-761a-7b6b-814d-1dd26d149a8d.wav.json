@@ -1,0 +1,15 @@
+{
+    "asset": "9f06423bd68c3de4bac3a7377b1528ca",
+    "fileName": "019facd8-761a-7b6b-814d-1dd26d149a8d.wav",
+    "prompt": "Single slow liquid drops falling from a funnel stem into a glass beaker below. Isolated plink drips with a hollow glass resonance, spaced apart. Dry close-mic, no reverb, no music.",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 1.5,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}
