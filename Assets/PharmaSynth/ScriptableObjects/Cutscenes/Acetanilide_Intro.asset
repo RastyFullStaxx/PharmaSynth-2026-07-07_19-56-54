@@ -31,7 +31,6 @@ MonoBehaviour:
       confirm the amide.
     seconds: 4.5
     face: 0
-  - subtitle: Check your data sheet on the tablet, then follow the glowing markers.
-      I'll guide you.
+  - subtitle: Check your wrist panel for each step. I'll guide you.
     seconds: 4
     face: 1

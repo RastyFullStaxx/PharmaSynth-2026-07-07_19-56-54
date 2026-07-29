@@ -35,14 +35,14 @@ MonoBehaviour:
   tasks: []
   graphTasks:
   - taskId: measure-ammonia
-    label: "Place 5 mL concentrated ammonia in the flask"
+    label: "Place 5 mL concentrated ammonia in the reaction beaker"
     phase: 0
     prerequisites: []
     progressWeight: 1
     skill: 0
     rubricCategory: 0
     required: 1
-    hint: "5 ml of concentrated ammonia is the amide's nitrogen source \u2014 sharp vapour, recap fast.\n\u2192 Beaker 100 mL (the 50-ml flask): 5 squeezes of ammonia solution."
+    hint: "5 ml of concentrated ammonia is the amide's nitrogen source \u2014 sharp vapour, recap fast.\n\u2192 Beaker 100 mL - the reaction vessel: 5 squeezes of ammonia solution."
   - taskId: ice-bath
     label: "Cool the flask in an ice bath"
     phase: 0
@@ -116,7 +116,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Boiling with dilute HCl hydrolyses it the other way \u2014 benzoic acid crystals separate and blue litmus turns RED.\n\u2192 Test Tube 16: 5 dips of your benzamide + 2 squeezes of diluted hydrochloric acid, warm it at the bath, then touch a litmus strip."
+    hint: "Boiling with dilute HCl hydrolyses it the other way \u2014 benzoic acid crystals separate and blue litmus turns RED.\n\u2192 Test Tube 16: 5 spatula dips of your benzamide + 2 squeezes of diluted hydrochloric acid, warm it at the bath, then touch a litmus strip."
   - taskId: test-nitrous
     label: "Nitrous-acid test \u2014 brisk N2 effervescence"
     phase: 2
@@ -126,7 +126,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Nitrous acid forms IN the tube from dilute HCl + sodium nitrite and deaminates the amide \u2014 brisk nitrogen effervescence. (The manual's 'nitrate' is a typo: NITRITE.)\n\u2192 Test Tube 17: 5 dips of your benzamide + 2 squeezes of diluted HCl, then 3 squeezes of sodium nitrite \u2014 watch it fizz."
+    hint: "Nitrous acid forms IN the tube from dilute HCl + sodium nitrite and deaminates the amide \u2014 brisk nitrogen effervescence. (The manual's 'nitrate' is a typo: NITRITE.)\n\u2192 Test Tube 17: 5 spatula dips of your benzamide + 2 squeezes of diluted HCl, then 3 squeezes of sodium nitrite \u2014 watch it fizz."
   - taskId: record-yield
     label: "Record % yield and observations"
     phase: 3
@@ -139,7 +139,7 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 5
     required: 1
-    hint: "Crystal mass, % yield and all three test results go on the data sheet.\n\u2192 Review your observations, then answer on the tablet."
+    hint: "Crystal mass, % yield and all three test results go on the data sheet.\n\u2192 Review your observations, then answer on the data sheet."
     autoCompleteWhenOthersDone: 1
   assessmentMode: 0
   masteryThreshold: 0.9

@@ -68845,7 +68845,7 @@ ParticleSystem:
     enabled: 1
     x:
       serializedVersion: 2
-      minMaxState: 0
+      minMaxState: 3
       scalar: 0
       minScalar: 0
       maxCurve:
@@ -68951,7 +68951,7 @@ ParticleSystem:
         m_RotationOrder: 4
     z:
       serializedVersion: 2
-      minMaxState: 0
+      minMaxState: 3
       scalar: 0
       minScalar: 0
       maxCurve:
@@ -128197,8 +128197,8 @@ MonoBehaviour:
     radius: 2.4
   introBeat: "Welcome! Let's take a quick tour. The bench in the middle is your main
     workspace \u2014 walk around and I'll point out the rest as you reach them."
-  closerBeat: That's the tour! Follow the glowing markers during a run, and poke
-    me whenever you're ready to take on a graded campaign.
+  closerBeat: That's the tour! Check your wrist panel for each step during a run,
+    and poke me whenever you're ready to take on a graded campaign.
 --- !u!114 &1688781738
 MonoBehaviour:
   m_ObjectHideFlags: 0

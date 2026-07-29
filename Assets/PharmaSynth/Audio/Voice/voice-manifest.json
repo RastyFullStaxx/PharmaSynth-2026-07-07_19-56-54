@@ -141,17 +141,17 @@
             "group": "Review"
         },
         {
-            "id": "662c006adf56d816",
+            "id": "09460904cc420fcf",
             "speaker": "Jimenez",
-            "text": "Answer the questions on the tablet. Your documentation counts toward your final grade. Begin.",
-            "chars": 93,
+            "text": "Answer the questions on the data sheet. Your documentation counts toward your final grade. Begin.",
+            "chars": 97,
             "group": "Review"
         },
         {
-            "id": "a0dbe26beb72624a",
+            "id": "71f4eadf02d074dd",
             "speaker": "Jimenez",
-            "text": "Take your time. Accuracy over speed. The tablet is ready for you.",
-            "chars": 65,
+            "text": "Take your time. Accuracy over speed. The data sheet is ready for you.",
+            "chars": 69,
             "group": "Review"
         },
         {
@@ -162,10 +162,10 @@
             "group": "Review"
         },
         {
-            "id": "c56513dc8e786785",
+            "id": "e599197aaa2b3a7c",
             "speaker": "Jimenez",
-            "text": "A result you cannot document is a result I cannot credit. Proceed to the tablet.",
-            "chars": 80,
+            "text": "A result you cannot document is a result I cannot credit. Proceed to the data sheet.",
+            "chars": 84,
             "group": "Review"
         },
         {
@@ -771,10 +771,10 @@
             "group": "Tour"
         },
         {
-            "id": "b78daf0dac8d397c",
+            "id": "1ca646f2abbfadb0",
             "speaker": "Pharmee",
-            "text": "Follow the glowing markers to each step. Poke me whenever you're ready to take on a graded campaign!",
-            "chars": 100,
+            "text": "Check your wrist panel for each step. Poke me whenever you're ready to take on a graded campaign!",
+            "chars": 97,
             "group": "Tour"
         },
         {
@@ -960,10 +960,10 @@
             "group": "Tour"
         },
         {
-            "id": "1794511ecb78d5fa",
+            "id": "b3c358d4e0d21bd8",
             "speaker": "Pharmee",
-            "text": "That's the tour! Follow the glowing markers during a run, and poke me whenever you're ready to take on a graded campaign.",
-            "chars": 121,
+            "text": "That's the tour! Check your wrist panel for each step during a run, and poke me whenever you're ready to take on a graded campaign.",
+            "chars": 131,
             "group": "Tour"
         },
         {
@@ -1191,10 +1191,10 @@
             "group": "Cutscene"
         },
         {
-            "id": "281a1e5b8ca83c3f",
+            "id": "5319d9babf6be62e",
             "speaker": "Pharmee",
-            "text": "Check your data sheet on the tablet, then follow the glowing markers. I'll guide you.",
-            "chars": 85,
+            "text": "Check your wrist panel for each step. I'll guide you.",
+            "chars": 53,
             "group": "Cutscene"
         },
         {
@@ -1436,10 +1436,10 @@
             "group": "Cutscene"
         },
         {
-            "id": "8ac0e97c8b11dad4",
+            "id": "80300077bfee3b1c",
             "speaker": "Pharmee",
-            "text": "The must is pitched and sealed. Watch the airlock — steady bubbling means fermentation is alive.",
-            "chars": 96,
+            "text": "The must is pitched and roused. Watch for steady bubbling — that means fermentation is alive.",
+            "chars": 93,
             "group": "Cutscene"
         },
         {
@@ -1478,10 +1478,10 @@
             "group": "Cutscene"
         },
         {
-            "id": "df364420cabf1ce4",
+            "id": "7472f086ca8e620d",
             "speaker": "Pharmee",
-            "text": "Follow the steps on your tablet. I'll be right here if you need me!",
-            "chars": 67,
+            "text": "Follow the steps on your wrist panel. I'll be right here if you need me!",
+            "chars": 72,
             "group": "Cutscene"
         },
         {
@@ -1534,10 +1534,10 @@
             "group": "Cutscene"
         },
         {
-            "id": "21accf611a82c903",
+            "id": "588f650fdd0b9209",
             "speaker": "Pharmee",
-            "text": "Your must is sealed with the airlock. Now we wait — seven days and seven nights.",
-            "chars": 80,
+            "text": "Your must is pitched and roused. Now we wait — seven days and seven nights.",
+            "chars": 75,
             "group": "Cutscene"
         },
         {
@@ -1548,10 +1548,10 @@
             "group": "Cutscene"
         },
         {
-            "id": "de53061b0a89099d",
+            "id": "8aceb2020aa8016c",
             "speaker": "Pharmee",
-            "text": "Beaker 100 mL (the 50-ml flask): 5 squeezes of ammonia solution.",
-            "chars": 64,
+            "text": "Beaker 100 mL - the reaction vessel: 5 squeezes of ammonia solution.",
+            "chars": 68,
             "group": "Steps"
         },
         {
@@ -1597,31 +1597,31 @@
             "group": "Steps"
         },
         {
-            "id": "c8d171d8c119686f",
+            "id": "2c97d5ee1f615405",
             "speaker": "Pharmee",
-            "text": "Test Tube 16: 5 dips of your benzamide + 2 squeezes of diluted hydrochloric acid, warm it at the bath, then touch a litmus strip.",
-            "chars": 129,
+            "text": "Test Tube 16: 5 spatula dips of your benzamide + 2 squeezes of diluted hydrochloric acid, warm it at the bath, then touch a litmus strip.",
+            "chars": 137,
             "group": "Steps"
         },
         {
-            "id": "422659ec79212837",
+            "id": "8aa83b1039f5d041",
             "speaker": "Pharmee",
-            "text": "Test Tube 17: 5 dips of your benzamide + 2 squeezes of diluted HCl, then 3 squeezes of sodium nitrite — watch it fizz.",
-            "chars": 118,
+            "text": "Test Tube 17: 5 spatula dips of your benzamide + 2 squeezes of diluted HCl, then 3 squeezes of sodium nitrite — watch it fizz.",
+            "chars": 126,
             "group": "Steps"
         },
         {
-            "id": "9a9fa37df84374ea",
+            "id": "25ffc5887327f01f",
             "speaker": "Pharmee",
-            "text": "Review your observations, then answer on the tablet.",
-            "chars": 52,
+            "text": "Review your observations, then answer on the data sheet.",
+            "chars": 56,
             "group": "Steps"
         },
         {
-            "id": "9772d86f658f2cd1",
+            "id": "fc6223fce68e3b1d",
             "speaker": "Pharmee",
-            "text": "Fermentation Jar: tilt-pour Mixed Fruit Juice to the 40 ml band, 3 scoopula dips of brown sugar, 1 dip of ammonium phosphate, then pitch 2 dips of yeast - watch the tag turn to 'Wine'.",
-            "chars": 184,
+            "text": "Fermentation Jar: tilt-pour Mixed Fruit Juice to the 40 ml band, 3 scoopula dips of brown sugar, 1 scoopula dip of ammonium phosphate, then pitch 2 scoopula dips of yeast - watch the tag turn to 'Wine'.",
+            "chars": 202,
             "group": "Steps"
         },
         {
@@ -1660,10 +1660,10 @@
             "group": "Steps"
         },
         {
-            "id": "011e6f4e6046fed4",
+            "id": "b31c5b470bf74f01",
             "speaker": "Pharmee",
-            "text": "Review your wine, then answer on the tablet.",
-            "chars": 44,
+            "text": "Review your wine, then answer on the data sheet.",
+            "chars": 48,
             "group": "Steps"
         },
         {
@@ -1716,17 +1716,17 @@
             "group": "Steps"
         },
         {
-            "id": "2be8f276c9420205",
+            "id": "5e8c2ba60051bcfc",
             "speaker": "Pharmee",
-            "text": "Review the results, then answer on the tablet.",
-            "chars": 46,
+            "text": "Review the results, then answer on the data sheet.",
+            "chars": 50,
             "group": "Steps"
         },
         {
-            "id": "31f80843ef004382",
+            "id": "f3da0a7719932cd2",
             "speaker": "Pharmee",
-            "text": "Set the HARD-GLASS tube on the balance, then scoop 4 scoopula dips of EACH acetate into it (watch the grams).",
-            "chars": 109,
+            "text": "Set the HARD-GLASS tube on the balance, then scoop each acetate in until the balance passes 7 g - about 4 scoopula dips of each.",
+            "chars": 128,
             "group": "Steps"
         },
         {
@@ -1940,10 +1940,10 @@
             "group": "Steps"
         },
         {
-            "id": "327d77050e38e79b",
+            "id": "129b5764a985ccaa",
             "speaker": "Pharmee",
-            "text": "Same build on the second rack, acid instead of base: 2 squeezes of KMnO4, 2 of Sulfuric Acid, then 5 of each alcohol into tubes 1-3. Leave tube 4 alone again. Then compare both racks side by side.",
-            "chars": 196,
+            "text": "Same build on the second rack, acid instead of base: 2 squeezes of KMnO4 and 2 of Sulfuric Acid into ALL FOUR tubes, then 5 of each alcohol into tubes 1-3 only - tube 4 stays alcohol-free as the control. Then compare both racks side by side.",
+            "chars": 241,
             "group": "Steps"
         },
         {
@@ -1996,66 +1996,66 @@
             "group": "Steps"
         },
         {
-            "id": "a340146916eb6d07",
+            "id": "eb5afccb7c057ede",
             "speaker": "Pharmee",
-            "text": "The results board filled itself in as you worked - read it back, then answer on the tablet.",
-            "chars": 91,
+            "text": "The results board filled itself in as you worked - read it back, then answer on the data sheet.",
+            "chars": 95,
             "group": "Steps"
         },
         {
-            "id": "dc63db35e47019d9",
+            "id": "144b0c8249e3de70",
             "speaker": "Pharmee",
-            "text": "Scoopula the sugar & yeast into the flask, add water, then the ammonium phosphate.",
-            "chars": 82,
+            "text": "Florence Flask: 6 scoopula dips of brown sugar, 2 scoopula dips of yeast, 1 scoopula dip of ammonium phosphate, then tilt-pour distilled water to the 20 ml band.",
+            "chars": 161,
             "group": "Steps"
         },
         {
-            "id": "223dc761df8150e9",
+            "id": "71f15828160aa99a",
             "speaker": "Pharmee",
-            "text": "Pour limewater into a test tube, lead the delivery tube from the flask into it, watch it turn milky.",
-            "chars": 100,
+            "text": "Pour 10 ml of limewater into Test Tube 5, then lead the delivery tube from the flask into it and watch it turn milky.",
+            "chars": 117,
             "group": "Steps"
         },
         {
-            "id": "460d69349cb6e4b8",
+            "id": "8e15cbdfce69be6d",
             "speaker": "Pharmee",
-            "text": "Add 10% sodium hydroxide to the flask until litmus reads faintly blue.",
-            "chars": 70,
+            "text": "Squeeze 2 dropper-loads of 10% sodium hydroxide into the Florence Flask to bring the wash slightly alkaline.",
+            "chars": 108,
             "group": "Steps"
         },
         {
-            "id": "80c42eaf72808169",
+            "id": "8462c7530211aec8",
             "speaker": "Pharmee",
-            "text": "Pour the wash into the distilling flask and warm it in the water bath.",
-            "chars": 70,
+            "text": "Decant 20 ml of the fermented wash into the Distilling Flask, then warm it at the water bath until it reads 70 C.",
+            "chars": 113,
             "group": "Steps"
         },
         {
-            "id": "90ca10790bf5166d",
+            "id": "fab6408efb39e49b",
             "speaker": "Pharmee",
-            "text": "Put a few drops on the watch glass and touch a lit match to it.",
-            "chars": 63,
+            "text": "Pour 3 ml of your distillate onto the Watch Glass, then strike a match and hold the flame to it.",
+            "chars": 96,
             "group": "Steps"
         },
         {
-            "id": "bce79305d8221b31",
+            "id": "f655dd3167411b05",
             "speaker": "Pharmee",
-            "text": "Add KI then hypochlorite to a little distillate and warm it to 60°C in the water bath.",
-            "chars": 86,
+            "text": "Test Tube 6: 1 squeeze of your distillate, 10 squeezes of potassium iodide 10%, 5 squeezes of sodium hypochlorite - then warm it at the water bath to 60 C.",
+            "chars": 155,
             "group": "Steps"
         },
         {
-            "id": "48352ab2d9b9a91c",
+            "id": "0e806f8f80c8ca58",
             "speaker": "Pharmee",
-            "text": "Combine them in a tube and warm gently; note the odour.",
-            "chars": 55,
+            "text": "Test Tube 7: 10 squeezes of your distillate, 4 squeezes of diluted acetic acid, 1 squeeze of sulfuric acid - then warm it at the water bath.",
+            "chars": 140,
             "group": "Steps"
         },
         {
-            "id": "2d04a8fc8ff1f81e",
+            "id": "543b627b8543627b",
             "speaker": "Pharmee",
-            "text": "Read the results back, then answer on the tablet.",
-            "chars": 49,
+            "text": "Read the results back, then answer on the data sheet.",
+            "chars": 53,
             "group": "Steps"
         },
         {

@@ -22,14 +22,14 @@ MonoBehaviour:
     - Water only
     correctIndex: 1
     explanation: Fermentation releases CO2.
-  - prompt: 'The airlock on the vessel allows:'
+  - prompt: 'Racking the wine means:'
     options:
-    - Air in freely
-    - Nothing to move
-    - CO2 out but no air in
-    - Sugar in
-    correctIndex: 2
-    explanation: CO2 out while keeping air/contaminants from entering.
+    - Adding more sugar to restart fermentation
+    - Decanting the clear wine off the sediment (lees)
+    - Shaking the jar to mix the yeast back in
+    - Boiling the wine to concentrate it
+    correctIndex: 1
+    explanation: Racking decants the clear wine off the lees without disturbing the sediment.
   - prompt: 'Evolved gas turning limewater milky confirms:'
     options:
     - Carbon dioxide is being produced

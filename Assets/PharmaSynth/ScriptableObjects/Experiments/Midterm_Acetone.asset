@@ -45,7 +45,7 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 0
     required: 1
-    hint: "7 g calcium acetate + 7 g sodium acetate decompose on strong heat into acetone.\n\u2192 Set the HARD-GLASS tube on the balance, then scoop 4 scoopula dips of EACH acetate into it (watch the grams)."
+    hint: "7 g calcium acetate + 7 g sodium acetate decompose on strong heat into acetone.\n\u2192 Set the HARD-GLASS tube on the balance, then scoop each acetate in until the balance passes 7 g - about 4 scoopula dips of each."
   - taskId: heat-glow
     label: "Heat the tube over the open flame until the acetates glow"
     phase: 1
@@ -118,7 +118,7 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 5
     required: 1
-    hint: "Distillate mass, % yield and all four test results go on the data sheet.\n\u2192 Review the results, then answer on the tablet."
+    hint: "Distillate mass, % yield and all four test results go on the data sheet.\n\u2192 Review the results, then answer on the data sheet."
     autoCompleteWhenOthersDone: 1
   assessmentMode: 0
   masteryThreshold: 0.9

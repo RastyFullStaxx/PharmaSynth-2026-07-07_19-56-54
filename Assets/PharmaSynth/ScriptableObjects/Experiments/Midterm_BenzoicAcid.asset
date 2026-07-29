@@ -130,7 +130,7 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 5
     required: 1
-    hint: "Crystal mass, % yield and each test result go on the data sheet.\n\u2192 Review the results, then answer on the tablet."
+    hint: "Crystal mass, % yield and each test result go on the data sheet.\n\u2192 Review the results, then answer on the data sheet."
     autoCompleteWhenOthersDone: 1
   assessmentMode: 0
   masteryThreshold: 0.9

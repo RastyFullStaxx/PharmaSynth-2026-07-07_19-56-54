@@ -24,7 +24,7 @@ public class LabTourGuide : MonoBehaviour
     [SerializeField, TextArea] private string introBeat =
         "Welcome! Let's take a quick tour. The bench in the middle is your main workspace — walk around and I'll point out the rest as you reach them.";
     [SerializeField, TextArea] private string closerBeat =
-        "That's the tour! Follow the glowing markers during a run, and poke me whenever you're ready to take on a graded campaign.";
+        "That's the tour! Check your wrist panel for each step during a run, and poke me whenever you're ready to take on a graded campaign.";
 
     private Action<string> _say;
     private Transform[] _resolved;
@@ -126,7 +126,7 @@ public class LabTourGuide : MonoBehaviour
         "This bench is your main workspace. Flick your wrist face-up and glance at it — your holographic procedures board appears with every step, live. The progress bar and timer up top track your pace.",
         "Every instrument stays out on this bench, every experiment — picking the right one is part of the work. Flick your wrist anytime to check the next step.",
         "The reagent cabinets hold your chemicals — take only what each step needs. And Settings up top lets you tune audio, text size and comfort whenever you like.",
-        "That's the tour! Follow the glowing markers during a run, and poke me whenever you're ready to take on a graded campaign.",
+        "That's the tour! Check your wrist panel for each step during a run, and poke me whenever you're ready to take on a graded campaign.",
     };
 
     /// Default stops — the storyboard's tour areas, each folding in a UI tip so every

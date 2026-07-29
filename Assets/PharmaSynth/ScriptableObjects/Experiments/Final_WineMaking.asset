@@ -38,7 +38,7 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 0
     required: 1
-    hint: "The manual: ferment at least 250 mL of any fruit juice EXCEPT grapes. Sugar feeds the yeast; a pinch of nutrient keeps it healthy.\n\u2192 Fermentation Jar: tilt-pour Mixed Fruit Juice to the 40 ml band, 3 scoopula dips of brown sugar, 1 dip of ammonium phosphate, then pitch 2 dips of yeast - watch the tag turn to 'Wine'."
+    hint: "The manual: ferment at least 250 mL of any fruit juice EXCEPT grapes. Sugar feeds the yeast; a pinch of nutrient keeps it healthy.\n\u2192 Fermentation Jar: tilt-pour Mixed Fruit Juice to the 40 ml band, 3 scoopula dips of brown sugar, 1 scoopula dip of ammonium phosphate, then pitch 2 scoopula dips of yeast - watch the tag turn to 'Wine'."
   - taskId: stir-must
     label: "Swirl the must to rouse the yeast"
     phase: 0
@@ -58,7 +58,7 @@ MonoBehaviour:
     skill: 4
     rubricCategory: 0
     required: 1
-    hint: "Fermenting wine gives off CO2 (that is what an airlock vents); leading that gas through limewater proves it is alive - the limewater turns milky (CaCO3).\n\u2192 Pour 10 ml of limewater into Test Tube 5 and hold it at the jar's mouth until it clouds - then the week-long ferment passes."
+    hint: "Fermenting wine gives off CO2; leading that gas through limewater proves it is alive - the limewater turns milky (CaCO3).\n\u2192 Pour 10 ml of limewater into Test Tube 5 and hold it at the jar's mouth until it clouds - then the week-long ferment passes."
     longProcess: 1
     longProcessMessage: "Seven days and seven nights later - fermentation is complete and the wine has cleared over its lees."
   - taskId: rack
@@ -101,7 +101,7 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 5
     required: 1
-    hint: "Design the bottle label and log the final volume (250-500 mL) with your appearance and tasting notes.\n\u2192 Review your wine, then answer on the tablet."
+    hint: "Design the bottle label and log the final volume (250-500 mL) with your appearance and tasting notes.\n\u2192 Review your wine, then answer on the data sheet."
     autoCompleteWhenOthersDone: 1
   assessmentMode: 0
   masteryThreshold: 0.9

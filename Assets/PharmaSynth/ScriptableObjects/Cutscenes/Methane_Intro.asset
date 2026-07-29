@@ -33,6 +33,6 @@ MonoBehaviour:
       it burns with a clean blue flame.'
     seconds: 4.5
     face: 0
-  - subtitle: Follow the steps on your tablet. I'll be right here if you need me!
+  - subtitle: Follow the steps on your wrist panel. I'll be right here if you need me!
     seconds: 3.5
     face: 1

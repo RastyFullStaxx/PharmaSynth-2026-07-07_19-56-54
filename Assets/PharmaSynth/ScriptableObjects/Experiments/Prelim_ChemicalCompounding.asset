@@ -120,11 +120,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Repeat using 2 ml of 0.1% Potassium Permanganate and 2 drops of 6N Sulfuric
-      Acid, then the same three alcohols.\n\u2192 Same build on the second rack,
-      acid instead of base: 2 squeezes of KMnO4, 2 of Sulfuric Acid, then 5 of each
-      alcohol into tubes 1-3. Leave tube 4 alone again. Then compare both racks side
-      by side."
+    hint: "Repeat using 2 ml of 0.1% Potassium Permanganate and 2 drops of 6N Sulfuric Acid, then the same three alcohols.\n\u2192 Same build on the second rack, acid instead of base: 2 squeezes of KMnO4 and 2 of Sulfuric Acid into ALL FOUR tubes, then 5 of each alcohol into tubes 1-3 only - tube 4 stays alcohol-free as the control. Then compare both racks side by side."
     autoCompleteWhenOthersDone: 0
     longProcess: 0
     longProcessMessage: 
@@ -251,7 +247,7 @@ MonoBehaviour:
     required: 1
     hint: "Write up each test, the reaction involved and the colour or odour you
       observed.\n\u2192 The results board filled itself in as you worked - read it
-      back, then answer on the tablet."
+      back, then answer on the data sheet."
     autoCompleteWhenOthersDone: 1
     longProcess: 0
     longProcessMessage: 

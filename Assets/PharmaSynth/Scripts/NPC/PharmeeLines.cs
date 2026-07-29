@@ -159,10 +159,10 @@ public static class PharmeeLines
     public static readonly string[] JimenezQuizBrief =
     {
         "Well done reaching this stage. Before your grade is final, you will document your work.",
-        "Answer the questions on the tablet. Your documentation counts toward your final grade. Begin.",
-        "Take your time. Accuracy over speed. The tablet is ready for you.",
+        "Answer the questions on the data sheet. Your documentation counts toward your final grade. Begin.",
+        "Take your time. Accuracy over speed. The data sheet is ready for you.",
         "The bench work is finished. The record is not. Complete your data sheet.",
-        "A result you cannot document is a result I cannot credit. Proceed to the tablet.",
+        "A result you cannot document is a result I cannot credit. Proceed to the data sheet.",
     };
 
     public static readonly string[] JimenezPassRemarks =
@@ -234,7 +234,7 @@ public static class PharmeeLines
         "The reagent cabinets along the wall hold your chemicals. Take only what each step needs — the bottles are limited!",
         "Flick your wrist anytime for the live checklist, and watch the progress bar and timer up top to track how you're doing.",
         "The Settings button up top lets you tune audio, text size and comfort options whenever you like.",
-        "Follow the glowing markers to each step. Poke me whenever you're ready to take on a graded campaign!",
+        "Check your wrist panel for each step. Poke me whenever you're ready to take on a graded campaign!",
     };
 
     /// Deterministic pool picker (tests pin it): wraps any index, non-negative.

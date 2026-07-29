@@ -154,6 +154,18 @@ public class LiquidPhysics : MonoBehaviour
 
     void Start()
     {
+        // A mainRenderer pointing at an OPAQUE surface (the "Powder" mound, a glass
+        // shell) is worse than none, and every consumer below trusts it: LerpColor
+        // READS _LiquidColour/_SceneColourAmount off it (URP/Lit has neither → a
+        // console error every Start), and UpdateFillPhysics does
+        // `mainRenderer.enabled = hasLiquid` — so a powder-only vessel HID its own
+        // mound the moment it held 0 ml. EnsureLiquidVisual's powder branch returns
+        // early and deliberately leaves this field alone, so a vessel that once held
+        // liquid can arrive here still pointing at the wrong surface. Drop it, then
+        // let the adopt below have its say.
+        if (mainRenderer != null && !ShouldAdoptHostRenderer(mainRenderer.sharedMaterial))
+            mainRenderer = null;
+
         if (mainRenderer == null)
         {
             var host = GetComponent<Renderer>();
@@ -509,4 +521,3 @@ public class LiquidPhysics : MonoBehaviour
         Ledger.Clear();
     }
 }
-
