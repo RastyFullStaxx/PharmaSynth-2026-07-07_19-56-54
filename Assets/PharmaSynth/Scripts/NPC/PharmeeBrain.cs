@@ -127,15 +127,20 @@ public class PharmeeBrain : MonoBehaviour
         // (user 2026-07-19: "speaks rapidly from time to time"). SAFETY warnings
         // deliberately bypass this cooldown (see OnMistake).
         if (Time.time - _lastLineTime < reactionCooldown) return;
-        string praise = (_praiseToggle = !_praiseToggle) ? PharmeeLines.Pick(PharmeeLines.Praise, _variant++) + " " : "";
+        // ⛔ NEVER CONCATENATE SPOKEN LINES (2026-07-28). Voice clips are keyed by
+        // the hash of the WHOLE string, so "Nice work! " + an instruction hashes to
+        // something that exists in no bank and silently drops the line back to
+        // placeholder blips — even though both halves are voiced individually.
+        // Speak them as two lines instead; the narration controller queues them and
+        // plays them back to back with its normal beat.
+        string praise = (_praiseToggle = !_praiseToggle) ? PharmeeLines.Pick(PharmeeLines.Praise, _variant++) : null;
+        if (!string.IsNullOrEmpty(praise))
+            Speak(PharmeeState.Instructing, PharmeeFaceExpression.Happy, praise);
         foreach (var nx in runner.Graph.AvailableTasks())
         {
-            Speak(PharmeeState.Instructing, PharmeeFaceExpression.Happy, praise + InstructionFor(nx));
+            Speak(PharmeeState.Instructing, PharmeeFaceExpression.Happy, InstructionFor(nx));
             return;
         }
-        // all steps done — a small cheer while the data sheet/quiz comes up
-        if (!string.IsNullOrEmpty(praise))
-            Speak(PharmeeState.Instructing, PharmeeFaceExpression.Happy, praise.Trim());
     }
 
     /// Idle chatter: after a stretch of quiet mid-run, Pharmee offers a friendly

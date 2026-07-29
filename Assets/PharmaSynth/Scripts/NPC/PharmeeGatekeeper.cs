@@ -28,6 +28,13 @@ public class PharmeeGatekeeper : MonoBehaviour
         [TextArea] public string thresholdWarn = "The period will start as soon as you walk in. Step through when you're ready!";
         [TextArea] public string congrats = "Congratulations! You handled that experiment brilliantly. Let's head back outside.";
         [TextArea] public string supplyWarn = "Oh no — there isn't enough reagent left to finish the experiment. We'll have to restart the period.";
+        // These two used to interpolate ppe.MissingSummary() into the spoken text,
+        // which made them unvoiceable — a clip is keyed by the hash of the whole
+        // string, so a line assembled at runtime matches nothing and drops to
+        // placeholder blips (user 2026-07-28). The locker itself shows which pieces
+        // are still missing, so the spoken line does not need to enumerate them.
+        [TextArea] public string ppePartial = "Almost there — you're still missing a piece of your gear. Check the locker.";
+        [TextArea] public string ppeBlocked = "Hold on — I can't let you in without your full protective gear. The locker is right beside you.";
         [TextArea] public string welcome = "Welcome to the lab! I'm Pharmee. Come talk to me at the door whenever you're ready to begin.";
     }
 
@@ -221,8 +228,10 @@ public class PharmeeGatekeeper : MonoBehaviour
         if (Model.State == GateState.CoatPrompt)
         {
             if (ppe == null || ppe.PPEWorn) { Model.Fire(GateEvent.Coated); return; }
-            // Partially dressed — tell the player what's still missing (per-piece PPE).
-            Say("Almost there — you still need your " + ppe.MissingSummary() + ".");
+            // Partially dressed. The SPOKEN line is static (see ppePartial); the
+            // specific missing pieces go to the choice panel, which is text.
+            Say(lines.ppePartial);
+            panel?.Show("You still need your " + ppe.MissingSummary() + ".", new List<string> { "Back" });
             return;
         }
         // PPE changed outside CoatPrompt (e.g. the player finished dressing at the
@@ -472,9 +481,11 @@ public class PharmeeGatekeeper : MonoBehaviour
                 After(0.5f, () =>
                 {
                     if (Model.State != GateState.Debrief) return;
-                    Say(PharmeeLines.Pick(PharmeeLines.DebriefCongrats, _remarkVariant++) + " "
-                        + PharmeeLines.DebriefRemark(_lastResult.HasValue ? _lastResult.Value.grade.Total : 100f,
-                                                     AllCampaignComplete()));
+                    // TWO Say() calls, never a concatenation — a joined string hashes
+                    // to nothing and loses its voice clip. The controller queues them.
+                    Say(PharmeeLines.Pick(PharmeeLines.DebriefCongrats, _remarkVariant++));
+                    Say(PharmeeLines.DebriefRemark(_lastResult.HasValue ? _lastResult.Value.grade.Total : 100f,
+                                                   AllCampaignComplete()));
                 });
                 After(lineSeconds + 1.5f, () => Model.Fire(GateEvent.DebriefDone));
                 break;
@@ -882,7 +893,7 @@ public class PharmeeGatekeeper : MonoBehaviour
         if (open && GatekeeperModel.RequiresPPEToOpen(s) && ppe != null && !ppe.PPEWorn)
         {
             open = false;
-            Say("Hold on — you still need your " + ppe.MissingSummary() + " before you can enter.");
+            Say(lines.ppeBlocked);   // static so it can carry a voice clip
         }
         if (doorBlocker != null) doorBlocker.SetActive(!open);
         if (doorOpener != null) doorOpener.SetOpen(open);

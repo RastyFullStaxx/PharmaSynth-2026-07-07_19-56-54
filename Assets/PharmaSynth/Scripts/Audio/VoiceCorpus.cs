@@ -59,6 +59,7 @@ public static class VoiceCorpus
             gate.approach, gate.labTour, gate.campaignExplain, gate.episodePrompt,
             gate.lockedEpisode, gate.coatPrompt, gate.readyPrompt, gate.thresholdWarn,
             gate.congrats, gate.supplyWarn, gate.welcome,
+            gate.ppePartial, gate.ppeBlocked,
         }, "Gate");
 
         // Guided-tour beats (location-triggered guide).

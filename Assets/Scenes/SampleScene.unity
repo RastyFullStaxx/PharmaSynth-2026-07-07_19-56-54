@@ -128074,6 +128074,10 @@ MonoBehaviour:
       back outside.
     supplyWarn: "Oh no \u2014 there isn't enough reagent left to finish the experiment.
       We'll have to restart the period."
+    ppePartial: "Almost there \u2014 you're still missing a piece of your gear. Check
+      the locker."
+    ppeBlocked: "Hold on \u2014 I can't let you in without your full protective gear.
+      The locker is right beside you."
     welcome: Welcome to the lab! I'm Pharmee. Come talk to me at the door whenever
       you're ready to begin.
   lineSeconds: 5.5
@@ -128208,6 +128212,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RobotVoiceFx
   profile: {fileID: 11400000, guid: 5b827426fc16a1f4e9fc02b01d4d4f82, type: 2}
+  ringMix: 0.38
+  ringHz: 62
+  presenceBoost: 0.85
+  presenceHz: 3000
+  crushBits: 10
+  crushMix: 0.35
   vocoderMix: 0.92
   carrierHz: 205
   carrierNoise: 0.18
@@ -128217,12 +128227,6 @@ MonoBehaviour:
   combMs: 3.2
   combFeedback: 0.72
   combMix: 0.5
-  crushBits: 10
-  crushMix: 0.35
-  ringHz: 62
-  ringMix: 0.38
-  presenceBoost: 0.85
-  presenceHz: 3000
   active: 1
 --- !u!166 &1688781740
 AudioChorusFilter:

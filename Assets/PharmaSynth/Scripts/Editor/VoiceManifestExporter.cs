@@ -61,6 +61,28 @@ public static class VoiceManifestExporter
                 if (b != null) { Add(VoiceSpeaker.Pharmee, b.subtitle, "Cutscene"); beats++; }
         }
 
+        // STEP INSTRUCTIONS — the lines Pharmee says constantly DURING an experiment,
+        // and by far the most-heard dialogue in the game. They live on the module
+        // assets (graphTasks[].hint), so runtime code cannot enumerate them and they
+        // were missing from the corpus entirely — every one of them played as a
+        // placeholder blip (user 2026-07-28: "there are still dialogues that use the
+        // robot voices"). PharmeeBrain.InstructionFor is the exact transform the game
+        // applies, so exporting through it guarantees the hashes match at runtime.
+        int steps = 0;
+        foreach (string guid in AssetDatabase.FindAssets("t:ExperimentModuleDefinition"))
+        {
+            var m = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>(AssetDatabase.GUIDToAssetPath(guid));
+            if (m == null || m.graphTasks == null) continue;
+            foreach (var t in m.graphTasks)
+            {
+                if (t == null) continue;
+                string line = PharmeeBrain.InstructionFor(t);
+                if (string.IsNullOrWhiteSpace(line)) continue;
+                Add(VoiceSpeaker.Pharmee, line, "Steps");
+                steps++;
+            }
+        }
+
         // Jimenez first (stable within each speaker — OrderBy is a stable sort, so
         // the corpus order is preserved and re-exports don't shuffle the queue).
         manifest.lines = new List<ManifestLine>(
@@ -91,7 +113,7 @@ public static class VoiceManifestExporter
         groupLines.Sort();
 
         Debug.Log($"[VoiceManifest] {manifest.lines.Count} unique lines ({jimenez} Jimenez FIRST, {pharmee} Pharmee, "
-                  + $"{beats} cutscene beats folded in), {chars:n0} characters ≈ {chars / 2:n0} ElevenLabs credits "
+                  + $"{beats} cutscene beats + {steps} step instructions folded in), {chars:n0} characters ≈ {chars / 2:n0} ElevenLabs credits "
                   + $"on eleven_flash_v2_5. Jimenez alone: {jChars:n0} characters ≈ {jChars / 2:n0} credits.\n"
                   + "  Per group (generate-voice.ps1 -Group <name>):\n" + string.Join("\n", groupLines)
                   + $"\n  Wrote {OutPath}.");

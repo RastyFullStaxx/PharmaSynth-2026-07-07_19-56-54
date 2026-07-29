@@ -918,6 +918,20 @@
             "group": "Gate"
         },
         {
+            "id": "ffc0bd533c4061b3",
+            "speaker": "Pharmee",
+            "text": "Almost there — you're still missing a piece of your gear. Check the locker.",
+            "chars": 75,
+            "group": "Gate"
+        },
+        {
+            "id": "dea0a8ab877b4d48",
+            "speaker": "Pharmee",
+            "text": "Hold on — I can't let you in without your full protective gear. The locker is right beside you.",
+            "chars": 95,
+            "group": "Gate"
+        },
+        {
             "id": "28df8dd14b0b55e1",
             "speaker": "Pharmee",
             "text": "Welcome! Let's take a quick tour. The bench in the middle is your main workspace — walk around and I'll point out the rest as you reach them.",
@@ -1532,6 +1546,552 @@
             "text": "Clear, aromatic, well-balanced — a wine to be proud of. Cheers to good technique!",
             "chars": 81,
             "group": "Cutscene"
+        },
+        {
+            "id": "de53061b0a89099d",
+            "speaker": "Pharmee",
+            "text": "Beaker 100 mL (the 50-ml flask): 5 squeezes of ammonia solution.",
+            "chars": 64,
+            "group": "Steps"
+        },
+        {
+            "id": "8f173bf2cdf926e2",
+            "speaker": "Pharmee",
+            "text": "Set the beaker in the ice bucket until its label reads 5 °C.",
+            "chars": 60,
+            "group": "Steps"
+        },
+        {
+            "id": "e480861f88ae4564",
+            "speaker": "Pharmee",
+            "text": "Dropper 1 squeeze of benzoyl chloride into the chilled beaker.",
+            "chars": 62,
+            "group": "Steps"
+        },
+        {
+            "id": "26e242b005d22fe3",
+            "speaker": "Pharmee",
+            "text": "Circle the GLASS ROD inside the beaker until 'Well stirred!' — then time passes.",
+            "chars": 80,
+            "group": "Steps"
+        },
+        {
+            "id": "2c0bc875cebd7765",
+            "speaker": "Pharmee",
+            "text": "Tilt-pour 4 ml from the beaker through the funnel onto the Watch Glass.",
+            "chars": 71,
+            "group": "Steps"
+        },
+        {
+            "id": "461798a0545b59f7",
+            "speaker": "Pharmee",
+            "text": "Set the Watch Glass on the balance and let the reading settle.",
+            "chars": 62,
+            "group": "Steps"
+        },
+        {
+            "id": "4ec58286846ccb4a",
+            "speaker": "Pharmee",
+            "text": "Test Tube 15: 5 spatula dips of your benzamide + 2 squeezes of sodium hydroxide 10%, warm it at the water bath, then touch a litmus strip to the tube.",
+            "chars": 150,
+            "group": "Steps"
+        },
+        {
+            "id": "c8d171d8c119686f",
+            "speaker": "Pharmee",
+            "text": "Test Tube 16: 5 dips of your benzamide + 2 squeezes of diluted hydrochloric acid, warm it at the bath, then touch a litmus strip.",
+            "chars": 129,
+            "group": "Steps"
+        },
+        {
+            "id": "422659ec79212837",
+            "speaker": "Pharmee",
+            "text": "Test Tube 17: 5 dips of your benzamide + 2 squeezes of diluted HCl, then 3 squeezes of sodium nitrite — watch it fizz.",
+            "chars": 118,
+            "group": "Steps"
+        },
+        {
+            "id": "9a9fa37df84374ea",
+            "speaker": "Pharmee",
+            "text": "Review your observations, then answer on the tablet.",
+            "chars": 52,
+            "group": "Steps"
+        },
+        {
+            "id": "9772d86f658f2cd1",
+            "speaker": "Pharmee",
+            "text": "Fermentation Jar: tilt-pour Mixed Fruit Juice to the 40 ml band, 3 scoopula dips of brown sugar, 1 dip of ammonium phosphate, then pitch 2 dips of yeast - watch the tag turn to 'Wine'.",
+            "chars": 184,
+            "group": "Steps"
+        },
+        {
+            "id": "c11e31d4445a2cda",
+            "speaker": "Pharmee",
+            "text": "Circle the GLASS ROD in the jar until the 'Well stirred!' cue shows.",
+            "chars": 68,
+            "group": "Steps"
+        },
+        {
+            "id": "46f3746e3a892b17",
+            "speaker": "Pharmee",
+            "text": "Pour 10 ml of limewater into Test Tube 5 and hold it at the jar's mouth until it clouds - then the week-long ferment passes.",
+            "chars": 124,
+            "group": "Steps"
+        },
+        {
+            "id": "45e365f4640e570c",
+            "speaker": "Pharmee",
+            "text": "Tilt-pour the clear wine from the jar THROUGH the racking funnel into the Wine Bottle (Florence flask) to the 30 ml band, leaving the lees behind.",
+            "chars": 146,
+            "group": "Steps"
+        },
+        {
+            "id": "d77552615443a52f",
+            "speaker": "Pharmee",
+            "text": "Pour a splash (about 6 ml) of your racked wine onto the Watch Glass and judge its clarity against the light.",
+            "chars": 108,
+            "group": "Steps"
+        },
+        {
+            "id": "7ac2d53442b54c4a",
+            "speaker": "Pharmee",
+            "text": "Pour about 12 ml into the Tasting Glass and evaluate the aroma and flavour.",
+            "chars": 75,
+            "group": "Steps"
+        },
+        {
+            "id": "011e6f4e6046fed4",
+            "speaker": "Pharmee",
+            "text": "Review your wine, then answer on the tablet.",
+            "chars": 44,
+            "group": "Steps"
+        },
+        {
+            "id": "6b12cb81c7d6d203",
+            "speaker": "Pharmee",
+            "text": "Carry the Florence flask INTO the fume hood, then squeeze 2 dropper-loads of aniline into it there.",
+            "chars": 99,
+            "group": "Steps"
+        },
+        {
+            "id": "75a360fcc7bb0443",
+            "speaker": "Pharmee",
+            "text": "Squeeze 2 dropper-loads of glacial acetic acid into the flask.",
+            "chars": 62,
+            "group": "Steps"
+        },
+        {
+            "id": "da7d466d48379334",
+            "speaker": "Pharmee",
+            "text": "In the fume hood, squeeze 2 dropper-loads of acetyl chloride in, then warm the flask at the water bath (~5 min).",
+            "chars": 112,
+            "group": "Steps"
+        },
+        {
+            "id": "ece9e061059b3da0",
+            "speaker": "Pharmee",
+            "text": "Tilt-pour about 20 ml of distilled water into the flask, then set it in the ice bucket.",
+            "chars": 87,
+            "group": "Steps"
+        },
+        {
+            "id": "d2ec262eb8229541",
+            "speaker": "Pharmee",
+            "text": "Hold the funnel over the Beaker 100 mL and tilt-pour the flask through it.",
+            "chars": 74,
+            "group": "Steps"
+        },
+        {
+            "id": "aa7328c24a0d1486",
+            "speaker": "Pharmee",
+            "text": "Into Test Tube 11: 1 scoopula of your crystals + 3 squeezes of concentrated HCl, then boil it at the water bath.",
+            "chars": 112,
+            "group": "Steps"
+        },
+        {
+            "id": "45528498aa25fb79",
+            "speaker": "Pharmee",
+            "text": "Tube 12: 1 scoopula of crystals + 5 water + 1 of 0.1N HCl + 5 bromine water. Tube 13: 2 aniline (fume hood!) + 5 water + 1 of 0.1N HCl + 2 bromine water.",
+            "chars": 153,
+            "group": "Steps"
+        },
+        {
+            "id": "2be8f276c9420205",
+            "speaker": "Pharmee",
+            "text": "Review the results, then answer on the tablet.",
+            "chars": 46,
+            "group": "Steps"
+        },
+        {
+            "id": "31f80843ef004382",
+            "speaker": "Pharmee",
+            "text": "Set the HARD-GLASS tube on the balance, then scoop 4 scoopula dips of EACH acetate into it (watch the grams).",
+            "chars": 109,
+            "group": "Steps"
+        },
+        {
+            "id": "68dd5ea79bc05a41",
+            "speaker": "Pharmee",
+            "text": "Light a burner and hold the tube over its flame until it reaches a red-glow 150 °C.",
+            "chars": 83,
+            "group": "Steps"
+        },
+        {
+            "id": "606a593c42c8659c",
+            "speaker": "Pharmee",
+            "text": "Keep Test Tube 14 close to the hot tube's mouth; the distillate collects there while the tube stays hot.",
+            "chars": 104,
+            "group": "Steps"
+        },
+        {
+            "id": "cfe8d28c998dfb82",
+            "speaker": "Pharmee",
+            "text": "Test Tube 15: 2 of your acetone + 5 water + 2 squeezes of silver nitrate.",
+            "chars": 73,
+            "group": "Steps"
+        },
+        {
+            "id": "ef6e0762b4c04891",
+            "speaker": "Pharmee",
+            "text": "Test Tube 16: 5 squeezes of Schiff's reagent + 2 of your acetone; let it stand.",
+            "chars": 79,
+            "group": "Steps"
+        },
+        {
+            "id": "afbd71deea9646e9",
+            "speaker": "Pharmee",
+            "text": "Test Tube 17: 10 of KI + 2 of your acetone + 10 of hypochlorite, then warm it at the water bath.",
+            "chars": 96,
+            "group": "Steps"
+        },
+        {
+            "id": "14bebb580f28146f",
+            "speaker": "Pharmee",
+            "text": "Test Tube 18: 1 of ethanol + 2 of sodium bisulfite + 1 of your acetone, then set it in the ice bucket.",
+            "chars": 102,
+            "group": "Steps"
+        },
+        {
+            "id": "85a2bc8e244f0e8a",
+            "speaker": "Pharmee",
+            "text": "Tilt-pour about 40 ml of it into the Beaker 500 mL.",
+            "chars": 51,
+            "group": "Steps"
+        },
+        {
+            "id": "5776d2421628194c",
+            "speaker": "Pharmee",
+            "text": "Squeeze 2 dropper-loads of benzaldehyde into the beaker, then warm the beaker at the water bath (pour distilled water in, lit burner beside it).",
+            "chars": 144,
+            "group": "Steps"
+        },
+        {
+            "id": "91758e3772b74f20",
+            "speaker": "Pharmee",
+            "text": "Hold the funnel over the Erlenmeyer flask and tilt-pour the beaker through it (about 20 ml).",
+            "chars": 92,
+            "group": "Steps"
+        },
+        {
+            "id": "91c9200c177472c8",
+            "speaker": "Pharmee",
+            "text": "Squeeze 5 dropper-loads of 6N hydrochloric acid into the flask.",
+            "chars": 63,
+            "group": "Steps"
+        },
+        {
+            "id": "dc7ddddd59631f7b",
+            "speaker": "Pharmee",
+            "text": "Set the flask in the ice bucket and let it chill.",
+            "chars": 49,
+            "group": "Steps"
+        },
+        {
+            "id": "57aad749b8efe72a",
+            "speaker": "Pharmee",
+            "text": "Scoop 1 scoopula of your crystals (2 g) into Test Tube 8, add 2 squeezes of distilled water, then touch a litmus strip to it.",
+            "chars": 125,
+            "group": "Steps"
+        },
+        {
+            "id": "9f38b05cf3d08340",
+            "speaker": "Pharmee",
+            "text": "Into Test Tube 9: 1 scoopula of crystals, 2 squeezes of 10% NaOH, then 5 squeezes of ferric chloride.",
+            "chars": 101,
+            "group": "Steps"
+        },
+        {
+            "id": "14221a9bedc1be59",
+            "speaker": "Pharmee",
+            "text": "Into Test Tube 10: 1 scoopula of crystals, 10 squeezes of propyl alcohol, 1 of sulfuric acid — then warm it at the water bath.",
+            "chars": 126,
+            "group": "Steps"
+        },
+        {
+            "id": "100bffde81bc4b66",
+            "speaker": "Pharmee",
+            "text": "Erlenmeyer Flask 400 mL: scoop 5 scoopula dips of bleaching powder in FIRST, then tilt-pour distilled water to 20 ml.",
+            "chars": 117,
+            "group": "Steps"
+        },
+        {
+            "id": "4f48bbd8ed203e6e",
+            "speaker": "Pharmee",
+            "text": "Graduated Cylinder 50 mL: tilt-pour acetone to 5 ml, then a 10 ml tilt-pour of distilled water.",
+            "chars": 95,
+            "group": "Steps"
+        },
+        {
+            "id": "e32645a14c858e3a",
+            "speaker": "Pharmee",
+            "text": "Dropper 5 squeezes of the acetone mix into the flask, then warm the flask to 40 °C at the water bath — watch the dense chloroform form.",
+            "chars": 135,
+            "group": "Steps"
+        },
+        {
+            "id": "6523b6629b23b0a8",
+            "speaker": "Pharmee",
+            "text": "Keep the flask in the water bath (lit burner beside it) until its label reads 65 °C.",
+            "chars": 84,
+            "group": "Steps"
+        },
+        {
+            "id": "2f9f46846b4b777c",
+            "speaker": "Pharmee",
+            "text": "Hold Beaker 100 mL beside the hot flask — 8 ml of crude chloroform run over.",
+            "chars": 76,
+            "group": "Steps"
+        },
+        {
+            "id": "918b7d45e61e03a5",
+            "speaker": "Pharmee",
+            "text": "Squeeze 4 of distilled water into Beaker 100 mL and swirl — the next step decants the bottom layer off.",
+            "chars": 103,
+            "group": "Steps"
+        },
+        {
+            "id": "993fdd16d2d01c76",
+            "speaker": "Pharmee",
+            "text": "Decant (tilt-pour) 8 ml of the dense chloroform into the Distilling Flask, add 1 scoopula of anhydrous calcium chloride, then warm it to 65 °C at the bath.",
+            "chars": 155,
+            "group": "Steps"
+        },
+        {
+            "id": "1f91b52b80cd14d0",
+            "speaker": "Pharmee",
+            "text": "Keep the Distilling Flask hot; hold Test Tube 14 at its mouth until 6 ml run over clear.",
+            "chars": 88,
+            "group": "Steps"
+        },
+        {
+            "id": "a8aa96b2c3b00924",
+            "speaker": "Pharmee",
+            "text": "Set Test Tube 14 on the balance and let the reading settle.",
+            "chars": 59,
+            "group": "Steps"
+        },
+        {
+            "id": "eb2f09d0c6d1956e",
+            "speaker": "Pharmee",
+            "text": "Pour 2 ml (4 tilt-pours) of your chloroform onto the Watch Glass, then strike a match and hold the flame to it.",
+            "chars": 111,
+            "group": "Steps"
+        },
+        {
+            "id": "86b239566dafe08c",
+            "speaker": "Pharmee",
+            "text": "Test Tube 15 in the hood: 2 tilt-pours of your chloroform, 4 spatula dips of potassium dichromate, 2 squeezes of sulfuric acid — then warm it at the water bath.",
+            "chars": 160,
+            "group": "Steps"
+        },
+        {
+            "id": "1339a13f45202cd0",
+            "speaker": "Pharmee",
+            "text": "Test Tube 16: 1 squeeze of alcoholic silver nitrate FIRST, then 2 tilt-pours of your chloroform. Warm it at the water bath and watch for the white precipitate.",
+            "chars": 159,
+            "group": "Steps"
+        },
+        {
+            "id": "ef4c2468ca04e355",
+            "speaker": "Pharmee",
+            "text": "Dropper = 1 squeeze per ml: one squeeze of its OWN sample into each labelled tube, then tilt-pour distilled water to the 10 ml mark. All five tubes.",
+            "chars": 148,
+            "group": "Steps"
+        },
+        {
+            "id": "6e0aa66aaaf30968",
+            "speaker": "Pharmee",
+            "text": "5 squeezes of the dropper over EVERY tube. Watch which one flashes violet - that is the enol.",
+            "chars": 93,
+            "group": "Steps"
+        },
+        {
+            "id": "f904bc32f6abc9b3",
+            "speaker": "Pharmee",
+            "text": "2 squeezes of KMnO4, then 2 of Sodium Hydroxide, into all four tubes. This rack is the ALKALINE run.",
+            "chars": 100,
+            "group": "Steps"
+        },
+        {
+            "id": "94bb1d72e8faa1a2",
+            "speaker": "Pharmee",
+            "text": "5 squeezes into tubes 1-3, one alcohol each. Do NOT pour into tube 4 - the untouched control is part of the experiment.",
+            "chars": 119,
+            "group": "Steps"
+        },
+        {
+            "id": "327d77050e38e79b",
+            "speaker": "Pharmee",
+            "text": "Same build on the second rack, acid instead of base: 2 squeezes of KMnO4, 2 of Sulfuric Acid, then 5 of each alcohol into tubes 1-3. Leave tube 4 alone again. Then compare both racks side by side.",
+            "chars": 196,
+            "group": "Steps"
+        },
+        {
+            "id": "d51b0c4998eb9714",
+            "speaker": "Pharmee",
+            "text": "2 squeezes of the sample, then 2 of Tollen's, in BOTH tubes. Only the aldehyde plates a silver mirror.",
+            "chars": 102,
+            "group": "Steps"
+        },
+        {
+            "id": "b22dded3e0b61de2",
+            "speaker": "Pharmee",
+            "text": "10 squeezes, then 4, then 1 - all three are needed; the acid is the catalyst. Then read the odour cue.",
+            "chars": 102,
+            "group": "Steps"
+        },
+        {
+            "id": "4553236034266f8f",
+            "speaker": "Pharmee",
+            "text": "10 squeezes of Methanol, ONE spatula dip of Salicylic Acid (a dip = 0.1 g), 1 squeeze of acid.",
+            "chars": 94,
+            "group": "Steps"
+        },
+        {
+            "id": "9400a371204ca48c",
+            "speaker": "Pharmee",
+            "text": "5 spatula dips of Aspirin (0.1 g each), tilt-pour water to 10 ml, 1 squeeze of acid - then strike a match, light the burner and let it boil.",
+            "chars": 140,
+            "group": "Steps"
+        },
+        {
+            "id": "fcb060e2839b9d6d",
+            "speaker": "Pharmee",
+            "text": "Rest the funnel on the beaker and pour the boiled mixture through it.",
+            "chars": 69,
+            "group": "Steps"
+        },
+        {
+            "id": "839f05e05c3517c2",
+            "speaker": "Pharmee",
+            "text": "2 squeezes into the filtrate beaker.",
+            "chars": 36,
+            "group": "Steps"
+        },
+        {
+            "id": "a2a91491b737b291",
+            "speaker": "Pharmee",
+            "text": "5 spatula dips of Aspirin into the control tube, then 2 squeezes of Ferric Chloride. The DIFFERENCE between the two tubes is the result.",
+            "chars": 136,
+            "group": "Steps"
+        },
+        {
+            "id": "a340146916eb6d07",
+            "speaker": "Pharmee",
+            "text": "The results board filled itself in as you worked - read it back, then answer on the tablet.",
+            "chars": 91,
+            "group": "Steps"
+        },
+        {
+            "id": "dc63db35e47019d9",
+            "speaker": "Pharmee",
+            "text": "Scoopula the sugar & yeast into the flask, add water, then the ammonium phosphate.",
+            "chars": 82,
+            "group": "Steps"
+        },
+        {
+            "id": "223dc761df8150e9",
+            "speaker": "Pharmee",
+            "text": "Pour limewater into a test tube, lead the delivery tube from the flask into it, watch it turn milky.",
+            "chars": 100,
+            "group": "Steps"
+        },
+        {
+            "id": "460d69349cb6e4b8",
+            "speaker": "Pharmee",
+            "text": "Add 10% sodium hydroxide to the flask until litmus reads faintly blue.",
+            "chars": 70,
+            "group": "Steps"
+        },
+        {
+            "id": "80c42eaf72808169",
+            "speaker": "Pharmee",
+            "text": "Pour the wash into the distilling flask and warm it in the water bath.",
+            "chars": 70,
+            "group": "Steps"
+        },
+        {
+            "id": "90ca10790bf5166d",
+            "speaker": "Pharmee",
+            "text": "Put a few drops on the watch glass and touch a lit match to it.",
+            "chars": 63,
+            "group": "Steps"
+        },
+        {
+            "id": "bce79305d8221b31",
+            "speaker": "Pharmee",
+            "text": "Add KI then hypochlorite to a little distillate and warm it to 60°C in the water bath.",
+            "chars": 86,
+            "group": "Steps"
+        },
+        {
+            "id": "48352ab2d9b9a91c",
+            "speaker": "Pharmee",
+            "text": "Combine them in a tube and warm gently; note the odour.",
+            "chars": 55,
+            "group": "Steps"
+        },
+        {
+            "id": "2d04a8fc8ff1f81e",
+            "speaker": "Pharmee",
+            "text": "Read the results back, then answer on the tablet.",
+            "chars": 49,
+            "group": "Steps"
+        },
+        {
+            "id": "693d345b5468988a",
+            "speaker": "Pharmee",
+            "text": "Scoop the sodium acetate + soda lime into the mortar, then GRAB THE PESTLE and grind in the bowl until it is a fine powder. (You do not move the powder into the tube — grinding is all this step needs.)",
+            "chars": 201,
+            "group": "Steps"
+        },
+        {
+            "id": "a325907c563bead5",
+            "speaker": "Pharmee",
+            "text": "Scoop the ground mixture from the mortar into the \"Hard-glass tube\" — this is the tube you will heat. (Ignore the bent delivery tubes; they are not used.)",
+            "chars": 154,
+            "group": "Steps"
+        },
+        {
+            "id": "2ef46c383621ec04",
+            "speaker": "Pharmee",
+            "text": "Grab a match and strike it on the matchbox, touch it to the burner to light it, then hold the lit burner under the \"Hard-glass tube\". Heating it makes the methane gas.",
+            "chars": 167,
+            "group": "Steps"
+        },
+        {
+            "id": "e8e0a658551bee28",
+            "speaker": "Pharmee",
+            "text": "Keep the \"Gas collection tube\" held against the heated \"Hard-glass tube\" — methane collects until the tube is full (a few seconds).",
+            "chars": 131,
+            "group": "Steps"
+        },
+        {
+            "id": "6ee4934ecce04ecd",
+            "speaker": "Pharmee",
+            "text": "Light a match and bring it to the mouth of the full \"Gas collection tube\" — methane pops and burns with a pale blue flame. Test complete!",
+            "chars": 137,
+            "group": "Steps"
         }
     ]
 }
