@@ -165,6 +165,13 @@ public static class PharmeeLines
         "A result you cannot document is a result I cannot credit. Proceed to the data sheet.",
     };
 
+    /// Dr. Jimenez's lead-in to the module ILO recap at QuizIntro. Lives HERE, not
+    /// as a literal at the call site: VoiceCorpus can only voice what it can
+    /// enumerate, and a bare string in PharmeeGatekeeper was invisible to it, so
+    /// the line played as blips (2026-07-29).
+    public const string JimenezIloLeadIn =
+        "Before you answer — recall this session's objectives.";
+
     public static readonly string[] JimenezPassRemarks =
     {
         "A commendable performance. Your technique meets the standard.",

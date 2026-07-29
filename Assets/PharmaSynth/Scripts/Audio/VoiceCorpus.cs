@@ -36,6 +36,10 @@ public static class VoiceCorpus
         AddPool(lines, VoiceSpeaker.Pharmee, PharmeeLines.TourBeats, "Tour");
         AddPool(lines, VoiceSpeaker.Pharmee, PharmeeLines.TestsDoneLines, "Review");
         AddPool(lines, VoiceSpeaker.Pharmee, PharmeeLines.DebriefCongrats, "Review");
+        // The campaign-completion celebration — the climax of the whole game, and
+        // it was MISSING from the corpus, so the payoff line played as blips
+        // (found 2026-07-29 by auditing every pool for corpus membership).
+        AddPool(lines, VoiceSpeaker.Pharmee, PharmeeLines.CampaignComplete, "Celebrate");
 
         // Dr. Jimenez pools (exam voice + review verdicts).
         AddPool(lines, VoiceSpeaker.Jimenez, PharmeeLines.ExamGreeting, "Exam");
@@ -65,11 +69,21 @@ public static class VoiceCorpus
         // Guided-tour beats (location-triggered guide).
         AddPool(lines, VoiceSpeaker.Pharmee, LabTourGuide.DefaultBeatTexts, "Tour");
 
-        // ILO opening dialogue (verbatim Appendix C + game-authored trio).
+        // ILO dialogue (verbatim Appendix C + game-authored trio). BOTH NPCs speak
+        // these, so BOTH need clips: Pharmee reads them as intro-cutscene beats
+        // (IloBeatInjector), and Dr. Jimenez RECAPS the same text at QuizIntro
+        // (PharmeeGatekeeper.SpeakJimenezBrief). VoiceBank is keyed by
+        // speaker + text-hash, so a clip filed under one speaker is INVISIBLE to
+        // the other — Jimenez's whole recap played as blips while only Pharmee's
+        // copies existed (user-reported 2026-07-29).
         lines.Add(new Line(VoiceSpeaker.Pharmee, IloCopy.LeadIn, "Objectives"));
+        lines.Add(new Line(VoiceSpeaker.Jimenez, PharmeeLines.JimenezIloLeadIn, "Objectives"));
         foreach (var id in ModuleIds)
             foreach (var ilo in IloCopy.ForModule(id))
+            {
                 lines.Add(new Line(VoiceSpeaker.Pharmee, ilo, "Objectives"));
+                lines.Add(new Line(VoiceSpeaker.Jimenez, ilo, "Objectives"));
+            }
 
         // Hazard warnings (HUD toast copy doubles as the spoken warning).
         foreach (HazardousMix.HazardOutcome o in System.Enum.GetValues(typeof(HazardousMix.HazardOutcome)))

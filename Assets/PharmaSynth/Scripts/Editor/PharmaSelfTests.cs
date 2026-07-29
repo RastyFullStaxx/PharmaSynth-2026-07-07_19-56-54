@@ -1358,6 +1358,25 @@ public static class PharmaSelfTests
                         A("voice: every lab-tour beat has a clip (" + tourUnvoiced + " unvoiced)", tourUnvoiced == 0);
                         A("tour: every stop's landmark exists in the scene (" + badMark + " dangling)", badMark == 0);
                     }
+
+                    // The ILO recap is spoken by BOTH NPCs off the SAME text:
+                    // Pharmee reads it as an intro-cutscene beat, Dr. Jimenez
+                    // recaps it at QuizIntro (PharmeeGatekeeper.SpeakJimenezBrief).
+                    // VoiceBank keys on speaker + text-hash, so Pharmee having a
+                    // clip says NOTHING about Jimenez — his whole recap played as
+                    // blips while only Pharmee's copies existed (user 2026-07-29).
+                    int iloUnvoiced = 0;
+                    if (bank.Get(VoiceSpeaker.Jimenez, VoiceLineId.For(PharmeeLines.JimenezIloLeadIn)) == null)
+                        iloUnvoiced++;
+                    foreach (var mid in VoiceCorpus.ModuleIds)
+                        foreach (var ilo in IloCopy.ForModule(mid))
+                        {
+                            if (string.IsNullOrWhiteSpace(ilo)) continue;
+                            if (bank.Get(VoiceSpeaker.Pharmee, VoiceLineId.For(ilo)) == null) iloUnvoiced++;
+                            if (bank.Get(VoiceSpeaker.Jimenez, VoiceLineId.For(ilo)) == null) iloUnvoiced++;
+                        }
+                    A("voice: every ILO line has a clip for BOTH speakers (" + iloUnvoiced + " unvoiced)",
+                      iloUnvoiced == 0);
                 }
             }
         }
@@ -1419,6 +1438,30 @@ public static class PharmaSelfTests
             foreach (var l in VoiceCorpus.CodeLines())
                 if (!VoicePolish.IsRecordingSafe(l.text)) unsafeLines++;
             A("voice: every code-authored line is recording-safe", unsafeLines == 0);
+        }
+
+        // EVERY dialogue pool must reach the corpus, or the lines exist, play, and
+        // are never voiced. CampaignComplete — the campaign-completion payoff, the
+        // climax of the whole game — sat outside VoiceCorpus and played as blips
+        // until 2026-07-29. Reflect rather than enumerate, so a NEW pool added
+        // later fails this the moment it is forgotten.
+        {
+            var corpusText = new HashSet<string>();
+            foreach (var l in VoiceCorpus.CodeLines()) corpusText.Add(VoiceLineId.For(l.text));
+            var missing = new List<string>();
+            foreach (var f in typeof(PharmeeLines).GetFields())
+            {
+                string[] pool = f.FieldType == typeof(string[]) ? (string[])f.GetValue(null)
+                              : f.FieldType == typeof(string) ? new[] { (string)f.GetValue(null) }
+                              : null;
+                if (pool == null) continue;
+                foreach (var t in pool)
+                    if (!string.IsNullOrWhiteSpace(t) && !corpusText.Contains(VoiceLineId.For(t)))
+                    { missing.Add(f.Name); break; }
+            }
+            A("voice: every PharmeeLines pool reaches VoiceCorpus ("
+              + (missing.Count == 0 ? "all" : string.Join(",", missing) + " MISSING") + ")",
+              missing.Count == 0);
         }
 
         // Holo board scroll paging (W5.12: wrap + scrollable checklist).

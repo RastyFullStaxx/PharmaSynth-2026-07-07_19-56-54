@@ -260,6 +260,97 @@
             "group": "Review"
         },
         {
+            "id": "87426b975cfe00b2",
+            "speaker": "Jimenez",
+            "text": "Before you answer — recall this session's objectives.",
+            "chars": 53,
+            "group": "Objectives"
+        },
+        {
+            "id": "e373fef9120ab3d9",
+            "speaker": "Jimenez",
+            "text": "Objective 1: Synthesize methane gas by heating sodium acetate with soda lime.",
+            "chars": 77,
+            "group": "Objectives"
+        },
+        {
+            "id": "1ffc0b8f41932bb4",
+            "speaker": "Jimenez",
+            "text": "Objective 2: Determine its identity through the flame test.",
+            "chars": 59,
+            "group": "Objectives"
+        },
+        {
+            "id": "31e4e2aef4259d58",
+            "speaker": "Jimenez",
+            "text": "Objective 1: Write chemical reactions involved in some organic compounds such as alcohols, aldehydes, ketones, carboxylic acids and esters.",
+            "chars": 139,
+            "group": "Objectives"
+        },
+        {
+            "id": "011b4c8f69f57b86",
+            "speaker": "Jimenez",
+            "text": "Objective 2: Differentiate tests for different organic compounds.",
+            "chars": 65,
+            "group": "Objectives"
+        },
+        {
+            "id": "0965be010312555d",
+            "speaker": "Jimenez",
+            "text": "Objective 1: Synthesize ethyl alcohol.",
+            "chars": 38,
+            "group": "Objectives"
+        },
+        {
+            "id": "9da997fd5ba2776b",
+            "speaker": "Jimenez",
+            "text": "Objective 2: Determine its identity through chemical tests.",
+            "chars": 59,
+            "group": "Objectives"
+        },
+        {
+            "id": "b69563ffe0c2269e",
+            "speaker": "Jimenez",
+            "text": "Objective 1: Synthesize benzoic acid.",
+            "chars": 37,
+            "group": "Objectives"
+        },
+        {
+            "id": "7d533b7b8e205b7e",
+            "speaker": "Jimenez",
+            "text": "Objective 1: Synthesize acetanilide.",
+            "chars": 36,
+            "group": "Objectives"
+        },
+        {
+            "id": "6be18c51963160b8",
+            "speaker": "Jimenez",
+            "text": "Objective 1: Synthesize acetone.",
+            "chars": 32,
+            "group": "Objectives"
+        },
+        {
+            "id": "ef0d00296f507b76",
+            "speaker": "Jimenez",
+            "text": "Objective 1: Synthesize chloroform.",
+            "chars": 35,
+            "group": "Objectives"
+        },
+        {
+            "id": "53751ab98c5b72be",
+            "speaker": "Jimenez",
+            "text": "Objective 1: Synthesize benzamide.",
+            "chars": 34,
+            "group": "Objectives"
+        },
+        {
+            "id": "0d1999a17c58bd7b",
+            "speaker": "Jimenez",
+            "text": "Objective: Learn the basic methodology in preparation and synthesis of alcohol using the fermentation technique, with basic ingredients found in any household kitchen.",
+            "chars": 167,
+            "group": "Objectives"
+        },
+        {
             "id": "7084ac8853fac6c0",
             "speaker": "Pharmee",
             "text": "Welcome back to the lab! I'm Pharmee — follow your wrist checklist and I'll be right here.",
@@ -818,6 +909,27 @@
             "text": "That's a full experiment, tests, and documentation finished. Great job!",
             "chars": 71,
             "group": "Review"
+        },
+        {
+            "id": "bba4f42f94250f7c",
+            "speaker": "Pharmee",
+            "text": "Congratulations, graduate! You've passed every experiment in the campaign — Tutorial, Prelims, Midterms and Finals. This lab is yours!",
+            "chars": 134,
+            "group": "Celebrate"
+        },
+        {
+            "id": "913cc2267463c521",
+            "speaker": "Pharmee",
+            "text": "That was the final experiment — the entire campaign is complete! Dr. Jimenez and I are so proud of you. Gear up, synth it up — you did it!",
+            "chars": 138,
+            "group": "Celebrate"
+        },
+        {
+            "id": "016cc221443c1618",
+            "speaker": "Pharmee",
+            "text": "Every single synthesis, test and quiz — finished! You've mastered the whole PharmaSynth course. Outstanding work, chemist!",
+            "chars": 122,
+            "group": "Celebrate"
         },
         {
             "id": "00f6abf3dc62695c",

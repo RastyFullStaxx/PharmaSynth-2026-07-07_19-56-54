@@ -75,3 +75,4 @@ Engine, all 11 experiments (data + auto-built stages), and the **full client-con
 
 
 - 2026-07-29 · W5.34 clueless-player audit · dialogue-vs-reality + hint-vs-binding sweep: fixed the Exp 2 tube-4 hard-stuck blocker, the vanishing powder mound, 711 err/sec SpawnVFX particle spam, 3 phantom references (glowing markers / tablet / a GRADED airlock quiz question), Exp 3's 7 quantity-less hints + its phantom litmus, and 4 naming/arithmetic traps; 27 voice lines regenerated, 0 unvoiced. Suite 1288/1288.
+- 2026-07-29 · W5.34b voice routing · VoiceBank keys on speaker+text, so Jimenez's ILO recap and the CampaignComplete payoff played as blips — both now voiced (+16 clips, 315 lines, 0 unvoiced); his lead-in moved out of a bare literal; MainMenu.unity's particle-mode spam fixed (project-wide: 0 mismatches). Reflection pin now fails on ANY pool missing from VoiceCorpus. Suite 1290/1290.

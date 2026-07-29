@@ -664,7 +664,7 @@ public class PharmeeGatekeeper : MonoBehaviour
         var ilos = BriefObjectives();
         if (beat == 2 && ilos.Length > 0 && examiner != null)
         {
-            SpeakAsJimenez("Before you answer — recall this session's objectives.", beat);
+            SpeakAsJimenez(PharmeeLines.JimenezIloLeadIn, beat);
             return;
         }
         int iloIndex = beat - 3;
