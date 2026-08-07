@@ -59,6 +59,26 @@ public class TutorialHighlighter : MonoBehaviour
         TutorialTargets.Build();
         _lit.Clear();
         _droppedAt.Clear();
+        // Cached per run, not per poll: the sweep is over every grabbable in the lab
+        // (~79 of them), and the set only changes when the stage is rebuilt.
+        _allHighlights = Object.FindObjectsByType<HoverHighlight>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None);
+    }
+
+    private HoverHighlight[] _allHighlights;
+
+    /// Push every grabbable that is NOT part of the current step into the background.
+    /// Only touches objects whose state actually changes, so a step that lasts a minute
+    /// costs one pass, not one per poll.
+    private void ApplySpotlight(bool on)
+    {
+        if (_allHighlights == null) return;
+        for (int i = 0; i < _allHighlights.Length; i++)
+        {
+            var hh = _allHighlights[i];
+            if (hh == null) continue;
+            hh.SetDimmed(on && !hh.IsGuided);
+        }
     }
 
     /// Pure rule: should this target be glowing right now?
@@ -120,6 +140,12 @@ public class TutorialHighlighter : MonoBehaviour
 
         _lit.Clear();
         foreach (var kv in _wanted) _lit[kv.Key] = kv.Value;
+
+        // Spotlight AFTER the guide flags are set, so IsGuided is already true on the
+        // objects that must stay bright. Only while something is actually guided —
+        // dimming the whole lab during a wrap-up step with no target would just look
+        // like the lights failed.
+        ApplySpotlight(_lit.Count > 0);
     }
 
     /// Held right now? XRI's own select state is the truth — DropRespawn and the rack
@@ -218,6 +244,7 @@ public class TutorialHighlighter : MonoBehaviour
 
     private void ClearAll()
     {
+        ApplySpotlight(false);          // lights back up, always — even if nothing was lit
         if (_lit.Count == 0 && _xray.Count == 0) return;
         foreach (var kv in _lit) SetGuide(kv.Key, false, kv.Value.role);
         // Belt and braces: a target destroyed mid-run leaves no _lit entry to clear

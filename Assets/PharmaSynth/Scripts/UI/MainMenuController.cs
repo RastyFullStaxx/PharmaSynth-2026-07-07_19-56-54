@@ -42,7 +42,9 @@ public class MainMenuController : MonoBehaviour
     private void EnterLab(bool demo, bool tutorial)
     {
         DemoSession.Active = demo;
-        TutorialSession.Active = tutorial;
+        // BeginSession, not just the flag: it also clears the session-only "practised"
+        // ticks so a new student at the same headset starts clean.
+        if (tutorial) TutorialSession.BeginSession(); else TutorialSession.Active = false;
         var service = new ProgressionService();
         service.Load();
         GameFlow.Select(ResolveLabTarget(ProgressionFlow.Create(service), fallbackModuleId));

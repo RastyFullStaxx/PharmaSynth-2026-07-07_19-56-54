@@ -18,6 +18,14 @@ public class WaypointGuide : MonoBehaviour
     [Tooltip("Marker size multiplier — 1 = whatever the beacon prefab was authored at.")]
     [SerializeField] private float markerScale = 3.2f;
 
+    [Header("Distance scaling")]
+    [Tooltip("Distance at which the marker is exactly markerScale. Nearer shrinks, farther grows.")]
+    [SerializeField] private float referenceDistance = 2f;
+    [Tooltip("Floor on the distance multiplier — stops the marker vanishing when you lean right into it.")]
+    [SerializeField] private float minDistanceMul = 0.55f;
+    [Tooltip("Ceiling on the distance multiplier — stops a far marker swelling to fill the room.")]
+    [SerializeField] private float maxDistanceMul = 3.5f;
+
     /// The marker's ORIGINAL authored scale, captured exactly once and SERIALIZED.
     /// It has to persist: the multiplier is applied to it every frame, so re-deriving
     /// the "home" size from the marker's current scale would multiply an already
@@ -35,25 +43,45 @@ public class WaypointGuide : MonoBehaviour
     public void SetMarkerScale(float s)
     {
         markerScale = s;
-        ApplyMarkerScale();
+        ApplyMarkerScale(1f);       // no camera in edit mode — tuned size, unscaled
+    }
+
+    /// Pure: how much to grow the marker for its distance from the eye.
+    ///
+    /// Apparent (angular) size is size ÷ distance, so holding it constant means growing
+    /// the marker LINEARLY with distance — that is the whole point: a fixed-size beacon
+    /// shrinks exactly as fast as the thing you cannot find, which is backwards.
+    ///
+    /// Clamped at both ends deliberately, so it is NOT perfectly constant: without a
+    /// floor it disappears into nothing when you lean over the bench, and without a
+    /// ceiling a marker across the lab swells to fill the view.
+    public static float DistanceScale(float distance, float referenceDistance,
+                                      float minMul, float maxMul)
+    {
+        if (referenceDistance <= 0.001f) return 1f;
+        return Mathf.Clamp(distance / referenceDistance, minMul, maxMul);
     }
 
     /// Push the tuned placement into the scene. Necessary, not merely tidy: these are
     /// [SerializeField]s that ALREADY existed in the saved scene, so Unity keeps the
     /// old serialized numbers and a changed C# default silently does nothing —
     /// heightOffset sat at the original 0.55 long after the default became 0.16.
-    public void SetPlacement(float height, float clearance, float front)
+    public void SetPlacement(float height, float clearance, float front,
+                             float refDistance, float minMul, float maxMul)
     {
         heightOffset = height;
         shelfClearance = clearance;
         frontDistance = front;
+        referenceDistance = refDistance;
+        minDistanceMul = minMul;
+        maxDistanceMul = maxMul;
     }
 
-    private void ApplyMarkerScale()
+    private void ApplyMarkerScale(float distanceMul)
     {
         if (marker == null) return;
         if (markerHomeScale == Vector3.zero) markerHomeScale = marker.localScale;
-        marker.localScale = markerHomeScale * Mathf.Max(0.01f, markerScale);
+        marker.localScale = markerHomeScale * Mathf.Max(0.01f, markerScale) * distanceMul;
     }
 
     /// Pure placement rule (suite-pinned).
@@ -109,8 +137,6 @@ public class WaypointGuide : MonoBehaviour
         if (station != null)
         {
             if (!marker.gameObject.activeSelf) marker.gameObject.SetActive(true);
-            ApplyMarkerScale();
-
             if (_cam == null && Camera.main != null) _cam = Camera.main.transform;
 
             // SolidWorldBounds, not all renderers: LiquidPourer's StreamLine/PourStream
@@ -123,6 +149,14 @@ public class WaypointGuide : MonoBehaviour
 
             marker.position = MarkerPosition(solid, heightOffset, caged,
                 _cam != null ? _cam.position : marker.position, frontDistance);
+
+            // Scale AFTER positioning: the distance that matters is to where the marker
+            // actually landed, which for a shelf-caged target is well in front of the
+            // object it points at.
+            float eyeDistance = _cam != null
+                ? Vector3.Distance(_cam.position, marker.position)
+                : referenceDistance;
+            ApplyMarkerScale(DistanceScale(eyeDistance, referenceDistance, minDistanceMul, maxDistanceMul));
         }
         else Hide();
     }

@@ -17576,6 +17576,9 @@ MonoBehaviour:
   shelfClearance: 0.4
   frontDistance: 0.3
   markerScale: 3.2
+  referenceDistance: 2
+  minDistanceMul: 0.55
+  maxDistanceMul: 3.5
   markerHomeScale: {x: 1, y: 1, z: 1}
 --- !u!114 &191569882
 MonoBehaviour:

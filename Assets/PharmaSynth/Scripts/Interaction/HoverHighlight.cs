@@ -28,8 +28,16 @@ public class HoverHighlight : MonoBehaviour
     // object because it is the next step; hover lights it because a ray is on it.
     // With a single flag, waving the ray past a guided object and off again would
     // silently switch the guidance glow off.
-    private bool _hover, _guide;
+    private bool _hover, _guide, _dim;
     private TargetRole _guideRole;
+
+    /// How far a non-target is pushed toward black while a guided step is running.
+    /// Glowing one bottle among 57 near-identical ones is only a RELATIVE signal — it
+    /// competes with 56 equally bright neighbours. Dimming the rest turns it into an
+    /// absolute one. Not fully dark: the player must still be able to read the shelf
+    /// and pick a different bottle if they want to.
+    private static readonly Color DimTowards = new Color(0.10f, 0.11f, 0.14f, 1f);
+    private const float DimMix = 0.62f;
 
     private static readonly Color GuideSource      = new Color(1f, 0.72f, 0.20f, 1f);   // amber: go fetch this
     private static readonly Color GuideDestination = new Color(0.35f, 1f, 0.45f, 1f);   // green: put it here
@@ -143,14 +151,27 @@ public class HoverHighlight : MonoBehaviour
         Apply();
     }
 
+    /// Spotlight channel: push everything that is NOT part of the current step back,
+    /// so the guided object stands out absolutely rather than relatively.
+    public void SetDimmed(bool on)
+    {
+        if (on == _dim) return;
+        _dim = on;
+        Apply();
+    }
+
+    public bool IsDimmed => _dim;
+
     private void Apply()
     {
         Cache();
         bool lit = _hover || _guide;
         transform.localScale = HighlightScale(_baseScale, lit, scaleFactor);
         if (_rends == null) return;
-        // Guidance wins the tint when both are on: "THIS is the next thing" outranks
-        // the generic "your ray is on something".
+        // Priority: guidance > hover > dim > untouched. "THIS is the next thing"
+        // outranks "your ray is on something", and BOTH outrank being pushed back —
+        // a dimmed object you deliberately point at must still respond, or the lab
+        // stops feeling alive outside the one glowing bottle.
         Color tint = _guide
             ? (_guideRole == TargetRole.Source ? GuideSource : GuideDestination)
             : glow;
@@ -158,7 +179,8 @@ public class HoverHighlight : MonoBehaviour
         {
             if (_rends[i] == null) continue;
             _rends[i].GetPropertyBlock(_mpb);
-            Color c = lit ? Color.Lerp(_orig[i], tint, glowMix) : _orig[i];
+            Color c = lit ? Color.Lerp(_orig[i], tint, glowMix)
+                    : (_dim ? Color.Lerp(_orig[i], DimTowards, DimMix) : _orig[i]);
             if (_hasBase[i]) _mpb.SetColor(BaseColorID, c);
             if (_hasColor[i]) _mpb.SetColor(ColorID, c);
             _rends[i].SetPropertyBlock(_mpb);

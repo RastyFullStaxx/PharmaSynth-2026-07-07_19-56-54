@@ -15,12 +15,25 @@ public class ComfortSettings
     public bool seatedMode = false;
     public Handedness handedness = Handedness.Right;
 
+    /// Accessibility: hold Tutorial Mode's guidance glow STEADY instead of pulsing.
+    /// A repeatedly brightening object is exactly the pattern photosensitive players
+    /// are told to avoid, and this ships to classrooms — the guidance must remain
+    /// fully usable without it, so "off" means steady-at-full, never dimmer.
+    public bool reduceFlashing = false;
+
     public void SetTextScale(float v)       => textScale = Mathf.Clamp(v, 0.8f, 1.6f);
     public void SetSubtitleSpeed(float v)   => subtitleSpeed = Mathf.Clamp(v, 0.5f, 2f);
     public void SetVignette(float v)        => vignetteIntensity = Mathf.Clamp01(v);
     public void SetSnapTurnAngle(float deg) => snapTurnAngle = Mathf.Clamp(deg, 15f, 90f);
 
     public ComfortSettings Clone() => (ComfortSettings)MemberwiseClone();
+
+    /// What the guidance shader's global should be. 0 = pulse, 1 = hold steady.
+    ///
+    /// Phrased as "steady" rather than "flash" on purpose: an unset shader global reads
+    /// as ZERO, so the default must mean normal pulsing. Pure, so the mapping is pinned
+    /// without a scene or a shader.
+    public static float SteadyGlobal(bool reduceFlashing) => reduceFlashing ? 1f : 0f;
 }
 
 /// Owns the live ComfortSettings, persists them to PlayerPrefs, and raises Changed so
@@ -53,6 +66,7 @@ public class SettingsService : MonoBehaviour
         s.SetSnapTurnAngle(PlayerPrefs.GetFloat(P + "snapTurn", 45f));
         s.seatedMode = PlayerPrefs.GetInt(P + "seated", 0) == 1;
         s.handedness = PlayerPrefs.GetInt(P + "handed", 1) == 0 ? Handedness.Left : Handedness.Right;
+        s.reduceFlashing = PlayerPrefs.GetInt(P + "reduceFlashing", 0) == 1;
         Raise();
     }
 
@@ -65,6 +79,7 @@ public class SettingsService : MonoBehaviour
         PlayerPrefs.SetFloat(P + "snapTurn", s.snapTurnAngle);
         PlayerPrefs.SetInt(P + "seated", s.seatedMode ? 1 : 0);
         PlayerPrefs.SetInt(P + "handed", s.handedness == Handedness.Left ? 0 : 1);
+        PlayerPrefs.SetInt(P + "reduceFlashing", s.reduceFlashing ? 1 : 0);
         PlayerPrefs.Save();
     }
 
@@ -77,6 +92,7 @@ public class SettingsService : MonoBehaviour
     public void SetHandedness(Handedness h){ Settings.handedness = h;     Commit(); }
     /// Toggle wrapper: on = left-handed.
     public void SetLeftHanded(bool on)    { Settings.handedness = on ? Handedness.Left : Handedness.Right; Commit(); }
+    public void SetReduceFlashing(bool on){ Settings.reduceFlashing = on;  Commit(); }
 
     private void Commit() { Save(); Raise(); }
     private void Raise() => Changed?.Invoke(Settings);

@@ -100,6 +100,7 @@ public class ExperimentHudController : MonoBehaviour
         // anywhere in the project (2026-07-29 audit); in VR the toast is easy to
         // miss if you are looking at your hands.
         AudioService.TryPlay("ui-error");
+        LabHaptics.Mistake();       // a long coarse buzz — unmissable even hands-down
     }
 
     private void RefreshProgress()

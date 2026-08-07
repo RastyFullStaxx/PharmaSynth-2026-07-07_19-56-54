@@ -45,6 +45,15 @@ Shader "PharmaSynth/GuideGlow"
             float  _Swell;
         CBUFFER_END
 
+        // GLOBAL, so it must live OUTSIDE UnityPerMaterial (a global inside the
+        // per-material buffer breaks SRP batching and reads garbage).
+        //
+        // 0 = pulse, 1 = hold steady. Phrased as "steady" and NOT as "flash" because an
+        // unset shader global reads as ZERO — so the default has to be the normal
+        // pulsing behaviour, or every scene that never touched the setting would come
+        // up frozen. Written by ComfortApplier from the "reduce flashing" setting.
+        float _GuideSteady;
+
         struct Attributes
         {
             float4 positionOS : POSITION;
@@ -59,9 +68,14 @@ Shader "PharmaSynth/GuideGlow"
         };
 
         // 0..1, never fully dark: a glow that blinks out entirely reads as a fault.
+        //
+        // With _GuideSteady at 1 the wave is forced to its PEAK rather than its mean —
+        // accessibility must not cost the player brightness, or "reduce flashing" would
+        // quietly become "harder to find things".
         float Pulse()
         {
             float wave = 0.5 + 0.5 * sin(_Time.y * _PulseSpeed);
+            wave = lerp(wave, 1.0, saturate(_GuideSteady));
             return lerp(_PulseMin, 1.0, wave);
         }
 

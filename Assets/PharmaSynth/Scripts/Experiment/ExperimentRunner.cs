@@ -142,6 +142,7 @@ public class ExperimentRunner : MonoBehaviour
         // Finishing a whole PHASE was quieter than finishing one step inside it —
         // `task-complete` had a clip and no caller at all (2026-07-29 audit).
         AudioService.TryPlay("task-complete");
+        LabHaptics.StepComplete();     // the hands confirm progress too, not just the ears
         PhaseCompleted?.Invoke(p);
     }
     private void OnMistakeRecorded(LabErrorType t, string m) => MistakeRecorded?.Invoke(t, m);

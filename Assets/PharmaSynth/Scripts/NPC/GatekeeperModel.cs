@@ -273,7 +273,12 @@ public class GatekeeperModel
             int colon = title.IndexOf(':');
             if (colon >= 0 && colon + 2 <= title.Length) title = title.Substring(colon + 1).Trim();
 
-            labels.Add(title + (!unlocked ? "  (locked)" : passed ? "  ✓ PASSED" : ""));
+            // Practice mode never marks anything PASSED (nothing is graded), so its
+            // tick reads "tried this one", session-only. Campaign is untouched.
+            string suffix = !unlocked ? "  (locked)" : passed ? "  ✓ PASSED" : "";
+            if (TutorialSession.Active)
+                suffix = TutorialSession.HasPractised(e.moduleId) ? "  ✓ practised" : "";
+            labels.Add(title + suffix);
             selectable.Add(unlocked);
             moduleIds.Add(e.moduleId);
         }

@@ -3606,6 +3606,76 @@ public static class PharmaSelfTests
                 A("tutorial: caged waypoint pulls out toward the player",
                     Near(Vector3.Distance(new Vector3(boxed.x, 0f, boxed.z),
                                           new Vector3(shelfBottle.center.x, 0f, shelfBottle.center.z)), 0.3f));
+
+                // Distance scaling: apparent size is size/distance, so holding it
+                // constant means growing LINEARLY with distance — clamped at both ends.
+                A("tutorial: marker is unscaled at the reference distance",
+                    Near(WaypointGuide.DistanceScale(2f, 2f, 0.55f, 3.5f), 1f));
+                A("tutorial: marker grows with distance",
+                    Near(WaypointGuide.DistanceScale(4f, 2f, 0.55f, 3.5f), 2f));
+                A("tutorial: far marker is capped, not unbounded",
+                    Near(WaypointGuide.DistanceScale(40f, 2f, 0.55f, 3.5f), 3.5f));
+                A("tutorial: near marker never shrinks away",
+                    Near(WaypointGuide.DistanceScale(0.05f, 2f, 0.55f, 3.5f), 0.55f));
+                A("tutorial: a zero reference distance cannot divide by zero",
+                    Near(WaypointGuide.DistanceScale(3f, 0f, 0.55f, 3.5f), 1f));
+
+                // Spotlight: non-targets dim, and guidance/hover still outrank dimming
+                // so a dimmed object you deliberately point at still responds.
+                hh.SetDimmed(true);
+                A("tutorial: a non-target dims", hh.IsDimmed && !hh.IsHighlighted);
+                hh.SetGuide(true, TargetRole.Destination);
+                A("tutorial: guidance outranks dimming", hh.IsHighlighted && hh.IsGuided);
+                hh.SetGuide(false, TargetRole.Destination);
+                hh.SetHighlight(true);
+                A("tutorial: hover outranks dimming too", hh.IsHighlighted);
+                hh.SetHighlight(false);
+                hh.SetDimmed(false);
+                A("tutorial: clearing the spotlight restores the object", !hh.IsDimmed && !hh.IsHighlighted);
+
+                // Reduce-flashing: an UNSET shader global reads 0, so 0 must mean
+                // "pulse" or every untouched scene would come up frozen.
+                A("comfort: flashing on by default maps to 0 (the unset value)",
+                    Near(ComfortSettings.SteadyGlobal(false), 0f));
+                A("comfort: reduce-flashing holds the glow steady",
+                    Near(ComfortSettings.SteadyGlobal(true), 1f));
+
+                // Haptics: progress is a light tick, a mistake is a longer stronger buzz.
+                A("haptics: a mistake outranks a step tick in both amplitude and length",
+                    LabHaptics.ErrorAmplitude > LabHaptics.StepAmplitude
+                    && LabHaptics.ErrorSeconds > LabHaptics.StepSeconds);
+
+                // Practised ticks are SESSION-only and reset when the mode is entered,
+                // so a second student at the same headset never inherits them.
+                TutorialSession.BeginSession();
+                A("tutorial: a fresh session has practised nothing", TutorialSession.PractisedCount == 0);
+                TutorialSession.MarkPractised("midterm-acetone");
+                A("tutorial: a finished run marks the module practised",
+                    TutorialSession.HasPractised("midterm-acetone"));
+                A("tutorial: other modules stay unmarked", !TutorialSession.HasPractised("final-benzamide"));
+                TutorialSession.BeginSession();
+                A("tutorial: re-entering the mode clears the ticks",
+                    !TutorialSession.HasPractised("midterm-acetone") && TutorialSession.PractisedCount == 0);
+
+                // Picker labels: practice never says PASSED (nothing is graded).
+                {
+                    var pickSvc = new ProgressionService("selftest-tutorial-pick");
+                    var pickFlow = ProgressionFlow.Create(pickSvc);
+                    TutorialSession.MarkPractised("tutorial-methane");
+                    GatekeeperModel.ModuleOptions(pickFlow, ExperimentPeriod.Tutorial,
+                        out var tLabels, out _, out var tIds);
+                    int idx = tIds.IndexOf("tutorial-methane");
+                    A("tutorial: picker ticks a practised module",
+                        idx >= 0 && tLabels[idx].Contains("practised"));
+                    A("tutorial: picker never claims PASSED in practice mode",
+                        idx >= 0 && !tLabels[idx].Contains("PASSED"));
+                }
+                TutorialSession.Active = false;
+
+                // Orientation line exists and is one breath, not a paragraph.
+                A("tutorial: orientation line is authored",
+                    !string.IsNullOrEmpty(PharmeeLines.TutorialOrientation)
+                    && PharmeeLines.TutorialOrientation.Length < 260);
                 var textGo = new GameObject("ProxTag");
                 var textMf = textGo.AddComponent<MeshFilter>();
                 textMf.sharedMesh = probeMesh;

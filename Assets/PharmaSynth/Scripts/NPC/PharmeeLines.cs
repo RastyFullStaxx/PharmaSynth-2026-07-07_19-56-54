@@ -146,6 +146,13 @@ public static class PharmeeLines
         "Steady hands, please. The glassware is not replaceable.",
     };
 
+    /// Spoken once on entering the lab in Tutorial Mode. A single fixed line, not a
+    /// pool: it is an instruction, and a first-timer should hear the same words every
+    /// time rather than a variation. Keep it under one breath — it plays right after
+    /// the ordinary greeting.
+    public const string TutorialOrientation =
+        "This is practice mode. Whatever you need next will glow, and the marker points right at it. Nothing here is graded, so take your time — and you can skip a step if you get stuck.";
+
     // ---- Post-experiment review flow (user 2026-07-11: congrats → Jimenez quiz
     // briefing → score remarks → entrance debrief). Finite pools, numbers stay on
     // the grade card so every line is voice-recordable.

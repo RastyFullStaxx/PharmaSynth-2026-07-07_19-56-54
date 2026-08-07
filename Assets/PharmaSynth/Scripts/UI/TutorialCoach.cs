@@ -77,6 +77,10 @@ public class TutorialCoach : MonoBehaviour
     private void OnTaskCompleted(ExperimentTask _) => _stepsDone++;
     private void OnMistake(LabErrorType _, string __) => _corrections++;
 
+    /// Read by the practice summary panel.
+    public int StepsDone => _stepsDone;
+    public int Corrections => _corrections;
+
     /// Called by the gatekeeper when a practice run ends, in place of the grade screen.
     public void ShowSummary()
     {

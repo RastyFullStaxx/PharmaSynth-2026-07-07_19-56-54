@@ -26,6 +26,9 @@ public static class ComfortMath
 /// whatever the scene has (the menu scene has fewer targets than the lab).
 public class ComfortApplier : MonoBehaviour
 {
+    /// Read by PharmaSynth/GuideGlow. 0 = pulse (the unset default), 1 = hold steady.
+    public static readonly int GuideSteadyProperty = Shader.PropertyToID("_GuideSteady");
+
     [SerializeField] private Transform hudRoot;
     [SerializeField] private SnapTurn snapTurn;
     [SerializeField] private Vignette vignette;
@@ -67,6 +70,11 @@ public class ComfortApplier : MonoBehaviour
             hudRoot.localScale = ComfortMath.HudScale(_hudBase, s.textScale);
         }
         if (snapTurn != null) snapTurn.turnAmount = s.snapTurnAngle;
+
+        // Guidance flash switch. A GLOBAL shader float, not a material edit: the two
+        // guide materials are shared ASSETS, so writing _PulseMin into them at runtime
+        // would dirty them on disk in the editor and persist into the next session.
+        Shader.SetGlobalFloat(GuideSteadyProperty, ComfortSettings.SteadyGlobal(s.reduceFlashing));
         // Full, uncircled view (user 2026-07-11: "like Meta's home"). The XRI
         // tunneling vignette was stuck as a permanent ~0.7-aperture circle in the
         // headset — a locomotion provider (move-under-gravity) reports "locomoting"

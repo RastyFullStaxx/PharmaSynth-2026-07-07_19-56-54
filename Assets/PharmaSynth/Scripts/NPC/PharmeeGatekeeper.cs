@@ -207,7 +207,20 @@ public class PharmeeGatekeeper : MonoBehaviour
         // already IS the ungraded ending: it Aborts the run, clears the grade card
         // and tablet, re-seats every prop and walks the player back to Pharmee. So
         // practice reuses it wholesale rather than growing a parallel teardown.
-        UnityEngine.Object.FindAnyObjectByType<TutorialCoach>()?.ShowSummary();
+        TutorialSession.MarkPractised(runner != null && runner.Module != null
+            ? runner.Module.moduleId : GameFlow.SelectedModuleId);
+
+        var coach = UnityEngine.Object.FindAnyObjectByType<TutorialCoach>();
+        var card = UnityEngine.Object.FindFirstObjectByType<GradeScreenController>(FindObjectsInactive.Include);
+        if (card != null && coach != null)
+        {
+            // Hold the panel until the player dismisses it. Announcing and teleporting
+            // in the same breath meant the summary was gone before it was read.
+            runner?.FreezeClock();
+            card.ShowPractice(coach.StepsDone, coach.Corrections, ResetToEntrance);
+            return;
+        }
+        coach?.ShowSummary();          // no panel wired (bare test scene) — never lose the beat
         ResetToEntrance();
     }
 
@@ -554,6 +567,12 @@ public class PharmeeGatekeeper : MonoBehaviour
     {
         Say(lines.welcome);
         AudioService.TryPlay("pharmee-greet");
+
+        // Tutorial Mode drops the player into the SAME lab with no sign anything is
+        // different — glowing bottles and a floating arrow read as a bug until someone
+        // says what they are. Spoken once per entrance, after the normal greeting.
+        if (TutorialSession.Active)
+            After(lineSeconds * 0.9f, () => Say(PharmeeLines.TutorialOrientation));
     }
 
     /// HUD Reset (user 2026-07-10): everything in the lab returns to its original

@@ -70,10 +70,46 @@ public class GradeScreenController : MonoBehaviour
         }
     }
 
+    /// The PRACTICE ending: same panel, no score.
+    ///
+    /// Tutorial Mode used to announce its summary as floating text and teleport you
+    /// home in the same breath, which is easy to miss entirely — campaign's ending
+    /// holds attention because a panel waits for you. This reuses that panel and
+    /// deliberately shows NO percentage: a score would turn practice back into an exam,
+    /// which is the one thing the mode exists to avoid.
+    ///
+    /// `onDone` runs when the player dismisses it, so the caller keeps ownership of
+    /// what "finished" means rather than this panel reaching into the flow.
+    public void ShowPractice(int stepsDone, int corrections, System.Action onDone)
+    {
+        if (root != null) root.SetActive(true);
+        if (gradeText != null) gradeText.text = stepsDone.ToString();
+        if (mistakesText != null) mistakesText.text = corrections.ToString();
+        if (timeText != null) timeText.text = "—";              // practice runs are untimed
+        if (resultText != null) resultText.text = "PRACTICE COMPLETE";
+        if (breakdownText != null) breakdownText.text = TutorialCoach.SummaryText(stepsDone, corrections);
+        // No pass/fail theatre: nothing was judged, so celebrating or commiserating
+        // would both be lying.
+        if (passedVisuals != null) passedVisuals.SetActive(false);
+        if (failedVisuals != null) failedVisuals.SetActive(false);
+        if (backButton != null) backButton.SetActive(false);
+        if (continueButton != null) continueButton.SetActive(true);
+        _practiceDone = onDone;
+    }
+
+    private System.Action _practiceDone;
+
     public void Hide() { if (root != null) root.SetActive(false); }
 
     public void OnRetryPressed() { Hide(); onRetry?.Invoke(); }
-    public void OnContinuePressed() { Hide(); onContinue?.Invoke(); }
+    public void OnContinuePressed()
+    {
+        Hide();
+        // A practice run owns its own exit — firing onContinue as well would ALSO run
+        // the campaign's unlock/advance chain, which must never happen ungraded.
+        if (_practiceDone != null) { var done = _practiceDone; _practiceDone = null; done(); return; }
+        onContinue?.Invoke();
+    }
     public void OnBackPressed() { Hide(); onBackToEntrance?.Invoke(); }   // fail-path exit (W5.9)
 
     /// Builder seam (W5.9): lets Build Review Corner wire the fail-path button.

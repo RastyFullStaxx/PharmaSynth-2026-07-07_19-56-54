@@ -40,6 +40,8 @@ public static class VoiceCorpus
         // it was MISSING from the corpus, so the payoff line played as blips
         // (found 2026-07-29 by auditing every pool for corpus membership).
         AddPool(lines, VoiceSpeaker.Pharmee, PharmeeLines.CampaignComplete, "Celebrate");
+        // Tutorial Mode's one-off orientation (2026-08-07). A single line, not a pool.
+        lines.Add(new Line(VoiceSpeaker.Pharmee, PharmeeLines.TutorialOrientation, "Tour"));
 
         // Dr. Jimenez pools (exam voice + review verdicts).
         AddPool(lines, VoiceSpeaker.Jimenez, PharmeeLines.ExamGreeting, "Exam");

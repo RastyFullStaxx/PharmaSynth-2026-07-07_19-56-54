@@ -127,7 +127,10 @@ public static class TutorialModeBuilder
         {
             guide.SetRunner(runner);
             guide.SetMarkerScale(3.2f);                  // headset feedback: read as too small
-            guide.SetPlacement(0.16f, 0.4f, 0.3f);       // clear the TOP; cage → pull in front
+            // Clear the TOP; cage → pull in front; then hold a constant APPARENT size
+            // from 1.1 m out to 7 m so a marker across the lab stays as findable as one
+            // on the bench in front of you.
+            guide.SetPlacement(0.16f, 0.4f, 0.3f, refDistance: 2f, minMul: 0.55f, maxMul: 3.5f);
             EditorUtility.SetDirty(guide);
             foreach (var r in guide.GetComponentsInChildren<Renderer>(true))
             {
