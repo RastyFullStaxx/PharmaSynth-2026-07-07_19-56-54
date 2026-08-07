@@ -16,6 +16,8 @@ public class ProximityLabel : MonoBehaviour
     private GameObject _tag;
     private TextMeshPro _tmp;
     private Renderer[] _itemRends;   // the item's own renderers, cached (no per-frame alloc)
+    private HoverHighlight _guide;   // cached once: GetComponent every frame is waste
+    private bool _guideChecked;
 
     public void SetLabel(string text, float dist = 1.4f)
     {
@@ -23,15 +25,24 @@ public class ProximityLabel : MonoBehaviour
         if (_tmp != null) _tmp.text = text;
     }
 
-    /// Practice mode reads labels from across the bench. A student who cannot tell two
-    /// bottles apart learns nothing from finding the right one by glow alone — and this
-    /// is the cheaper answer to findability than an x-ray silhouette, because it also
-    /// teaches label-reading. Campaign keeps the close-range radius, where walking up to
-    /// read a label is a deliberate act.
-    public const float TutorialRadiusMultiplier = 4f;
+    /// Practice mode reads labels from further out: a student who cannot tell two
+    /// bottles apart learns nothing from finding the right one by glow alone, and this
+    /// is a cheaper answer to findability than an x-ray silhouette because it also
+    /// teaches label-reading.
+    ///
+    /// 2.5× (≈3.5 m), NOT the 4× first drafted — the reagent cabinets alone hold 57
+    /// bottles, and a 5.6 m radius lights the entire east wall at once, which is text
+    /// soup rather than help. Reach is handled instead by ForceShow below: the objects
+    /// the current step actually needs are labelled at ANY distance.
+    public const float TutorialRadiusMultiplier = 2.5f;
 
     public static float VisibleRadius(float baseRadius, bool tutorial)
         => tutorial ? baseRadius * TutorialRadiusMultiplier : baseRadius;
+
+    /// Pure: is this label shown right now? Guided objects are always named — that is
+    /// the one label the player is actually looking for.
+    public static bool ShouldShow(float distance, float baseRadius, bool tutorial, bool guided)
+        => (tutorial && guided) || distance <= VisibleRadius(baseRadius, tutorial);
 
     private void Awake() => Build();
 
@@ -82,7 +93,9 @@ public class ProximityLabel : MonoBehaviour
             var c = Camera.main; if (c == null) return; _cam = c.transform;
         }
         float d = Vector3.Distance(_cam.position, transform.position);
-        bool show = d <= VisibleRadius(showDistance, TutorialSession.Active);
+        if (!_guideChecked) { _guide = GetComponent<HoverHighlight>(); _guideChecked = true; }
+        bool show = ShouldShow(d, showDistance, TutorialSession.Active,
+                               _guide != null && _guide.IsGuided);
         if (_tag.activeSelf != show) _tag.SetActive(show);
         if (show)
         {

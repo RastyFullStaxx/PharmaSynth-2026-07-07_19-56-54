@@ -1223,17 +1223,25 @@ public class ExperimentSceneBuilder : MonoBehaviour
     /// tube's bounds down to the floor, so seating it in a rack lifted it a metre
     /// into the air — "positioned so high above that I thought they disappeared"
     /// (user 2026-07-27). Same poison mis-sized every bounds-fitted child.
+    /// Is this mesh part of a vessel's actual BODY? Effect children and text meshes
+    /// are not. Extracted so every consumer shares one definition — the Tutorial Mode
+    /// x-ray ghost originally rolled its own and forgot the TMP_Text clause, which
+    /// silhouetted each item's floating ProximityLabel. That label carries a large
+    /// compensating scale to undo its parent's, so the ghost came out hugely oversized.
+    public static bool IsSolidMesh(MeshFilter mf)
+        => mf != null && mf.sharedMesh != null
+           && !IsEffectChild(mf.gameObject.name)
+           && mf.GetComponent<TMPro.TMP_Text>() == null
+           && mf.GetComponent<Renderer>() != null;
+
     public static Bounds SolidWorldBounds(GameObject g)
     {
         if (g == null) return new Bounds(Vector3.zero, Vector3.one * 0.05f);
         Bounds b = default; bool has = false;
         foreach (var mf in g.GetComponentsInChildren<MeshFilter>(true))
         {
-            if (mf == null || mf.sharedMesh == null) continue;
-            if (IsEffectChild(mf.gameObject.name)) continue;
-            if (mf.GetComponent<TMPro.TMP_Text>() != null) continue;
+            if (!IsSolidMesh(mf)) continue;
             var r = mf.GetComponent<Renderer>();
-            if (r == null) continue;
             if (!has) { b = r.bounds; has = true; } else b.Encapsulate(r.bounds);
         }
         // Skinned/effect-only hosts still need SOME extent to work with.

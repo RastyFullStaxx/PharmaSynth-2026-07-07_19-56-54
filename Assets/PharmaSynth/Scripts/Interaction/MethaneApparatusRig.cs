@@ -137,6 +137,19 @@ public class MethaneApparatusRig : MonoBehaviour
         Transform burner = FindByItemId("burner");
         var match = FindObjectsByType<Matchstick>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
+        // prepare-mixture lives on a mortar that only CARRIES the taskId while a
+        // methane run is live — AcquireMortar stamps it on ExperimentStarted and
+        // ReleaseMortar nulls it again. So the generic GrindController sweep finds
+        // nothing whenever the map is built outside a run, and the very first step
+        // of the tutorial would have no target. Resolve it by the same "first grind
+        // verb" rule AcquireMortar uses, independent of run state.
+        foreach (var g in FindObjectsByType<GrindController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (g == null) continue;
+            Add("prepare-mixture", g.transform, TargetRole.Station, true);
+            break;
+        }
+
         // Scoop the ground mixture into the hard-glass tube.
         Add("setup-apparatus", tube, TargetRole.Destination, true);
         // Hold a LIT burner to that tube — fetch the burner, heat the tube.

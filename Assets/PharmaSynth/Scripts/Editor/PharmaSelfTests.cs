@@ -3577,6 +3577,50 @@ public static class PharmaSelfTests
                     ProximityLabel.VisibleRadius(1.4f, true) > ProximityLabel.VisibleRadius(1.4f, false));
                 A("tutorial: campaign label radius unchanged",
                     Near(ProximityLabel.VisibleRadius(1.4f, false), 1.4f));
+                A("tutorial: a guided object is labelled at ANY distance",
+                    ProximityLabel.ShouldShow(50f, 1.4f, true, true));
+                A("tutorial: an unguided far object stays unlabelled",
+                    !ProximityLabel.ShouldShow(50f, 1.4f, true, false));
+                A("tutorial: campaign ignores the guided flag",
+                    !ProximityLabel.ShouldShow(50f, 1.4f, false, true));
+
+                // The x-ray ghost copies only BODY meshes. It once copied each item's
+                // floating ProximityLabel too — that label carries a big compensating
+                // scale, so the silhouette came out hugely oversized.
+                var probeMesh = new Mesh { name = "selftest-probe-mesh" };
+                var solidGo = new GameObject("solid-probe");
+                var solidMf = solidGo.AddComponent<MeshFilter>();
+                solidMf.sharedMesh = probeMesh;
+                solidGo.AddComponent<MeshRenderer>();
+                A("tutorial: a body mesh counts as solid", ExperimentSceneBuilder.IsSolidMesh(solidMf));
+
+                // Waypoint placement: above the SOLID TOP normally, but pulled out in
+                // front when something (a shelf plank) is directly overhead.
+                var shelfBottle = new Bounds(new Vector3(0f, 1f, 0f), new Vector3(0.08f, 0.2f, 0.08f));
+                var open = WaypointGuide.MarkerPosition(shelfBottle, 0.16f, false, new Vector3(0f, 1.6f, -2f), 0.3f);
+                A("tutorial: waypoint clears the object's TOP, not its origin",
+                    open.y > shelfBottle.max.y && Near(open.y, shelfBottle.max.y + 0.16f));
+                var boxed = WaypointGuide.MarkerPosition(shelfBottle, 0.16f, true, new Vector3(0f, 1.6f, -2f), 0.3f);
+                A("tutorial: a shelf-caged waypoint moves in FRONT instead of up",
+                    Near(boxed.y, shelfBottle.center.y) && boxed.z < shelfBottle.center.z);
+                A("tutorial: caged waypoint pulls out toward the player",
+                    Near(Vector3.Distance(new Vector3(boxed.x, 0f, boxed.z),
+                                          new Vector3(shelfBottle.center.x, 0f, shelfBottle.center.z)), 0.3f));
+                var textGo = new GameObject("ProxTag");
+                var textMf = textGo.AddComponent<MeshFilter>();
+                textMf.sharedMesh = probeMesh;
+                textGo.AddComponent<TMPro.TextMeshPro>();
+                A("tutorial: a text mesh is NOT solid (x-ray must skip labels)",
+                    !ExperimentSceneBuilder.IsSolidMesh(textMf));
+                var fxGo = new GameObject("PourStream");
+                var fxMf = fxGo.AddComponent<MeshFilter>();
+                fxMf.sharedMesh = probeMesh;
+                fxGo.AddComponent<MeshRenderer>();
+                A("tutorial: an effect child is NOT solid", !ExperimentSceneBuilder.IsSolidMesh(fxMf));
+                UnityEngine.Object.DestroyImmediate(solidGo);
+                UnityEngine.Object.DestroyImmediate(textGo);
+                UnityEngine.Object.DestroyImmediate(fxGo);
+                UnityEngine.Object.DestroyImmediate(probeMesh);
 
                 // Stuck ladder: silent while the player is working, escalating only
                 // while the SAME step stays unsolved, and capped at "say it out loud".

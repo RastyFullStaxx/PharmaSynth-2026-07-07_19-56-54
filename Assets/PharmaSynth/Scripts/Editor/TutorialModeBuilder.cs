@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using TMPro;
 using UnityEditor;
 using UnityEditor.Events;
@@ -110,6 +111,9 @@ public static class TutorialModeBuilder
         var hl = runner.GetComponent<TutorialHighlighter>();
         if (hl == null) hl = runner.gameObject.AddComponent<TutorialHighlighter>();
         hl.Bind(runner);
+        hl.SetGlowMaterials(
+            EnsureGlowMaterial("TutorialGlowSource", new Color(1f, 0.66f, 0.12f, 1f)),    // amber: fetch this
+            EnsureGlowMaterial("TutorialGlowTarget", new Color(0.30f, 1f, 0.45f, 1f)));   // green: put it here
         EditorUtility.SetDirty(hl);
 
         var coach = runner.GetComponent<TutorialCoach>();
@@ -122,6 +126,8 @@ public static class TutorialModeBuilder
         foreach (var guide in Object.FindObjectsByType<WaypointGuide>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             guide.SetRunner(runner);
+            guide.SetMarkerScale(3.2f);                  // headset feedback: read as too small
+            guide.SetPlacement(0.16f, 0.4f, 0.3f);       // clear the TOP; cage → pull in front
             EditorUtility.SetDirty(guide);
             foreach (var r in guide.GetComponentsInChildren<Renderer>(true))
             {
@@ -136,26 +142,196 @@ public static class TutorialModeBuilder
         Debug.Log("[TutorialModeBuilder] highlighter bound; " + beacons + " waypoint guide(s) revived with a through-wall beacon.");
     }
 
+    /// Unlit + ZTest **Greater** + ZWrite Off: draws the ghost ONLY where the object is
+    /// occluded, so an unobstructed bottle looks completely normal and a hidden one
+    /// shows through the cabinet door. Semi-transparent so it reads as a hint, not a
+    /// solid object sitting in the wall.
+    /// The pulsing guidance shell. Two passes live inside PharmaSynth/GuideGlow — an
+    /// additive fresnel rim where the object is visible, a flat ghost where it is
+    /// hidden — so one material covers both "make it glow" and "let me see it through
+    /// the cabinet". The pulse is driven by _Time in the shader, not from C#.
+    static Material EnsureGlowMaterial(string name, Color colour)
+    {
+        string path = "Assets/PharmaSynth/Art/Materials/" + name + ".mat";
+        var shader = Shader.Find("PharmaSynth/GuideGlow");
+        if (shader == null)
+        {
+            Debug.LogError("[TutorialModeBuilder] PharmaSynth/GuideGlow not found — did PharmaGlow.shader import?");
+            return null;
+        }
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (mat == null)
+        {
+            System.IO.Directory.CreateDirectory("Assets/PharmaSynth/Art/Materials");
+            mat = new Material(shader) { name = name };
+            AssetDatabase.CreateAsset(mat, path);
+        }
+        mat.shader = shader;
+        // Tuned against a headset capture (user 2026-08-07: "slower, larger, brighter,
+        // halo wider"). The first pass was a fast, tight, dim shimmer that read as a
+        // specular highlight rather than a deliberate marker.
+        mat.SetColor("_BaseColor", colour);
+        mat.SetFloat("_Intensity", 4.5f);      // was 2.2 — brighter
+        mat.SetFloat("_RimPower", 1.1f);       // was 2.2 — LOWER = wider halo
+        mat.SetFloat("_PulseSpeed", 1.3f);     // was 3.0 — slower, ~5 s a breath
+        mat.SetFloat("_PulseMin", 0.15f);      // was 0.35 — deeper swing = bigger pulse
+        mat.SetFloat("_Occluded", 0.5f);       // was 0.35 — clearer through a door
+        mat.SetFloat("_Swell", 0.012f);        // 12 mm breath, so the pulse changes SIZE
+        EditorUtility.SetDirty(mat);
+        AssetDatabase.SaveAssets();
+        return mat;
+    }
+
+    /// Both guidance materials come from PharmaSynth/GuideOverlay, NOT URP's stock
+    /// Unlit — that shader does not declare a `_ZTest` property, so SetInt("_ZTest",…)
+    /// against it is a silent no-op and the overlay renders with ordinary depth
+    /// testing (i.e. shows through nothing). The material looks correctly configured
+    /// in the inspector either way, which is what makes it worth a comment.
+    ///
+    /// Rewrites an existing asset in place rather than returning early, so a material
+    /// left over from the stock-Unlit version is repaired instead of kept.
+    static Material EnsureGuideMaterial(string name, Color colour,
+        UnityEngine.Rendering.CompareFunction zTest, int queue)
+    {
+        string path = "Assets/PharmaSynth/Art/Materials/" + name + ".mat";
+        var shader = Shader.Find("PharmaSynth/GuideOverlay");
+        if (shader == null)
+        {
+            Debug.LogError("[TutorialModeBuilder] PharmaSynth/GuideOverlay shader not found — did PharmaGuide.shader import?");
+            return null;
+        }
+
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (mat == null)
+        {
+            System.IO.Directory.CreateDirectory("Assets/PharmaSynth/Art/Materials");
+            mat = new Material(shader) { name = name };
+            AssetDatabase.CreateAsset(mat, path);
+        }
+        mat.shader = shader;
+        mat.SetColor("_BaseColor", colour);
+        mat.SetFloat("_ZTest", (float)zTest);
+        mat.renderQueue = queue;
+        EditorUtility.SetDirty(mat);
+        AssetDatabase.SaveAssets();
+        return mat;
+    }
+
     /// Unlit + ZTest Always + ZWrite Off: the beacon draws on top of whatever is in
     /// front of it. Its own asset, never a shared bench material — flipping ZTest on
     /// one of those would make random glassware render through walls too.
     static Material EnsureThroughWallMaterial()
-    {
-        const string path = "Assets/PharmaSynth/Art/Materials/TutorialBeacon.mat";
-        var existing = AssetDatabase.LoadAssetAtPath<Material>(path);
-        if (existing != null) return existing;
+        => EnsureGuideMaterial("TutorialBeacon", new Color(1f, 0.72f, 0.20f, 1f),
+                               UnityEngine.Rendering.CompareFunction.Always, 4000);
 
-        var shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
-        var mat = new Material(shader) { name = "TutorialBeacon" };
-        mat.SetColor("_BaseColor", new Color(1f, 0.72f, 0.20f, 1f));
-        mat.SetColor("_Color", new Color(1f, 0.72f, 0.20f, 1f));
-        mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
-        mat.SetInt("_ZWrite", 0);
-        mat.renderQueue = 4000;                    // after opaque geometry
-        System.IO.Directory.CreateDirectory("Assets/PharmaSynth/Art/Materials");
-        AssetDatabase.CreateAsset(mat, path);
-        AssetDatabase.SaveAssets();
-        return mat;
+    // ---- end-to-end guidance simulation --------------------------------------
+
+    /// Walks every module's REAL task graph step by step with Tutorial Mode on, and
+    /// checks the guidance actually keeps up: at every point along the progression the
+    /// currently-available step must still resolve to a live object, and the clock must
+    /// never tick.
+    ///
+    /// This is the dynamic counterpart to Audit Tutorial Targets. The audit asks "does
+    /// every task have a target?" once, in aggregate; this asks "as steps complete, does
+    /// the target set MOVE with them?" — a stale or empty set mid-run would leave the
+    /// player staring at a lab with nothing lit, which the aggregate check cannot see.
+    ///
+    /// Mutates the open scene (it builds stages and starts runs) — reopen SampleScene
+    /// afterwards. Deliberately a menu item, not a suite pin, for that reason.
+    [MenuItem("Tools/PharmaSynth/Simulate Tutorial Guidance")]
+    public static void SimulateGuidance()
+    {
+        if (Application.isPlaying) { Debug.LogWarning("[TutorialSim] exit Play mode first."); return; }
+        var builder = Object.FindAnyObjectByType<ExperimentSceneBuilder>();
+        var runner = Object.FindAnyObjectByType<ExperimentRunner>();
+        var lib = AssetDatabase.LoadAssetAtPath<ExperimentLibrary>(
+            "Assets/PharmaSynth/ScriptableObjects/ExperimentLibrary.asset");
+        if (builder == null || runner == null || lib == null)
+        {
+            Debug.LogError("[TutorialSim] need ExperimentSceneBuilder + ExperimentRunner + ExperimentLibrary — open SampleScene.unity first.");
+            return;
+        }
+
+        // The sim starts real runs; restore vessel contents afterwards or an edit-mode
+        // pass permanently corrupts the saved scene's supplies (SimulatedRun's lesson).
+        var snapshot = new List<(LiquidPhysics lp, ChemicalData chem, float ml, ChemicalData ppt, float pptMl)>();
+        foreach (var lp in Object.FindObjectsByType<LiquidPhysics>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            snapshot.Add((lp, lp.currentChemical, lp.currentLiquidVolume, lp.currentPptChemical, lp.currentPptVolume));
+
+        bool wasTutorial = TutorialSession.Active;
+        TutorialSession.Active = true;
+        var report = new System.Text.StringBuilder("[TutorialSim] step-by-step guidance walk\n");
+        int totalBlind = 0, modules = 0;
+
+        try
+        {
+            foreach (var guid in AssetDatabase.FindAssets("t:ExperimentModuleDefinition",
+                         new[] { "Assets/PharmaSynth/ScriptableObjects/Experiments" }))
+            {
+                var def = AssetDatabase.LoadAssetAtPath<ExperimentModuleDefinition>(AssetDatabase.GUIDToAssetPath(guid));
+                if (def == null || def.graphTasks == null || def.graphTasks.Count == 0) continue;
+                var module = lib.Get(def.moduleId);
+                if (module == null) continue;
+
+                modules++;
+                builder.Build(def.moduleId);
+                runner.SetModule(module);
+                runner.StartExperiment();
+                TutorialTargets.Build();
+
+                var blind = new List<string>();
+                int steps = 0, guided = 0;
+                while (steps++ < 300)
+                {
+                    ExperimentTask next = null;
+                    foreach (var t in runner.Graph.AvailableTasks()) { next = t; break; }
+                    if (next == null) break;
+
+                    // Would anything actually light for this step, right now?
+                    var targets = TaskTargetRegistry.Targets(next.taskId);
+                    bool lit = false;
+                    for (int i = 0; i < targets.Count && !lit; i++)
+                        if (targets[i].transform != null
+                            && TutorialHighlighter.ShouldLight(targets[i], false, true)) lit = true;
+
+                    if (lit) guided++;
+                    else if (!next.autoCompleteWhenOthersDone) blind.Add(next.taskId);
+
+                    runner.CompleteTask(next.taskId);
+                }
+
+                // The clock must not have moved: practice runs are untimed.
+                bool untimed = runner.ElapsedSeconds <= 0.001f;
+                totalBlind += blind.Count;
+                report.Append(blind.Count == 0 && untimed ? "  OK   " : "  BAD  ")
+                      .Append(def.moduleId)
+                      .Append("  guided ").Append(guided).Append('/').Append(guided + blind.Count)
+                      .Append(untimed ? ", untimed" : ", CLOCK RAN (" + runner.ElapsedSeconds.ToString("0.0") + "s)");
+                if (blind.Count > 0) report.Append(", blind steps: ").Append(string.Join(", ", blind));
+                report.Append('\n');
+
+                runner.Abort();
+            }
+        }
+        finally
+        {
+            TutorialSession.Active = wasTutorial;
+            foreach (var s in snapshot)
+            {
+                if (s.lp == null) continue;
+                s.lp.SetContents(s.chem, s.ml);
+                s.lp.currentPptChemical = s.ppt;
+                s.lp.currentPptVolume = s.pptMl;
+            }
+            TaskTargetRegistry.Clear();
+        }
+
+        report.Append(totalBlind == 0
+            ? "  -> guidance kept up at every step of every module."
+            : "  -> " + totalBlind + " step(s) would leave the player with nothing lit.");
+        if (totalBlind == 0) Debug.Log(report.ToString()); else Debug.LogWarning(report.ToString());
+        System.IO.File.WriteAllText("Logs/tutorial-guidance-sim.txt",
+            report.ToString() + "\n(" + modules + " modules walked)\n");
     }
 
     // ---- coverage audit ------------------------------------------------------

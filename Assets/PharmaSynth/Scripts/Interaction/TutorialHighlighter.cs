@@ -131,17 +131,98 @@ public class TutorialHighlighter : MonoBehaviour
         return grab != null && grab.isSelected;
     }
 
-    private static void SetGuide(Transform t, bool on, TargetRole role)
+    private const string XrayChildName = "TutorialGlowShell";
+
+    [Tooltip("PharmaSynth/GuideGlow materials — assigned by Build Tutorial Scene Wiring.")]
+    [SerializeField] private Material glowSourceMaterial;      // amber: go fetch this
+    [SerializeField] private Material glowTargetMaterial;      // green: put it here
+
+    public void SetGlowMaterials(Material source, Material target)
+    { glowSourceMaterial = source; glowTargetMaterial = target; }
+
+    private Material GlowFor(TargetRole role)
+        => role == TargetRole.Source ? glowSourceMaterial : glowTargetMaterial;
+
+    private void SetGuide(Transform t, bool on, TargetRole role)
     {
         if (t == null) return;
         var hh = t.GetComponent<HoverHighlight>();
         if (hh != null) hh.SetGuide(on, role);
+
+        // The glow shell goes on EVERY guided object, not just the hidden ones: its
+        // rim pass is what makes an item read as lit rather than repainted, and it is
+        // wanted in plain sight. The through-wall pass inside the same shader costs
+        // nothing when the object is unobstructed — it simply draws nothing.
+        if (on) AddGlow(t, role); else RemoveGlow(t);
+    }
+
+    private readonly Dictionary<Transform, List<GameObject>> _xray = new Dictionary<Transform, List<GameObject>>();
+
+    /// A pulsing additive shell over the target's solid meshes: a fresnel rim where the
+    /// object is visible, a flat ghost where it is hidden (both passes live in
+    /// PharmaSynth/GuideGlow). Tinting the object's own base colour was not enough —
+    /// it read as "this bottle is orange now" rather than as a light.
+    ///
+    /// Each shell is parented to the mesh it copies with **identity local TRS**, which
+    /// makes it match exactly and follow the object for free. The first version parented
+    /// everything under one root and assigned `localScale = mf.lossyScale` — feeding a
+    /// WORLD scale into a LOCAL field under an already-scaled parent, so the target's own
+    /// scale was applied twice and every shell came out oversized.
+    ///
+    /// NOT a URP Renderer Feature: that needs targets moved onto a dedicated layer, and
+    /// layers here are load-bearing for XRI's interaction masks.
+    private void AddGlow(Transform t, TargetRole role)
+    {
+        var mat = GlowFor(role);
+        if (mat == null || _xray.ContainsKey(t)) return;
+
+        var ghosts = new List<GameObject>();
+        foreach (var mf in t.GetComponentsInChildren<MeshFilter>(false))
+        {
+            // One shared definition of "part of the body" — effect children (pour
+            // streams, liquid columns, powder mounds) and TEXT meshes are excluded.
+            if (!ExperimentSceneBuilder.IsSolidMesh(mf)) continue;
+            if (mf.gameObject.name == XrayChildName) continue;
+
+            var ghost = new GameObject(XrayChildName);
+            ghost.transform.SetParent(mf.transform, false);   // identity local TRS = exact match
+            ghost.hideFlags = HideFlags.DontSave;
+            ghost.layer = mf.gameObject.layer;
+            ghost.AddComponent<MeshFilter>().sharedMesh = mf.sharedMesh;
+            var mr = ghost.AddComponent<MeshRenderer>();
+            // One material per SUBMESH. A renderer with a single material draws only
+            // submesh 0, so a two-part prop (bottle + cap, flask + neck) would glow
+            // in half. sharedMaterials, never .material — that instances in edit mode.
+            int subs = Mathf.Max(1, mf.sharedMesh.subMeshCount);
+            var mats = new Material[subs];
+            for (int i = 0; i < subs; i++) mats[i] = mat;
+            mr.sharedMaterials = mats;
+            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            mr.receiveShadows = false;
+            mr.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+            ghosts.Add(ghost);
+        }
+        _xray[t] = ghosts;
+    }
+
+    private void RemoveGlow(Transform t)
+    {
+        if (t == null || !_xray.TryGetValue(t, out var ghosts)) return;
+        foreach (var g in ghosts)
+        {
+            if (g == null) continue;
+            if (Application.isPlaying) Destroy(g); else DestroyImmediate(g);
+        }
+        _xray.Remove(t);
     }
 
     private void ClearAll()
     {
-        if (_lit.Count == 0) return;
+        if (_lit.Count == 0 && _xray.Count == 0) return;
         foreach (var kv in _lit) SetGuide(kv.Key, false, kv.Value.role);
+        // Belt and braces: a target destroyed mid-run leaves no _lit entry to clear
+        // through, and a stranded shell would hang in the air forever.
+        foreach (var t in new List<Transform>(_xray.Keys)) RemoveGlow(t);
         _lit.Clear();
         _droppedAt.Clear();
     }

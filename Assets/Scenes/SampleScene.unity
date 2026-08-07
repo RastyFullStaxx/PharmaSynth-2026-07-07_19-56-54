@@ -17572,7 +17572,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WaypointGuide
   runner: {fileID: 191569879}
   marker: {fileID: 1603182506}
-  heightOffset: 0.55
+  heightOffset: 0.16
+  shelfClearance: 0.4
+  frontDistance: 0.3
+  markerScale: 3.2
+  markerHomeScale: {x: 1, y: 1, z: 1}
 --- !u!114 &191569882
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17753,6 +17757,8 @@ MonoBehaviour:
   runner: {fileID: 191569879}
   pollSeconds: 0.2
   regrabDelay: 0.5
+  glowSourceMaterial: {fileID: 2100000, guid: f07708ea41038d84cb94a7cb610d6dc1, type: 2}
+  glowTargetMaterial: {fileID: 2100000, guid: cc68293183f574445843e983ff613740, type: 2}
 --- !u!114 &191569892
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -121267,7 +121273,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 3.2, y: 3.2, z: 3.2}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1219542874}
@@ -148910,7 +148916,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6598815579406187037, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
