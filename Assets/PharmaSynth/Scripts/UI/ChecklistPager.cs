@@ -27,10 +27,11 @@ public static class ChecklistPager
     /// OBJECTIVES header — the manuscript's Intended Learning Outcomes, on the
     /// wrist board for the WHOLE run (user 2026-07-19: "ensure pharmee and dr
     /// load the important things written in the manuscript like learning
-    /// outcomes"). Until now `intendedLearningOutcomes` was DEAD DATA: the only
-    /// reader was the legacy ExperimentFlowManager, which isn't in the scene —
-    /// so the objectives were spoken once in the intro cutscene and never
-    /// readable again. Sits ABOVE materials: why you're here, then what to grab.
+    /// outcomes"). Until 2026-07-19 `intendedLearningOutcomes` was DEAD DATA: its
+    /// only reader was the legacy ExperimentFlowManager, which was in no scene and
+    /// has since been deleted (2026-08-07) — so the objectives were spoken once in
+    /// the intro cutscene and never readable again. This is now that reader.
+    /// Sits ABOVE materials: why you're here, then what to grab.
     public static string BuildObjectivesHeader(ExperimentModuleDefinition module)
     {
         if (module == null) return string.Empty;

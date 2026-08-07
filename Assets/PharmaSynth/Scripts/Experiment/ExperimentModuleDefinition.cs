@@ -18,7 +18,11 @@ public class ExperimentModuleDefinition : ScriptableObject
     public List<string> materialReagents = new List<string>();
     public List<string> materialApparatus = new List<string>();
 
-    [Header("Task Checklist (legacy — used by ExperimentFlowManager)")]
+    // ⚠ ORPHANED DATA. Its only reader was ExperimentFlowManager, deleted 2026-08-07.
+    // Kept because the field is SERIALIZED into all 9 module assets and removing it
+    // would rewrite their on-disk data for no gain; `graphTasks` below is what the
+    // game actually runs. Do not author into it, and do not wire anything to it.
+    [Header("Task Checklist (ORPHANED — nothing reads this; use graphTasks)")]
     public List<ExperimentTaskDefinition> tasks = new List<ExperimentTaskDefinition>();
 
     // ---- TaskGraph v2 (plan §4.2) ----------------------------------------

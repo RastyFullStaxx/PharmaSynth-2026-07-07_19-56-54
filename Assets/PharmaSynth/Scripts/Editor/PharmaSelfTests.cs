@@ -3672,6 +3672,15 @@ public static class PharmaSelfTests
                 }
                 TutorialSession.Active = false;
 
+                // Waypoint sizing is now a TARGET HEIGHT IN METRES, not a multiplier:
+                // a multiplier scaled whatever the artist authored and then distance
+                // scaling multiplied it AGAIN, so the marker filled the view up close.
+                A("tutorial: marker sizing holds a constant apparent height",
+                    Near(WaypointGuide.DistanceScale(2f, 2f, 0.35f, 3.5f), 1f)
+                    && Near(WaypointGuide.DistanceScale(1f, 2f, 0.35f, 3.5f), 0.5f));
+                A("tutorial: the near clamp lets the marker shrink out of your face",
+                    WaypointGuide.DistanceScale(0.2f, 2f, 0.35f, 3.5f) < 0.5f);
+
                 // Orientation line exists and is one breath, not a paragraph.
                 A("tutorial: orientation line is authored",
                     !string.IsNullOrEmpty(PharmeeLines.TutorialOrientation)
@@ -5010,8 +5019,8 @@ public static class PharmaSelfTests
 
             // ILOs REACH THE PLAYER (2026-07-19). intendedLearningOutcomes was
             // DEAD DATA — its only reader was the legacy ExperimentFlowManager,
-            // which isn't in the scene — and the asset text had drifted from the
-            // manuscript-verbatim IloCopy the intro cutscene actually speaks.
+            // which was in no scene and was deleted 2026-08-07 — and the asset text
+            // had drifted from the manuscript-verbatim IloCopy the intro speaks.
             // Now: synced to IloCopy, rendered on the wrist board for the whole
             // run, and recapped by Dr. Jimenez before the quiz.
             var ilos = m.intendedLearningOutcomes;

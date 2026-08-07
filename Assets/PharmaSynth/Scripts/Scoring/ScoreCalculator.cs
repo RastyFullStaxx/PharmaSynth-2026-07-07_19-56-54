@@ -46,8 +46,9 @@ public struct GradeBreakdown
 }
 
 /// Turns per-criterion sub-scores (each 0..1) into a weight-normalized grade %.
-/// Keeping this separate from ExperimentFlowManager is the audit's requested
-/// split of scoring out of the god-class.
+/// Split out of the original flow god-class as the audit asked; that class
+/// (ExperimentFlowManager) was finally deleted in 2026-08-07 once the split was
+/// complete and nothing in any scene referenced it.
 public class ScoreCalculator
 {
     private readonly RubricWeights _w;

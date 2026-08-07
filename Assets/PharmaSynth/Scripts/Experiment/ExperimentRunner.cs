@@ -20,8 +20,10 @@ public struct ExperimentResult
 /// and raises the events the HUD / tablet / wrist-watch / grade screen subscribe to.
 ///
 /// All scoring/mastery logic lives in the (unit-tested) pure classes; this is thin
-/// glue plus per-frame time + auto-check. Drives the new v2 data model; the legacy
-/// ExperimentFlowManager remains for the one inherited Ethyl module until migrated.
+/// glue plus per-frame time + auto-check. Drives the v2 TaskGraph data model — the
+/// sole runner since the legacy ExperimentFlowManager cluster was deleted
+/// (2026-08-07); it had been in no scene or prefab, and its callers reached it
+/// through `?.`, so every one of them had been silently doing nothing.
 public class ExperimentRunner : MonoBehaviour
 {
     [SerializeField] private ExperimentModuleDefinition module;

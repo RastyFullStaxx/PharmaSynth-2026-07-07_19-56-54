@@ -87,6 +87,92 @@ public static class TutorialModeBuilder
         Debug.Log("[TutorialModeBuilder] Tutorial menu button built and wired to OnTutorialLaboratory.");
     }
 
+    // ---- MainMenu: keep the button column above the floor --------------------
+
+    /// Reflows the cube-room menu column and lifts the canvas so nothing is buried.
+    ///
+    /// Two separate faults produced the sunken menu (user capture, 2026-08-07):
+    ///   1. `ResultsButton` is INACTIVE but still occupied a row, leaving a visible
+    ///      hole in the column and pushing everything below it a slot further down.
+    ///   2. New buttons were appended BELOW the lowest existing one, so the column
+    ///      grew downward until its tail crossed the floor plane.
+    /// Fixed by laying the KNOWN buttons out in an explicit order, skipping any that
+    /// are absent or inactive, then setting the canvas height ABSOLUTELY so the lowest
+    /// visible button clears the floor. Absolute, not an offset — an offset would sink
+    /// or launch the menu a little further on every re-run.
+    ///
+    /// Order is also the UX order: the two ways to play first, then settings/quit,
+    /// with the config-gated demo button last.
+    static readonly string[] MenuOrder =
+        { "LaboratoryButton", "TutorialModeButton", "SettingsButton", "QuitButton", "DemoModeButton" };
+
+    const float MenuRowSpacing = 170f;      // matches the original authored pitch
+    const float MenuFloorClearance = 0.28f; // metres from the floor to the lowest edge
+    const float MenuMaxTopHeight = 1.95f;   // metres — above this the player has to crane
+
+    [MenuItem("Tools/PharmaSynth/Fix Cube Room Menu Layout")]
+    public static void FixMenuLayout()
+    {
+        if (Application.isPlaying) { Debug.LogWarning("[TutorialModeBuilder] exit Play mode first."); return; }
+        var lab = FindInScene("LaboratoryButton");
+        if (lab == null)
+        {
+            Debug.LogError("[TutorialModeBuilder] LaboratoryButton not found — open MainMenu.unity first.");
+            return;
+        }
+
+        var parent = lab.transform.parent;
+        float topY = lab.GetComponent<RectTransform>().anchoredPosition.y;
+        float x = lab.GetComponent<RectTransform>().anchoredPosition.x;
+
+        int row = 0;
+        float lowestBottom = topY, highestTop = topY;
+        foreach (var name in MenuOrder)
+        {
+            var t = parent.Find(name);
+            // Inactive buttons are SKIPPED, not spaced around — that hole was the gap.
+            if (t == null || !t.gameObject.activeSelf) continue;
+            var rt = t.GetComponent<RectTransform>();
+            if (rt == null) continue;
+            float y = topY - row * MenuRowSpacing;
+            rt.anchoredPosition = new Vector2(x, y);
+            if (row == 0) highestTop = y + rt.sizeDelta.y * 0.5f;
+            lowestBottom = y - rt.sizeDelta.y * 0.5f;
+            EditorUtility.SetDirty(rt);
+            row++;
+        }
+
+        var canvas = parent.GetComponentInParent<Canvas>();
+        var canvasT = canvas != null ? canvas.transform : parent;
+        float unitsToMetres = canvasT.lossyScale.y;
+
+        // TWO constraints, not one. Lifting only until the bottom clears the floor put
+        // the top at ~2.18 m with every button shown, which the player has to crane at.
+        // Take the LOWER placement that still clears the floor.
+        float liftForFloor = MenuFloorClearance - lowestBottom * unitsToMetres;
+        float liftForReach = MenuMaxTopHeight - highestTop * unitsToMetres;
+        float wanted = Mathf.Max(Mathf.Min(liftForFloor, liftForReach), liftForFloor);
+
+        // When the column is too tall to satisfy both, the floor wins (a buried button
+        // is unusable; a high one is merely awkward) — but say so, because the real fix
+        // is fewer visible rows or tighter spacing, not more lifting.
+        if (liftForReach < liftForFloor)
+            Debug.LogWarning("[TutorialModeBuilder] " + row + " visible buttons is too tall to both clear the floor"
+                + " and stay under " + MenuMaxTopHeight.ToString("0.00") + " m — top lands at "
+                + (liftForFloor + highestTop * unitsToMetres).ToString("0.00")
+                + " m. Hide the config-gated Demo button, or reduce MenuRowSpacing/button height.");
+
+        var p = canvasT.position;
+        canvasT.position = new Vector3(p.x, wanted, p.z);
+        EditorUtility.SetDirty(canvasT);
+
+        EditorSceneManager.MarkAllScenesDirty();
+        EditorSceneManager.SaveOpenScenes();
+        Debug.Log("[TutorialModeBuilder] menu reflowed: " + row + " visible buttons, bottom "
+                  + (wanted + lowestBottom * unitsToMetres).ToString("0.00") + " m / top "
+                  + (wanted + highestTop * unitsToMetres).ToString("0.00") + " m above the floor.");
+    }
+
     // ---- SampleScene: the guidance rig ---------------------------------------
 
     /// Wires Tutorial Mode into the lab scene:
@@ -126,11 +212,11 @@ public static class TutorialModeBuilder
         foreach (var guide in Object.FindObjectsByType<WaypointGuide>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             guide.SetRunner(runner);
-            guide.SetMarkerScale(3.2f);                  // headset feedback: read as too small
-            // Clear the TOP; cage → pull in front; then hold a constant APPARENT size
-            // from 1.1 m out to 7 m so a marker across the lab stays as findable as one
-            // on the bench in front of you.
-            guide.SetPlacement(0.16f, 0.4f, 0.3f, refDistance: 2f, minMul: 0.55f, maxMul: 3.5f);
+            guide.SetMarkerScale(0.16f);                 // METRES tall at the reference distance
+            // Clear the TOP; cage → pull in front; then hold a constant APPARENT size.
+            // minMul 0.35 (not 0.55) because the complaint was the marker filling the
+            // view at arm's length — the near end needs room to shrink further.
+            guide.SetPlacement(0.16f, 0.4f, 0.3f, refDistance: 2f, minMul: 0.35f, maxMul: 3.5f);
             EditorUtility.SetDirty(guide);
             foreach (var r in guide.GetComponentsInChildren<Renderer>(true))
             {

@@ -15,8 +15,8 @@ public class WaypointGuide : MonoBehaviour
     [SerializeField] private float shelfClearance = 0.4f;
     [Tooltip("How far to pull the marker out toward the player when caged.")]
     [SerializeField] private float frontDistance = 0.3f;
-    [Tooltip("Marker size multiplier — 1 = whatever the beacon prefab was authored at.")]
-    [SerializeField] private float markerScale = 3.2f;
+    [Tooltip("How TALL the marker should appear at referenceDistance, in metres.")]
+    [SerializeField] private float targetHeightAtReference = 0.16f;
 
     [Header("Distance scaling")]
     [Tooltip("Distance at which the marker is exactly markerScale. Nearer shrinks, farther grows.")]
@@ -40,9 +40,9 @@ public class WaypointGuide : MonoBehaviour
     /// Set by Build Tutorial Scene Wiring so the tuned size lives in ONE place. The
     /// field is [SerializeField], so a value already saved in the scene would otherwise
     /// win over any new code default and the change would look like it did nothing.
-    public void SetMarkerScale(float s)
+    public void SetMarkerScale(float metresAtReference)
     {
-        markerScale = s;
+        targetHeightAtReference = metresAtReference;
         ApplyMarkerScale(1f);       // no camera in edit mode — tuned size, unscaled
     }
 
@@ -77,11 +77,36 @@ public class WaypointGuide : MonoBehaviour
         maxDistanceMul = maxMul;
     }
 
+    /// The beacon's own height at its authored scale, measured once and SERIALIZED.
+    /// Needed because the sizing is expressed in METRES, and metres mean nothing
+    /// without knowing how big the art already is. Zero = not measured yet.
+    [SerializeField, HideInInspector] private float markerBaseHeight = 0f;
+
+    /// Size the marker to a real-world height rather than to a multiplier.
+    ///
+    /// A multiplier was the wrong model and ping-ponged twice: it scaled whatever the
+    /// artist happened to author (~0.5 m here), and once distance scaling multiplied it
+    /// again the marker filled the view at arm's length. A target height in METRES is
+    /// absolute — 0.16 m at 2 m reads as a comfortable ~4.5°, and the distance term
+    /// then holds that angle instead of compounding with it.
     private void ApplyMarkerScale(float distanceMul)
     {
         if (marker == null) return;
         if (markerHomeScale == Vector3.zero) markerHomeScale = marker.localScale;
-        marker.localScale = markerHomeScale * Mathf.Max(0.01f, markerScale) * distanceMul;
+
+        if (markerBaseHeight <= 0f)
+        {
+            // Measure at HOME scale, never at whatever it is currently wearing, or the
+            // base is recorded pre-multiplied and every later size compounds.
+            var current = marker.localScale;
+            marker.localScale = markerHomeScale;
+            markerBaseHeight = Mathf.Max(0.001f,
+                ExperimentSceneBuilder.SolidWorldBounds(marker.gameObject).size.y);
+            marker.localScale = current;
+        }
+
+        float mul = Mathf.Max(0.01f, targetHeightAtReference / markerBaseHeight) * distanceMul;
+        marker.localScale = markerHomeScale * mul;
     }
 
     /// Pure placement rule (suite-pinned).
