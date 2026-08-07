@@ -133,7 +133,7 @@ MonoBehaviour:
     longProcess: 0
     longProcessMessage: 
   - taskId: record-yield
-    label: Record yield and observations
+    label: Record your observations
     phase: 3
     prerequisites:
     - test-combustion

@@ -124,7 +124,7 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 0
     required: 1
-    hint: "The data sheet needs your distillate's mass for the percentage yield.\n\u2192 Set Test Tube 14 on the balance and let the reading settle."
+    hint: "The data sheet needs your distillate's mass.\n\u2192 Set Test Tube 14 on the balance and let the reading settle."
   - taskId: test-flammability
     label: "Non-flammability test (lit match)"
     phase: 2
@@ -156,7 +156,7 @@ MonoBehaviour:
     required: 1
     hint: "Alcoholic silver nitrate shows NOTHING in the cold \u2014 only on warming does white silver chloride separate.\n\u2192 Test Tube 16: 1 squeeze of alcoholic silver nitrate FIRST, then 2 tilt-pours of your chloroform. Warm it at the water bath and watch for the white precipitate."
   - taskId: record-yield
-    label: "Record % yield and observations"
+    label: "Record your observations"
     phase: 3
     prerequisites:
     - weigh-product
@@ -167,7 +167,7 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 5
     required: 1
-    hint: "Mass, % yield and all three test results go on the data sheet.\n\u2192 Review your observations, then answer on the data sheet."
+    hint: "Mass and all three test results go on the data sheet.\n\u2192 Review your observations, then answer on the data sheet."
     autoCompleteWhenOthersDone: 1
   assessmentMode: 0
   masteryThreshold: 0.9

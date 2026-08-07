@@ -44,6 +44,8 @@ public static class W533Fixes
     public static void FixEverything()
     {
         if (!EditorGuard()) return;
+        int racks = FixRacksAnchoredCore();
+        int yieldGone = FixYieldGoneCore();
         int grab = FixGrabbableCore();
         int bottle = FixWashBottleCore();
         int glass = FixFlorenceFlaskCore();
@@ -53,11 +55,100 @@ public static class W533Fixes
         int tags = FixVesselTagsCore();
         LabelForge.Run();
         Save();
-        Debug.Log($"<color=#4CD07D>[W5.33] {grab} apparatus made grabbable, wash bottle {(bottle > 0 ? "stocked" : "already stocked")}, "
+        Debug.Log($"<color=#4CD07D>[W5.33] {racks} tube rack(s) anchored, {yieldGone} yield widget(s) removed, {grab} apparatus made grabbable, wash bottle {(bottle > 0 ? "stocked" : "already stocked")}, "
                   + $"{glass} Florence-flask renderer(s) glassed + round-bottom fill, {funnels} funnel(s) wired to drip from the stem, "
                   + $"balance {(scale > 0 ? "made live" : "already live")}, {panel} result-panel element(s) re-laid out, "
                   + $"{tags} vessel(s) given a live contents tag, reagent labels re-mounted. "
                   + "Run 'Apply W5.8 Verb Data' next if the water bath still reports unbound.</color>");
+    }
+
+    // ---- 0. FIXED FURNITURE: racks must never be pickable --------------------
+
+    /// The tube racks. Two roles, both FIXED (user 2026-07-29): the STORAGE racks
+    /// where tubes live and home, and the WORKSPACE holders that start empty and
+    /// receive tubes mid-experiment. Neither is a hand tool — picking one up
+    /// carries every seated tube with it and wrecks the bench.
+    public static readonly string[] FixedRacks =
+    {
+        "Eq_TestTubeRack", "TestTubeRack_2", "TestTubeRack_3", "TestTubeRack_4", "TestTubeRack_5",
+        "Experiment_Tube_Table_Kit_Holder_1", "Experiment_Tube_Table_Kit_Holder_2",
+        "Experiment_Tube_Table_Kit_Holder_3", "Experiment_Tube_Table_Kit_Holder_4",
+    };
+
+    [MenuItem(MenuRoot + "Anchor Tube Racks (not grabbable)")]
+    public static void FixRacksAnchored()
+    { if (!EditorGuard()) return; int n = FixRacksAnchoredCore(); Save(); Debug.Log($"[W5.33] {n} rack(s) anchored."); }
+
+    /// Strip the grab, pin the body. Colliders are KEPT — the tubes still rest on
+    /// the rack and the player still cannot walk through it. The Rigidbody is made
+    /// kinematic rather than destroyed so nothing doing GetComponent<Rigidbody>()
+    /// starts null-referencing.
+    static int FixRacksAnchoredCore()
+    {
+        int changed = 0;
+        foreach (string n in FixedRacks)
+        {
+            var go = GameObject.Find(n);
+            if (go == null) continue;
+            bool touched = false;
+
+            foreach (var grab in go.GetComponents<XRGrab>())
+            { Undo.DestroyObjectImmediate(grab); touched = true; }
+
+            var rb = go.GetComponent<Rigidbody>();
+            if (rb != null && (!rb.isKinematic || rb.useGravity))
+            {
+                Undo.RecordObject(rb, "anchor rack");
+                rb.isKinematic = true;
+                rb.useGravity = false;
+                touched = true;
+            }
+
+            // A rack that cannot move cannot be dropped, so its respawn bookkeeping
+            // is dead weight that would also fight the anchoring.
+            var respawn = go.GetComponent<DropRespawn>();
+            if (respawn != null) { Undo.DestroyObjectImmediate(respawn); touched = true; }
+
+            if (touched) { changed++; EditorUtility.SetDirty(go); }
+        }
+        return changed;
+    }
+
+    // ---- 0b. the yield stepper is GONE --------------------------------------
+
+    /// The data sheet's yield control. Removed 2026-07-29 (user: "delete it"):
+    /// `PostLabController.Yield` was read by nothing but the self-tests, so the
+    /// player set a number that was silently discarded — and could not have
+    /// derived it anyway, since the game never states the theoretical mass to
+    /// divide by. The client had already ruled yield never affects the grade, so
+    /// the control was pure decoration that misrepresented itself.
+    public static readonly string[] YieldWidgets = { "YieldPlus", "YieldMinus", "YieldValue" };
+
+    [MenuItem(MenuRoot + "Remove Yield Stepper")]
+    public static void FixYieldGone()
+    { if (!EditorGuard()) return; int n = FixYieldGoneCore(); Save(); Debug.Log($"[W5.33] {n} yield widget(s) removed."); }
+
+    static int FixYieldGoneCore()
+    {
+        int removed = 0;
+        foreach (string n in YieldWidgets)
+        {
+            var go = FindAnyByName(n);
+            if (go == null) continue;
+            Undo.DestroyObjectImmediate(go);
+            removed++;
+        }
+        return removed;
+    }
+
+    /// GameObject.Find only sees ACTIVE objects, and the data sheet / quiz panel is
+    /// disabled until the review — so a plain Find silently reported "nothing to
+    /// do" for every widget on it (2026-07-29). Search inactive too.
+    public static GameObject FindAnyByName(string n)
+    {
+        foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (t != null && t.name == n) return t.gameObject;
+        return null;
     }
 
     // ---- 1. ungrabbable apparatus -------------------------------------------

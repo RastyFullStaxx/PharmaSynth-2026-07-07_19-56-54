@@ -191,8 +191,6 @@ public static class SimulatedCampaign
                             log.AppendLine("      why: " + qq.explanation);
                     }
                 }
-                postLab.SetYield(85f);
-                log.AppendLine("  Yield entered: 85 % (record-only, never graded)");
                 if (!postLab.AllAnswered)
                     res.findings.Add(id + ": quiz Submit is blocked — not every question is answerable (AllAnswered false)");
                 var result = postLab.SubmitAndFinish();   // → runner.Finish

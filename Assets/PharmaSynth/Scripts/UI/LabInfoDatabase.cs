@@ -135,7 +135,7 @@ public static class LabInfoDatabase
         AddEquip("wiregauze", "Wire Gauze", "Metal mesh laid on a tripod or ring. It spreads the flame's heat evenly so glassware warms gently instead of cracking from a hot spot.");
         AddEquip("tripod", "Tripod", "Three-legged stand that holds glassware over a burner. Rest wire gauze on top first so the heat spreads evenly.");
         AddEquip("funnel", "Funnel", "Guides liquid into a narrow neck and, fitted with folded filter paper, separates solid from liquid by gravity filtration. Wet the paper first so it clings to the cone.");
-        AddEquip("balance", "Balance", "Weighs reagents and product. Place the empty container on the pan and TARE (zero) it, then add reagent until you reach the target mass — this is how you find your percent yield.");
+        AddEquip("balance", "Balance", "Weighs reagents and product. Place the empty container on the pan and TARE (zero) it, then add reagent until you reach the target mass.");
         AddEquip("vial", "Reagent Vial", "Small capped bottle that stores or dispenses a reagent or your finished product. Keep it capped between pours so nothing spills or evaporates.");
         AddEquip("labspeaker", "Lab Speaker", "Plays the lab's ambient music and gets louder as you approach — a handy audio landmark for this corner of the room.");
         AddEquip("speaker", "Lab Speaker", "Plays the lab's ambient music and gets louder as you approach — a handy audio landmark for this corner.");

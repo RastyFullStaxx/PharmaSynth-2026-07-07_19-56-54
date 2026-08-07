@@ -111,8 +111,26 @@ public class WeighStation : MonoBehaviour
         if (_occupants == 0) { _onPanSince = -1f; _panTimed = false; _occupantBody = null; }
     }
 
+    /// The permanent bench balance is wired ONCE at edit time
+    /// (`W533Fixes.FixBalanceCore` → `Bind(null,…,scale)`), but `_scale` is a plain
+    /// private field — NOT serialized — so it came back NULL after every domain
+    /// reload and the readout silently stopped updating for the rest of the
+    /// session (user 2026-07-29: "the scale doesnt work"). Same class as the
+    /// `_pestle` / `_runner` bug: re-find at runtime instead of trusting the bind.
+    /// The pan is a child of the balance, so the controller is straight up the
+    /// parent chain.
+    public void AutoFindScale()
+    {
+        if (_scale == null) _scale = GetComponentInParent<WeighingScaleController>();
+    }
+
+    /// Suite visibility: is this pan actually driving a readout?
+    public bool HasScale => _scale != null;
+
     private void Update()
     {
+        AutoFindScale();
+
         // Live display: the GROSS reading — whatever rests on the pan plus its
         // contents. It updates for a bare beaker, an empty tube, the mortar and a
         // watch glass, which auto-taring to the contents alone never did.

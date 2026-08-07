@@ -107,7 +107,7 @@ MonoBehaviour:
     required: 1
     hint: "Methyl ketones form a white crystalline adduct with saturated bisulfite, clearest when chilled.\n\u2192 Test Tube 18: 1 of ethanol + 2 of sodium bisulfite + 1 of your acetone, then set it in the ice bucket."
   - taskId: record-yield
-    label: "Record % yield and observations"
+    label: "Record your observations"
     phase: 3
     prerequisites:
     - test-tollens
@@ -118,7 +118,7 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 5
     required: 1
-    hint: "Distillate mass, % yield and all four test results go on the data sheet.\n\u2192 Review the results, then answer on the data sheet."
+    hint: "Distillate mass and all four test results go on the data sheet.\n\u2192 Review the results, then answer on the data sheet."
     autoCompleteWhenOthersDone: 1
   assessmentMode: 0
   masteryThreshold: 0.9

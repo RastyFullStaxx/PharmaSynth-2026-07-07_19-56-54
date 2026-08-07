@@ -108,7 +108,7 @@ MonoBehaviour:
     required: 1
     hint: "The COMPARISON is the lesson: the free amine takes bromine far faster than the amide.\n\u2192 Tube 12: 1 scoopula of crystals + 5 water + 1 of 0.1N HCl + 5 bromine water. Tube 13: 2 aniline (fume hood!) + 5 water + 1 of 0.1N HCl + 2 bromine water."
   - taskId: record-yield
-    label: "Record % yield and observations"
+    label: "Record your observations"
     phase: 3
     prerequisites:
     - test-hydrolysis
@@ -117,7 +117,7 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 5
     required: 1
-    hint: "Crystal mass, % yield and both test results go on the data sheet.\n\u2192 Review the results, then answer on the data sheet."
+    hint: "Crystal mass and both test results go on the data sheet.\n\u2192 Review the results, then answer on the data sheet."
     autoCompleteWhenOthersDone: 1
   assessmentMode: 0
   masteryThreshold: 0.9

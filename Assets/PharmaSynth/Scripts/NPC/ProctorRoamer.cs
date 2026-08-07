@@ -36,6 +36,10 @@ public class ProctorRoamer : MonoBehaviour
     private Vector3 _lastPos;
     private float _stuckTimer;
 
+    /// How fast he settles back onto the floor. Gentle on purpose — he should sink
+    /// off a bench lip, not drop like a stone.
+    private const float FallSpeed = 2.5f;
+
     public ProctorRoamModel Model => _model;
 
     /// Edit-mode/test seam.
@@ -123,6 +127,15 @@ public class ProctorRoamer : MonoBehaviour
     private void Update()
     {
         if (_model == null) return;
+
+        // GRAVITY. CharacterController.Move applies NONE, and every step below is
+        // FLATTENED (Flat()), so his Y could only ever go UP: the controller's
+        // stepOffset (0.15 m) let him climb a bench lip or a dropped tube, and
+        // nothing ever brought him down again — he hovered there for the rest of
+        // the run (user 2026-07-29: "sometimes he levitates"). Pull him down every
+        // frame, unconditionally: standing on the floor the controller resolves it
+        // to no movement (and it keeps isGrounded true), airborne it settles him.
+        if (_cc != null && _cc.enabled) _cc.Move(Vector3.down * FallSpeed * Time.deltaTime);
 
         // Leash: whatever went wrong (missing wall collider, physics shove), he can
         // NEVER wander off — past the leash he snaps back to his post.

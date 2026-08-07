@@ -1224,6 +1224,23 @@ public static class PharmaSelfTests
             WeighingScaleController.Reading(0.01f, 5f, 0.4f, 0.12f) >= 0f);
         A("scale: format is two decimals + unit", WeighingScaleController.Format(12.4f, "g") == "12.40 g");
 
+        // The pan's scale reference is a plain private field, so the edit-time
+        // Bind() does NOT survive a domain reload — the readout silently died for
+        // the rest of the session (user 2026-07-29). It must re-find the balance
+        // itself, exactly like GrindController.AutoFindPestle.
+        {
+            var balFix = new GameObject("BalanceFixture");
+            balFix.AddComponent<WeighingScaleController>();
+            var panFix = new GameObject("Pan");
+            panFix.transform.SetParent(balFix.transform, false);
+            var stFix = panFix.AddComponent<WeighStation>();
+            bool wasUnbound = !stFix.HasScale;
+            stFix.AutoFindScale();
+            A("scale: an unbound pan re-finds its balance (survives domain reload)",
+              wasUnbound && stFix.HasScale);
+            UnityEngine.Object.DestroyImmediate(balFix);
+        }
+
         // Pharmee's robot colouring: a blend, never a replacement, so speech stays
         // intelligible in an educational game (user 2026-07-27).
         A("robot: zero mix leaves the voice untouched", Near(RobotVoiceFx.RingSample(0.5f, -1f, 0f), 0.5f));
@@ -3280,6 +3297,38 @@ public static class PharmaSelfTests
         A("rack: out-count = capacity minus seated", RackDispenserMath.OutCount(6, 4) == 2
             && RackDispenserMath.OutCount(6, 6) == 0);
         A("rack: live label reads seated/capacity", RackDispenserMath.Label("Test Tubes", 4, 6) == "Test Tubes  4/6");
+
+        // Racks are FIXED FURNITURE (user 2026-07-29). Both roles — the storage
+        // racks tubes live in and the workspace holders they get dragged into —
+        // must never be pickable: grabbing one carries every seated tube with it.
+        // Pinned against the SCENE, because only a builder re-run can undo it
+        // (pure math cannot see a re-added component — the W5.8 striker lesson).
+        {
+            var stillGrabbable = new List<string>();
+            foreach (string rn in W533Fixes.FixedRacks)
+            {
+                var go = W533Fixes.FindAnyByName(rn);
+                if (go == null) continue;                       // not in this scene — fine
+                if (go.GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable>() != null)
+                    stillGrabbable.Add(rn);
+            }
+            A("rack: fixed racks are NOT grabbable ("
+              + (stillGrabbable.Count == 0 ? "all anchored" : string.Join(",", stillGrabbable)) + ")",
+              stillGrabbable.Count == 0);
+        }
+
+        // The yield stepper was DELETED (user 2026-07-29): the value was read by
+        // nothing, and the player could not have computed it anyway. The C# API is
+        // gone so code can't regress, but the SCENE widgets could be re-added by a
+        // panel rebuild — pin them absent.
+        {
+            var ghosts = new List<string>();
+            foreach (string yn in W533Fixes.YieldWidgets)
+                if (W533Fixes.FindAnyByName(yn) != null) ghosts.Add(yn);
+            A("postlab: the yield stepper is gone ("
+              + (ghosts.Count == 0 ? "clean" : string.Join(",", ghosts) + " still present") + ")",
+              ghosts.Count == 0);
+        }
         bool namesReal = true;
         foreach (var s in WorkspaceKitsBuilder.Row0Plan()) if (!RealSizes.TryGet(s.prefab, out _)) namesReal = false;
         foreach (var s in WorkspaceKitsBuilder.Row1Plan()) if (!RealSizes.TryGet(s.prefab, out _)) namesReal = false;
@@ -4354,10 +4403,6 @@ public static class PharmaSelfTests
             ctrl.OpenFor(bank);
             A("postlab: opens", ctrl.IsOpen);
             A("postlab: not answered at open", !ctrl.AllAnswered);
-            ctrl.AdjustYield(85); A("postlab: yield stepper adjusts", Near(ctrl.Yield, 85f));
-            ctrl.AdjustYield(50); A("postlab: yield clamps at 100", Near(ctrl.Yield, 100f));
-            ctrl.SetYield(-10);   A("postlab: yield clamps at 0", Near(ctrl.Yield, 0f));
-            ctrl.SetYield(72);
             for (int i = 0; i < bank.Count; i++) ctrl.Answer(i, bank.questions[i].correctIndex);
             A("postlab: all answered", ctrl.AllAnswered);
             A("postlab: perfect quiz fraction = 1", Near(ctrl.ScoreFraction(), 1f));

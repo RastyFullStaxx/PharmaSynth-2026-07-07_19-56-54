@@ -96,7 +96,7 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 0
     required: 1
-    hint: "The data sheet needs the crystal mass for the percentage yield.\n\u2192 Set the Watch Glass on the balance and let the reading settle."
+    hint: "The data sheet needs your product's crystal mass.\n\u2192 Set the Watch Glass on the balance and let the reading settle."
   - taskId: test-alkali
     label: "Alkaline hydrolysis \u2014 ammonia turns red litmus BLUE"
     phase: 2
@@ -128,7 +128,7 @@ MonoBehaviour:
     required: 1
     hint: "Nitrous acid forms IN the tube from dilute HCl + sodium nitrite and deaminates the amide \u2014 brisk nitrogen effervescence. (The manual's 'nitrate' is a typo: NITRITE.)\n\u2192 Test Tube 17: 5 spatula dips of your benzamide + 2 squeezes of diluted HCl, then 3 squeezes of sodium nitrite \u2014 watch it fizz."
   - taskId: record-yield
-    label: "Record % yield and observations"
+    label: "Record your observations"
     phase: 3
     prerequisites:
     - weigh-product
@@ -139,7 +139,7 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 5
     required: 1
-    hint: "Crystal mass, % yield and all three test results go on the data sheet.\n\u2192 Review your observations, then answer on the data sheet."
+    hint: "Crystal mass and all three test results go on the data sheet.\n\u2192 Review your observations, then answer on the data sheet."
     autoCompleteWhenOthersDone: 1
   assessmentMode: 0
   masteryThreshold: 0.9

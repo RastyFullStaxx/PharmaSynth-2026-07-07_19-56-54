@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 /// The post-lab "Documentation" phase (manual's Data Sheet + quiz), shown on a
 /// world-space tablet once the Chemical Tests phase is complete. The player enters
-/// the yield and answers the module's multiple-choice questions; submitting
+/// the module's multiple-choice questions; submitting
 /// completes the terminal data-sheet task and ends the attempt with the quiz score
 /// feeding the grader's Documentation criterion.
 ///
@@ -25,8 +25,6 @@ public class PostLabController : MonoBehaviour
     [SerializeField] private Button[] optionButtons = new Button[0];
     [SerializeField] private TMP_Text[] optionLabels = new TMP_Text[0];
     [SerializeField] private TMP_Text explanationText;
-    [SerializeField] private TMP_InputField yieldInput;   // legacy/optional
-    [SerializeField] private TMP_Text yieldValueText;     // stepper display "Yield: NN %"
     [SerializeField] private Button submitButton;
 
     [Tooltip("Open automatically when ChemicalTests completes. The gatekeeper's review flow sets this false and opens the quiz itself after Jimenez's briefing.")]
@@ -48,7 +46,6 @@ public class PostLabController : MonoBehaviour
     private QuizBank _bank;
     private int[] _answers;      // chosen option per question, -1 = unanswered
     private int _current;
-    private float _yieldPercent = -1f;
     private bool _open;
 
     public bool IsOpen => _open;
@@ -83,7 +80,7 @@ public class PostLabController : MonoBehaviour
         OpenFor(bank);
     }
 
-    /// Open for a specific bank (bank may be null → a yield-only data sheet).
+    /// Open for a specific bank (bank may be null → an acknowledge-only data sheet).
     public void OpenFor(QuizBank bank)
     {
         _bank = bank;
@@ -91,11 +88,9 @@ public class PostLabController : MonoBehaviour
         _answers = new int[n];
         for (int i = 0; i < n; i++) _answers[i] = -1;
         _current = 0;
-        _yieldPercent = 0f;
         _open = true;
         if (root != null) root.SetActive(true);
         if (titleText != null) titleText.text = "Data Sheet & Documentation";
-        RefreshYield();
         Render();
         // The tablet used to appear in SILENCE (user 2026-07-19: "add sound sfx
         // for when the tablet for quiz appears to its direction"). Played 3D AT
@@ -108,18 +103,6 @@ public class PostLabController : MonoBehaviour
     /// there is one (the panel the player reads), else this component.
     private Vector3 TabletPosition()
         => root != null ? root.transform.position : transform.position;
-
-    /// Record the yield the player entered (percent). Optional for the grade.
-    public void SetYield(float percent) { _yieldPercent = Mathf.Clamp(percent, 0f, 100f); RefreshYield(); }
-    public float Yield => _yieldPercent;
-
-    /// Yield stepper buttons (e.g. −5 / +5). Clamped 0..100.
-    public void AdjustYield(int delta) { SetYield(_yieldPercent + delta); }
-
-    private void RefreshYield()
-    {
-        if (yieldValueText != null) yieldValueText.text = "Yield:  " + Mathf.RoundToInt(Mathf.Max(0f, _yieldPercent)) + " %";
-    }
 
     /// Hooked to each option button (index passed by the button wiring).
     public void OnOptionSelected(int optionIndex)
@@ -185,12 +168,6 @@ public class PostLabController : MonoBehaviour
     /// it used to grade Documentation 0 while a missing bank graded 1.
     public float ScoreFraction() => _bank != null && _bank.Count > 0 ? _bank.Score(_answers) : 1f;
 
-    /// Read the yield the player typed into the input field (if any).
-    private void ReadYieldFromField()
-    {
-        if (yieldInput != null && float.TryParse(yieldInput.text, out var v)) _yieldPercent = v;
-    }
-
     /// Close without submitting (W5.9: HUD Restart / fail-abandon mid-quiz used
     /// to leave the tablet floating). The attempt is NOT finished here.
     public void Close()
@@ -250,7 +227,6 @@ public class PostLabController : MonoBehaviour
     /// Finish the attempt: complete the terminal data-sheet task and grade.
     public ExperimentResult SubmitAndFinish()
     {
-        ReadYieldFromField();
         // Complete the data-sheet / record task so the graph reaches 100%.
         if (runner != null && runner.Graph != null)
         {
@@ -278,7 +254,7 @@ public class PostLabController : MonoBehaviour
     {
         if (_bank == null || _bank.Count == 0)
         {
-            if (promptText != null) promptText.text = "Enter the yield you obtained, then submit your data sheet.";
+            if (promptText != null) promptText.text = "Review your observations, then submit your data sheet.";
             if (questionCounterText != null) questionCounterText.text = "";
             for (int i = 0; i < optionButtons.Length; i++)
                 if (optionButtons[i] != null) optionButtons[i].gameObject.SetActive(false);

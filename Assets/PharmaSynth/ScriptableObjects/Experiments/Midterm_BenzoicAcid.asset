@@ -120,7 +120,7 @@ MonoBehaviour:
     required: 1
     hint: "Warmed with propyl alcohol and a drop of sulfuric acid, benzoic acid gives a sweet ester odour (shown on screen).\n\u2192 Into Test Tube 10: 1 scoopula of crystals, 10 squeezes of propyl alcohol, 1 of sulfuric acid \u2014 then warm it at the water bath."
   - taskId: record-yield
-    label: "Record yield and observations"
+    label: "Record your observations"
     phase: 3
     prerequisites:
     - test-litmus
@@ -130,7 +130,7 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 5
     required: 1
-    hint: "Crystal mass, % yield and each test result go on the data sheet.\n\u2192 Review the results, then answer on the data sheet."
+    hint: "Crystal mass and each test result go on the data sheet.\n\u2192 Review the results, then answer on the data sheet."
     autoCompleteWhenOthersDone: 1
   assessmentMode: 0
   masteryThreshold: 0.9
