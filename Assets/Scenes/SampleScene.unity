@@ -17509,6 +17509,8 @@ GameObject:
   - component: {fileID: 191569888}
   - component: {fileID: 191569889}
   - component: {fileID: 191569890}
+  - component: {fileID: 191569891}
+  - component: {fileID: 191569892}
   m_Layer: 0
   m_Name: ExperimentSystems
   m_TagString: Untagged
@@ -17736,6 +17738,34 @@ MonoBehaviour:
   runner: {fileID: 191569879}
   holdSeconds: 2
   fadeSeconds: 0.6
+--- !u!114 &191569891
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 191569878}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c22250caef8d6d04d95ca51d3e77b22c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TutorialHighlighter
+  runner: {fileID: 191569879}
+  pollSeconds: 0.2
+  regrabDelay: 0.5
+--- !u!114 &191569892
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 191569878}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7273d54f82632444fba7a4a5fac4b1cd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TutorialCoach
+  runner: {fileID: 191569879}
 --- !u!1 &192420906
 GameObject:
   m_ObjectHideFlags: 0

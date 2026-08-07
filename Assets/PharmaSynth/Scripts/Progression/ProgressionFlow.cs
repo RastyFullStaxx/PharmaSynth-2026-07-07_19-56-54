@@ -17,10 +17,15 @@ public class ProgressionFlow
     public ProgressionFlow(ProgressionService service, bool unlockAll)
     { _service = service; _unlockAll = unlockAll; }
 
-    /// The runtime factory: folds in whether this is a demo session. Scene code
-    /// should use this instead of the constructor.
+    /// The runtime factory: folds in whether this session unlocks everything. Scene
+    /// code should use this instead of the constructor.
+    ///
+    /// Tutorial Mode rides the SAME _unlockAll switch demo already uses rather than
+    /// growing a second bypass — that way it clears period doors (IsPeriodUnlocked)
+    /// as well as module prerequisites, which a check bolted onto IsUnlocked alone
+    /// would have missed.
     public static ProgressionFlow Create(ProgressionService service)
-        => new ProgressionFlow(service, DemoSession.Active);
+        => new ProgressionFlow(service, DemoSession.Active || TutorialSession.Active);
 
     /// An experiment is unlocked if its catalog prerequisite has been passed
     /// (or it has none). Unknown ids are treated as locked.

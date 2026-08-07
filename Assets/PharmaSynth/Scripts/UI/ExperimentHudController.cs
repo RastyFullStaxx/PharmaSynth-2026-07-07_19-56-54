@@ -71,7 +71,13 @@ public class ExperimentHudController : MonoBehaviour
     {
         _graphProgress = 0f; _mistakes = 0; _lastTimerSecond = -1;
         if (titleText != null) titleText.text = m != null ? m.moduleTitle : "Experiment";
-        if (timerText != null) timerText.text = FormatTime(0f);
+        if (timerText != null)
+        {
+            // HIDE the clock in practice mode rather than freezing it at 00:00 —
+            // a stopped timer on screen just invites "is this broken?".
+            timerText.gameObject.SetActive(ExperimentRunner.ClockRuns);
+            timerText.text = FormatTime(0f);
+        }
         RefreshProgress();
     }
 

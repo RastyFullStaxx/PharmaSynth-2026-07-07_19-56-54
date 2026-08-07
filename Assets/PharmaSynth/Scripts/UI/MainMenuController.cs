@@ -1,11 +1,13 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// Drives the cube spawn-room menu (3 options, user 2026-07-10): Laboratory enters
-/// the lab at the entrance (Pharmee's gate flow then handles episode choice);
-/// Settings toggles the settings panel; Quit exits the game. The lab scene's
-/// ExperimentLauncher reads GameFlow.SelectedModuleId on load; the Tutorial is now
-/// reached inside the lab via Pharmee's episode picker rather than a menu button.
+/// Drives the cube spawn-room menu: Laboratory enters the lab at the entrance
+/// (Pharmee's gate flow then handles episode choice); Tutorial enters the same lab
+/// in ungraded guided-practice mode with everything unlocked; Settings toggles the
+/// settings panel; Quit exits the game. Plus the config-gated amber Demo button.
+/// The lab scene's ExperimentLauncher reads GameFlow.SelectedModuleId on load; the
+/// methane TUTORIAL EXPERIMENT is a separate thing, reached inside the lab via
+/// Pharmee's episode picker — not this Tutorial MODE button.
 public class MainMenuController : MonoBehaviour
 {
     [SerializeField] private string labSceneName = "SampleScene";
@@ -22,23 +24,25 @@ public class MainMenuController : MonoBehaviour
         return next != null ? next.moduleId : fallback;
     }
 
-    public void OnLaboratory()
-    {
-        DemoSession.Active = false;          // normal play never inherits a demo session
-        EnterLab();
-    }
+    public void OnLaboratory() => EnterLab(demo: false, tutorial: false);
 
     /// The config-gated Demo Mode button (visible only when the backend file
     /// enables it): same entry, but on the throwaway demo save with every
     /// period unlocked and the HUD auto-complete controls armed.
-    public void OnDemoLaboratory()
-    {
-        DemoSession.Active = true;
-        EnterLab();
-    }
+    public void OnDemoLaboratory() => EnterLab(demo: true, tutorial: false);
 
-    private void EnterLab()
+    /// Tutorial Mode (2026-08-07): all 9 experiments unlocked and heavily guided
+    /// — glow + waypoint on the next apparatus, hints on the watch, always-on
+    /// labels, skippable steps — and completely ungraded.
+    public void OnTutorialLaboratory() => EnterLab(demo: false, tutorial: true);
+
+    /// Every entry declares the FULL mode, both flags, every time. Setting only the
+    /// one you're turning on lets a returning player carry the other back in — a
+    /// campaign run inheriting Tutorial Mode would be unlocked and ungraded.
+    private void EnterLab(bool demo, bool tutorial)
     {
+        DemoSession.Active = demo;
+        TutorialSession.Active = tutorial;
         var service = new ProgressionService();
         service.Load();
         GameFlow.Select(ResolveLabTarget(ProgressionFlow.Create(service), fallbackModuleId));

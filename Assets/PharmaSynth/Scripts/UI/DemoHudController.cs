@@ -16,17 +16,27 @@ public class DemoHudController : MonoBehaviour
         GameObject clusterRoot, GameObject skip, GameObject finish, GameObject quiz)
     { runner = r; postLab = p; cluster = clusterRoot; skipButton = skip; finishButton = finish; quizButton = quiz; }
 
+    /// Pure: may the player skip the current step? Practice mode reuses this button —
+    /// a student stuck on one pour must be able to reach the interesting part. Campaign
+    /// never offers it: skipping there would hand out a grade for work not done.
+    public static bool SkipAllowed(bool demo, bool tutorial, bool running, bool review)
+        => (demo || tutorial) && running && !review;
+
     private void Update()
     {
         // W5.9: IsRunning persists through the review corner, so Skip/Finish
         // used to float (uselessly) beside the quiz — hide them there; only the
         // Auto-Quiz button applies while the tablet is open.
         bool review = PharmeeGatekeeper.ReviewFlowActive;
-        bool running = DemoSession.Active && runner != null && runner.IsRunning && !review;
+        bool live = runner != null && runner.IsRunning && !review;
+        bool skip = SkipAllowed(DemoSession.Active, TutorialSession.Active, live, false);
+        // Finish + Auto-Quiz stay DEMO-only: a practice run is ungraded and never opens
+        // the quiz tablet, so both would be dead buttons that only raise questions.
+        bool demoOnly = DemoSession.Active && live;
         bool quizOpen = DemoSession.Active && postLab != null && postLab.IsOpen;
-        Toggle(cluster, running || quizOpen);
-        Toggle(skipButton, running);
-        Toggle(finishButton, running);
+        Toggle(cluster, skip || demoOnly || quizOpen);
+        Toggle(skipButton, skip);
+        Toggle(finishButton, demoOnly);
         Toggle(quizButton, quizOpen);
     }
 

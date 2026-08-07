@@ -172,10 +172,15 @@ public class ExperimentRunner : MonoBehaviour
     /// Bind a world-state predicate so the task auto-completes when satisfied.
     public void RegisterCondition(string taskId, Func<bool> condition) => _graph?.RegisterCondition(taskId, condition);
 
+    /// Practice runs are untimed. A guided learning session that still runs a
+    /// stopwatch reads as an exam, which is the opposite of Tutorial Mode's point —
+    /// and its Time-Management score is never computed anyway.
+    public static bool ClockRuns => !TutorialSession.Active;
+
     /// Advance the experiment clock (called by Update; exposed for deterministic tests).
     public void AdvanceTime(float dt)
     {
-        if (IsRunning && dt > 0f && !_clockFrozen) _elapsed += dt;
+        if (IsRunning && dt > 0f && !_clockFrozen && ClockRuns) _elapsed += dt;
     }
 
     private bool _clockFrozen;

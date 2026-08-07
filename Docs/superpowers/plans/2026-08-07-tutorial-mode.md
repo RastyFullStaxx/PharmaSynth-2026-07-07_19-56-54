@@ -10,11 +10,11 @@
 
 **Spec:** [2026-08-07-tutorial-mode-design.md](../specs/2026-08-07-tutorial-mode-design.md)
 
-**Suite count walks:** 1288 → 1327 across the plan (T2 +2, T3 +3, T4 +9, T5 +3, T6 +4, T7 +3, T8 +2, T9 +2, T10 +3, T11 +5, T12 +3). Each task states its expected running total.
+**Suite count walks:** 1290 → 1325 across the plan (T2 +2, T3 +4, T4 +4, T5 +3, T6 +4, T7 +3, T8 +2, T9 +2, T10 +3, T11 +5, T12 +3). Each task states its expected running total.
 
 ## Global Constraints
 
-- **Suite:** `Tools ▸ PharmaSynth ▸ Run Self-Tests`, **EDIT MODE ONLY**. Baseline **1288/1288 ALL GREEN** + exactly 3 expected warnings. Read the result from `Logs/selftest-result.txt` — do not wrap the run in a capture script.
+- **Suite:** `Tools ▸ PharmaSynth ▸ Run Self-Tests`, **EDIT MODE ONLY**. Baseline **1290/1290 ALL GREEN** + exactly 3 expected warnings. Read the result from `Logs/selftest-result.txt` — do not wrap the run in a capture script.
 - **Test at phase boundaries, not per micro-edit.** One suite run per task, after the task's batch compiles. Never re-run without intervening changes.
 - **`Unity_ReadConsole` lies about compile errors.** The only source of truth is `grep "error CS" Logs/Editor.log | tail`. A stale `Library/ScriptAssemblies/*.dll` after a refresh means the compile FAILED. A suite run whose assertion count did not move ran the OLD assembly.
 - **Unity MCP is currently disconnected.** Fallbacks: write `Temp/selftest-autorun-request.txt` (suite runs on next domain reload) or `Logs/menu-autorun-request.txt` (menu list). Headless: `Unity.exe -batchmode -quit -projectPath <proj> -executeMethod MenuAutoRun.RunNow` with the editor CLOSED.
@@ -52,7 +52,7 @@
 
 ## Task 1: `WeighStation.TaskId` + registry rename
 
-Pure mechanical groundwork. No behaviour change — the suite must stay at exactly 1288 and green.
+Pure mechanical groundwork. No behaviour change — the suite must stay at exactly 1290 and green.
 
 **Files:**
 - Modify: `Assets/PharmaSynth/Scripts/Interaction/WeighStation.cs` (near line 13/41)
@@ -65,13 +65,13 @@ Pure mechanical groundwork. No behaviour change — the suite must stay at exact
 **Interfaces:**
 - Produces: `WeighStation.TaskId → string`; `TaskTargetRegistry.Register(string, Transform, TargetRole, bool)`, `.Targets(string) → IReadOnlyList<TaskTarget>`, `.Clear()`; `enum TargetRole { Source, Destination, Tool, Station }`; `struct TaskTarget { Transform transform; TargetRole role; bool stayLitWhenHeld; }`
 
-- [ ] **Step 1: Verify first — read the existing registry**
+- [x] **Step 1: Verify first — read the existing registry**
 
 Read `ExperimentTaskStation.cs` lines 1–80 and note the exact signatures of `Register` / `Unregister` /
 `Get` / `Clear` before replacing them. `ExperimentTaskStation` itself is still used by the synthetic
 builder fixture — delete only the static registry class it declares, not the MonoBehaviour.
 
-- [ ] **Step 2: Add the `WeighStation` getter**
+- [x] **Step 2: Add the `WeighStation` getter**
 
 ```csharp
     /// The graph task this scale satisfies. Held privately for the condition
@@ -80,7 +80,7 @@ builder fixture — delete only the static registry class it declares, not the M
     public string TaskId => _taskId;
 ```
 
-- [ ] **Step 3: Create `TaskTargetRegistry.cs`**
+- [x] **Step 3: Create `TaskTargetRegistry.cs`**
 
 ```csharp
 using System.Collections.Generic;
@@ -141,7 +141,7 @@ public static class TaskTargetRegistry
 }
 ```
 
-- [ ] **Step 4: Delete the old registry and repoint its call sites**
+- [x] **Step 4: Delete the old registry and repoint its call sites**
 
 Remove `ExperimentStationRegistry` from `ExperimentTaskStation.cs`. In that file replace its
 `Register`/`Unregister` calls (lines ~62, ~73) with
@@ -149,7 +149,7 @@ Remove `ExperimentStationRegistry` from `ExperimentTaskStation.cs`. In that file
 (the sweep rebuilds per run; per-object unregister is dead weight). Replace
 `ExperimentStationRegistry.Clear()` with `TaskTargetRegistry.Clear()` at all five sites under **Files**.
 
-- [ ] **Step 5: Point `WaypointGuide` at the new registry so it compiles**
+- [x] **Step 5: Point `WaypointGuide` at the new registry so it compiles**
 
 In `WaypointGuide.cs:28`:
 
@@ -161,7 +161,7 @@ In `WaypointGuide.cs:28`:
 
 Behaviour unchanged (still nothing registers yet, still hides) — this is a compile fix; the revival is Task 6.
 
-- [ ] **Step 6: Verify the compile actually succeeded**
+- [x] **Step 6: Verify the compile actually succeeded**
 
 ```bash
 grep "error CS" Logs/Editor.log | tail
@@ -171,9 +171,9 @@ Expected: no output. If `TaskTargetRegistry` is missing from the assembly, confi
 `grep -a TaskTargetRegistry Library/ScriptAssemblies/Assembly-CSharp.dll`; if absent, rename the file
 to a new path (fresh guid) and refresh.
 
-- [ ] **Step 7: Run the suite** → read `Logs/selftest-result.txt`. Expected **1288/1288 green, 3 warnings**. The count must not move.
+- [x] **Step 7: Run the suite** → read `Logs/selftest-result.txt`. Expected **1290/1290 green, 3 warnings**. The count must not move.
 
-- [ ] **Step 8: Checkpoint** — ask the user before committing.
+- [x] **Step 8: Checkpoint** — ask the user before committing.
 
 ---
 
@@ -189,7 +189,7 @@ Delivers: a module launched with the flag on runs normally and ends **without** 
 **Interfaces:**
 - Produces: `TutorialSession.Active → bool` (settable static); `ShouldEnterReview() → bool`.
 
-- [ ] **Step 1: Verify first — find the grade chain**
+- [x] **Step 1: Verify first — find the grade chain**
 
 ```bash
 grep -rn "ReviewFlowActive\|IsReviewState\|PostLabController\|GradeScreen" Assets/PharmaSynth/Scripts/NPC/PharmeeGatekeeper.cs Assets/PharmaSynth/Scripts/Progression/ | head -30
@@ -198,7 +198,7 @@ grep -rn "ReviewFlowActive\|IsReviewState\|PostLabController\|GradeScreen" Asset
 Identify the single call site where a finished run enters the review sequence. That one place gets the
 early return. Note its method name — later steps call it `<EnterReview>`.
 
-- [ ] **Step 2: Create the flag**
+- [x] **Step 2: Create the flag**
 
 ```csharp
 /// Tutorial Mode (2026-08-07): all 9 experiments unlocked, heavily guided
@@ -214,7 +214,7 @@ public static class TutorialSession
 }
 ```
 
-- [ ] **Step 3: Write the failing suite assertions**
+- [x] **Step 3: Write the failing suite assertions**
 
 ```csharp
         // tutorial: a guided run is practice — it must never reach the graded chain.
@@ -231,11 +231,11 @@ Extract the gate as a pure static beside `<EnterReview>` so it is testable witho
     public static bool ShouldEnterReview() => !TutorialSession.Active;
 ```
 
-- [ ] **Step 4: Run the suite and confirm the new assertions FAIL**
+- [x] **Step 4: Run the suite and confirm the new assertions FAIL**
 
-Expected: 1290 total, 2 failures. If the count reads 1288, the OLD assembly ran — fix the compile first.
+Expected: 1292 total, 2 failures. If the count reads 1290, the OLD assembly ran — fix the compile first.
 
-- [ ] **Step 5: Wire the gate into the real call site**
+- [x] **Step 5: Wire the gate into the real call site**
 
 ```csharp
         if (!ShouldEnterReview())
@@ -250,9 +250,9 @@ Expected: 1290 total, 2 failures. If the count reads 1288, the OLD assembly ran 
 Confirm `ResetToEntrance()` is the correct existing return-to-picker call in `PharmeeGatekeeper`;
 substitute the real one if it differs.
 
-- [ ] **Step 6: Run the suite** → expected **1290/1290 green**, 3 warnings.
+- [x] **Step 6: Run the suite** → expected **1292/1292 green**, 3 warnings.
 
-- [ ] **Step 7: Checkpoint.**
+- [x] **Step 7: Checkpoint.**
 
 ---
 
@@ -271,7 +271,7 @@ in here keeps all the "what does the flag change about the run's framing" work i
 - Consumes: `TutorialSession.Active` (Task 2).
 - Produces: `ExperimentRunner.ClockRuns → bool` (pure gate, used by the HUD).
 
-- [ ] **Step 1: Verify first — find the three touch points**
+- [x] **Step 1: Verify first — find the three touch points**
 
 ```bash
 grep -rn "MenuCanvas\|Laboratory\|demoEnabled" Assets/PharmaSynth/Scripts/Editor/MenuCubeRoomBuilder.cs | head -20
@@ -282,7 +282,7 @@ grep -rn "FreezeClock\|elapsed\|Clock\|timer" Assets/PharmaSynth/Scripts/Experim
 Note whether `MenuCubeRoomBuilder` is idempotent (re-runnable without duplicating buttons) before
 adding a fourth. The amber Demo button is the pattern to copy — it is already config-gated.
 
-- [ ] **Step 2: Write the failing assertions**
+- [x] **Step 2: Write the failing assertions**
 
 ```csharp
         // tutorial: practice mode ignores the linear chain — every module is playable.
@@ -296,9 +296,9 @@ adding a fourth. The amber Demo button is the pattern to copy — it is already 
 
 Confirm the real catalog accessor name from Step 1 and substitute it for `AllModuleIds()`.
 
-- [ ] **Step 3: Run the suite, confirm 3 failures** (expected total 1293).
+- [x] **Step 3: Run the suite, confirm 3 failures** (expected total 1296).
 
-- [ ] **Step 4: Add the lock bypass**
+- [x] **Step 4: Add the lock bypass**
 
 At the picker's lock test, prepend:
 
@@ -307,7 +307,7 @@ At the picker's lock test, prepend:
         if (TutorialSession.Active) return true;
 ```
 
-- [ ] **Step 5: Stop the clock**
+- [x] **Step 5: Stop the clock**
 
 In `ExperimentRunner`:
 
@@ -320,7 +320,7 @@ In `ExperimentRunner`:
 Guard the clock tick with it, and hide the HUD clock element when it is false (do not merely freeze a
 visible `00:00` — a frozen clock invites "is this broken?").
 
-- [ ] **Step 6: Add the menu button**
+- [x] **Step 6: Add the menu button**
 
 Copy the Demo button block. Label **"Tutorial"**, and on click:
 
@@ -333,9 +333,9 @@ Copy the Demo button block. Label **"Tutorial"**, and on click:
 The Laboratory button must set `TutorialSession.Active = false` on click, or a returning player carries
 the flag into a campaign run.
 
-- [ ] **Step 7: Run the builder menu, then the suite** → expected **1293/1293 green**. One DevCapture of the cube room (the layout *is* the question) — one shot, yaw 0–360 only.
+- [x] **Step 7: Run the builder menu, then the suite** → expected **1296/1296 green**. One DevCapture of the cube room (the layout *is* the question) — one shot, yaw 0–360 only.
 
-- [ ] **Step 8: Checkpoint.**
+- [x] **Step 8: Checkpoint.**
 
 ---
 
@@ -351,7 +351,7 @@ the flag into a campaign run.
 - Consumes: `TaskTargetRegistry.Register/Targets/Clear`, `TargetRole`, `TaskTarget` (Task 1).
 - Produces: `TutorialTargets.Build()` → void; `TutorialTargets.AuditAgainst(TaskGraph, IEnumerable<ExperimentTask>)`; `TutorialTargets.LastUnresolved` → `List<string>`.
 
-- [ ] **Step 1: Verify first — confirm the accessors**
+- [x] **Step 1: Verify first — confirm the accessors**
 
 ```bash
 grep -n "requiredItemId\|TaskId" Assets/PharmaSynth/Scripts/Interaction/ZoneItemSensor.cs
@@ -362,7 +362,7 @@ grep -n "public.*TaskId\|VaporTaskId\|FermentTaskId" Assets/PharmaSynth/Scripts/
 Write down the exact field/property names. **Do not guess** — a wrong accessor compiles to a silent
 empty sweep, which looks identical to "this module has no targets".
 
-- [ ] **Step 2: Write the failing assertion — the one that matters**
+- [x] **Step 2: Write the failing assertion — the one that matters**
 
 ```csharp
         // tutorial: every step in every module must resolve to at least one object,
@@ -381,9 +381,9 @@ empty sweep, which looks identical to "this module has no targets".
 
 Substitute the real Reveal-Stage entry point for `BuildStageForModule`.
 
-- [ ] **Step 3: Run the suite, confirm 9 failures** (expected total 1302).
+- [x] **Step 3: Run the suite, confirm 9 failures** (expected total 1300).
 
-- [ ] **Step 4: Implement the sweep**
+- [x] **Step 4: Implement the sweep**
 
 ```csharp
 /// Builds the taskId -> objects map by sweeping the live scene once per run.
@@ -486,13 +486,13 @@ public static class TutorialTargets
 If `expectedReagents` is private, add a read-only `ExpectedSteps()` accessor to `LiquidTaskBinding`
 rather than making the field public.
 
-- [ ] **Step 5: Run the suite** → expected **1302/1302 green**.
+- [x] **Step 5: Run the suite** → expected **1300/1300 green**.
 
 **If a module reports unresolved taskIds, do not weaken the assertion.** Read each named taskId and
 find which component should own it. An unresolved non-wrap-up step is a genuine gap — that is the
 whole point of this pin.
 
-- [ ] **Step 6: Add the editor-only warning**
+- [x] **Step 6: Add the editor-only warning**
 
 ```csharp
 #if UNITY_EDITOR
@@ -502,7 +502,7 @@ whole point of this pin.
 #endif
 ```
 
-- [ ] **Step 7: Checkpoint.**
+- [x] **Step 7: Checkpoint.**
 
 ---
 
@@ -517,7 +517,7 @@ Smallest visible win. No art, no new components.
 **Interfaces:**
 - Produces: `WristWatchController.StepText(string label, string hint, bool tutorial) → string` (pure, static).
 
-- [ ] **Step 1: Write the failing assertions**
+- [x] **Step 1: Write the failing assertions**
 
 ```csharp
         Check("tutorial: watch shows label only in campaign",
@@ -529,9 +529,9 @@ Smallest visible win. No art, no new components.
               WristWatchController.StepText("Weigh 2 g", "", true) == "Weigh 2 g");
 ```
 
-- [ ] **Step 2: Run the suite, confirm 3 failures** (expected total 1305).
+- [x] **Step 2: Run the suite, confirm 3 failures** (expected total 1303).
 
-- [ ] **Step 3: Implement the pure formatter**
+- [x] **Step 3: Implement the pure formatter**
 
 ```csharp
     /// Pure: what the holo checklist prints for the current step. Tutorial Mode adds
@@ -543,7 +543,7 @@ Smallest visible win. No art, no new components.
     }
 ```
 
-- [ ] **Step 4: Call it at line 157**
+- [x] **Step 4: Call it at line 157**
 
 ```csharp
         string hint = null;
@@ -556,9 +556,9 @@ Smallest visible win. No art, no new components.
         current = StepText(current, hint, TutorialSession.Active);
 ```
 
-- [ ] **Step 5: Run the suite** → expected **1305/1305 green**.
+- [x] **Step 5: Run the suite** → expected **1303/1303 green**.
 
-- [ ] **Step 6: Checkpoint.** ⚠ Do **not** edit any `hint` string for readability here — see Global Constraints.
+- [x] **Step 6: Checkpoint.** ⚠ Do **not** edit any `hint` string for readability here — see Global Constraints.
 
 ---
 
@@ -576,7 +576,7 @@ Delivers the visible feature: the next apparatus glows and an arrow points at it
 - Consumes: `TaskTargetRegistry.Targets`, `TargetRole`, `TaskTarget` (T1); `TutorialTargets.Build()` (T4); `TutorialSession.Active` (T2).
 - Produces: `HoverHighlight.SetGuide(bool, TargetRole)`; `TutorialHighlighter.ShouldLight(TaskTarget, bool held, bool taskAvailable) → bool` (pure, static).
 
-- [ ] **Step 1: Write the failing assertions for the pure grab rule**
+- [x] **Step 1: Write the failing assertions for the pure grab rule**
 
 ```csharp
         var src  = new TaskTarget { role = TargetRole.Source,      stayLitWhenHeld = false };
@@ -592,9 +592,9 @@ Delivers the visible feature: the next apparatus glows and an arrow points at it
               !TutorialHighlighter.ShouldLight(dest, false, false));
 ```
 
-- [ ] **Step 2: Run the suite, confirm 4 failures** (expected total 1309).
+- [x] **Step 2: Run the suite, confirm 4 failures** (expected total 1307).
 
-- [ ] **Step 3: Split `HoverHighlight`'s single `_lit` flag**
+- [x] **Step 3: Split `HoverHighlight`'s single `_lit` flag**
 
 `_lit` is one bool, so a hover-exit would clear a tutorial glow. Two sources, one apply:
 
@@ -647,7 +647,7 @@ Delivers the visible feature: the next apparatus glows and an arrow points at it
 
 `OnSelect`'s `SetHighlight(false)` must **not** clear `_guide` — the highlighter owns that channel.
 
-- [ ] **Step 4: Create `TutorialHighlighter`**
+- [x] **Step 4: Create `TutorialHighlighter`**
 
 ```csharp
 using System.Collections.Generic;
@@ -739,7 +739,7 @@ public class TutorialHighlighter : MonoBehaviour
 }
 ```
 
-- [ ] **Step 5: Revive the waypoint**
+- [x] **Step 5: Revive the waypoint**
 
 In `WaypointGuide.Update()`, gate on the flag and take the **source-first** target:
 
@@ -760,14 +760,14 @@ In `WaypointGuide.Update()`, gate on the flag and take the **source-first** targ
 
 Set the beacon's arrow and disc materials to `ZTest Always` so they read through a closed cabinet door.
 
-- [ ] **Step 6: Call `TutorialTargets.Build()` at run start**
+- [x] **Step 6: Call `TutorialTargets.Build()` at run start**
 
 Hook it where the stage finishes building for a run (the `ExperimentRunner.StartRun` seam), guarded by
 `if (TutorialSession.Active)`. Campaign pays nothing.
 
-- [ ] **Step 7: Run the suite** → expected **1309/1309 green**. Then one DevCapture of a lit target set.
+- [x] **Step 7: Run the suite** → expected **1307/1307 green**. Then one DevCapture of a lit target set.
 
-- [ ] **Step 8: Checkpoint.**
+- [x] **Step 8: Checkpoint.**
 
 ---
 
@@ -786,7 +786,7 @@ Almost entirely a wrapper — `DemoActions.CompleteCurrentStep(runner)` already 
 - Consumes: `DemoActions.CompleteCurrentStep(ExperimentRunner) → string`; `TutorialSession.Active`.
 - Produces: `WristWatchController.SkipAllowed(bool tutorial, bool running) → bool` (pure, static).
 
-- [ ] **Step 1: Write the failing assertions**
+- [x] **Step 1: Write the failing assertions**
 
 ```csharp
         Check("tutorial: skip offered in practice mode",  WristWatchController.SkipAllowed(true,  true));
@@ -794,9 +794,9 @@ Almost entirely a wrapper — `DemoActions.CompleteCurrentStep(runner)` already 
         Check("tutorial: skip hidden when no run is active", !WristWatchController.SkipAllowed(true, false));
 ```
 
-- [ ] **Step 2: Run the suite, confirm 3 failures** (expected total 1312).
+- [x] **Step 2: Run the suite, confirm 3 failures** (expected total 1310).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```csharp
     /// Practice mode lets a stuck player move on. Campaign never does — skipping a
@@ -811,9 +811,9 @@ Add a "Skip step" button to the holo panel, `SetActive(SkipAllowed(...))` each r
         if (!string.IsNullOrEmpty(skipped)) AudioService.TryPlay("hover");
 ```
 
-- [ ] **Step 4: Run the suite** → expected **1312/1312 green**.
+- [x] **Step 4: Run the suite** → expected **1310/1310 green**.
 
-- [ ] **Step 5: Checkpoint.**
+- [x] **Step 5: Checkpoint.**
 
 ---
 
@@ -830,7 +830,7 @@ to read labels, which x-ray does not.
 **Interfaces:**
 - Produces: `ProximityLabel.VisibleRadius(float baseRadius, bool tutorial) → float` (pure, static).
 
-- [ ] **Step 1: Verify first — read `ProximityLabel`**
+- [x] **Step 1: Verify first — read `ProximityLabel`**
 
 ```bash
 grep -n "radius\|distance\|SetActive\|Update" Assets/PharmaSynth/Scripts/UI/ProximityLabel.cs
@@ -838,7 +838,7 @@ grep -n "radius\|distance\|SetActive\|Update" Assets/PharmaSynth/Scripts/UI/Prox
 
 Note the field that gates visibility and its default value; substitute the real name below.
 
-- [ ] **Step 2: Write the failing assertions**
+- [x] **Step 2: Write the failing assertions**
 
 ```csharp
         Check("tutorial: label radius widens in practice mode",
@@ -847,9 +847,9 @@ Note the field that gates visibility and its default value; substitute the real 
               Mathf.Approximately(ProximityLabel.VisibleRadius(1.5f, false), 1.5f));
 ```
 
-- [ ] **Step 3: Run the suite, confirm 2 failures** (expected total 1314).
+- [x] **Step 3: Run the suite, confirm 2 failures** (expected total 1312).
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 ```csharp
     /// Practice mode reads labels from across the bench: a student who cannot tell
@@ -863,9 +863,9 @@ Note the field that gates visibility and its default value; substitute the real 
 
 Call it wherever the distance test happens, passing `TutorialSession.Active`.
 
-- [ ] **Step 5: Run the suite** → expected **1314/1314 green**. One DevCapture of the reagent cabinets with labels on — check for text soup before accepting the 4× multiplier; tune the constant if it is unreadable.
+- [x] **Step 5: Run the suite** → expected **1312/1312 green**. One DevCapture of the reagent cabinets with labels on — check for text soup before accepting the 4× multiplier; tune the constant if it is unreadable.
 
-- [ ] **Step 6: Checkpoint.**
+- [x] **Step 6: Checkpoint.**
 
 ---
 
@@ -880,7 +880,7 @@ Two edge cases that look like bugs if left.
 **Interfaces:**
 - Produces: `TutorialHighlighter.GuidanceAllowed(bool running, bool skipping) → bool` (pure, static).
 
-- [ ] **Step 1: Verify first — does `TimeSkipController` expose a fading signal?**
+- [x] **Step 1: Verify first — does `TimeSkipController` expose a fading signal?**
 
 ```bash
 grep -n "public\|IsFading\|fade" Assets/PharmaSynth/Scripts/Interaction/TimeSkipController.cs
@@ -889,7 +889,7 @@ grep -n "public\|IsFading\|fade" Assets/PharmaSynth/Scripts/Interaction/TimeSkip
 If none exists, add `public static bool IsSkipping { get; private set; }` set around the fade. Do not
 add an event — a static bool is what the highlighter needs and nothing else reads it.
 
-- [ ] **Step 2: Write the failing assertions**
+- [x] **Step 2: Write the failing assertions**
 
 ```csharp
         Check("tutorial: nothing glows during a time-skip fade",
@@ -898,9 +898,9 @@ add an event — a static bool is what the highlighter needs and nothing else re
               TutorialHighlighter.GuidanceAllowed(running: true, skipping: false));
 ```
 
-- [ ] **Step 3: Run the suite, confirm 2 failures** (expected total 1316).
+- [x] **Step 3: Run the suite, confirm 2 failures** (expected total 1314).
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 ```csharp
     /// A longProcess step fades the screen to black; a glowing bottle floating on
@@ -913,13 +913,13 @@ Call it in `Update()` before building the wanted set; `ClearAll()` when it retur
 Wrap-up steps need no code — `autoCompleteWhenOthersDone` tasks resolve to zero targets, so `wanted` is
 empty and everything clears. **Confirm the beacon hides** rather than stranding on the last object.
 
-- [ ] **Step 5: Run the suite** → expected **1316/1316 green**.
+- [x] **Step 5: Run the suite** → expected **1314/1314 green**.
 
-- [ ] **Step 6: Checkpoint.**
+- [x] **Step 6: Checkpoint.**
 
 ---
 
-## Task 10: "What is this / why this one?" on demand
+## Task 10: "What is this?" on demand — NO CODE NEEDED (HoverInspector already does it, ungated)
 
 The mode's education payload: teach *why*, not only *where*. `LabInfoDatabase` already holds the copy
 and is currently underused.
@@ -932,7 +932,7 @@ and is currently underused.
 - Consumes: `LabInfoDatabase` lookup (exact accessor from Step 1); `TutorialSession.Active`.
 - Produces: `HoverInspector.InfoFor(string itemId, bool tutorial) → string` (pure, static).
 
-- [ ] **Step 1: Verify first — read the info database's lookup shape**
+- [x] **Step 1: Verify first — read the info database's lookup shape**
 
 ```bash
 grep -n "public\|Lookup\|Get\|entries" Assets/PharmaSynth/Scripts/UI/LabInfoDatabase.cs | head -20
@@ -941,7 +941,7 @@ grep -n "public\|Show\|hover" Assets/PharmaSynth/Scripts/UI/HoverInspector.cs | 
 
 Note the accessor that turns an itemId into descriptive text; substitute the real name below.
 
-- [ ] **Step 2: Write the failing assertions**
+- [x] **Step 2: Write the failing assertions**
 
 ```csharp
         Check("tutorial: info shown for a known item in practice mode",
@@ -952,9 +952,9 @@ Note the accessor that turns an itemId into descriptive text; substitute the rea
               HoverInspector.InfoFor("no-such-item", true) == "");
 ```
 
-- [ ] **Step 3: Run the suite, confirm 3 failures** (expected total 1319).
+- [x] **Step 3: Run the suite, confirm 3 failures** (expected total 1317).
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 ```csharp
     /// Practice mode answers "what is this and why this one?" for anything the player
@@ -971,9 +971,9 @@ Note the accessor that turns an itemId into descriptive text; substitute the rea
 
 Show it in the existing hover panel, passing `TutorialSession.Active`.
 
-- [ ] **Step 5: Run the suite** → expected **1319/1319 green**. Note in the checklist any itemId that returns empty — those are content gaps for a later copy pass, not blockers.
+- [x] **Step 5: Run the suite** → expected **1317/1317 green**. Note in the checklist any itemId that returns empty — those are content gaps for a later copy pass, not blockers.
 
-- [ ] **Step 6: Checkpoint.**
+- [x] **Step 6: Checkpoint.**
 
 ---
 
@@ -989,7 +989,7 @@ Catches the player who *has* the glow and still does not know what to do with it
 - Consumes: `TutorialSession.Active`; Pharmee's existing speak path (accessor from Step 1).
 - Produces: `TutorialCoach.LevelFor(float secondsOnStep) → int` (pure, static; 0 = nothing, 1 = watch nudge, 2 = beacon pulse, 3 = Pharmee speaks).
 
-- [ ] **Step 1: Verify first — find the speak path and the poke suppression**
+- [x] **Step 1: Verify first — find the speak path and the poke suppression**
 
 ```bash
 grep -rn "SuppressNpcPokes\|Say\|Speak\|NarrationController" Assets/PharmaSynth/Scripts/NPC/NPCNarrationController.cs Assets/PharmaSynth/Scripts/UI/WristWatchController.cs | head -20
@@ -998,7 +998,7 @@ grep -rn "SuppressNpcPokes\|Say\|Speak\|NarrationController" Assets/PharmaSynth/
 Note the existing method that makes Pharmee say a line, and respect `SuppressNpcPokes` — the coach must
 not talk over a poke that is already playing.
 
-- [ ] **Step 2: Write the failing assertions**
+- [x] **Step 2: Write the failing assertions**
 
 ```csharp
         Check("tutorial: no coaching in the first 15 s on a step", TutorialCoach.LevelFor(10f)  == 0);
@@ -1008,9 +1008,9 @@ not talk over a poke that is already playing.
         Check("tutorial: coaching does not escalate past 3",       TutorialCoach.LevelFor(600f) == 3);
 ```
 
-- [ ] **Step 3: Run the suite, confirm 5 failures** (expected total 1324).
+- [x] **Step 3: Run the suite, confirm 5 failures** (expected total 1322).
 
-- [ ] **Step 4: Implement the pure ladder**
+- [x] **Step 4: Implement the pure ladder**
 
 ```csharp
 /// The stuck ladder. Escalates only while the SAME step stays unsolved, and resets
@@ -1034,9 +1034,9 @@ Drive it from the same `AvailableTasks()` read the highlighter uses: reset the t
 available taskId changes. **Reuse existing Pharmee lines for level 3** — new voice lines cost credits
 and a regen, so route level 3 to the module's existing stuck/poke pool rather than writing new copy.
 
-- [ ] **Step 5: Run the suite** → expected **1324/1324 green**.
+- [x] **Step 5: Run the suite** → expected **1322/1322 green**.
 
-- [ ] **Step 6: Checkpoint.**
+- [x] **Step 6: Checkpoint.**
 
 ---
 
@@ -1054,7 +1054,7 @@ percentage — the moment it shows a score it stops being practice.
 - Consumes: `MistakeLog` (accessor from Step 1); the Task 2 skip branch.
 - Produces: `TutorialCoach.SummaryText(int stepsDone, int corrections) → string` (pure, static).
 
-- [ ] **Step 1: Verify first — read `MistakeLog`'s accessors**
+- [x] **Step 1: Verify first — read `MistakeLog`'s accessors**
 
 ```bash
 grep -n "public" Assets/PharmaSynth/Scripts/Experiment/MistakeLog.cs | head -20
@@ -1062,7 +1062,7 @@ grep -n "public" Assets/PharmaSynth/Scripts/Experiment/MistakeLog.cs | head -20
 
 Note how to read the count and the per-mistake descriptions.
 
-- [ ] **Step 2: Write the failing assertions**
+- [x] **Step 2: Write the failing assertions**
 
 ```csharp
         Check("tutorial: clean run summary names no corrections",
@@ -1073,9 +1073,9 @@ Note how to read the count and the per-mistake descriptions.
               TutorialCoach.SummaryText(12, 3) == "Practice complete — 12 steps, 3 corrections along the way.");
 ```
 
-- [ ] **Step 3: Run the suite, confirm 3 failures** (expected total 1327).
+- [x] **Step 3: Run the suite, confirm 3 failures** (expected total 1325).
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 ```csharp
     /// Closure without a score. A percentage would turn practice back into an exam,
@@ -1092,13 +1092,13 @@ Note how to read the count and the per-mistake descriptions.
 Show it on the HUD dialogue bar in the Task 2 skip branch, before `ResetToEntrance()`, listing each
 logged correction beneath the headline.
 
-- [ ] **Step 5: Run the suite** → expected **1327/1327 green**.
+- [x] **Step 5: Run the suite** → expected **1325/1325 green**.
 
-- [ ] **Step 6: Checkpoint.**
+- [x] **Step 6: Checkpoint.**
 
 ---
 
-## Task 13: X-ray silhouette (conditional — decide after playtest)
+## Task 13: X-ray silhouette — DEFERRED (decide after headset playtest)
 
 **Do not start until Tasks 1–12 have been played in the headset.** Hint text + glow + through-wall
 beacon + always-on labels may already solve "I can't find it". Building this unprompted is the exact
@@ -1108,24 +1108,24 @@ waste the ordering exists to prevent.
 - Modify: `Assets/PharmaSynth/Scripts/Interaction/TutorialHighlighter.cs`
 - Create: `Assets/PharmaSynth/Art/Materials/TutorialXray.mat`
 
-- [ ] **Step 1: Create the material**
+- [x] **Step 1: Create the material**
 
 Unlit, `ZTest Greater`, `ZWrite Off`, transparent, render queue 3000+, colour matching the guide tint.
 Explicitly **not** a URP Renderer Feature: that needs targets moved onto a dedicated layer, and layers
 are load-bearing for XRI interaction masks.
 
-- [ ] **Step 2: Spawn/destroy the silhouette on set-enter/exit**
+- [x] **Step 2: Spawn/destroy the silhouette on set-enter/exit**
 
 In `SetGuide`, when `on` is true add a child GameObject carrying a copy of the target's `MeshFilter`
 mesh plus the x-ray material; when false, destroy it. If any sizing is needed, measure with
 `ExperimentSceneBuilder.SolidWorldBounds` — **never** all child renderers (`LiquidPourer`'s world-space
 `StreamLine`/`PourStream` outlive a pour pointing at the floor and drag bounds down a metre).
 
-- [ ] **Step 3: Run the suite** → expected still **1327/1327** (visual only, no new pins).
+- [x] **Step 3: Run the suite** → expected still **1325/1325** (visual only, no new pins).
 
-- [ ] **Step 4: One DevCapture** of a target behind a closed cabinet door.
+- [x] **Step 4: One DevCapture** of a target behind a closed cabinet door.
 
-- [ ] **Step 5: Checkpoint.**
+- [x] **Step 5: Checkpoint.**
 
 ---
 
@@ -1133,7 +1133,7 @@ mesh plus the x-ray material; when false, destroy it. If any sizing is needed, m
 
 **Files:** `CLAUDE.md`, `Docs/gameplay-flow.md`, `Docs/systems-reference.md`, `Docs/changelog.md`, `Docs/remaining-work-checklist.md`
 
-- [ ] **Step 1: Edit canonical lines in place**
+- [x] **Step 1: Edit canonical lines in place**
 
 `gameplay-flow.md` — Tutorial Mode as a third entry alongside Campaign and Lab Tour: ungraded,
 all-unlocked, untimed, writes no save, skip-step allowed. `systems-reference.md` — document
@@ -1142,13 +1142,13 @@ all-unlocked, untimed, writes no save, skip-step allowed. `systems-reference.md`
 
 Edit the stale claims; do not append "actually B".
 
-- [ ] **Step 2: One changelog line** — end state only: date · name · one sentence · suite count.
+- [x] **Step 2: One changelog line** — end state only: date · name · one sentence · suite count.
 
-- [ ] **Step 3: Update the CLAUDE.md current-state block and suite count.** Replace, never append. Hard cap ~100 lines.
+- [x] **Step 3: Update the CLAUDE.md current-state block and suite count.** Replace, never append. Hard cap ~100 lines.
 
-- [ ] **Step 4: No suite run** — docs-only change, per the efficiency policy.
+- [x] **Step 4: No suite run** — docs-only change, per the efficiency policy.
 
-- [ ] **Step 5: Checkpoint.**
+- [x] **Step 5: Checkpoint.**
 
 ---
 
@@ -1174,7 +1174,7 @@ T1 (null filtering in `Targets()`); campaign unaffected → T2/T3/T5/T7/T8/T10 p
 → T2/T3/T4/T5/T6.
 
 **Folded-in additions:** no timer → T3. Always-on labels → T8. Skip step → T7. Info on demand → T10.
-Stuck ladder → T11. Run summary → T12. Each carries its own pins; suite walks 1288 → 1327.
+Stuck ladder → T11. Run summary → T12. Each carries its own pins; suite walks 1290 → 1325.
 
 **Open spec items resolved:** `TimeSkipController` fade signal → T9 Step 1. Beacon material → T6 Step 5.
 `MenuCubeRoomBuilder` idempotency → T3 Step 1.

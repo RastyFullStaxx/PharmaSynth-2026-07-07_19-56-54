@@ -4,7 +4,7 @@
 
 ## 1. Boot & scenes
 - Build order: `MainMenu` (0) → `SampleScene` (1). In-editor, Play ALWAYS boots into MainMenu via `PlayFromMenuBootstrap` (toggle: Tools ▸ PharmaSynth ▸ Play Starts In Cube Room).
-- **MainMenu = the cube spawn room**: solid futuristic cube (cyan trim, launch pad, neon frames, walkable rig with move+turn providers, `music-menu` bed). Panel = **Laboratory / Settings / Quit** only. If `demo-config.json` enables it, an amber **Demo Mode** button also appears (see §10).
+- **MainMenu = the cube spawn room**: solid futuristic cube (cyan trim, launch pad, neon frames, walkable rig with move+turn providers, `music-menu` bed). Panel = **Laboratory / Tutorial / Settings / Quit**. **Tutorial** (cyan-green) enters the same lab in ungraded guided-practice mode — see §14. If `demo-config.json` enables it, an amber **Demo Mode** button also appears below Tutorial (see §10).
 - **Laboratory** → fade → load SampleScene. The player lands at `FrontDoorSpawn` (spawn routed through the same teleport path Restart uses, inside the start fade), HUD appears, Pharmee greets (`SpeakWelcome` + `pharmee-greet`), `SpawnBurstFX` cyan materialize.
 
 ## 2. The lab & the HUD
@@ -76,3 +76,18 @@ Per module: intro (on start, with verbatim Appendix C ILO beats), reagent-prep (
 
 ## 11. Known playtest gaps (queued)
 See `Docs/remaining-work-checklist.md` §13 — user-reported issues awaiting fixes (items returning to shelves mid-run, break-respawn losing contents, in-headset pour debugging, apparatus kits, snap/stick assembly, UI wrap/scroll, dialogue polish).
+
+## 14. Tutorial Mode (2026-08-07) — ungraded guided practice
+A third top-level mode beside Campaign and Lab Tour, entered from the **Tutorial** button in the cube room (`MainMenuController.OnTutorialLaboratory` → `TutorialSession.Active = true`). Every consumer early-returns on that one flag, so campaign behaviour is unchanged by construction.
+
+**What it changes**
+- **All 9 modules unlocked, any order.** `ProgressionFlow.Create` folds `TutorialSession.Active` into the same `_unlockAll` switch demo uses, so period doors open too.
+- **Ungraded.** `PharmeeGatekeeper.ShouldEnterReview()` is false, so `EndOfRun()` skips quiz → grade → BKT → unlock → save entirely and calls `ResetToEntrance()` (which already Aborts the run, clears the grade card/tablet, re-seats props and walks the player home). A run leaves **no trace** — no save file at all, unlike demo's throwaway save.
+- **No clock.** `ExperimentRunner.ClockRuns` is false; `AdvanceTime` stops and the HUD timer object is **hidden** (a frozen 00:00 reads as broken). Mastery is dropped from the watch for the same reason.
+- **Guidance.** The next step's objects glow (`TutorialHighlighter`), a through-wall beacon points at them (`WaypointGuide` + `TutorialBeacon.mat`, ZTest Always), the task's `hint` prints permanently under the step on the wrist watch, and `ProximityLabel` shows names at **4×** range.
+- **Skip step.** The demo HUD's existing Skip button is reused (`DemoHudController.SkipAllowed`); Finish/Auto-Quiz stay demo-only because a practice run never opens the quiz.
+- **Coaching.** `TutorialCoach` escalates only while the SAME step stays unsolved — 15 s nudge, 30 s marker, 60 s speaks the step's existing hint aloud (no new voice lines). Progress resets the ladder.
+- **Ending.** `TutorialCoach.ShowSummary()` announces counts, never a percentage: *"Practice complete — 12 steps, 2 corrections along the way."*
+- **Unchanged in practice mode:** `HoverInspector` already answers "what is this?" from `LabInfoDatabase` in every mode — pointing at anything gives its card.
+
+**How targets are found** — see systems-reference §Tutorial Mode. Nothing is authored per task; the sweep reads the components that actually complete each step, so the glow cannot disagree with the binding.

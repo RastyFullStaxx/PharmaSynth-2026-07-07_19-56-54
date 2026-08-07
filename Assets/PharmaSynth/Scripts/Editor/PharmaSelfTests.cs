@@ -3378,6 +3378,35 @@ public static class PharmaSelfTests
             !GatekeeperModel.IsReviewState(GateState.Running) && !GatekeeperModel.IsReviewState(GateState.Blocked)
             && !GatekeeperModel.IsReviewState(GateState.Loading) && !GatekeeperModel.IsReviewState(GateState.LabTour));
 
+        // Tutorial Mode: a guided run is PRACTICE — it must never reach the graded
+        // chain (quiz -> grade -> BKT -> unlock -> save). Campaign must be untouched.
+        TutorialSession.Active = true;
+        A("tutorial: flag gates the review chain", !PharmeeGatekeeper.ShouldEnterReview());
+        TutorialSession.Active = false;
+        A("tutorial: campaign still enters the review chain", PharmeeGatekeeper.ShouldEnterReview());
+
+        // Tutorial Mode unlocks the whole chain and stops the clock. A fresh service
+        // has nothing passed, so in campaign the prerequisite modules MUST stay shut —
+        // that negative is the real regression guard on the unlockAll switch.
+        {
+            var tutSvc = new ProgressionService("selftest-tutorial");
+            TutorialSession.Active = true;
+            var tutFlow = ProgressionFlow.Create(tutSvc);
+            bool allOpen = true;
+            foreach (var e in ExperimentCatalog.Entries)
+                if (!tutFlow.IsUnlocked(e.moduleId)) allOpen = false;
+            A("tutorial: every module unlocked in practice mode", allOpen);
+            A("tutorial: clock does not run in practice mode", !ExperimentRunner.ClockRuns);
+
+            TutorialSession.Active = false;
+            var campFlow = ProgressionFlow.Create(tutSvc);
+            bool someLocked = false;
+            foreach (var e in ExperimentCatalog.Entries)
+                if (!campFlow.IsUnlocked(e.moduleId)) someLocked = true;
+            A("tutorial: campaign still gates the chain", someLocked);
+            A("tutorial: campaign still runs the clock", ExperimentRunner.ClockRuns);
+        }
+
         // F4: the fail path can abandon back to the entrance.
         A("gate: fail can abandon to entrance", GatekeeperModel.Next(GateState.ScoreReview, GateEvent.AbandonRun) == GateState.Blocked);
         A("gate: abandon illegal elsewhere", GatekeeperModel.Next(GateState.Running, GateEvent.AbandonRun) == GateState.Running
@@ -3471,6 +3500,106 @@ public static class PharmaSelfTests
             if (m == null || m.graphTasks == null || m.graphTasks.Count == 0) emptyModules++;
         }
         A("data: every module has tasks (mastery gate reachable)", emptyModules == 0);
+
+        // Tutorial Mode target registry + gap audit. Deliberately DETERMINISTIC and
+        // scene-read-only: the per-module coverage sweep has to Build() each stage,
+        // which mutates the open scene, so it lives behind
+        // Tools ▸ PharmaSynth ▸ Audit Tutorial Targets instead of dirtying SampleScene
+        // on every suite run. What is pinned here is the logic that sweep depends on.
+        {
+            TaskTargetRegistry.Clear();
+            var probe = new GameObject("selftest-target-probe");
+            try
+            {
+                TaskTargetRegistry.Register("t-a", probe.transform, TargetRole.Source, false);
+                A("tutorial: registry returns a registered target",
+                    TaskTargetRegistry.Targets("t-a").Count == 1);
+                TaskTargetRegistry.Register("t-a", probe.transform, TargetRole.Destination, true);
+                A("tutorial: registry is idempotent per transform",
+                    TaskTargetRegistry.Targets("t-a").Count == 1);
+                A("tutorial: unknown task resolves to nothing",
+                    TaskTargetRegistry.Targets("t-none").Count == 0);
+
+                // The audit must flag a step with no target, but exempt a wrap-up step
+                // — autoCompleteWhenOthersDone tasks have no physical verb by design.
+                var real = new ExperimentTask { taskId = "t-a" };
+                var gap = new ExperimentTask { taskId = "t-gap" };
+                var wrap = new ExperimentTask { taskId = "t-wrap", autoCompleteWhenOthersDone = true };
+                TutorialTargets.AuditAgainst(new[] { real, gap, wrap });
+                A("tutorial: audit flags a step with no target",
+                    TutorialTargets.LastUnresolved.Count == 1 && TutorialTargets.LastUnresolved[0] == "t-gap");
+
+                // The watch prints the step's hint in practice mode only.
+                A("tutorial: watch shows label only in campaign",
+                    WristWatchController.StepText("Weigh 2 g", "Use the balance.", false) == "Weigh 2 g");
+                A("tutorial: watch appends the hint in practice mode",
+                    WristWatchController.StepText("Weigh 2 g", "Use the balance.", true)
+                        == "Weigh 2 g\n<size=70%>Use the balance.</size>");
+                A("tutorial: watch omits an empty hint cleanly",
+                    WristWatchController.StepText("Weigh 2 g", "", true) == "Weigh 2 g");
+
+                // The grab rule: a SOURCE goes quiet in hand (message received), a
+                // DESTINATION/TOOL stays lit (holding the right tube ≠ step finished).
+                var src = new TaskTarget { role = TargetRole.Source, stayLitWhenHeld = false };
+                var dst = new TaskTarget { role = TargetRole.Destination, stayLitWhenHeld = true };
+                A("tutorial: source glows when not held", TutorialHighlighter.ShouldLight(src, false, true));
+                A("tutorial: grabbing the source silences it", !TutorialHighlighter.ShouldLight(src, true, true));
+                A("tutorial: destination stays lit while held", TutorialHighlighter.ShouldLight(dst, true, true));
+                A("tutorial: nothing glows once the step is unavailable",
+                    !TutorialHighlighter.ShouldLight(dst, false, false));
+
+                // Guidance is suppressed while a longProcess skip holds the screen black.
+                A("tutorial: no guidance during a time-skip fade",
+                    !TutorialHighlighter.GuidanceAllowed(true, true));
+                A("tutorial: guidance resumes after the fade",
+                    TutorialHighlighter.GuidanceAllowed(true, false));
+
+                // Hover and guidance are independent channels — neither clears the other.
+                var hh = probe.AddComponent<HoverHighlight>();
+                hh.SetGuide(true, TargetRole.Source);
+                hh.SetHighlight(true);
+                hh.SetHighlight(false);
+                A("tutorial: hover-exit does not clear the guidance glow", hh.IsGuided && hh.IsHighlighted);
+                hh.SetGuide(false, TargetRole.Source);
+                A("tutorial: clearing guidance unlights it", !hh.IsGuided && !hh.IsHighlighted);
+
+                // Skip-step: offered in practice AND demo, never in campaign, never
+                // while the review corner is up.
+                A("tutorial: skip offered in practice mode",
+                    DemoHudController.SkipAllowed(false, true, true, false));
+                A("tutorial: skip never offered in campaign",
+                    !DemoHudController.SkipAllowed(false, false, true, false));
+                A("tutorial: skip hidden during the review flow",
+                    !DemoHudController.SkipAllowed(false, true, true, true));
+
+                // Always-on labels: practice reads the bench from a distance.
+                A("tutorial: label radius widens in practice mode",
+                    ProximityLabel.VisibleRadius(1.4f, true) > ProximityLabel.VisibleRadius(1.4f, false));
+                A("tutorial: campaign label radius unchanged",
+                    Near(ProximityLabel.VisibleRadius(1.4f, false), 1.4f));
+
+                // Stuck ladder: silent while the player is working, escalating only
+                // while the SAME step stays unsolved, and capped at "say it out loud".
+                A("tutorial: no coaching in the first 15 s on a step", TutorialCoach.LevelFor(10f) == 0);
+                A("tutorial: watch nudge at 15 s", TutorialCoach.LevelFor(20f) == 1);
+                A("tutorial: marker escalates at 30 s", TutorialCoach.LevelFor(40f) == 2);
+                A("tutorial: coach speaks at 60 s", TutorialCoach.LevelFor(90f) == 3);
+                A("tutorial: coaching never escalates past 3", TutorialCoach.LevelFor(600f) == 3);
+
+                // Run summary: counts, never a percentage.
+                A("tutorial: clean run summary names no corrections",
+                    TutorialCoach.SummaryText(12, 0) == "Practice complete — 12 steps, no corrections needed.");
+                A("tutorial: summary singularises one correction",
+                    TutorialCoach.SummaryText(12, 1) == "Practice complete — 12 steps, 1 correction along the way.");
+                A("tutorial: summary pluralises many corrections",
+                    TutorialCoach.SummaryText(12, 3) == "Practice complete — 12 steps, 3 corrections along the way.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(probe);
+                TaskTargetRegistry.Clear();
+            }
+        }
 
         var cuts = AssetDatabase.LoadAssetAtPath<CutsceneLibrary>("Assets/PharmaSynth/ScriptableObjects/CutsceneLibrary.asset");
         int badOutros = 0;

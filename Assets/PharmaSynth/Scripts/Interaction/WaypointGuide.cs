@@ -15,7 +15,10 @@ public class WaypointGuide : MonoBehaviour
 
     private void Update()
     {
-        if (marker == null || runner == null || runner.Graph == null || !runner.IsRunning)
+        // Guidance is a Tutorial Mode affordance. Campaign shows no beacon — finding
+        // the apparatus is part of what it assesses.
+        if (marker == null || runner == null || runner.Graph == null || !runner.IsRunning
+            || !TutorialSession.Active || TimeSkipController.IsSkipping)
         {
             Hide();
             return;
@@ -25,7 +28,18 @@ public class WaypointGuide : MonoBehaviour
         foreach (var t in runner.Graph.AvailableTasks()) { id = t.taskId; break; }
         CurrentTargetTaskId = id;
 
-        Transform station = ExperimentStationRegistry.Get(id);
+        // ONE arrow, never two — pick the SOURCE first ("go fetch that"), and hop to
+        // the destination once it is in hand ("now put it here"). Two simultaneous
+        // arrows would just ask the player which one to follow.
+        Transform station = null;
+        var targets = TaskTargetRegistry.Targets(id);
+        for (int i = 0; i < targets.Count && station == null; i++)
+            if (targets[i].role == TargetRole.Source && targets[i].transform != null
+                && !TutorialHighlighter.IsHeld(targets[i].transform))
+                station = targets[i].transform;
+        for (int i = 0; i < targets.Count && station == null; i++)
+            if (targets[i].transform != null) station = targets[i].transform;
+
         if (station != null)
         {
             if (!marker.gameObject.activeSelf) marker.gameObject.SetActive(true);

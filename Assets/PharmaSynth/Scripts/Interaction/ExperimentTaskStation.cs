@@ -1,30 +1,6 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
-
-/// Maps taskId → the world station where that step happens, so guidance/waypoints
-/// can point the player to the right place. Rebuilt each experiment.
-public static class ExperimentStationRegistry
-{
-    private static readonly Dictionary<string, Transform> _stations = new Dictionary<string, Transform>();
-
-    public static void Register(string taskId, Transform t)
-    {
-        if (!string.IsNullOrEmpty(taskId) && t != null) _stations[taskId] = t;
-    }
-
-    public static void Unregister(string taskId)
-    {
-        if (!string.IsNullOrEmpty(taskId)) _stations.Remove(taskId);
-    }
-
-    public static Transform Get(string taskId)
-        => (!string.IsNullOrEmpty(taskId) && _stations.TryGetValue(taskId, out var t)) ? t : null;
-
-    public static void Clear() => _stations.Clear();
-    public static int Count => _stations.Count;
-}
 
 /// A world location where a procedure step is performed. Completing the station
 /// (via interaction, trigger, or Activate()) advances the bound task in the runner.
@@ -59,7 +35,10 @@ public class ExperimentTaskStation : MonoBehaviour
 
     private void OnEnable()
     {
-        ExperimentStationRegistry.Register(taskId, transform);
+        // No self-registration: TutorialTargets' per-run sweep is the single source of
+        // truth for taskId → objects. Registering here as well would give the map two
+        // lifetimes to keep in sync, and a station disabled mid-run would strand a
+        // stale transform the sweep never planted.
         if (activateOnSelect)
         {
             _hookedInteractable = GetComponent<XRBaseInteractable>();
@@ -70,7 +49,6 @@ public class ExperimentTaskStation : MonoBehaviour
 
     private void OnDisable()
     {
-        ExperimentStationRegistry.Unregister(taskId);
         if (_hookedInteractable != null)
             _hookedInteractable.selectEntered.RemoveListener(OnSelectEntered);
     }

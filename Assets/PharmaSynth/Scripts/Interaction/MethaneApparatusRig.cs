@@ -115,6 +115,51 @@ public class MethaneApparatusRig : MonoBehaviour
         runner.Graph.RegisterCondition("test-gas", () => _splintFired);
     }
 
+    /// Tutorial Mode target map — which prop each of this rig's steps is ABOUT.
+    ///
+    /// It lives here, immediately beneath RegisterConditions, because this rig is the
+    /// only place these four task ids are written as literals: the methane tutorial
+    /// stages no dynamic vessels, so the generic sweep finds nothing for it. Keeping
+    /// the map adjacent to the conditions means the ids are read off the same block a
+    /// maintainer edits — anywhere else and the two would silently drift.
+    ///
+    /// Called BY TutorialTargets.Build() rather than self-registering, so the registry
+    /// keeps exactly one lifetime (rebuilt per run, cleared on teardown).
+    public void RegisterTutorialTargets()
+    {
+        // Resolved independently of FindItems()/_tube/_collect: those skip INACTIVE
+        // objects and cache into runtime state. The methane props are visibility-gated
+        // (MethaneStageVisibility), so while another module's stage stands they are
+        // switched off — and an audit that silently found nothing would read exactly
+        // like a module with no targets.
+        Transform tube = FindByItemId("glass-tube");
+        Transform collect = FindByItemId("collection-tube");
+        Transform burner = FindByItemId("burner");
+        var match = FindObjectsByType<Matchstick>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        // Scoop the ground mixture into the hard-glass tube.
+        Add("setup-apparatus", tube, TargetRole.Destination, true);
+        // Hold a LIT burner to that tube — fetch the burner, heat the tube.
+        Add("heat-mixture", burner, TargetRole.Source, false);
+        Add("heat-mixture", tube, TargetRole.Station, true);
+        // Bring the collection tube up to the hot tube; the gas fills it.
+        Add("collect-gas", collect, TargetRole.Destination, true);
+        Add("collect-gas", tube, TargetRole.Station, true);
+        // A lit match to the FILLED collection tube — the pop.
+        Add("test-gas", collect, TargetRole.Destination, true);
+        if (match.Length > 0) Add("test-gas", match[0].transform, TargetRole.Source, false);
+
+        void Add(string taskId, Transform t, TargetRole role, bool stayLit)
+            => TaskTargetRegistry.Register(taskId, t, role, stayLit);
+    }
+
+    private Transform FindByItemId(string itemId)
+    {
+        foreach (var li in FindObjectsByType<LabItem>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (li != null && li.itemId == itemId) return li.transform;
+        return null;
+    }
+
     // ---- item lookup -------------------------------------------------------
 
     private void FindItems()

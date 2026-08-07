@@ -180,15 +180,35 @@ public class PharmeeGatekeeper : MonoBehaviour
 
     private void OnRunnerStarted(ExperimentModuleDefinition m) => _lastResult = null;
 
+    /// Pure gate: only a graded (campaign) run goes to the review corner. Tutorial
+    /// Mode is ungraded practice, so quiz/grade/BKT/unlock/save are skipped whole.
+    public static bool ShouldEnterReview() => !TutorialSession.Active;
+
     /// ChemicalTests complete while Running → begin the review flow. Modules
     /// without a ChemicalTests phase route off their Synthesis completion instead.
     private void OnRunnerPhase(TaskPhase p)
     {
         if (Model.State != GateState.Running) return;
-        if (p == TaskPhase.ChemicalTests) { Model.Fire(GateEvent.TestsDone); return; }
-        if (p == TaskPhase.Synthesis && runner != null && runner.Graph != null
-            && !runner.Graph.HasPhase(TaskPhase.ChemicalTests))
-            Model.Fire(GateEvent.TestsDone);
+        bool done = p == TaskPhase.ChemicalTests
+                    || (p == TaskPhase.Synthesis && runner != null && runner.Graph != null
+                        && !runner.Graph.HasPhase(TaskPhase.ChemicalTests));
+        if (done) EndOfRun();
+    }
+
+    /// The ONE seam where a finished run leaves Running. Both routes in (tests-done
+    /// and a dev/legacy Finish) go through here, so Tutorial Mode's skip cannot be
+    /// half-applied — guarding only one of them would leave the sibling grading a
+    /// practice run.
+    private void EndOfRun()
+    {
+        if (ShouldEnterReview()) { Model.Fire(GateEvent.TestsDone); return; }
+        // Tutorial Mode: no quiz, no grade, no unlock. Say what happened first —
+        // steps and corrections, never a percentage — then ResetToEntrance, which
+        // already IS the ungraded ending: it Aborts the run, clears the grade card
+        // and tablet, re-seats every prop and walks the player back to Pharmee. So
+        // practice reuses it wholesale rather than growing a parallel teardown.
+        UnityEngine.Object.FindAnyObjectByType<TutorialCoach>()?.ShowSummary();
+        ResetToEntrance();
     }
 
     /// Quiz submitted (or a dev/legacy Finish) → the result is in. From QuizTime
@@ -199,7 +219,7 @@ public class PharmeeGatekeeper : MonoBehaviour
     {
         _lastResult = r;
         if (Model.State == GateState.QuizTime) Model.Fire(GateEvent.Graded);
-        else if (Model.State == GateState.Running) Model.Fire(GateEvent.TestsDone);
+        else if (Model.State == GateState.Running) EndOfRun();
     }
 
     // ---- scene entry points (trigger relays, PPE, panel) -------------------
@@ -552,7 +572,7 @@ public class PharmeeGatekeeper : MonoBehaviour
             if (grade != null) grade.Hide();
             postLab?.Close();
             string id = runner != null && runner.Module != null ? runner.Module.moduleId : GameFlow.SelectedModuleId;
-            ExperimentStationRegistry.Clear();
+            TaskTargetRegistry.Clear();
             launcher?.Launch(id, LaunchMode.StageOnly);   // props/bottles back to original spawns
             DropRespawn.ResetAllHome();                    // hand-placed apparatus + reagents back home too
             RestorePharmeeHome();                          // a mid-review reset must not strand him by the tablet
@@ -585,7 +605,7 @@ public class PharmeeGatekeeper : MonoBehaviour
         }
         var mod = runner != null ? runner.Module : null;
         string id = mod != null ? mod.moduleId : GameFlow.SelectedModuleId;
-        ExperimentStationRegistry.Clear();
+        TaskTargetRegistry.Clear();
         void Relaunch() { launcher?.Launch(id, LaunchMode.FullStart); DropRespawn.ResetAllHome(); }
         if (ScreenFader.Instance != null && Application.isPlaying)
             ScreenFader.Instance.FadeAround(Relaunch);
@@ -744,7 +764,7 @@ public class PharmeeGatekeeper : MonoBehaviour
     private void ResetLabForReturn()
     {
         string id = runner != null && runner.Module != null ? runner.Module.moduleId : GameFlow.SelectedModuleId;
-        ExperimentStationRegistry.Clear();
+        TaskTargetRegistry.Clear();
         launcher?.Launch(id, LaunchMode.StageOnly);
         DropRespawn.ResetAllHome();                    // hand-placed apparatus + reagents back home
         RestorePharmeeHome();                          // off the review spot, back on door duty

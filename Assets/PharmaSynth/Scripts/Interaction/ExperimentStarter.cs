@@ -32,7 +32,7 @@ public class ExperimentStarter : MonoBehaviour
     public void Begin()
     {
         if (runner == null) return;
-        if (clearStationRegistryOnBegin) ExperimentStationRegistry.Clear();
+        if (clearStationRegistryOnBegin) TaskTargetRegistry.Clear();
         runner.StartExperiment();
     }
 

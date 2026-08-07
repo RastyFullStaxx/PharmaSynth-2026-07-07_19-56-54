@@ -150,14 +150,32 @@ public class WristWatchController : MonoBehaviour
         holoPanel.transform.rotation = Quaternion.LookRotation(fwd);   // +Z away → UI reads correctly
     }
 
+    /// Pure: what the holo checklist prints for the current step. Tutorial Mode prints
+    /// the task's HINT beneath the label — in campaign a hint only surfaces on the
+    /// stuck/poke path, because working out the "how" is part of the assessment there.
+    public static string StepText(string label, string hint, bool tutorial)
+    {
+        if (!tutorial || string.IsNullOrEmpty(hint)) return label;
+        return label + "\n<size=70%>" + hint + "</size>";
+    }
+
     public static string BuildSummary(ExperimentRunner runner)
     {
         if (runner == null || runner.Graph == null) return "";
-        string current = "—";
-        foreach (var t in runner.Graph.AvailableTasks()) { current = GlyphSafe.Sanitize(t.label); break; }
-        return "Step: " + current
-             + "\nProgress " + ExperimentHudController.FormatPercent(runner.Progress01)
-             + "\nMastery " + Mathf.RoundToInt(runner.OverallMastery * 100f) + "%";
+        string current = "—", hint = null;
+        foreach (var t in runner.Graph.AvailableTasks())
+        {
+            current = GlyphSafe.Sanitize(t.label);
+            hint = GlyphSafe.Sanitize(t.hint);
+            break;
+        }
+        bool tutorial = TutorialSession.Active;
+        string s = "Step: " + StepText(current, hint, tutorial)
+                 + "\nProgress " + ExperimentHudController.FormatPercent(runner.Progress01);
+        // Mastery is a GRADED number. A practice run never computes or saves one, so
+        // printing "Mastery 0%" all the way through would read as constant failure.
+        if (!tutorial) s += "\nMastery " + Mathf.RoundToInt(runner.OverallMastery * 100f) + "%";
+        return s;
     }
 
     /// True when the head is looking roughly toward the wrist.

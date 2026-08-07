@@ -22,9 +22,20 @@ public class HoverHighlight : MonoBehaviour
     private Color[] _orig;
     private bool[] _hasBase, _hasColor;
     private Vector3 _baseScale;
-    private bool _lit, _cached;
+    private bool _cached;
 
-    public bool IsHighlighted => _lit;
+    // TWO independent sources, not one bool (2026-08-07). Tutorial Mode lights an
+    // object because it is the next step; hover lights it because a ray is on it.
+    // With a single flag, waving the ray past a guided object and off again would
+    // silently switch the guidance glow off.
+    private bool _hover, _guide;
+    private TargetRole _guideRole;
+
+    private static readonly Color GuideSource      = new Color(1f, 0.72f, 0.20f, 1f);   // amber: go fetch this
+    private static readonly Color GuideDestination = new Color(0.35f, 1f, 0.45f, 1f);   // green: put it here
+
+    public bool IsHighlighted => _hover || _guide;
+    public bool IsGuided => _guide;
 
     void Awake() { if (_grab == null) Bind(GetComponent<XRGrab>()); }
 
@@ -118,16 +129,36 @@ public class HoverHighlight : MonoBehaviour
     /// Toggle the hover look. Public so tests / other affordance drivers can call it.
     public void SetHighlight(bool on)
     {
+        if (on == _hover) return;
+        _hover = on;
+        Apply();
+    }
+
+    /// Toggle the Tutorial Mode guidance look. Independent of hover: neither channel
+    /// can clear the other, and the role picks the tint (amber source / green target).
+    public void SetGuide(bool on, TargetRole role)
+    {
+        if (on == _guide && role == _guideRole) return;
+        _guide = on; _guideRole = role;
+        Apply();
+    }
+
+    private void Apply()
+    {
         Cache();
-        if (on == _lit) return;
-        _lit = on;
-        transform.localScale = HighlightScale(_baseScale, on, scaleFactor);
+        bool lit = _hover || _guide;
+        transform.localScale = HighlightScale(_baseScale, lit, scaleFactor);
         if (_rends == null) return;
+        // Guidance wins the tint when both are on: "THIS is the next thing" outranks
+        // the generic "your ray is on something".
+        Color tint = _guide
+            ? (_guideRole == TargetRole.Source ? GuideSource : GuideDestination)
+            : glow;
         for (int i = 0; i < _rends.Length; i++)
         {
             if (_rends[i] == null) continue;
             _rends[i].GetPropertyBlock(_mpb);
-            Color c = on ? Color.Lerp(_orig[i], glow, glowMix) : _orig[i];
+            Color c = lit ? Color.Lerp(_orig[i], tint, glowMix) : _orig[i];
             if (_hasBase[i]) _mpb.SetColor(BaseColorID, c);
             if (_hasColor[i]) _mpb.SetColor(ColorID, c);
             _rends[i].SetPropertyBlock(_mpb);

@@ -30,6 +30,10 @@ public class WeighStation : MonoBehaviour
 
     public LabItem OccupantItem => _occupantItem;
     public LiquidPhysics OccupantVessel => _occupantVessel;
+    /// The graph task this scale satisfies. Held privately for the condition
+    /// registration; exposed so the tutorial target sweep can locate the balance
+    /// for its step (2026-08-07). No behaviour change.
+    public string TaskId => _taskId;
     public float SecondsOnPan => _occupants > 0 && _panTimed ? Time.time - _onPanSince : 0f;
 
     /// True while THIS vessel rests settled on the pan — the zone-free weigh

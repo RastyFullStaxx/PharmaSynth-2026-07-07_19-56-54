@@ -47,6 +47,11 @@ public class TimeSkipController : MonoBehaviour
         _subscribed = false;
     }
 
+    /// True while the screen is black for a long-process skip. Read by Tutorial Mode's
+    /// highlighter, which must drop every glow for the duration — a lit bottle floating
+    /// on a black screen reads as a rendering bug, not a hint.
+    public static bool IsSkipping { get; private set; }
+
     private void OnTaskCompleted(ExperimentTask t)
     {
         if (!IsTimeSkip(t) || !Application.isPlaying) return;
@@ -55,6 +60,7 @@ public class TimeSkipController : MonoBehaviour
         if (ScreenFader.Instance != null && ScreenFader.Instance.isActiveAndEnabled)
         {
             // Fade to black, HOLD the darkness, then fade back and announce.
+            IsSkipping = true;
             ScreenFader.Instance.FadeOut(fadeSeconds, () =>
                 Invoke(nameof(ReturnFromSkip), Mathf.Max(0f, holdSeconds)));
             _pendingMessage = msg;
@@ -69,6 +75,9 @@ public class TimeSkipController : MonoBehaviour
     private string _pendingMessage;
     private void ReturnFromSkip()
     {
+        // Cleared as the light comes back rather than after the fade completes, so
+        // guidance is already on screen by the time the player can see anything.
+        IsSkipping = false;
         if (ScreenFader.Instance != null) ScreenFader.Instance.FadeIn(fadeSeconds);
         Announce(_pendingMessage);
         _pendingMessage = null;

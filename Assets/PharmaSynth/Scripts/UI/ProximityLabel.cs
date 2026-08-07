@@ -23,6 +23,16 @@ public class ProximityLabel : MonoBehaviour
         if (_tmp != null) _tmp.text = text;
     }
 
+    /// Practice mode reads labels from across the bench. A student who cannot tell two
+    /// bottles apart learns nothing from finding the right one by glow alone — and this
+    /// is the cheaper answer to findability than an x-ray silhouette, because it also
+    /// teaches label-reading. Campaign keeps the close-range radius, where walking up to
+    /// read a label is a deliberate act.
+    public const float TutorialRadiusMultiplier = 4f;
+
+    public static float VisibleRadius(float baseRadius, bool tutorial)
+        => tutorial ? baseRadius * TutorialRadiusMultiplier : baseRadius;
+
     private void Awake() => Build();
 
     private void Build()
@@ -72,7 +82,7 @@ public class ProximityLabel : MonoBehaviour
             var c = Camera.main; if (c == null) return; _cam = c.transform;
         }
         float d = Vector3.Distance(_cam.position, transform.position);
-        bool show = d <= showDistance;
+        bool show = d <= VisibleRadius(showDistance, TutorialSession.Active);
         if (_tag.activeSelf != show) _tag.SetActive(show);
         if (show)
         {

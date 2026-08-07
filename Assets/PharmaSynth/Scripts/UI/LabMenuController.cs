@@ -92,7 +92,7 @@ public class LabMenuController : MonoBehaviour
 
         // Fallback (no gatekeeper wired — e.g. a bare test scene): rebuild in place.
         string id = runner != null && runner.Module != null ? runner.Module.moduleId : GameFlow.SelectedModuleId;
-        ExperimentStationRegistry.Clear();
+        TaskTargetRegistry.Clear();
         if (ScreenFader.Instance != null && Application.isPlaying)
             ScreenFader.Instance.FadeAround(() => launcher?.Launch(id, LaunchMode.StageOnly));
         else
