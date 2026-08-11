@@ -106,8 +106,13 @@ public static class TutorialModeBuilder
     static readonly string[] MenuOrder =
         { "LaboratoryButton", "TutorialModeButton", "SettingsButton", "QuitButton", "DemoModeButton" };
 
-    const float MenuRowSpacing = 170f;      // matches the original authored pitch
-    const float MenuFloorClearance = 0.28f; // metres from the floor to the lowest edge
+    // The column was 5 rows x 170 units = 1.83 m tall, which cannot both sit clear of
+    // the floor AND stay in reach — every attempt to lift it just traded a buried
+    // bottom for an unreachable top. Shrinking the rows is the fix that satisfies both
+    // (5 rows x 128 = 1.37 m), and 0.24 m-tall buttons are still a generous VR target.
+    const float MenuRowHeight = 110f;
+    const float MenuRowSpacing = 128f;
+    const float MenuFloorClearance = 0.5f;  // metres from the floor to the lowest edge
     const float MenuMaxTopHeight = 1.95f;   // metres — above this the player has to crane
 
     [MenuItem("Tools/PharmaSynth/Fix Cube Room Menu Layout")]
@@ -134,6 +139,7 @@ public static class TutorialModeBuilder
             if (t == null || !t.gameObject.activeSelf) continue;
             var rt = t.GetComponent<RectTransform>();
             if (rt == null) continue;
+            rt.sizeDelta = new Vector2(rt.sizeDelta.x, MenuRowHeight);
             float y = topY - row * MenuRowSpacing;
             rt.anchoredPosition = new Vector2(x, y);
             if (row == 0) highestTop = y + rt.sizeDelta.y * 0.5f;
@@ -171,6 +177,109 @@ public static class TutorialModeBuilder
         Debug.Log("[TutorialModeBuilder] menu reflowed: " + row + " visible buttons, bottom "
                   + (wanted + lowestBottom * unitsToMetres).ToString("0.00") + " m / top "
                   + (wanted + highestTop * unitsToMetres).ToString("0.00") + " m above the floor.");
+    }
+
+    // ---- MainMenu: make the room feel alive ----------------------------------
+
+    /// Adds atmosphere to the cube spawn room: breathing neon trim, drifting light
+    /// levels with the occasional arc stutter, floor haze and slow rising motes.
+    ///
+    /// Deliberately built from PARTICLES + emissive pulsing rather than post-processing:
+    /// this is the first thing a Quest 3 player sees, a full-screen effect stack costs
+    /// frame budget on a mobile GPU for the whole session, and the room only needs to
+    /// look alive, not cinematic. Idempotent — re-running replaces its own objects.
+    [MenuItem("Tools/PharmaSynth/Build Cube Room FX")]
+    public static void BuildRoomFx()
+    {
+        if (Application.isPlaying) { Debug.LogWarning("[TutorialModeBuilder] exit Play mode first."); return; }
+        var canvasGo = FindInScene("MenuCanvas");
+        if (canvasGo == null)
+        {
+            Debug.LogError("[TutorialModeBuilder] MenuCanvas not found — open MainMenu.unity first.");
+            return;
+        }
+
+        // Collect the room's neon trim + lights. Trim is matched by name because the
+        // cube room authors its strips as Trim_* / neon frames.
+        var trim = new List<Renderer>();
+        foreach (var root in EditorSceneManager.GetActiveScene().GetRootGameObjects())
+            foreach (var r in root.GetComponentsInChildren<Renderer>(true))
+            {
+                string n = r.gameObject.name;
+                if (n.StartsWith("Trim_") || n.Contains("Neon") || n.Contains("Frame"))
+                    if (r.GetComponentInParent<Canvas>() == null) trim.Add(r);   // never the UI
+            }
+        var lights = new List<Light>();
+        foreach (var root in EditorSceneManager.GetActiveScene().GetRootGameObjects())
+            lights.AddRange(root.GetComponentsInChildren<Light>(true));
+
+        var host = GameObject.Find("~RoomFx");
+        if (host != null) Object.DestroyImmediate(host);      // idempotent: rebuild clean
+        host = new GameObject("~RoomFx");
+
+        var fx = host.AddComponent<MenuRoomFx>();
+        fx.Bind(trim.ToArray(), lights.ToArray());
+        EditorUtility.SetDirty(fx);
+
+        // Floor haze — wide, slow, barely-there. Sits BELOW the menu so it never fogs
+        // the buttons the player has to read.
+        MakeParticles(host.transform, "Haze", new Vector3(0f, 0.12f, 2.2f),
+            rate: 6f, life: 9f, size: 1.6f, speed: 0.05f, radius: 3.2f,
+            colour: new Color(0.35f, 0.85f, 1f, 0.05f), gravity: -0.005f);
+
+        // Rising motes — the movement your eye actually catches.
+        MakeParticles(host.transform, "Motes", new Vector3(0f, 0.05f, 2.2f),
+            rate: 14f, life: 7f, size: 0.022f, speed: 0.16f, radius: 2.6f,
+            colour: new Color(0.6f, 1f, 1f, 0.5f), gravity: -0.02f);
+
+        EditorSceneManager.MarkAllScenesDirty();
+        EditorSceneManager.SaveOpenScenes();
+        Debug.Log("[TutorialModeBuilder] room FX built: " + trim.Count + " trim strip(s) breathing, "
+                  + lights.Count + " light(s) drifting, haze + motes added.");
+    }
+
+    static void MakeParticles(Transform parent, string name, Vector3 pos, float rate,
+        float life, float size, float speed, float radius, Color colour, float gravity)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.transform.position = pos;
+
+        var ps = go.AddComponent<ParticleSystem>();
+        var main = ps.main;
+        main.startLifetime = life;
+        main.startSpeed = speed;
+        main.startSize = size;
+        main.startColor = colour;
+        main.gravityModifier = gravity;              // negative = drifts upward
+        main.maxParticles = 220;
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
+        main.playOnAwake = true;
+        // ⛔ Every curve stays in Constant mode. Mixing curve modes on a particle
+        // system is what produced 711 errors/second from SpawnVFX (W5.34) — the
+        // system spams every frame and the console becomes unusable.
+        var emission = ps.emission;
+        emission.rateOverTime = rate;
+        var shape = ps.shape;
+        shape.shapeType = ParticleSystemShapeType.Circle;
+        shape.radius = radius;
+        shape.radiusThickness = 1f;
+
+        var col = ps.colorOverLifetime;
+        col.enabled = true;
+        var grad = new Gradient();
+        grad.SetKeys(
+            new[] { new GradientColorKey(colour, 0f), new GradientColorKey(colour, 1f) },
+            new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.25f),
+                    new GradientAlphaKey(1f, 0.7f), new GradientAlphaKey(0f, 1f) });
+        col.color = new ParticleSystem.MinMaxGradient(grad);
+
+        var pr = go.GetComponent<ParticleSystemRenderer>();
+        pr.renderMode = ParticleSystemRenderMode.Billboard;
+        pr.sharedMaterial = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Particle.mat");
+        pr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        pr.receiveShadows = false;
+        pr.sortingOrder = -1;                        // behind the menu, never over the text
     }
 
     // ---- SampleScene: the guidance rig ---------------------------------------

@@ -3681,6 +3681,14 @@ public static class PharmaSelfTests
                 A("tutorial: the near clamp lets the marker shrink out of your face",
                     WaypointGuide.DistanceScale(0.2f, 2f, 0.35f, 3.5f) < 0.5f);
 
+                // Room FX: the breath curve stays in range, and two strips with
+                // different phases must genuinely differ — a room pulsing in lockstep
+                // reads as one blinking prop, not as somewhere alive.
+                A("roomfx: breath stays within 0..1",
+                    MenuRoomFx.Breath(3.1f, 0.7f, 0f) >= 0f && MenuRoomFx.Breath(3.1f, 0.7f, 0f) <= 1f);
+                A("roomfx: phase offsets desynchronise the strips",
+                    !Near(MenuRoomFx.Breath(1f, 0.7f, 0f), MenuRoomFx.Breath(1f, 0.7f, 0.7f)));
+
                 // Orientation line exists and is one breath, not a paragraph.
                 A("tutorial: orientation line is authored",
                     !string.IsNullOrEmpty(PharmeeLines.TutorialOrientation)
