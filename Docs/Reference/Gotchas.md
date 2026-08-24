@@ -1,0 +1,236 @@
+# Gotchas
+
+Up: [[Home]] · [[Process MOC]] · [[Architecture MOC]]
+
+Traps that have already cost this project real time. Every entry here is a **bug that
+actually happened**, not a hypothetical. Read the relevant section before touching
+that area; add to it when you lose a day to something new.
+
+---
+
+## Unity Editor & MCP
+
+> [!danger] `Unity_ReadConsole` lies about compile errors
+> It returned **0 errors** while a CS0136 sat in `PharmaSelfTests` and the assembly
+> silently refused to rebuild. `IsCompiling: false`, and "success" from
+> `Assets/Refresh` and `RequestScriptCompilation` — all of it still lies.
+>
+> **The only source of truth:**
+> ```bash
+> grep "error CS" Logs/Editor.log | tail
+> ```
+> A stale `Library/ScriptAssemblies/*.dll` after a refresh means the compile
+> **failed**, not that Unity is idle. And a suite run whose *assertion count* did not
+> move ran the OLD assembly, whatever the timestamp says.
+
+> [!danger] A new `.cs` can import but never reach the assembly
+> `PlaytestFixW533.cs` had a valid `.meta`, `LoadAssetAtPath<MonoScript>` returned it,
+> the assembly compiled green — and its class was absent from the DLL with its menus
+> unregistered. `ImportAsset(ForceUpdate)` and `RequestScriptCompilation` did nothing.
+>
+> **Fix:** rename the file to a NEW asset path (fresh GUID) and refresh. Verify the
+> type actually landed with
+> `grep -a <TypeName> Library/ScriptAssemblies/Assembly-CSharp-Editor.dll` — not with
+> a menu list.
+
+- **Never `RunCommand` while the user is in Play mode.** `OpenScene` throws and scene
+  edits force-exit play. Check `Unity_ManageEditor GetState` first.
+- `Unity_RunCommand` compiles inside `Unity.AI.*` → **fully qualify or alias**
+  `UnityEngine.UI.*` (`UImage`, `UButton`). `System.Reflection`, `ISet` and
+  `GetInstanceID` are blocked. File writes and `AssetDatabase.DeleteAsset` get flagged
+  "requires user interaction" → use Bash for files, load-or-overwrite for assets.
+  **Menu items are exempt.**
+- One scene per command. `AssetDatabase.Refresh()` before cross-scene asset loads.
+  A `Refresh: true` menu execute can swallow the run in the domain reload.
+- MCP **"named pipe not found"** = editor busy → wait for `Logs/Editor.log` to go
+  quiet, retry.
+- MCP **"Connection revoked"** = the AI seat. Project Settings ▸ AI ▸ Unity MCP will
+  show *"Up to 0 direct connections allowed at a time"*. Use the file fallbacks in
+  [[Build and Test Loop]].
+- `Unity_Camera_Capture` is broken → use **DevCapture** (yaw **0–360 only**; negative
+  values misparse).
+
+---
+
+## Edit mode vs Play mode
+
+> [!danger] The `AddComponent` mirror traps
+> Both cost a hard-stuck playtest on 2026-07-17.
+>
+> - **Edit mode:** `OnEnable`/`Awake` do *not* fire on `AddComponent` → hence the
+>   `Bind()` seams everywhere.
+> - **Play mode:** `AddComponent` fires `OnEnable` **immediately** — *before*
+>   `Bind()`, while fields are still null. So event subscription must live in the
+>   `Bind` seam, not in `OnEnable` alone.
+> - `DestroyImmediate` **skips** `OnDisable`/`OnDestroy` for components whose
+>   `OnEnable` never ran → call an explicit `Detach()` before destroying, or C# event
+>   subscriptions ghost forever.
+
+- **Never `renderer.material` in edit mode** — use `sharedMaterial` or an MPB. TMP's
+  `outlineWidth` also instances materials.
+- `AddComponent<LiquidPhysics>` needs a Renderer host.
+- Before deleting a script, **grep all of `Assets/`** for the type name.
+- FBX imports have **no colliders**.
+- ChemLab `_WithLiquid` prefabs: verify **mesh** names, not GameObject names.
+
+---
+
+## Builders that destroy what they touch
+
+> [!danger] Rebuilding silently takes components with it
+> A 2026-07-16 `Build Reagent Cabinets` run wiped `Raw_Matchsticks`'
+> `MatchStrikerSurface` and two `FlameAnchor`s. Striking the box did nothing — which
+> killed the methane splint test **and every burner light in the game** — and nothing
+> caught it, because the pure `ShouldStrike`/`ShouldIgnite` tests still passed.
+>
+> **Pure math cannot see a missing component. Pin the actual scene objects.**
+>
+> Recovery: `Apply W5.8 Verb Data` → `Add Placement Anchors` →
+> **`Re-Home Scene Items (Adopt Current)`**. Adopt the CURRENT hand-placement; never
+> re-apply a transform from git (a HEAD *local* position against a different parent
+> left the ice bucket floating at y = 2.05).
+
+- `Build Reagent Cabinets` preserves only **unit** transforms, never the items inside.
+  Hand-placed things must be **excluded** from stocking, not stocked —
+  `IsHandPlacedConsumable` covers the ice bucket and the 4 consumable boxes.
+- `ShelfY`'s lowest entry (0.11) is the **Base panel's top face**. `BuildUnit` always
+  made that surface and nothing stocked it, so every unit wasted a whole bottom row —
+  that is why "overflow" was a phantom.
+- **Verb wiring is a step.** `Apply W5.8 Verb Data` wires droppers, the 0.1 g
+  spatula, the water bath, the ice bath and time-skip. `Name Tubes + Build Rack Slots`
+  wires holder snapping. Both are suite-pinned (`wired:`).
+
+---
+
+## The bench and layouts
+
+> [!danger] The bench ALREADY EXISTS — a layout must never stage it
+> Cost a 46-object duplication on 2026-07-16. `SpawnRackKit`, `SpawnSpares` and
+> `StageConsumables` were **deleted**: they re-spawned a rack + 6 tubes, 2 spare
+> beakers, a flask and a redundant `MatchStriker` cube on **every** module, undoing
+> the user's hand-deletions.
+>
+> Vessels set **`Vessel.benchItem`** (e.g. `Kit_TestTube_0`) → the builder *finds* the
+> object and attaches only task wiring. `ClearBenchBindings()` strips it each build or
+> it leaks into the next module. **Only task-bound VESSELS may be staged.**
+
+Never author a prop for a general tool or a pourable reagent bottle — they all already
+exist: `Eq_Dropper`, `Eq_PorcelainSpatula`, `Eq_Funnel`, `Eq_TestTubeBrush`,
+`Eq_GlassRod`, `Eq_WashBottle`, `Eq_Beaker_*`, `Eq_GraduatedCylinder_50mL`,
+`Eq_WatchGlass`, `Kit_BunsenBurner_0-9`, `Kit_TestTube_0-18`,
+`Kit_Hard-GlassTestTube_0-3`, `Kit_Motar`, `Pestle`, `Tripod`, `WireGauze`, …
+
+A station's `ZoneItemSensor` matches a `LabItem.itemId` **wherever it already lives**,
+so point `requiredItemId` at the bench (`kit-bunsenburner`, `kit-funnel`,
+`kit-waterbath`).
+
+🔎 **See what a module litters the bench with:**
+`Tools ▸ PharmaSynth ▸ Reveal Stage ▸ <module>` — builds the stage in edit mode and
+logs an inventory grouped by spawner. Deletes nothing.
+
+### Tubes and racks
+
+Two roles share `itemId kit-testtuberack`:
+
+- **STORAGE racks** (`Eq_TestTubeRack`, `TestTubeRack_2-5`) — where tubes live and
+  home. **They get NO slots.** ⛔ Never re-derive them: the tubes were duplicated
+  *with* their holders and already sit perfectly.
+- **WORKSPACE holders** (`Experiment_Tube_Table_Kit_Holder_1-4`) — start **empty**;
+  the player drags tubes in mid-experiment. Only these get `Slot_0-5` anchors.
+
+⚠ **A broken tube respawns at its BAKED home**, so positions must be right *before*
+re-homing.
+
+---
+
+## Physics and bounds
+
+> [!danger] Measure with `ExperimentSceneBuilder.SolidWorldBounds`
+> Never all child renderers. `LiquidPourer`'s **world-space** `StreamLine`/`PourStream`
+> outlive the pour still pointing at the FLOOR, so encapsulating them dragged bounds
+> down a metre and racked tubes flew into the air. Same trap for any bounds-fitted
+> child. `IsEffectChild` is the pinned list.
+
+> [!danger] Never write the rig root's Y from a horizontal system
+> `HeadCollisionPushback` applied its wall-sweep correction as a full 3D vector.
+> Real head tracking jitters every frame; each downward jitter sank the rig, which put
+> the knee sweep deeper into the floor and guaranteed the next hit. Runaway sink → the
+> CharacterController ends up fully inside the floor collider, `Move()` can no longer
+> resolve it, and the player is **stuck under the lab floor**. Headset-only: the XR
+> Device Simulator's head barely moves, so it never fired.
+>
+> Also: `Physics.CapsuleCast` returns **distance 0** when the sweep starts already
+> overlapping. Treating that as a blocking hit pinned the head in world space and
+> dragged the rig by the inverse of every head movement.
+>
+> Vertical placement belongs to the **CharacterController + gravity**, always.
+
+- `SeatedHeightBoost`'s ground guard is now **two-sided**. It was up-only, which is
+  why a sink was unrecoverable.
+- Fixed eye height is **not relative to real height** — the Quest runtime flip-flops
+  between Floor and Device origin spaces across sessions, and every relative scheme
+  produced floor-spawns or roof-spawns.
+
+---
+
+## Text and UI
+
+- **`GlyphSafe.Sanitize` every new TMP string.** LiberationSans lacks ☑ ▶ → Δ ↑ °.
+- Transparent geometry does not z-write → visibility is **sortingOrder**:
+  HUD 30000 · bubble 29000 · world panels 4000–5000 · TMP labels 20000.
+- **TMP will not rebuild `textInfo` on an inactive GameObject.** Activate → write text
+  → `ForceMeshUpdate`. Doing it in the other order returned the *previous* line's
+  `characterCount`, so a longer line exited the reveal loop early and sat truncated.
+  Never trust a 0 count — fall back to the raw string.
+
+---
+
+## Shaders
+
+> [!danger] URP's stock Unlit declares no `_ZTest`
+> `SetInt("_ZTest", …)` on it is a **silent no-op**. Both tutorial overlay materials
+> inspected as correctly configured and would have shown through nothing. Hence
+> `Art/Shaders/PharmaGuide.shader`. **Verify by grepping the `.mat` for `_ZTest`.**
+
+---
+
+## Files, YAML and encoding
+
+> [!warning] Hand-written Unity YAML
+> **Single-quote any string scalar containing `": "`** — e.g. `"unchanged: that
+> contrast"`. Unquoted, YAML parses it as a key/value split and silently truncates the
+> field. Double internal apostrophes.
+
+- `re.sub` expands escapes in its **replacement** template → a literal `\n` becomes a
+  real newline. Pass a lambda.
+- **Windows FS is case-insensitive** → case-only asset renames need
+  `AssetDatabase.RenameAsset`.
+- **PDFs:** TEMP is hijacked, so the Read tool cannot open them. Use
+  `"C:/Program Files/Git/mingw64/bin/pdftotext.exe"` or pypdf.
+- Internet via `curl` (github-raw rate-limits at 429).
+- `generate-voice.ps1` needs `-Encoding UTF8` on the manifest read **and** a UTF-8
+  *byte* body, or PowerShell 5.1 mangles every em-dash. The `.ps1` must keep its BOM.
+
+---
+
+## Test suite
+
+- **Expected warnings** (not failures): the two W5.9 guard tests and the
+  Unknown-moduleId negative test.
+- The suite **pins behaviour** — Mishandling lists, ContentSuite task counts, layout
+  spacing. Move a pinned assertion **in the same change** as the behaviour it pins.
+- Scene-pinned assertions fail *en masse* when the wrong scene is open. → [[Build and Test Loop]]
+
+---
+
+## A bug class the simulator cannot catch
+
+> [!danger] `SimulatedRun` pours from the BINDING, never the HINT
+> So a hint whose ACTION line contradicts the binding it must satisfy is structurally
+> invisible to it. The W5.34 clueless-player audit found an Exp 2 hard-stuck blocker
+> this way: the hint said "leave tube 4 alone" for a tube its own `rackGroup`
+> required — and there is no feedback, because the have/required readout only appears
+> on a vessel you actually pour into.
+>
+> **Read hints cold, as a first-timer, and cross-check each ACTION line against the
+> binding.**

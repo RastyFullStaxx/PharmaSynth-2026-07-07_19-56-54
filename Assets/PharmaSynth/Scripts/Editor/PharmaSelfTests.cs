@@ -5158,6 +5158,28 @@ public static class PharmaSelfTests
     // relative scheme spawn players on the floor or the roof).
     static void HeightCalibrationSuite()
     {
+        // --- head pushback: horizontal-only (2026-08-24 under-the-floor fix) ---
+        {
+            var last = new UnityEngine.Vector3(0f, 1.45f, 0f);
+            var dirDown = new UnityEngine.Vector3(0f, -1f, 0f);
+            var tgtDown = last + dirDown * 0.05f;
+            A("pushback: vertical never corrected (no sink)",
+                Near(HeadPushbackMath.Correction(last, tgtDown, dirDown, 0.01f).y, 0f));
+
+            var dirFwd = new UnityEngine.Vector3(0f, 0f, 1f);
+            var tgtFwd = last + dirFwd * 0.10f;
+            var c = HeadPushbackMath.Correction(last, tgtFwd, dirFwd, 0.02f);
+            A("pushback: forward wall hit pulls rig back", c.z < -0.05f);
+            A("pushback: wall correction stays level", Near(c.y, 0f));
+
+            var dirDiag = new UnityEngine.Vector3(0f, -0.6f, 0.8f);
+            A("pushback: diagonal head dip corrects XZ only",
+                Near(HeadPushbackMath.Correction(last, last + dirDiag * 0.1f, dirDiag, 0.01f).y, 0f));
+
+            A("pushback: initial-overlap sweep is not a blocking hit", !HeadPushbackMath.IsBlockingHit(0f));
+            A("pushback: real surface hit blocks", HeadPushbackMath.IsBlockingHit(0.05f));
+        }
+
         A("height: seated head lifted to target", Near(HeightCalibration.FixedOffset(1.65f, 1.00f), 0.65f));
         A("height: head already at target", Near(HeightCalibration.FixedOffset(1.65f, 1.65f), 0f));
         A("height: too-high head pulled DOWN (roof impossible)", Near(HeightCalibration.FixedOffset(1.65f, 2.40f), -0.75f));

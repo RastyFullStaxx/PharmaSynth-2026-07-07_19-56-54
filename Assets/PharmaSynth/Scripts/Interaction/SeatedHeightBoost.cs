@@ -56,6 +56,7 @@ public class SeatedHeightBoost : MonoBehaviour
 {
     const int SettleFrames = 45;   // ~0.5 s of valid, stable tracking
     const float RoofY = 0.3f;      // rig ROOT above this = floating/shoved (floors are y≈0, lip 0.19)
+    const float CellarY = -0.3f;   // rig ROOT below this = sunk through the floor (single-level lab)
     const float DebugEvery = 3f;   // [HeightDebug] telemetry cadence (seconds)
 
     [SerializeField] private float targetEyeHeight = 1.65f;   // authored per scene
@@ -95,12 +96,16 @@ public class SeatedHeightBoost : MonoBehaviour
     {
         if (!Application.isPlaying || cameraTransform == null || offsetTransform == null) return;
 
-        // Continuous roof guard — depenetration can shove the rig up at any time.
-        if (transform.position.y > RoofY)
+        // Continuous ground guard — BOTH directions. Depenetration can shove the
+        // rig up; anything that writes the rig root's Y directly can sink it under
+        // the floor, where the CharacterController is fully inside the floor
+        // collider and Move() can no longer resolve it (= stuck, no way back).
+        // This guard was up-only, which is why a sink was unrecoverable.
+        if (transform.position.y > RoofY || transform.position.y < CellarY)
         {
             var p = transform.position;
             Debug.LogWarning("[FixedEyeHeight] rig root at y=" + p.y.ToString("F2")
-                + " (floating) — snapping to ground level.");
+                + (p.y > RoofY ? " (floating)" : " (below floor)") + " — snapping to ground level.");
             transform.position = new Vector3(p.x, 0f, p.z);
         }
 

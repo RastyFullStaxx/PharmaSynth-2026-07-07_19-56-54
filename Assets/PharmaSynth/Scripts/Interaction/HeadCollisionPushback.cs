@@ -1,5 +1,34 @@
 using UnityEngine;
 
+/// Pure pushback resolution (edit-mode testable). Both rules exist because the
+/// old inline version broke headset play (2026-08-24: player ended up under the
+/// lab floor, unable to walk).
+public static class HeadPushbackMath
+{
+    public const float SurfaceSkin = 0.02f;   // stop just short of the surface
+
+    /// A sweep that STARTS overlapping reports distance 0 with a zero normal —
+    /// that is not a real blocking hit. Honouring it pinned the head in world
+    /// space and dragged the rig by the inverse of every head movement, with no
+    /// way back out. In a lab the knee end of the sweep overlaps a bench or
+    /// cabinet base most of the time, so it fired almost every frame.
+    public static bool IsBlockingHit(float hitDistance) => hitDistance > 0f;
+
+    /// Rig correction for a head that swept toward `target` and was stopped at
+    /// `nearest`. HORIZONTAL ONLY: vertical placement belongs to the
+    /// CharacterController + gravity. A Y term here writes the rig root directly,
+    /// so the CC never resolves it — and since real head tracking jitters every
+    /// frame, each downward jitter sank the rig further, putting the knee sweep
+    /// deeper into the floor and guaranteeing the next hit. Runaway sink.
+    public static Vector3 Correction(Vector3 lastValid, Vector3 target, Vector3 dir, float nearest)
+    {
+        Vector3 allowed = lastValid + dir * Mathf.Max(0f, nearest - SurfaceSkin);
+        Vector3 c = allowed - target;
+        c.y = 0f;
+        return c;
+    }
+}
+
 /// Stops the player's HEAD from phasing through static geometry, no matter how the
 /// camera moved — thumbstick locomotion, the XR Device Simulator's direct HMD
 /// translate (which bypasses the CharacterController by design), or physically
@@ -59,6 +88,13 @@ public class HeadCollisionPushback : MonoBehaviour
             if (h.collider == null) continue;
             if (h.rigidbody != null) continue;                          // dynamic props never wall the player
             if (h.collider.transform.IsChildOf(rigT)) continue;         // the rig's own body
+            // A sweep that STARTS overlapping reports distance 0 with a zero
+            // normal — not a real blocking hit. Honouring it pinned the head in
+            // world space (allowed == _lastValid, which then never advanced) and
+            // dragged the whole rig by the inverse of every head movement. In a
+            // lab the knee end of the capsule overlaps a bench/cabinet base most
+            // of the time, so this fired constantly and left no way back out.
+            if (!HeadPushbackMath.IsBlockingHit(h.distance)) continue;
             if (h.distance < nearest) nearest = h.distance;
         }
 
@@ -66,10 +102,9 @@ public class HeadCollisionPushback : MonoBehaviour
         {
             // Head tried to cross static geometry: allow travel up to the surface,
             // then shift the RIG back by the overshoot so the head stays outside.
-            Vector3 allowed = _lastValid + dir * Mathf.Max(0f, nearest - 0.02f);
-            Vector3 correction = allowed - target;
+            Vector3 correction = HeadPushbackMath.Correction(_lastValid, target, dir, nearest);
             rigT.position += correction;
-            _lastValid = allowed;
+            _lastValid = target + correction;   // where the head actually ended up
         }
         else
         {

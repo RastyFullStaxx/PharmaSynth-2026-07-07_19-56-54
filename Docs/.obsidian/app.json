@@ -1,0 +1,8 @@
+{
+  "alwaysUpdateLinks": true,
+  "newLinkFormat": "shortest",
+  "useMarkdownLinks": false,
+  "readableLineLength": true,
+  "defaultViewMode": "preview",
+  "showLineNumber": true
+}
