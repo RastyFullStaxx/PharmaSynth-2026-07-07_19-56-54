@@ -22,6 +22,7 @@ Shader "PharmaSynth/Liquid"
         _LocalYMax ("Local Y Max", Float) = 0.5
         _RimPower ("Rim Power", Range(0.5,8)) = 3
         _RimStrength ("Rim Strength", Range(0,1)) = 0.3
+        _Boil ("Boil", Range(0,1)) = 0
     }
     SubShader
     {
@@ -53,6 +54,7 @@ Shader "PharmaSynth/Liquid"
                 float _LocalYMax;
                 float _RimPower;
                 float _RimStrength;
+                float _Boil;
             CBUFFER_END
 
             struct Attributes
@@ -87,6 +89,12 @@ Shader "PharmaSynth/Liquid"
                 return OUT;
             }
 
+            // Cheap per-cell hash, no texture read - this runs per fragment on a mobile GPU.
+            float Hash21(float2 p)
+            {
+                return frac(sin(dot(p, float2(12.9898, 78.233))) * 43758.5453);
+            }
+
             half4 frag (Varyings IN, FRONT_FACE_TYPE face : FRONT_FACE_SEMANTIC) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(IN);
@@ -97,6 +105,36 @@ Shader "PharmaSynth/Liquid"
                 float wobble = IN.positionOS.x * _WobbleX * _WobbleScale
                              + IN.positionOS.z * _WobbleZ * _WobbleScale;
                 float fillLine = lerp(_LocalYMin, _LocalYMax, saturate(_Fill));
+
+                // ---- boiling (driven by LiquidPhysics from currentTempC vs the chemical's
+                // boilingPointC). Before this the liquid sat PERFECTLY STILL while the station
+                // vented steam above it, so the one verb almost every module uses - heat it -
+                // had no feedback inside the glass at all.
+                float span = max(_LocalYMax - _LocalYMin, 1e-4);
+                float bubbles = 0.0;
+                if (_Boil > 0.001)
+                {
+                    // Surface chop: the fill plane itself churns.
+                    float t = _Time.y;
+                    float chop = sin(IN.positionOS.x * 55.0 + t * 9.0)
+                               * cos(IN.positionOS.z * 47.0 + t * 7.3);
+                    fillLine += chop * span * 0.02 * _Boil;
+
+                    // Bubbles rising through the body: one column per XZ cell, each climbing
+                    // on its own phase so they do not pulse in lockstep.
+                    float2 g    = IN.positionOS.xz / span * 7.0;
+                    float2 cell = floor(g);
+                    float2 loc  = frac(g) - 0.5;
+                    float  seed = Hash21(cell);
+                    float  phase = frac(t * (0.55 + seed * 0.7) + seed);
+                    float  by   = lerp(_LocalYMin, fillLine, phase);
+                    float  rad  = (0.10 + seed * 0.12) * (0.45 + 0.55 * _Boil);
+                    float  d    = length(float2(length(loc), (h - by) / span * 1.6));
+                    bubbles = smoothstep(rad, rad * 0.25, d) * _Boil;
+                    // They fade as they reach the surface and pop.
+                    bubbles *= saturate(1.0 - phase * 0.55);
+                }
+
                 clip(fillLine - (h + wobble));
 
                 half4 col = _LiquidColour;
@@ -104,13 +142,16 @@ Shader "PharmaSynth/Liquid"
                 {
                     // Backface = visible liquid surface plane
                     col.rgb = saturate(col.rgb + _TopColour);
+                    // A rolling boil turns the surface pale and broken, not glassy.
+                    col.rgb = saturate(col.rgb + _Boil * 0.22 * (0.6 + 0.4 * sin(_Time.y * 11.0)));
                 }
                 else
                 {
                     float fres = pow(1.0 - saturate(dot(normalize(IN.normalWS), normalize(IN.viewDirWS))), _RimPower);
                     col.rgb = saturate(col.rgb + fres * _RimStrength);
                 }
-                col.a = saturate(col.a * (1.0 - _SceneColourAmount * 0.8));
+                col.rgb = saturate(col.rgb + bubbles * 0.55);
+                col.a = saturate(col.a * (1.0 - _SceneColourAmount * 0.8) + bubbles * 0.25);
                 return col;
             }
             ENDHLSL

@@ -3928,6 +3928,16 @@ Builds the lab's hazard-alarm fixture (manuscript: "flashing lights, warning mes
 static void Build()
 ```
 
+### `LabLightingBake` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/LabLightingBake.cs`</sub>
+
+is the whole reason it is the right tool on a Quest. The three steps that have to happen in THIS order, because each depends on the last: 1. Lightmap UVs. A mesh with no UV2 cannot receive a lightmap. 36 of the project's 107 models lacked them, including the entire room shell (Wall, Floor, Ceiling_2, the tables). Anything still missing UV2 after the import pass is set to receive from LIGHT PROBES instead, so it still occludes and bounces without a broken lightmap. 2. Static flags, filtered HARD. A grabbable baked into a lightmap carries its baked shadow around the room in your hand, so anything with a Rigidbody, an XRGrabInteractable, a DropRespawn or a LabItem is excluded, as is everything the stage builder spawns. 3. Light modes. Realtime lights contribute nothing to a bake. Tools > PharmaSynth > Prepare Lab Lighting Bake  - steps 1-3, no bake (fast, inspectable) Tools > PharmaSynth > 
+
+```csharp
+static void Prepare()
+static void Run()
+```
+
 ### `LabLightingBuilder` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Editor/LabLightingBuilder.cs`</sub>
 
@@ -3944,6 +3954,59 @@ Wires the 2026-07-10 NPC/audio polish batch into SampleScene: 1. Pharmee express
 
 ```csharp
 static void Build()
+```
+
+### `LabProbeBuilder` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/LabProbeBuilder.cs`</sub>
+
+blending AND box projection switched on - the features were paid for with nothing to feed them. Two consequences the player sees constantly: * Every glass material in the ChemLab pack sets _EnvironmentReflections = 1, so with no probe they all sampled the DEFAULT reflection - the built-in procedural outdoor sky - inside a sealed windowless room. That is why beakers and flasks read as pale plastic. * Every dynamic object (all grabbable glassware, held items, Pharmee, Dr. Jimenez) was lit by flat ambient alone, so a beaker was lit identically under a closed cabinet and directly beneath a lamp. Nothing in the room grounded anything. Probe placement is DERIVED from the room's own renderer bounds rather than hard-coded, so it survives the furniture moves the user makes through Select Movable Furniture. Tools > PharmaSynth > Build Lab Probes (edit mode, idempotent - deletes and rebuilds its ow
+
+```csharp
+static void Build()
+```
+
+### `LabRenderTuner` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/LabRenderTuner.cs`</sub>
+
+* MSAA was 1 (off). On the Adreno tile GPU 4x resolves in tile memory and is close to free, and this scene is nothing but thin edges - tube rims, glass rods, rack rails. It is the largest per-pixel quality gain available. * HDR was off, so emission above 1.0 just clamped: the 16 emissive ceiling panels could never read as LIGHTS, only as white paint, and tonemapping had no range to work with. * Ambient was FLAT grey 0.45 - identical from every direction, so nothing in the room had any vertical shading and the whole space read as one plane of grey. * The skybox was the built-in PROCEDURAL SKY, in a sealed windowless room, feeding ambient and every reflection an outdoor gradient. Vignette is deliberately DISABLED rather than tuned down: it was active at template strength and would have switched on the moment post was enabled, and a vignette in a headset reads as a dirty lens rather than as
+
+```csharp
+const int   Msaa
+const float BloomIntensity
+const float BloomThreshold
+const float PostExposure
+const float Contrast
+const float Saturation
+const float Temperature
+static readonly Color AmbientSky
+static readonly Color AmbientEquator
+static readonly Color AmbientGround
+static void Tune()
+static void ApplyAmbient()
+```
+
+### `LabSurfaceTextureForge` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/LabSurfaceTextureForge.cs`</sub>
+
+Generates the lab's MISSING surface textures (user 2026-08-28: "improve the textures to make it an aesthetic lab"; free-authoring route chosen, so no Unity AI credits are spent). The Laboratory pack left the two largest surfaces in the player's view with no albedo at all - Wall_0/Wall_1 carry a normal map and nothing else, and Ceiling_2 carries no maps whatsoever. A featureless white plane is exactly what makes the room read as an untextured grey box, and it is worst on the ceiling, which a seated VR player looks straight up into. Everything here is drawn in code and written to PNG - the same approach LabelForge already uses for reagent labels: deterministic, re-runnable, diffable, and free. All noise wraps, so the maps tile seamlessly. Tools > PharmaSynth > Generate Lab Surface Textures (edit mode, idempotent, re-runnable).
+
+```csharp
+static void Generate()
+```
+
+### `LabSurfaceTuner` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/LabSurfaceTuner.cs`</sub>
+
+single most obviously wrong thing in the room. * The four vessel materials the player handles constantly - beaker 100/500, Erlenmeyer, graduated cylinder - sat at smoothness 0. Glass with NO specular and NO reflection is why they read as pale plastic blobs. The same pack ships CORRECT glass values on GlassMat/GlassInnerMat/GlassOuterMat (0.92-0.95), so the right answer was already sitting next to the wrong one. * Several non-metals sat at metallic 0 + smoothness 1 - a physically impossible "non-metal mirror" that produces a hard white specular blob instead of a highlight. Every value here is a judgement about what the surface IS, so they live in one table rather than being scattered. Suite-pinned (surface:) because a pack reimport or a stray inspector drag restores the bad values silently and pure math cannot see a material regression - the same lesson as the wiped MatchStrikerSurface. T
+
+### `Surface` <sub>struct</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/LabSurfaceTuner.cs`</sub>
+
+One surface's calibrated look. metallic < 0 means "leave it alone".
+
+```csharp
+static readonly Surface[] Surfaces
+static void Tune()
 ```
 
 ### `LabelForge` <sub>class</sub>

@@ -102,6 +102,11 @@ Builds the lab's hazard-alarm fixture (manuscript: "flashing lights, warning mes
 
 Builds the corner music speaker in the lab (user 2026-07-10): a floor-standing speaker cabinet in the empty back-right corner that plays the Background_Music/Lab playlist as a 3D positional source (louder as you approach) and fades in/out with the screen fade on menu<->lab transitions. Also disables the old 2D LabMusicPlayer bed and re-points the menu-room music to the user's supplied track. Tools ▸ PharmaSynth ▸ Build Lab Music Speaker (SampleScene, edit mode, idempotent).
 
+### `Tools/PharmaSynth/Build Lab Probes`
+<sub>`Assets/PharmaSynth/Scripts/Editor/LabProbeBuilder.cs`</sub>
+
+blending AND box projection switched on - the features were paid for with nothing to feed them. Two consequences the player sees constantly: * Every glass material in the ChemLab pack sets _EnvironmentReflections = 1, so with no probe they all sampled the DEFAULT reflection - the built-in procedural outdoor sky - inside a sealed windowless room. That is why beakers and flasks read as pale plastic. * Every dynamic object (all grabbable glassware, held items, Pharmee, Dr. Jimenez) was lit by flat 
+
 ### `Tools/PharmaSynth/Build Menu Cube Room`
 <sub>`Assets/PharmaSynth/Scripts/Editor/MenuCubeRoomBuilder.cs`</sub>
 
@@ -222,6 +227,11 @@ W5.12 (user 2026-07-13): the tripod is a STAND — the burner goes underneath, w
 
 Two VR-UI scene fixes (user 2026-07-15). • Quiz answers unclickable: a world-space Canvas needs a TrackedDeviceGraphicRaycaster for the XR ray to hit it — a plain GraphicRaycaster is mouse-only. The scene had 10 GraphicRaycasters but only 3 tracked ones, so most panels (incl. the quiz) ignored the controller ray. • Dr. Jimenez's subtitles floated at local y=2.15 — above head height, up by the ceiling and unreadable. Lowered to just above his head. Both idempotent.
 
+### `Tools/PharmaSynth/Generate Lab Surface Textures`
+<sub>`Assets/PharmaSynth/Scripts/Editor/LabSurfaceTextureForge.cs`</sub>
+
+Generates the lab's MISSING surface textures (user 2026-08-28: "improve the textures to make it an aesthetic lab"; free-authoring route chosen, so no Unity AI credits are spent). The Laboratory pack left the two largest surfaces in the player's view with no albedo at all - Wall_0/Wall_1 carry a normal map and nothing else, and Ceiling_2 carries no maps whatsoever. A featureless white plane is exactly what makes the room read as an untextured grey box, and it is worst on the ceiling, which a seat
+
 ### `Tools/PharmaSynth/Generate Materials Guides`
 <sub>`Assets/PharmaSynth/Scripts/Editor/MaterialsGuideGenerator.cs`</sub>
 
@@ -296,6 +306,11 @@ Physics-attributes / resting-pose audit (task #78). Tools ▸ PharmaSynth ▸ Ph
 <sub>`Assets/PharmaSynth/Scripts/Editor/PhysicsAudit.cs`</sub>
 
 Physics-attributes / resting-pose audit (task #78). Tools ▸ PharmaSynth ▸ Physics Audit (Report)   — non-destructive scan of the scene apparatus + SceneAssetLibrary prefabs: colliders present/degenerate, Rigidbody settings, profile coverage. Writes Temp/physics-audit.md. Tools ▸ PharmaSynth ▸ Physics Audit (Drop Test) — drops every library prefab onto a plane 50 m above the lab for 3 simulated seconds (script-mode simulation, all other dynamic rigidbodies frozen for the sweep) and checks it neit
+
+### `Tools/PharmaSynth/Prepare Lab Lighting Bake`
+<sub>`Assets/PharmaSynth/Scripts/Editor/LabLightingBake.cs`</sub>
+
+is the whole reason it is the right tool on a Quest. The three steps that have to happen in THIS order, because each depends on the last: 1. Lightmap UVs. A mesh with no UV2 cannot receive a lightmap. 36 of the project's 107 models lacked them, including the entire room shell (Wall, Floor, Ceiling_2, the tables). Anything still missing UV2 after the import pass is set to receive from LIGHT PROBES instead, so it still occludes and bounces without a broken lightmap. 2. Static flags, filtered HARD.
 
 ### `Tools/PharmaSynth/Purge Stale Workspace Labels`
 <sub>`Assets/PharmaSynth/Scripts/Editor/WorkspaceLabelPurge.cs`</sub>
@@ -381,6 +396,11 @@ mode only shown. dont remove any yet, I'll remove it myself. just show all preli
 <sub>`Assets/PharmaSynth/Scripts/Editor/RevealExperimentStage.cs`</sub>
 
 mode only shown. dont remove any yet, I'll remove it myself. just show all prelims tools we have currently in edit mode as well"). ⛔ DELETES NOTHING. Same intent as RevealMethaneStage: the stage normally only exists at runtime, so there is no way to see what an experiment litters the bench with until you are inside VR. This makes it visible and named. Why the grouping matters: the spawn sources are independent, and only ONE of them is the layout's fault — • LAYOUT VESSELS   — authored per experi
+
+### `Tools/PharmaSynth/Run Lab Lighting Bake`
+<sub>`Assets/PharmaSynth/Scripts/Editor/LabLightingBake.cs`</sub>
+
+is the whole reason it is the right tool on a Quest. The three steps that have to happen in THIS order, because each depends on the last: 1. Lightmap UVs. A mesh with no UV2 cannot receive a lightmap. 36 of the project's 107 models lacked them, including the entire room shell (Wall, Floor, Ceiling_2, the tables). Anything still missing UV2 after the import pass is set to receive from LIGHT PROBES instead, so it still occludes and bounces without a broken lightmap. 2. Static flags, filtered HARD.
 
 ### `Tools/PharmaSynth/Run Self-Tests`
 <sub>`Assets/PharmaSynth/Scripts/Editor/PharmaSelfTests.cs`</sub>
@@ -471,6 +491,16 @@ Swaps the sealed Tripo fume-hood model for the regenerated OPEN-SASH, hollow-cha
 <sub>`Assets/PharmaSynth/Scripts/Editor/LayoutTidy.cs`</sub>
 
 Re-seats every experiment layout onto the LayoutTidyMath zoning grid (W5.8: clean center table — stations across the back, vessels center-front, reagents right, tools left; the front strip stays free for the rack and spares). Deterministic + idempotent; also structurally removes the two historical clamped overlaps at (1.38, −3.88) in Acetone and Benzamide. Run AFTER `Apply W5.8 Verb Data` so new stations/props get slots too.
+
+### `Tools/PharmaSynth/Tune Lab Surfaces`
+<sub>`Assets/PharmaSynth/Scripts/Editor/LabSurfaceTuner.cs`</sub>
+
+single most obviously wrong thing in the room. * The four vessel materials the player handles constantly - beaker 100/500, Erlenmeyer, graduated cylinder - sat at smoothness 0. Glass with NO specular and NO reflection is why they read as pale plastic blobs. The same pack ships CORRECT glass values on GlassMat/GlassInnerMat/GlassOuterMat (0.92-0.95), so the right answer was already sitting next to the wrong one. * Several non-metals sat at metallic 0 + smoothness 1 - a physically impossible "non-
+
+### `Tools/PharmaSynth/Tune Render Pipeline`
+<sub>`Assets/PharmaSynth/Scripts/Editor/LabRenderTuner.cs`</sub>
+
+* MSAA was 1 (off). On the Adreno tile GPU 4x resolves in tile memory and is close to free, and this scene is nothing but thin edges - tube rims, glass rods, rack rails. It is the largest per-pixel quality gain available. * HDR was off, so emission above 1.0 just clamped: the 16 emissive ceiling panels could never read as LIGHTS, only as white paint, and tonemapping had no range to work with. * Ambient was FLAT grey 0.45 - identical from every direction, so nothing in the room had any vertical s
 
 ### `Tools/PharmaSynth/Upgrade Distilling Flask Glass`
 <sub>`Assets/PharmaSynth/Scripts/Editor/DistillingFlaskGlass.cs`</sub>

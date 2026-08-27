@@ -52,6 +52,21 @@ that area; add to it when you lose a day to something new.
 - `Unity_Camera_Capture` is broken → use **DevCapture** (yaw **0–360 only**; negative
   values misparse).
 
+> [!warning] Unity's MCP panel misreports code signatures — ignore the scare banner
+> The Connected Clients panel flags `claude.exe` in red — *"This application is
+> unsigned or not recognized and may be dangerous!"* — and lists its publisher as
+> **NAVER Global Root Certification Authority**. Both are wrong. Windows reports
+> `Status: Valid`, signer `CN="Anthropic, PBC"`, issuer DigiCert; and there is **no
+> NAVER certificate in any machine store** (LocalMachine\Root, CurrentUser\Root,
+> LocalMachine\CA all return zero). Unity's own `relay_win.exe` gets the identical
+> bogus NAVER attribution, so this is a Unity publisher-lookup bug, not a property of
+> either binary or of this machine.
+>
+> **Verify with `Get-AuthenticodeSignature <path>`, never with Unity's panel or the
+> `Signed:`/`Publisher:` lines in `Logs/Editor.log`.** The `Accepted` state is what
+> actually governs access. A 2026-08-27 session trusted Unity's report and wrongly
+> concluded a binary was unsigned.
+
 > [!danger] An embedded package silently overrides the registry — and freezes you there
 > `com.unity.ai.assistant` had been **vendored into `Packages/`** (523 MB, 6340 tracked
 > files) at repo init, because pre-release packages were disabled and it could not
@@ -214,6 +229,76 @@ re-homing.
 > `SetInt("_ZTest", …)` on it is a **silent no-op**. Both tutorial overlay materials
 > inspected as correctly configured and would have shown through nothing. Hence
 > `Art/Shaders/PharmaGuide.shader`. **Verify by grepping the `.mat` for `_ZTest`.**
+
+---
+
+## Materials, textures and lighting
+
+> [!danger] `_Smoothness` above 1 is a silent mirror
+> URP clamps `_Smoothness` to 0-1, so a material authored at **2.19-3.20** renders as a
+> **perfect mirror** and nothing warns you. Four Laboratory-pack materials shipped that
+> way - `Ceiling_1` 2.60, `Ceiling_2` 3.20, `Floor` 2.51, `Cabinet` 2.19 - and with **no
+> reflection probe in the scene** they mirrored the built-in **procedural outdoor sky**
+> inside a sealed windowless room. That is why the lab read as wet plastic for months.
+>
+> **Never trust a pack's PBR values.** Sweep them:
+> ```bash
+> grep -rH "  - _Smoothness: [2-9]" --include="*.mat" Assets/
+> ```
+> Now pinned by `SurfaceSuite` (`surface: no material has smoothness > 1`).
+> The opposite error shipped too: the four vessel materials the player handles most
+> (beaker 100/500, Erlenmeyer, graduated cylinder) sat at smoothness **0** - matte glass,
+> no specular, no reflection - while `GlassMat`/`GlassInnerMat`/`GlassOuterMat` next to
+> them were correct at 0.92-0.95.
+
+> [!danger] A Volume profile renders nothing if the camera has post-processing off
+> `SampleSceneProfile.asset` had Bloom, Vignette and Tonemapping authored and active, and
+> a global Volume sat in the scene - while **both cameras had `m_RenderPostProcessing: 0`**.
+> Everything inspected as configured and none of it ran. The same shape of waste: the RP
+> asset had reflection-probe **blending and box projection enabled with zero probes** in the
+> scene to feed them.
+>
+> Check the CAMERA, not the profile. And retune before enabling: the template Vignette was
+> active at full strength and would have switched on the instant post went live.
+
+> [!danger] Do not re-tile a pack texture without looking at it first
+> Retiling `Floor.mat` from 1x1 to 6x6 to "add scale detail" produced hard rectangular
+> streaks across the floor. `Floor_AlbedoTransparency.png` has a **defective band of
+> vertical lines baked along its top edge**; at the pack's 1x1 mapping that band lands once
+> against the far wall and reads as nothing, and tiling repeated the defect six times.
+>
+> It looked exactly like a bad lightmap bake, and cost **three full rebakes** (resolution
+> 12 -> 24 -> 40, plus seam stitching) before the lightmap was ruled out.
+> **The decisive test took ten seconds:** set the renderer's `lightmapIndex = -1` and
+> capture. The streaks survived, so they were never the bake.
+> When an artifact is *invariant to every setting you change*, stop changing settings -
+> that invariance is the evidence.
+
+> [!warning] A pack albedo is often an ATLAS, not a tiling swatch
+> Binding a flat epoxy map to `Table_1`/`Table_2`/`WashTable` turned **every bench cabinet
+> in the room black**: those materials already carried a pack albedo covering the white
+> cabinet doors *and* the dark worktop in one atlas. Check whether `_BaseMap` is already
+> bound before you bind over it - only `Wall_0`, `Wall_1` and `Ceiling_2` genuinely had none.
+
+> [!warning] The Laboratory FBXs bind materials BY NAME, and it is not recorded on disk
+> They import with `materialLocation: 0` (External, obsolete in Unity 6) and an **empty
+> `externalObjects: {}`**, so bindings are re-resolved by material name on every reimport.
+> Editing the `.mat` files themselves is safe; relying on the FBX to remember an assignment
+> is not. Reimporting 12 of them to add lightmap UVs did *not* break anything - verified by
+> capture - but check after any reimport rather than assuming.
+
+- **`generateSecondaryUV` is off on 36 of 107 models**, including the whole room shell.
+  A mesh with no UV2 cannot receive a lightmap. `LabLightingBake` turns it on only for
+  meshes it is about to mark static, and anything still lacking UV2 is set to
+  `ReceiveGI.LightProbes` so it still occludes and bounces instead of rendering black.
+- **Never bake a grabbable.** An object baked into a lightmap carries its baked shadow
+  around the room in your hand. `LabLightingBake.IsBakeCandidate` excludes anything with a
+  Rigidbody, `XRGrabInteractable`, `DropRespawn`, `LabItem`, or a dynamic-root ancestor.
+- **A runtime `Shader.Find` material gets its shader STRIPPED from device builds.**
+  `EffectVfx` has guarded against this since W5.7 by instantiating
+  `Resources/FxParticleUnlit`; `StationVfx` did not, so every station steam / frost / drip /
+  bubble effect was a candidate to render wrong on the Quest while looking perfect in the
+  editor. Both now share the guarded path.
 
 ---
 

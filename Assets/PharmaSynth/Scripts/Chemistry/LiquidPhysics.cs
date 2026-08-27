@@ -128,6 +128,7 @@ public class LiquidPhysics : MonoBehaviour
     private static readonly int UpVectorID = Shader.PropertyToID("_UpVector");
     private static readonly int LocalYMinID = Shader.PropertyToID("_LocalYMin");
     private static readonly int LocalYMaxID = Shader.PropertyToID("_LocalYMax");
+    private static readonly int BoilID = Shader.PropertyToID("_Boil");
     private static readonly int WobbleXID = Shader.PropertyToID("_WobbleX");
     private static readonly int WobbleZID = Shader.PropertyToID("_WobbleZ");
 
@@ -285,7 +286,29 @@ public class LiquidPhysics : MonoBehaviour
         Vector3 localUp = transform.InverseTransformDirection(Vector3.up);
         if (mainRenderer) mainRenderer.material.SetVector(UpVectorID, localUp);
         if (precipitateRenderer) precipitateRenderer.material.SetVector(UpVectorID, localUp);
+
+        if (mainRenderer) mainRenderer.material.SetFloat(BoilID, BoilAmount());
     }
+
+    /// How hard this vessel's contents are boiling, 0-1.
+    ///
+    /// `boilingPointC` was pure chemistry data until 2026-08-28 - nothing ever displayed it,
+    /// so heating a beaker vented steam from the STATION while the liquid inside sat perfectly
+    /// still. It ramps over the last 8 degrees rather than switching on at the threshold, so a
+    /// vessel coming up to temperature visibly starts to move before it runs.
+    public float BoilAmount()
+        => BoilFor(currentLiquidVolume, currentTempC,
+                   currentChemical != null ? currentChemical.boilingPointC : 100f);
+
+    /// Pure so the suite can pin it without a Renderer host (thin-MonoBehaviour-over-pure-core).
+    public static float BoilFor(float volumeMl, float tempC, float boilingPointC)
+    {
+        if (volumeMl <= 1f) return 0f;                       // an empty vessel never boils
+        return Mathf.Clamp01((tempC - (boilingPointC - RampC)) / RampC);
+    }
+
+    /// Degrees below the boiling point at which the churn starts to show.
+    public const float RampC = 8f;
 
     void UpdateWobble(Vector3 velocity, Vector3 angularVelocity)
     {

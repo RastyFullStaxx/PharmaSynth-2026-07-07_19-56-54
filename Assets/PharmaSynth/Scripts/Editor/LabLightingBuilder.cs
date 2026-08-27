@@ -52,9 +52,10 @@ public static class LabLightingBuilder
             fixtures++;
         }
 
-        // 2. Bright neutral flat ambient.
-        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-        RenderSettings.ambientLight = new Color(0.45f, 0.46f, 0.48f);
+        // 2. Ambient. Owned by LabRenderTuner so re-running THIS builder can never stomp the
+        //    gradient back to flat grey - which is exactly what a flat 0.45 here used to do,
+        //    erasing all vertical shading in the room.
+        LabRenderTuner.ApplyAmbient();
 
         // 3. Shadowless fill lights (re-runnable: wipe + respawn the group).
         var old = GameObject.Find(GroupName);
@@ -62,11 +63,15 @@ public static class LabLightingBuilder
         var group = new GameObject(GroupName);
         Undo.RegisterCreatedObjectUndo(group, "Brighten Lab Lighting");
         // Fixture grid spans x −3.32→2.66, z −0.72→−6.65 at y 2.64 — 6 lights cover it in 2×3.
+        //    y = 2.05, NOT 2.5: at 2.5 each fill light sat 14 cm below the 2.64 m ceiling and
+        //    burned a blown-out ellipse into it (the "melting ceiling" in every capture).
+        //    Dropped to just above head height they light the room and the benches instead,
+        //    and the emissive panels supply the ceiling's own brightness.
         var spots = new List<Vector3>
         {
-            new Vector3(-2.3f, 2.5f, -1.7f), new Vector3(1.7f, 2.5f, -1.7f),
-            new Vector3(-2.3f, 2.5f, -3.7f), new Vector3(1.7f, 2.5f, -3.7f),
-            new Vector3(-2.3f, 2.5f, -5.7f), new Vector3(1.7f, 2.5f, -5.7f),
+            new Vector3(-2.3f, 2.05f, -1.7f), new Vector3(1.7f, 2.05f, -1.7f),
+            new Vector3(-2.3f, 2.05f, -3.7f), new Vector3(1.7f, 2.05f, -3.7f),
+            new Vector3(-2.3f, 2.05f, -5.7f), new Vector3(1.7f, 2.05f, -5.7f),
         };
         foreach (var p in spots)
         {

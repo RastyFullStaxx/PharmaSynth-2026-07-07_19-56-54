@@ -87,6 +87,7 @@ public static class PharmaSelfTests
         HoverInfoSuite();
         GlyphSafeSuite();
         MusicSpeakerSuite();
+        SurfaceSuite();
         GrabTuningSuite();
         HeightCalibrationSuite();
         WatchMathSuite();
@@ -5139,6 +5140,77 @@ public static class PharmaSelfTests
         A("led: contrast is noticeable", SpeakerLedBlink.Level01(P * ON * 0.5f, P, ON, E, DIM)
                                        - SpeakerLedBlink.Level01(P * 0.9f, P, ON, E, DIM) > 0.5f);
         A("led: zero period safe", Mathf.Approximately(SpeakerLedBlink.Level01(3f, 0f, ON, E, DIM), 1f));
+    }
+
+
+    // W5.37 surface + render calibration (user 2026-08-28, "make it an aesthetic lab").
+    // These pin ASSET state, not math, on purpose: a pack reimport or one stray inspector drag
+    // silently restores the bad values, and no pure test can see a material regression - the
+    // same lesson as the builder that wiped MatchStrikerSurface while every pure test passed.
+    static void SurfaceSuite()
+    {
+        foreach (var surf in LabSurfaceTuner.Surfaces)
+        {
+            var mat = UnityEditor.AssetDatabase.LoadAssetAtPath<Material>(surf.path);
+            string id = System.IO.Path.GetFileNameWithoutExtension(surf.path);
+            A("surface: " + id + " exists", mat != null);
+            if (mat == null) continue;
+            A("surface: " + id + " smoothness calibrated",
+              mat.HasProperty("_Smoothness") &&
+              Mathf.Approximately(mat.GetFloat("_Smoothness"), surf.smoothness));
+            if (surf.metallic >= 0f)
+                A("surface: " + id + " metallic calibrated",
+                  mat.HasProperty("_Metallic") &&
+                  Mathf.Approximately(mat.GetFloat("_Metallic"), surf.metallic));
+        }
+
+        // The whole bug class, not just the four known offenders: URP clamps _Smoothness to
+        // 0-1, so anything above it renders as a perfect mirror. Four pack materials shipped
+        // at 2.19-3.20 and turned the ceiling, floor and cabinets into mirrors reflecting the
+        // outdoor procedural skybox inside a sealed room.
+        int outOfRange = 0;
+        foreach (var guid in UnityEditor.AssetDatabase.FindAssets("t:Material", new[] { "Assets/PharmaSynth" }))
+        {
+            var m = UnityEditor.AssetDatabase.LoadAssetAtPath<Material>(
+                UnityEditor.AssetDatabase.GUIDToAssetPath(guid));
+            if (m != null && m.HasProperty("_Smoothness") && m.GetFloat("_Smoothness") > 1.0001f) outOfRange++;
+        }
+        A("surface: no material has smoothness > 1", outOfRange == 0);
+
+        // The walls and ceiling shipped with NO albedo at all - the largest surfaces in the
+        // player's view carrying zero texture is what made the room read as a grey box.
+        foreach (var p in new[]
+        {
+            "Assets/PharmaSynth/Art/Environment/Laboratory/Materials/Exterior/Wall_0.mat",
+            "Assets/PharmaSynth/Art/Environment/Laboratory/Materials/Exterior/Wall_1.mat",
+            "Assets/PharmaSynth/Art/Environment/Laboratory/Materials/Exterior/Ceiling_2.mat",
+        })
+        {
+            var m = UnityEditor.AssetDatabase.LoadAssetAtPath<Material>(p);
+            A("surface: " + System.IO.Path.GetFileNameWithoutExtension(p) + " has an albedo map",
+              m != null && m.GetTexture("_BaseMap") != null);
+        }
+
+        // Boil ramp (W5.37). boilingPointC was chemistry-only data until now, so heating a
+        // beaker vented steam from the STATION while the liquid inside sat perfectly still.
+        A("boil: empty vessel never boils", LiquidPhysics.BoilFor(0f, 300f, 100f) == 0f);
+        A("boil: cold liquid is still", LiquidPhysics.BoilFor(50f, 25f, 100f) == 0f);
+        A("boil: full boil at the point", Mathf.Approximately(LiquidPhysics.BoilFor(50f, 100f, 100f), 1f));
+        A("boil: ramps in before the point",
+          LiquidPhysics.BoilFor(50f, 96f, 100f) > 0f && LiquidPhysics.BoilFor(50f, 96f, 100f) < 1f);
+        A("boil: clamped above the point", Mathf.Approximately(LiquidPhysics.BoilFor(50f, 250f, 100f), 1f));
+        A("boil: follows the chemical, not 100 C", LiquidPhysics.BoilFor(50f, 80f, 78f) > 0.9f);
+
+        // The render pipeline was authored and inert: a Volume with Bloom/Vignette/Tonemapping
+        // sat in the scene while both cameras had post-processing switched off.
+        var rp = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset>(
+            "Assets/Settings/Mobile_RPAsset.asset");
+        A("render: mobile RP asset exists", rp != null);
+        if (rp != null)
+        {
+            A("render: MSAA is on (thin glass edges alias without it)", rp.msaaSampleCount >= 4);
+            A("render: HDR is on (emissive panels must exceed 1.0 to read as lights)", rp.supportsHDR);
+        }
     }
 
     // Font-safe glyph sanitiser for the lab pads / holo board (user 2026-07-10).

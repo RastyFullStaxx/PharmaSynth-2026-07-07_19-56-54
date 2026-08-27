@@ -14,7 +14,6 @@ public class StationVfx : MonoBehaviour
     private StationSim _kind = StationSim.None;
     private bool _running;
 
-    private static Texture2D _softDot;
     private static Material _sharedMat;
 
     /// Pure mapping for tests: which style a station verb gets.
@@ -181,32 +180,15 @@ public class StationVfx : MonoBehaviour
     private static Material SharedMaterial()
     {
         if (_sharedMat != null) return _sharedMat;
-        var sh = Shader.Find("Universal Render Pipeline/Particles/Unlit");
-        if (sh == null) sh = Shader.Find("Particles/Standard Unlit");
-        _sharedMat = new Material(sh);
-        _sharedMat.SetTexture("_BaseMap", SoftDot());
-        // additive-ish transparency
-        _sharedMat.SetFloat("_Surface", 1f);
-        _sharedMat.SetFloat("_Blend", 0f);
+        // Routed through EffectVfx so this shares the STRIP-SAFE path: a material built from a
+        // bare Shader.Find has its shader stripped out of a device build, so the station
+        // steam / frost / drip / bubbles would render wrong or not at all on the Quest while
+        // looking perfect in the editor. EffectVfx instantiates the persisted
+        // Resources/FxParticleUnlit asset, which keeps the URP particle shader included.
+        // It also means one soft-dot texture instead of two identical ones.
+        _sharedMat = EffectVfx.MakeParticleMat(EffectVfx.SoftDot());
         _sharedMat.renderQueue = 3000;
         return _sharedMat;
     }
 
-    /// 64×64 radial soft dot, generated once (same look as the spawn burst).
-    private static Texture2D SoftDot()
-    {
-        if (_softDot != null) return _softDot;
-        const int n = 64;
-        _softDot = new Texture2D(n, n, TextureFormat.RGBA32, false);
-        for (int y = 0; y < n; y++)
-            for (int x = 0; x < n; x++)
-            {
-                float dx = (x - n / 2f) / (n / 2f), dy = (y - n / 2f) / (n / 2f);
-                float d = Mathf.Sqrt(dx * dx + dy * dy);
-                float a = Mathf.Clamp01(1f - d);
-                _softDot.SetPixel(x, y, new Color(1f, 1f, 1f, a * a));
-            }
-        _softDot.Apply();
-        return _softDot;
-    }
 }

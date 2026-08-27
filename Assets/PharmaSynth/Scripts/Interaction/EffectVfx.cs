@@ -236,7 +236,7 @@ public static class EffectVfx
     /// Shader.Find-only material gets its shader STRIPPED from device builds;
     /// the asset (created by Tools ▸ PharmaSynth ▸ Wire Shelf Pourers) keeps the
     /// URP particle shader included.
-    private static Material MakeParticleMat(Texture tex)
+    internal static Material MakeParticleMat(Texture tex)
     {
         var src = Resources.Load<Material>("FxParticleUnlit");
         if (src != null)
@@ -260,7 +260,7 @@ public static class EffectVfx
         return m;
     }
 
-    private static Texture2D SoftDot()
+    internal static Texture2D SoftDot()
     {
         if (_dot != null) return _dot;
         const int n = 64;

@@ -2,6 +2,7 @@
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 /// Dev-only capture bridge: renders a one-off camera to a PNG on disk so
 /// out-of-editor tooling can see the scene (the MCP scene-preview capture is
@@ -42,7 +43,20 @@ public static class DevCapture
             cam.fieldOfView = req.fov;
             cam.nearClipPlane = 0.05f;
 
-            var rt = new RenderTexture(req.width, req.height, 24);
+            // A bare URP camera defaults post-processing OFF, so a capture would show the
+            // scene WITHOUT the volume stack the player actually sees - which made every
+            // before/after shot a lie about the render setup. Opt in, and match the
+            // pipeline's MSAA so thin glass edges alias in the capture the way they do
+            // in the headset.
+            var camData = go.GetComponent<UniversalAdditionalCameraData>();
+            if (camData == null) camData = go.AddComponent<UniversalAdditionalCameraData>();
+            camData.renderPostProcessing = true;
+
+            int msaa = 1;
+            var urp = UniversalRenderPipeline.asset;
+            if (urp != null) msaa = Mathf.Max(1, urp.msaaSampleCount);
+
+            var rt = new RenderTexture(req.width, req.height, 24) { antiAliasing = msaa };
             cam.targetTexture = rt;
             cam.Render();
             RenderTexture.active = rt;
