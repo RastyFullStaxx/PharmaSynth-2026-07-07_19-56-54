@@ -126,8 +126,8 @@ cubby is now empty.
 
 ## Assets still to produce
 
-[[asset-production-spec]] — art, audio and video. Note that AI asset generation is
-gated behind a Unity AI seat.
+[[asset-production-spec]] — art, audio and video. Note that AI asset generation
+consumes Unity AI credits. The MCP bridge itself is free — only generation costs.
 
 Voice: **343 clips, 0 unvoiced.** See the voice warning in [[Systems MOC]] before
 editing any dialogue or hint copy.

@@ -126,9 +126,10 @@ one. ~108 exist. → [[Editor Menus]]
 
 ## Tooling
 
-**MCP** — the Unity MCP bridge (official Assistant server). Requires a **Unity AI
-seat**. ⚠ "Connection revoked" usually means the seat lapsed, not that approval was
-withdrawn. A speed layer, not a capability layer.
+**MCP** — the Unity MCP bridge (official Assistant server). **No AI seat required**
+since `com.unity.ai.assistant` 2.16.0-pre.1. ⚠ "Connection revoked" means the bridge
+is awaiting approval — approve it under Project Settings ▸ AI ▸ Unity MCP. A speed
+layer, not a capability layer.
 
 **DevCapture** — the working screenshot tool (`Unity_Camera_Capture` is broken).
 ⚠ Yaw **0–360 only**; negative values misparse.

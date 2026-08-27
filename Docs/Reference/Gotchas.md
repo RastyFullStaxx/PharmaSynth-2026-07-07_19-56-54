@@ -44,11 +44,34 @@ that area; add to it when you lose a day to something new.
   A `Refresh: true` menu execute can swallow the run in the domain reload.
 - MCP **"named pipe not found"** = editor busy → wait for `Logs/Editor.log` to go
   quiet, retry.
-- MCP **"Connection revoked"** = the AI seat. Project Settings ▸ AI ▸ Unity MCP will
-  show *"Up to 0 direct connections allowed at a time"*. Use the file fallbacks in
-  [[Build and Test Loop]].
+- MCP **"Connection revoked"** = the bridge is **awaiting approval**, not an
+  entitlement problem. Approve the client under Project Settings ▸ AI ▸ Unity MCP.
+  The decision is logged verbatim in `Logs/Editor.log` — grep for
+  `=== Connection Info ===` and read the `Validation:` / `Reason:` lines rather than
+  guessing. Use the file fallbacks in [[Build and Test Loop]] while it is down.
 - `Unity_Camera_Capture` is broken → use **DevCapture** (yaw **0–360 only**; negative
   values misparse).
+
+> [!danger] An embedded package silently overrides the registry — and freezes you there
+> `com.unity.ai.assistant` had been **vendored into `Packages/`** (523 MB, 6340 tracked
+> files) at repo init, because pre-release packages were disabled and it could not
+> resolve otherwise. A folder directly under `Packages/` is an *embedded* package: UPM
+> ignores the manifest version entirely, so the project sat on **2.13.0-pre.2** for two
+> months while `Packages/manifest.json` looked perfectly reasonable.
+>
+> The visible symptom was **"Connection revoked"** on every MCP call, which was
+> misdiagnosed for weeks as a lapsed AI seat — and nearly paid for with a subscription
+> that would have changed nothing. The real cause was a June build predating the
+> 2026-07-21 release that removed entitlement caps.
+>
+> **Tells:** `packages-lock.json` says `"source": "embedded"` and
+> `"version": "file:<name>"`; editor stack traces read `./Packages/<name>/...` instead
+> of `Library/PackageCache/...`.
+>
+> **Fix:** close the editor (loaded DLLs are file-locked), `git rm -r` the folder, drop
+> the stale lock entry, pin the version in the manifest, enable pre-release packages if
+> the version needs it. Check `du -sh Packages/*` when a Unity-owned package misbehaves
+> in a way its version number cannot explain.
 
 ---
 

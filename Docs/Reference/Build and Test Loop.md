@@ -54,9 +54,10 @@ that Unity is idle. → [[Gotchas]]
 
 ## Working without the Unity MCP bridge
 
-The bridge needs a **Unity AI seat**. When it lapses, Project Settings ▸ AI ▸ Unity
-MCP shows *"Up to 0 direct connections allowed at a time"* and every client is
-refused with a misleading **"Connection revoked"**.
+The bridge is free as of `com.unity.ai.assistant` **2.16.0-pre.1** (2026-07-21) — no
+AI seat required. **"Connection revoked"** means it is **awaiting approval**, not that
+you lack entitlement: approve the client under Project Settings ▸ AI ▸ Unity MCP.
+The fallbacks below still matter whenever the editor is closed, busy or mid-reload.
 
 > [!info] MCP is a speed layer, not a capability layer
 > Everything below still works. What you actually lose is **latency** — editor-side

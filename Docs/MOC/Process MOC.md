@@ -111,9 +111,10 @@ Binding user directive, 2026-07-12.
 Windows 11; PowerShell primary, Git Bash available. Build target **Android**
 (IL2CPP / ARM64 / ASTC).
 
-**Unity MCP** is the official Assistant server and needs an **AI seat**. When the
-seat lapses the connection panel reads *"Up to 0 direct connections allowed at a
-time"* and every attempt is refused with a misleading "Connection revoked".
+**Unity MCP** is the official Assistant server. It **no longer needs an AI seat** —
+entitlement caps were removed in `com.unity.ai.assistant` **2.16.0-pre.1**
+(2026-07-21). "Connection revoked" now means the bridge is **awaiting approval**:
+open Project Settings ▸ AI ▸ Unity MCP and approve the client.
 
 > [!info] MCP is a speed layer, not a capability layer
 > Everything except **screenshots** has a file-based fallback. See
