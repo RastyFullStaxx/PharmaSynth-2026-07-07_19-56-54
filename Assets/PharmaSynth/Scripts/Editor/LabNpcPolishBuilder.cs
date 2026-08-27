@@ -17,6 +17,14 @@ using UnityEngine.UI;
 /// Tools ▸ PharmaSynth ▸ Wire NPC Polish (SampleScene, edit mode, idempotent).
 public static class LabNpcPolishBuilder
 {
+    /// Enforce a serialized float. A changed C# default never reaches an already-saved
+    /// scene instance, so tuned values must be written, not merely defaulted.
+    static void SetFloat(SerializedObject so, string prop, float value)
+    {
+        var p = so.FindProperty(prop);
+        if (p != null) p.floatValue = value;
+    }
+
     [MenuItem("Tools/PharmaSynth/Wire NPC Polish")]
     public static void Build()
     {
@@ -75,6 +83,47 @@ public static class LabNpcPolishBuilder
             Debug.Log("[NpcPolish] Pharmee give-way wired (bob on '" + floatBob.name + "', cam=" + (pcam != null) + ")");
         }
         else Debug.LogWarning("[NpcPolish] no FloatBob on RobotNPC — give-way skipped");
+
+        // ---- 1c. Gestures (W5.38) -------------------------------------------
+        // The animation set: PharmeeState -> body. He has NO skeleton (no skins, no joints,
+        // no LimbNodes in either model file), so this is procedural and rides on the two
+        // components that already own his transforms.
+        var attitude = robot.GetComponentInChildren<PharmeeAttitude>(true);
+        if (attitude != null)
+        {
+            // The model ships two hand pivots ("Hand origin", "Hand origin.002") that nothing
+            // had ever moved. Matched by prefix because the FBX importer sorts and may rename.
+            Transform hL = null, hR = null;
+            foreach (var t in robot.GetComponentsInChildren<Transform>(true))
+            {
+                if (!t.name.ToLower().StartsWith("hand origin")) continue;
+                if (hL == null) hL = t; else if (hR == null) hR = t;
+            }
+            attitude.BindHands(hL, hR);
+
+            // ENFORCE the tuned values. PharmeeAttitude is authored directly in the scene, so
+            // a changed C# default NEVER reaches the saved instance - the exact failure that
+            // cost the W5.35 waypoint-sizing batch. Set them explicitly, every run.
+            var soAtt = new SerializedObject(attitude);
+            SetFloat(soAtt, "talkPitchDegrees", 6.5f);
+            SetFloat(soAtt, "talkRollDegrees", 3.5f);
+            SetFloat(soAtt, "handRaiseDegrees", 55f);
+            SetFloat(soAtt, "handSharpness", 8f);
+            soAtt.ApplyModifiedProperties();
+            EditorUtility.SetDirty(attitude);
+
+            var gestures = robot.GetComponentInChildren<PharmeeGestures>(true);
+            if (gestures == null) gestures = attitude.gameObject.AddComponent<PharmeeGestures>();
+            gestures.Bind(attitude, floatBob, brain,
+                          Object.FindAnyObjectByType<ExperimentRunner>(),
+                          robot.GetComponentInChildren<LabTourGuide>(true));
+            gestures.SetTuning(PharmeeGestureTuning.Default);
+            EditorUtility.SetDirty(gestures);
+
+            Debug.Log("[NpcPolish] Pharmee gestures wired (hands: " +
+                      (hL != null ? hL.name : "none") + " / " + (hR != null ? hR.name : "none") + ")");
+        }
+        else Debug.LogWarning("[NpcPolish] no PharmeeAttitude on RobotNPC — gestures skipped");
 
         // ---- 2. Jimenez roaming ---------------------------------------------
         var jim = GameObject.Find("DrJimenez");

@@ -39,6 +39,14 @@ public class LabTourGuide : MonoBehaviour
     public int VisitedCount => _visitedCount;
     public int StopCount => stops.Count;
 
+    /// The landmark whose beat is being spoken right now, or null between beats.
+    ///
+    /// Until W5.38 the tour named each area and never INDICATED it - he narrated
+    /// "the reagent shelf" while facing wherever he happened to be facing. Exposing the
+    /// transform lets PharmeeGestures aim a point at it; the tour itself still owns all the
+    /// proximity logic and never touches a transform.
+    public Transform CurrentLandmark { get; private set; }
+
     private void Awake() { if (stops.Count == 0) SeedDefaults(); }
 
     /// Begin the tour; `say` routes a beat to Pharmee's narration. Returns the number
@@ -65,7 +73,7 @@ public class LabTourGuide : MonoBehaviour
         return reachable;
     }
 
-    public void End() { _active = false; }
+    public void End() { _active = false; CurrentLandmark = null; }
 
     private void Resolve()
     {
@@ -90,6 +98,7 @@ public class LabTourGuide : MonoBehaviour
         if (idx >= 0)
         {
             _visited[idx] = true; _visitedCount++;
+            CurrentLandmark = _resolved[idx];
             Speak(stops[idx].beat);
             _nextSpeakOk = Time.time + speakCooldown;
             return;
@@ -97,6 +106,7 @@ public class LabTourGuide : MonoBehaviour
         if (_visitedCount >= stops.Count && !_closerSaid)
         {
             _closerSaid = true;
+            CurrentLandmark = null;      // the closer is not about any one landmark
             Speak(closerBeat);
             _nextSpeakOk = Time.time + speakCooldown;
         }

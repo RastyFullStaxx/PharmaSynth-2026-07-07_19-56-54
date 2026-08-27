@@ -88,6 +88,7 @@ public static class PharmaSelfTests
         GlyphSafeSuite();
         MusicSpeakerSuite();
         SurfaceSuite();
+        PharmeeGestureSuite();
         GrabTuningSuite();
         HeightCalibrationSuite();
         WatchMathSuite();
@@ -5210,6 +5211,103 @@ public static class PharmaSelfTests
         {
             A("render: MSAA is on (thin glass edges alias without it)", rp.msaaSampleCount >= 4);
             A("render: HDR is on (emissive panels must exceed 1.0 to read as lights)", rp.supportsHDR);
+        }
+    }
+
+
+    // W5.38 Pharmee animation set (checklist section 3 / asset-production-spec A1).
+    // Pure curves, pinned here because there is no headset pass to judge them by eye.
+    static void PharmeeGestureSuite()
+    {
+        var tune = PharmeeGestureTuning.Default;
+
+        // Envelope: every gesture must start AND end at exactly rest, or it pops when it
+        // hands back to the hover.
+        A("gesture: envelope starts at rest", Mathf.Approximately(PharmeeGestureMath.Envelope(0f), 0f));
+        A("gesture: envelope ends at rest", Mathf.Approximately(PharmeeGestureMath.Envelope(1f), 0f));
+        A("gesture: envelope peaks on the plateau", Mathf.Approximately(PharmeeGestureMath.Envelope(0.5f), 1f));
+        A("gesture: envelope clamps below 0", Mathf.Approximately(PharmeeGestureMath.Envelope(-3f), 0f));
+        A("gesture: envelope clamps above 1", Mathf.Approximately(PharmeeGestureMath.Envelope(9f), 0f));
+        A("gesture: ease is monotonic", PharmeeGestureMath.EaseInOut(0.3f) < PharmeeGestureMath.EaseInOut(0.7f));
+
+        // None and rest.
+        var rest = PharmeeGestureMath.Pose(PharmeeGesture.None, 0.5f, tune);
+        A("gesture: None is identity", rest.bodyRot == Quaternion.identity && rest.rootOffset == Vector3.zero);
+        A("gesture: rest does not flare the rings", Mathf.Approximately(rest.waveFlare, 1f));
+
+        // EVERY one-shot must actually move something, and must settle back to exactly rest.
+        // A state that produces no motion is the failure this whole batch exists to prevent.
+        foreach (var g in new[] { PharmeeGesture.Greet, PharmeeGesture.Nod,
+                                  PharmeeGesture.Warn, PharmeeGesture.Celebrate })
+        {
+            float dur = PharmeeGestureMath.DurationOf(g);
+            A("gesture: " + g + " has a duration", dur > 0f && dur < 10f);
+
+            bool moved = false;
+            for (float t = 0f; t < dur; t += dur / 24f)
+            {
+                var p = PharmeeGestureMath.Pose(g, t, tune);
+                if (Quaternion.Angle(p.bodyRot, Quaternion.identity) > 1f ||
+                    p.rootOffset.sqrMagnitude > 1e-6f || p.handRaise > 0.05f ||
+                    Mathf.Abs(p.waveFlare - 1f) > 0.02f) { moved = true; break; }
+            }
+            A("gesture: " + g + " actually moves him", moved);
+
+            var after = PharmeeGestureMath.Pose(g, dur + 0.5f, tune);
+            A("gesture: " + g + " settles at rest",
+              after.bodyRot == Quaternion.identity && after.rootOffset == Vector3.zero &&
+              after.handRaise == 0f && Mathf.Approximately(after.waveFlare, 1f));
+        }
+
+        // Point is SUSTAINED - it must not expire on a timer, because the driver ends it when
+        // he stops instructing or the target is lost.
+        A("gesture: Point is sustained", PharmeeGestureMath.IsSustained(PharmeeGesture.Point));
+        A("gesture: Point never expires", float.IsPositiveInfinity(PharmeeGestureMath.DurationOf(PharmeeGesture.Point)));
+        A("gesture: Point holds its raise", PharmeeGestureMath.Pose(PharmeeGesture.Point, 30f, tune).handRaise > 0.99f);
+        A("gesture: Point eases in, not snaps", PharmeeGestureMath.Pose(PharmeeGesture.Point, 0.05f, tune).handRaise < 0.5f);
+
+        // Celebrate is the payoff moment - it must rise AND flare the hover rings.
+        var cel = PharmeeGestureMath.Pose(PharmeeGesture.Celebrate, 1.1f, tune);
+        A("gesture: Celebrate rises", cel.rootOffset.y > 0.05f);
+        A("gesture: Celebrate flares the rings", cel.waveFlare > 1.1f);
+
+        // Warn is a flinch: it recoils BACKWARD (negative pitch), not a gentle sway.
+        var warn = PharmeeGestureMath.Pose(PharmeeGesture.Warn, 0.02f, tune);
+        A("gesture: Warn recoils backward", Mathf.DeltaAngle(0f, warn.bodyRot.eulerAngles.x) < -2f);
+
+        // State -> body, the fourth mapping alongside line pool / face / beep.
+        A("gesture: Warning state warns", PharmeeGestureMath.ForState(PharmeeState.Warning) == PharmeeGesture.Warn);
+        A("gesture: Celebrating state celebrates", PharmeeGestureMath.ForState(PharmeeState.Celebrating) == PharmeeGesture.Celebrate);
+        A("gesture: Instructing state points", PharmeeGestureMath.ForState(PharmeeState.Instructing) == PharmeeGesture.Point);
+        A("gesture: Greeting state greets", PharmeeGestureMath.ForState(PharmeeState.Greeting) == PharmeeGesture.Greet);
+        A("gesture: Idle state is still", PharmeeGestureMath.ForState(PharmeeState.Idle) == PharmeeGesture.None);
+
+        // The body must agree with the face, not drift from it (PharmeeMood.ExpressionForGate).
+        A("gesture: supply trouble warns both ways",
+          PharmeeGestureMath.ForGate(GateState.SupplyPrompt) == PharmeeGesture.Warn &&
+          PharmeeMood.ExpressionForGate(GateState.SupplyPrompt) == PharmeeFaceExpression.Warning);
+        A("gesture: unlock celebrates", PharmeeGestureMath.ForGate(GateState.UnlockAnnounce) == PharmeeGesture.Celebrate);
+        A("gesture: mid-run gate is still", PharmeeGestureMath.ForGate(GateState.Running) == PharmeeGesture.None);
+
+        // The composition contract. FloatBob is the SOLE writer of Pharmee's position and
+        // PharmeeAttitude the sole writer of his body rotation; the gesture layer adds terms
+        // to those, it does not compete. Pin the scene so a stray inspector edit cannot
+        // silently hand root rotation back to FloatBob and start a fight with FaceCamera.
+        var robot = GameObject.Find("RobotNPC");
+        A("gesture: RobotNPC is in the scene", robot != null);
+        if (robot != null)
+        {
+            var bob = robot.GetComponentInChildren<FloatBob>(true);
+            var att = robot.GetComponentInChildren<PharmeeAttitude>(true);
+            A("gesture: Pharmee has a FloatBob", bob != null);
+            A("gesture: Pharmee has a PharmeeAttitude", att != null);
+            if (bob != null)
+            {
+                var so = new UnityEditor.SerializedObject(bob);
+                var rot = so.FindProperty("applyRotation");
+                A("gesture: FloatBob leaves root rotation to FaceCamera",
+                  rot != null && rot.boolValue == false);
+            }
         }
     }
 
