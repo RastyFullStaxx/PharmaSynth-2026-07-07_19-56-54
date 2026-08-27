@@ -131,6 +131,13 @@ since `com.unity.ai.assistant` 2.16.0-pre.1. ⚠ "Connection revoked" means the 
 is awaiting approval — approve it under Project Settings ▸ AI ▸ Unity MCP. A speed
 layer, not a capability layer.
 
+⚠ The **in-Editor** MCP server is deprecated as of package 2.18 — not removed, and
+the protocol itself is staying. See [[Build and Test Loop]].
+
+**Unity CLI** — the announced replacement for the in-Editor MCP server. Ships its own
+MCP server on the Unity Pipeline package (same protocol), plus `unity eval` for direct
+Editor commands. ⚠ Experimental, and **not adopted before the 2026-08-31 turnover**.
+
 **DevCapture** — the working screenshot tool (`Unity_Camera_Capture` is broken).
 ⚠ Yaw **0–360 only**; negative values misparse.
 

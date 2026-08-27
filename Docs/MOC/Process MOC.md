@@ -121,6 +121,11 @@ open Project Settings ▸ AI ▸ Unity MCP and approve the client.
 > [[Build and Test Loop]] for the fallbacks and [[Gotchas]] for the MCP traps —
 > including the one where `Unity_ReadConsole` lies about compile errors.
 
+⚠ The in-Editor MCP server is **deprecated** (package 2.18) in favour of the **Unity
+CLI**. Not broken, no removal date, and MCP-the-protocol is staying — so the migration
+is parked until after the 2026-08-31 turnover. Recipe and reasoning:
+[[Build and Test Loop]]. Tracked in [[remaining-work-checklist]] §19.
+
 ---
 
 ## Current phase

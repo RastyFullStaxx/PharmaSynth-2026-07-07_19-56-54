@@ -309,3 +309,29 @@ Ungraded guided practice. Spec/plan: `Docs/superpowers/specs|plans/2026-08-07-tu
 - [x] **Cube room made "alive" (user, 2026-08-07).** `UI/MenuRoomFx.cs` + `Tools ▸ PharmaSynth ▸ Build Cube Room FX`: 32 neon trim strips breathe on emissive, 6 lights drift, one random strip arc-stutters like a loose contact, plus floor haze and rising motes. Phases come from each object's INDEX, never `Random` — the room must look the same every entry, or "alive" becomes "the lights rearranged themselves while you were away". Particles + emissive rather than post-processing: this is the first thing a Quest 3 player sees and a full-screen stack costs frame budget all session. All colour via MPB, so no shared trim material is instanced.
   - ⛔ Every particle curve stays in **Constant** mode — mixed curve modes are what produced 711 errors/second from `SpawnVFX` (W5.34).
   - ⬜ **Not visually verified:** `MenuRoomFx` has no `[ExecuteAlways]` and particles do not simulate in edit mode, so an editor capture shows the room static. Motion, pulse rate and haze density can only be judged in Play/headset. Knobs: `trimSpeed`/`trimMin`/`trimMax`, `lightSwing`, `arcChancePerSecond`, and `rate`/`colour` in `MakeParticles`.
+
+## §19 Tooling — post-turnover (2026-08-27, W5.36)
+
+Deliberately deferred past the **2026-08-31** deadline. Nothing here is broken; this is
+scheduled maintenance, not a fix.
+
+- [x] **Unity MCP restored — it never needed an AI seat.** `com.unity.ai.assistant` had
+  been vendored into `Packages/` (523 MB, 6340 tracked files) at repo init, which made
+  UPM ignore the manifest and freeze the project on **2.13.0-pre.2** from June. Unity
+  removed entitlement caps in **2.16.0-pre.1 (2026-07-21)**; the vendored copy predated
+  it, so every call returned "Connection revoked" and it was misread for weeks as a
+  lapsed seat. Now on **2.18.0-pre.2 from the registry**. Bridge verified live, suite
+  **1362/1362**, console clean. → [[Gotchas]]
+  - The stale `~/.unity/relay/relay_win.exe` (Jun 27) reported `Signature Valid: No`
+    under `CN=NAVER Global Root Certification Authority`. The 2.18 build is **Valid**,
+    signed `CN=Unity Technologies SF` via DigiCert. Removing the old binary forced the
+    clean re-extract.
+- [ ] **Migrate to the Unity CLI** — the in-Editor MCP server is deprecated (notice
+  added in 2.18). `unity pipeline install` → `unity mcp configure claude` →
+  `unity skill install claude`. Full context, caveats and rationale for waiting:
+  [[Build and Test Loop]] §"The in-Editor MCP server is deprecated".
+  - **Why not now:** the CLI is *experimental*, is not installed here, and
+    `unity pipeline install` mutates the project. No removal date is announced and the
+    bridge works today.
+  - **Worth it later:** `unity eval` drives the Editor directly — faster and cheaper in
+    tokens than MCP, which compounds across a session.

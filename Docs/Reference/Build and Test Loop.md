@@ -64,6 +64,42 @@ The fallbacks below still matter whenever the editor is closed, busy or mid-relo
 > work becomes asynchronous and routed through the user — and **screenshots**, which
 > have no fallback.
 
+### The in-Editor MCP server is deprecated (verified 2026-08-27)
+
+`com.unity.ai.assistant` 2.18 added a deprecation notice to every MCP doc page:
+
+> Unity MCP server is deprecated. Use the Unity command-line interface (CLI) instead.
+> Unity CLI provides faster iteration times, improved stability, and the ability to
+> target runtime and the Editor.
+
+**Deprecated is not broken, and MCP as a protocol is not going away.** Only the
+*in-Editor* server inside `com.unity.ai.assistant` is deprecated. The Unity CLI ships
+its own MCP server (built on the Unity Pipeline package) using the same protocol, and
+Unity states that mode "is not part of the deprecation. It remains fully supported."
+No removal date has been announced. The bridge works today — verified end to end on
+2026-08-27.
+
+**Not migrating before the 2026-08-31 turnover.** The Unity CLI is flagged
+*experimental* ("features and documentation might change"), it is not installed on
+this machine, and `unity pipeline install` mutates the project. Swapping a verified
+toolchain for an experimental one days before a hard contract deadline is the wrong
+trade. → [[remaining-work-checklist]]
+
+**The migration, when it is time:**
+
+```bash
+unity pipeline install
+unity mcp configure claude     # rewrites the client config to the CLI's MCP server
+unity skill install claude
+```
+
+`unity mcp configure --list` shows supported clients. Beyond MCP mode, the CLI adds
+`unity` and `unity eval` — direct Editor commands that are faster and cheaper in
+tokens than MCP, which matters given how much of a session is prefix re-read. Docs:
+`https://docs.unity.com/en-us/unity-cli/replace-mcp-server-unity-cli`.
+
+Unaffected either way: third-party MCP packages installed from GitHub.
+
 ### Run the suite
 
 Write a request file; the suite runs on the next domain reload and writes its result:
