@@ -36,7 +36,9 @@ public static class PlaytestAutopilot
 
     /// Hard ceilings. The editor must NEVER be left sitting in Play mode because the
     /// autopilot wedged waiting for a state that will never arrive.
-    const float HardCapSeconds = 420f;
+    /// Nine modules at ~50 s each, plus slack for the slowest (13-task) ones. Still a
+    /// hard ceiling: the editor must never be left sitting in Play mode.
+    const float HardCapSeconds = 1800f;
     /// Generous on purpose: the review briefing is two spoken beats behind a fade, and a
     /// watchdog that fires mid-cutscene reports a stall that is really just dialogue.
     const float BeatTimeout = 60f;
@@ -51,6 +53,16 @@ public static class PlaytestAutopilot
     public static void Launch()
     {
         if (Application.isPlaying) { Debug.LogWarning("[Autopilot] already in Play mode."); return; }
+        // ⛔ Never launch with a compile pending. Unity defers script compilation until
+        // play mode EXITS, so a queued compile leaves IsCompiling stuck true for the whole
+        // session, EditorApplication.update is starved, and the autopilot wedges — its own
+        // hard cap cannot save it, because that check runs on the update it no longer gets.
+        if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+        {
+            Debug.LogWarning("[Autopilot] Unity is still compiling/importing — wait for it to "
+                             + "settle, then run this again.");
+            return;
+        }
         Directory.CreateDirectory("Logs");
         Directory.CreateDirectory(ShotDir);
         File.WriteAllText(Request, "run");
@@ -91,6 +103,14 @@ public static class PlaytestAutopilot
     const int MaxRepeats = 4;
     const int MaxTrace = 400;
 
+    /// ⛔ A PER-MODULE ceiling, independent of beats and actions.
+    /// Beat and action watchdogs both reset when the state changes — so a gate that
+    /// OSCILLATES between two states resets them forever and neither ever fires. That
+    /// wedged the sweep twice on prelim-ethyl-alcohol with no report at all. This cap
+    /// cannot be reset by anything the game does, which is the whole point: one bad
+    /// module becomes one finding, not a dead run and zero data about the other eight.
+    const float ModuleCapSeconds = 150f;
+
     static double s_nextActAt;
     static string s_lastAction = "";
     static double s_lastActionAt;
@@ -103,6 +123,18 @@ public static class PlaytestAutopilot
     static bool s_reachedLab, s_reachedRunning, s_reachedQuiz, s_reachedGrade;
     static int s_tasksCompleted;
 
+    /// The sweep: every module in catalog order, each played through the real loop.
+    /// Modules are FORCE-selected (canSelect => true) rather than waiting for the unlock
+    /// chain — the autopilot's job is coverage of what each module does when played, and
+    /// the unlock chain itself is already proven 8/8 by the edit-mode campaign sim.
+    static readonly List<string> s_queue = new List<string>();
+    static readonly List<string> s_moduleLog = new List<string>();
+    static int s_moduleIndex;
+    static int s_moduleTasks, s_moduleGrabsOk, s_moduleGrabsTested, s_moduleFindingsAt;
+    static double s_moduleStartedAt;
+
+    static string CurrentModule => s_moduleIndex < s_queue.Count ? s_queue[s_moduleIndex] : null;
+
     static void Begin()
     {
         s_findings.Clear(); s_errors.Clear(); s_errorBeat.Clear(); s_trace.Clear();
@@ -112,6 +144,10 @@ public static class PlaytestAutopilot
         s_nextActAt = 0; s_lastAction = ""; s_lastActionAt = 0; s_repeats = 0; s_traceFull = false;
         s_reachedLab = s_reachedRunning = s_reachedQuiz = s_reachedGrade = false;
         s_tasksCompleted = 0;
+
+        s_queue.Clear(); s_moduleLog.Clear();
+        foreach (var e in ExperimentCatalog.Entries) if (e != null) s_queue.Add(e.moduleId);
+        s_moduleIndex = 0;
         s_startedAt = EditorApplication.timeSinceStartup;
         s_beatSince = s_startedAt;
         s_beat = "boot"; s_lastState = ""; s_running = true;
@@ -121,6 +157,7 @@ public static class PlaytestAutopilot
         EditorApplication.update -= Tick;
         EditorApplication.update += Tick;
         Trace("autopilot started");
+        BeginModule();          // after s_startedAt, or the first trace stamps garbage
     }
 
     /// Every error/exception, DEDUPLICATED with a count and tagged with the beat it first
@@ -166,6 +203,28 @@ public static class PlaytestAutopilot
         Shot("finding-" + s_findings.Count);      // a picture of where it broke
     }
 
+    static void BeginModule()
+    {
+        s_moduleStartedAt = EditorApplication.timeSinceStartup;
+        s_moduleTasks = 0; s_moduleGrabsOk = 0; s_moduleGrabsTested = 0;
+        s_moduleFindingsAt = s_findings.Count;
+        s_uiCheckedThisRun = false;
+        s_grabChecked.Clear();          // a rebuilt stage means new transforms
+        Trace("=== module " + (s_moduleIndex + 1) + "/" + s_queue.Count + ": " + CurrentModule + " ===");
+    }
+
+    static void EndModule()
+    {
+        int found = s_findings.Count - s_moduleFindingsAt;
+        s_moduleLog.Add("  " + (CurrentModule ?? "?").PadRight(30)
+                        + (s_moduleTasks + " tasks").PadRight(11)
+                        + (s_moduleGrabsOk + "/" + s_moduleGrabsTested + " grabs").PadRight(13)
+                        + (found + " finding(s)").PadRight(14)
+                        + (EditorApplication.timeSinceStartup - s_moduleStartedAt).ToString("0") + "s");
+        s_moduleIndex++;
+        if (s_moduleIndex < s_queue.Count) BeginModule();
+    }
+
     static void SetBeat(string beat)
     {
         if (s_beat == beat) return;
@@ -188,6 +247,21 @@ public static class PlaytestAutopilot
         // act on the last input.
         if (now < s_nextActAt) return;
         s_nextActAt = now + ActEverySeconds;
+
+        // Per-module ceiling — checked BEFORE Drive so a wedged module cannot skip it.
+        if (CurrentModule != null && now - s_moduleStartedAt > ModuleCapSeconds)
+        {
+            var g = Object.FindAnyObjectByType<PharmeeGatekeeper>();
+            Finding(CurrentModule + ": module TIMED OUT after " + ModuleCapSeconds
+                    + "s, stuck at gate state '" + (g != null ? g.Model.State.ToString() : "?")
+                    + "' (beat '" + s_beat + "') — skipping to the next module");
+            var gate2 = g;
+            if (gate2 != null) gate2.ResetToEntrance();      // hard reset back to Blocked
+            EndModule();
+            s_lastAction = ""; s_repeats = 0;
+            if (CurrentModule == null) { Finish("swept every module"); return; }
+            return;
+        }
 
         try { Drive(); }
         catch (System.Exception e)
@@ -261,6 +335,7 @@ public static class PlaytestAutopilot
         {
             case GateState.Blocked:
                 s_reachedLab = true;
+                if (CurrentModule == null) { Finish("swept every module"); return; }
                 Shot("01-at-the-door");
                 if (Act("approach-door")) gate.OnApproachTriggerEntered();
                 break;
@@ -304,6 +379,19 @@ public static class PlaytestAutopilot
                 DriveRun(runner);
                 break;
 
+            case GateState.SupplyPrompt:
+                // ⛔ The gate has a state the driver never handled, so it sat here in
+                // silence until the module cap fired — the sweep's real cause of death
+                // (user, 2026-09-02: "reagents were not enough, even when you restart").
+                // Report it as the blocker it is, then take the restart so the sweep can
+                // see whether a fresh stage fixes it.
+                Finding((CurrentModule ?? "?") + ": SUPPLY PROMPT at " + s_moduleTasks
+                        + " task(s) done — the game says there are not enough reagents to "
+                        + "finish, before the player has consumed anything");
+                Shot("supply-prompt");
+                if (Act("supply-restart")) gate.OnPanelOption(0);   // Restart period
+                break;
+
             case GateState.QuizIntro:
                 StallCheck("stuck in QuizIntro — Jimenez's briefing never completed");
                 break;
@@ -320,6 +408,7 @@ public static class PlaytestAutopilot
             case GateState.Returning:
             case GateState.Debrief:
             case GateState.UnlockAnnounce:
+                // These advance on their own coroutines; only complain if they never do.
                 StallCheck("stuck in " + state + " — the return/debrief chain never advanced");
                 break;
         }
@@ -327,22 +416,37 @@ public static class PlaytestAutopilot
 
     /// Open a period, then take the first module it offers. Both go through the real
     /// picker, so a broken unlock chain shows up here rather than being narrated over.
+    /// Pick the module the sweep is currently on, through the REAL two-step picker but
+    /// with the unlock gate bypassed. Coverage is the goal here; the unlock chain has its
+    /// own proof in the edit-mode campaign sim.
     static void PickSomething(PharmeeGatekeeper gate)
     {
-        var svc = new ProgressionService();
-        svc.Load();
-        var flow = new ProgressionFlow(svc, DemoSession.Active || TutorialSession.Active);
+        string want = CurrentModule;
+        if (string.IsNullOrEmpty(want)) { Finish("sweep complete"); return; }
 
-        foreach (ExperimentPeriod p in System.Enum.GetValues(typeof(ExperimentPeriod)))
+        var entry = ExperimentCatalog.Get(want);
+        if (entry == null)
         {
-            string first = GatekeeperModel.FirstPlayableInPeriod(flow, p);
-            if (string.IsNullOrEmpty(first)) continue;
-            if (!gate.Model.ChooseEpisode(p, flow.IsUnlocked, x => GatekeeperModel.FirstPlayableInPeriod(flow, x)))
-                continue;
-            if (gate.Model.ChooseModule(first, flow.IsUnlocked)) { Trace("picked " + first); return; }
+            Finding("module '" + want + "' is not in ExperimentCatalog — the roster and the "
+                    + "module assets disagree");
+            EndModule();
+            return;
         }
-        Finding("the picker offered no playable module at all — the unlock chain is broken");
-        Finish("nothing to play");
+
+        System.Func<string, bool> anything = _ => true;
+        if (!gate.Model.ChooseEpisode(entry.period, anything, _ => want))
+        {
+            Finding(want + ": the picker refused to open period " + entry.period);
+            EndModule();
+            return;
+        }
+        if (!gate.Model.ChooseModule(want, anything))
+        {
+            Finding(want + ": the picker refused the module even with the unlock gate open");
+            EndModule();
+            return;
+        }
+        Trace("picked " + want);
     }
 
     static void DonPPE(PharmeeGatekeeper gate)
@@ -374,7 +478,7 @@ public static class PlaytestAutopilot
         // audio, the quiz tablet, the grade card — all get exercised for real.
         if (!Act("task:" + next.taskId)) return;
         runner.CompleteTask(next.taskId);
-        s_tasksCompleted++;
+        s_tasksCompleted++; s_moduleTasks++;
         SetBeat("run:" + next.taskId);
     }
 
@@ -424,7 +528,7 @@ public static class PlaytestAutopilot
             if (grab == null) continue;                       // fixed apparatus: not grabbable by design
             if (!s_grabChecked.Add(t.transform)) continue;    // once per object per session
 
-            s_grabsTested++;
+            s_grabsTested++; s_moduleGrabsTested++;
             string name = t.transform.name;
 
             // ⛔ NOT XRInteractionManager.CanSelect. That also asks whether the interactable
@@ -459,27 +563,20 @@ public static class PlaytestAutopilot
                 continue;
             }
 
-            Vector3 before = t.transform.position;
-            manager.SelectEnter((UnityEngine.XR.Interaction.Toolkit.Interactors.IXRSelectInteractor)interactor,
-                                (UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable)grab);
-            bool grabbed = grab.isSelected;
-            manager.SelectExit((UnityEngine.XR.Interaction.Toolkit.Interactors.IXRSelectInteractor)interactor,
-                               (UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable)grab);
-
-            if (t.transform == null) { Finding("'" + name + "' was DESTROYED by a grab/release"); continue; }
-            if (!grabbed)
-            {
-                Finding("'" + name + "' (needed by " + taskId + ") did not enter the selected "
-                        + "state even on a FORCED select — the grab machinery refuses it");
-                continue;
-            }
-            // Under the floor after a release is the classic physics failure, and it is
-            // silent: the step still "works", the object is simply gone.
-            if (t.transform.position.y < -1f)
-                Finding("'" + name + "' fell through the world after release (y="
-                        + t.transform.position.y.ToString("0.0") + ", was "
-                        + before.y.ToString("0.0") + ")");
-            else s_grabsOk++;
+            // ⛔ The forced SelectEnter/SelectExit pair was REMOVED (2026-09-02).
+            //
+            // With no device attached the interactor is inactive, so SelectEnter silently
+            // did not take; SelectExit then asserted "An Interactor received a Select Exit
+            // event for an Interactable that it was not selecting" and threw, killing the
+            // whole sweep 13 s in. Worse, an earlier run reported 5/5 grabs "clean" from
+            // the same non-event — a pass that proved nothing.
+            //
+            // What survives is what is actually TRUE without hands: the capability checks
+            // above. They catch the real "can never be picked up" class — disabled
+            // interactable, no solid collider, non-overlapping interaction layers — and
+            // they cannot lie about it. Whether a grab FEELS right, and whether an object
+            // behaves on release, are headset questions and are honestly labelled as such.
+            s_grabsOk++; s_moduleGrabsOk++;
         }
     }
 
@@ -495,8 +592,14 @@ public static class PlaytestAutopilot
         Shot("06-quiz");
         CheckUiRaycasts();
         if (!Act("submit-quiz")) return;
-        for (int q = 0; q < 3; q++) quiz.Answer(q, 0);
+        // ⚠ Answer EVERY question, not a hardcoded three. Submit() refuses unless
+        // AllAnswered, silently (it only writes feedback text), so a bank with a
+        // different question count stalls the sweep with no visible cause.
+        int n = quiz.Bank != null ? quiz.Bank.Count : 0;
+        for (int q = 0; q < n; q++) quiz.Answer(q, 0);
         quiz.Submit();
+        if (quiz.IsOpen)
+            Trace("submit refused (" + n + " answered): " + quiz.LastFeedback);
         SetBeat("quiz-submitted");
     }
 
@@ -505,10 +608,27 @@ public static class PlaytestAutopilot
         var card = Object.FindFirstObjectByType<GradeScreenController>(FindObjectsInactive.Include);
         if (card == null) { StallCheck("ScoreReview but no GradeScreenController"); return; }
         s_reachedGrade = true;
-        // Either exit is fine — the autopilot is proving the chain advances, not passing.
-        gate.OnContinueAfterPass();
-        SetBeat("after-grade");
-        Finish("reached the end of the loop");
+        if (!Act("leave-grade:" + s_moduleIndex)) return;
+
+        bool last = s_moduleIndex >= s_queue.Count - 1;
+        if (last)
+        {
+            // Exercise the FULL return chain once — Returning → Debrief → UnlockAnnounce
+            // → Blocked — which the fast path below deliberately skips.
+            Trace("continuing through the return/debrief/unlock chain");
+            if (!gate.Model.Fire(GateEvent.ContinueAfterPass)) gate.OnAbandonAfterFail();
+            EndModule();
+            SetBeat("after-grade");
+            return;
+        }
+
+        // Between modules take the ABANDON exit: §9 says it lands in Blocked with a full
+        // reset and no debrief, which is the clean, pass-or-fail-agnostic way back to the
+        // picker. Continue would depend on having passed, and the autopilot answers 3
+        // quiz questions with option 0 — it is not here to score.
+        gate.OnAbandonAfterFail();
+        EndModule();
+        SetBeat("next-module");
     }
 
     // ---- live-only checks ----------------------------------------------------------
@@ -549,6 +669,8 @@ public static class PlaytestAutopilot
 
     static void Shot(string label)
     {
+        // Namespaced per module, or module 2's beats silently reuse module 1's images.
+        label = (s_moduleIndex + 1).ToString("00") + "-" + (CurrentModule ?? "end") + "-" + label;
         if (!s_shots.Add(label)) return;            // one image per beat, not one per tick
         Directory.CreateDirectory(ShotDir);
         ScreenCapture.CaptureScreenshot(ShotDir + "/" + label + ".png");
@@ -569,11 +691,19 @@ public static class PlaytestAutopilot
         sb.AppendLine();
         sb.AppendLine("  findings         : " + s_findings.Count);
         sb.AppendLine("  distinct errors  : " + s_errors.Count);
-        sb.AppendLine("  grabs            : " + s_grabsOk + "/" + s_grabsTested + " objects pick up cleanly");
+        sb.AppendLine("  grabs            : " + s_grabsOk + "/" + s_grabsTested + " objects CAN be picked up (capability, not feel)");
         sb.AppendLine("  buttons          : " + s_uiOk + "/" + s_uiTested + " are actually clickable");
         sb.AppendLine("  screenshots      : " + ShotDir + "/");
         sb.AppendLine();
 
+        if (s_moduleLog.Count > 0)
+        {
+            sb.AppendLine("  module                        tasks      grabs        findings      time");
+            sb.AppendLine("  " + new string('-', 76));
+            foreach (var m in s_moduleLog) sb.AppendLine(m);
+            sb.AppendLine();
+        }
+        sb.AppendLine("  modules played    : " + s_moduleLog.Count + "/" + s_queue.Count);
         sb.AppendLine("  reached           : lab=" + s_reachedLab + " run=" + s_reachedRunning
                       + " quiz=" + s_reachedQuiz + " grade=" + s_reachedGrade
                       + " (" + s_tasksCompleted + " tasks completed)");
@@ -582,7 +712,9 @@ public static class PlaytestAutopilot
         // ⛔ COVERAGE IS PART OF THE VERDICT. The first run never left the cube room and
         // still printed "0 findings — CLEAN", because nothing had happened yet. A false
         // NEGATIVE is worse than a false positive: nobody goes looking for it.
-        bool covered = s_reachedRunning && s_tasksCompleted > 0;
+        // Coverage means every module actually played, not just the first one — the same
+        // rule that stopped v1 printing CLEAN from the cube room, applied to the sweep.
+        bool covered = s_reachedRunning && s_tasksCompleted > 0 && s_moduleLog.Count == s_queue.Count;
         bool quiet = s_findings.Count == 0 && s_errors.Count == 0;
         bool clean = covered && quiet;
 
@@ -590,7 +722,8 @@ public static class PlaytestAutopilot
             sb.AppendLine("  VERDICT: CLEAN — the game ran with no errors, everything a step needs picks"
                           + "\n           up, and every button can be pressed.");
         else if (!covered)
-            sb.AppendLine("  VERDICT: INCONCLUSIVE — the run never got far enough to test anything."
+            sb.AppendLine("  VERDICT: INCONCLUSIVE — only " + s_moduleLog.Count + " of "
+                          + s_queue.Count + " modules were played through."
                           + "\n           " + (s_findings.Count + s_errors.Count) + " issue(s) below; "
                           + "treat a quiet report here as NO evidence, not good news.");
         else

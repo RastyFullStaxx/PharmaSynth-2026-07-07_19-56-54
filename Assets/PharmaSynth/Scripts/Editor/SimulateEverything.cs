@@ -93,6 +93,10 @@ public static class SimulateEverything
         var reach = new StringBuilder();
         var reachFindings = ReachabilityAudit.RunAll(reach);
 
+        // ---- 4b. can each module even be STARTED without starving? -----------------
+        var supply = new StringBuilder();
+        var supplyFindings = SupplyAtStart(supply);
+
         // ---- 5. the player who gets it wrong --------------------------------------
         var mis = new StringBuilder();
         var misFindings = SimulatedMisplay.RunAll(mis);
@@ -102,7 +106,8 @@ public static class SimulateEverything
         rows.Sort((a, b) => b.bugs.Count.CompareTo(a.bugs.Count));
 
         bool allClean = bugs == 0 && blindSteps == 0 && reachFindings.Count == 0
-                        && misFindings.Count == 0 && camp != null && camp.Clean;
+                        && misFindings.Count == 0 && supplyFindings.Count == 0
+                        && camp != null && camp.Clean;
 
         report.AppendLine("=== PharmaSynth — full playability check ===");
         report.AppendLine();
@@ -126,11 +131,15 @@ public static class SimulateEverything
                                                       : reachFindings.Count + " finding(s)"));
         report.AppendLine("  imperfect play     : " + (misFindings.Count == 0 ? "every recovery path holds"
                                                       : misFindings.Count + " finding(s)"));
+        report.AppendLine("  supply at start    : " + (supplyFindings.Count == 0
+                              ? "no module starves before you begin"
+                              : supplyFindings.Count + " module(s) starve at 0% progress"));
         report.AppendLine();
         report.AppendLine(allClean
             ? "  VERDICT: CLEAN — all 9 experiments are playable end to end, correct play is never"
               + "\n           punished, every recovery path holds, and nothing is out of reach."
-            : "  VERDICT: " + (bugs + reachFindings.Count + misFindings.Count + blindSteps)
+            : "  VERDICT: " + (bugs + reachFindings.Count + misFindings.Count + blindSteps
+                                 + supplyFindings.Count)
               + " ISSUE(S) — details below, worst module first.");
 
         // Detail sections, only for what actually has something to say.
@@ -153,6 +162,7 @@ public static class SimulateEverything
         if (blindSteps > 0) { detail.AppendLine(); detail.Append(guidance); }
         if (reachFindings.Count > 0) { detail.AppendLine(); detail.Append(reach); }
         if (misFindings.Count > 0) { detail.AppendLine(); detail.Append(mis); }
+        if (supplyFindings.Count > 0) { detail.AppendLine(); detail.Append(supply); }
 
         report.Append(detail);
         report.AppendLine();
@@ -167,7 +177,8 @@ public static class SimulateEverything
         File.WriteAllText("Logs/simulate-everything.txt", report.ToString());
         Debug.Log((allClean ? "<color=#4CD07D>" : "<color=#FF7A6B>")
                   + "[SimAll] " + (allClean ? "CLEAN — all 9 experiments playable end to end"
-                                            : (bugs + reachFindings.Count + misFindings.Count + blindSteps)
+                                            : (bugs + reachFindings.Count + misFindings.Count + blindSteps
+                                               + supplyFindings.Count)
                                               + " issue(s) across 9 modules")
                   + "</color>\n  full report → Logs/simulate-everything.txt"
                   + "\n  ⚠ reopen SampleScene — the battery mutated it.");
@@ -179,6 +190,86 @@ public static class SimulateEverything
         public int tasks, totalTasks, mistakes;
         public readonly List<string> bugs = new List<string>();
         public readonly List<string> warnings = new List<string>();
+    }
+
+    /// Can each module be STARTED without the supply monitor immediately declaring
+    /// starvation? (user, 2026-09-02: "Not enough reagents left to finish. Restart the
+    /// period?" appearing at Progress 0% on a fresh run — and restarting does not help.)
+    ///
+    /// This is the monitor's OWN arithmetic, run on a freshly built stage with nothing
+    /// consumed. Every other supply check in this repo asks whether a bottle runs dry
+    /// during a run; none asked the much simpler question of whether the bench can satisfy
+    /// the module at all before the player has touched anything.
+    ///
+    /// ⚠ The monitor deliberately counts as AVAILABLE only vessels with NO
+    /// LiquidTaskBinding — so a reagent whose only source in the scene is itself a task
+    /// vessel is invisible to it, and the module starves permanently at 0%.
+    static List<string> SupplyAtStart(StringBuilder log)
+    {
+        var findings = new List<string>();
+        var builder = Object.FindAnyObjectByType<ExperimentSceneBuilder>();
+        var runner = Object.FindAnyObjectByType<ExperimentRunner>();
+        var monitor = Object.FindAnyObjectByType<ReagentSupplyMonitor>();
+        var lib = AssetDatabase.LoadAssetAtPath<ExperimentLibrary>(
+            "Assets/PharmaSynth/ScriptableObjects/ExperimentLibrary.asset");
+        if (builder == null || runner == null || monitor == null || lib == null)
+        {
+            log.AppendLine("--- supply at start: skipped (need builder + runner + ReagentSupplyMonitor) ---");
+            return findings;
+        }
+
+        log.AppendLine("--- supply at start: can the bench satisfy each module at 0% progress? ---");
+        var snapshot = new List<(LiquidPhysics lp, ChemicalData chem, float ml)>();
+        foreach (var lp in Object.FindObjectsByType<LiquidPhysics>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            snapshot.Add((lp, lp.currentChemical, lp.currentLiquidVolume));
+
+        try
+        {
+            foreach (var id in AllModules)
+            {
+                var module = lib.Get(id);
+                if (module == null) continue;
+                builder.Build(id);
+                runner.SetModule(module);
+                runner.StartExperiment();
+
+                var short_ = monitor.EvaluateNow();
+                if (short_.Count == 0) { log.AppendLine("  ok   " + id); runner.Abort(); continue; }
+
+                foreach (var taskId in short_)
+                {
+                    string chem = "?"; float need = 0f;
+                    foreach (var b in Object.FindObjectsByType<LiquidTaskBinding>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                    {
+                        if (b == null || b.ExpectedSteps == null) continue;
+                        foreach (var st in b.ExpectedSteps)
+                            if (st != null && st.taskId == taskId && st.reagent != null)
+                            { chem = st.reagent.chemicalName; need = st.requiredMl; }
+                    }
+                    // Count exactly what the monitor counts: unbound vessels of that name.
+                    float avail = 0f; int bottles = 0;
+                    foreach (var lp in Object.FindObjectsByType<LiquidPhysics>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                    {
+                        if (lp == null || lp.currentChemical == null || lp.currentLiquidVolume <= 0f) continue;
+                        if (lp.currentChemical.chemicalName != chem) continue;
+                        if (lp.GetComponent<LiquidTaskBinding>() != null) continue;
+                        avail += lp.currentLiquidVolume; bottles++;
+                    }
+                    string f = id + " · " + taskId + ": STARVED BEFORE THE PLAYER STARTS — needs "
+                               + need.ToString("0.#") + " of '" + chem + "' but the bench offers "
+                               + avail.ToString("0.#") + " across " + bottles + " unbound bottle(s)";
+                    log.AppendLine("  BUG  " + f);
+                    findings.Add(f);
+                }
+                runner.Abort();
+            }
+        }
+        finally
+        {
+            foreach (var (lp, chem, ml) in snapshot) if (lp != null) lp.SetContents(chem, ml);
+        }
+        if (findings.Count == 0) log.AppendLine("  -> every module can be started.");
+        return findings;
     }
 
     /// Build each module's stage and ask whether every step resolves to an object.

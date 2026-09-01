@@ -128,11 +128,25 @@ public class ReagentSupplyMonitor : MonoBehaviour
     public List<string> EvaluateNow()
     {
         var needs = new List<ReagentSupplyMath.Need>();
+
+        // ⛔ The module's OWN PRODUCT is not a bench supply — the player SYNTHESISES it.
+        //
+        // The 2026-07-16 client rule deleted ready-made bottles of Acetanilide, Chloroform,
+        // Benzamide and Wine precisely so the player must craft them. Every step that then
+        // draws from your own product (the chemical tests, the wash, the racking) looked to
+        // this monitor like a step needing a bottle that does not exist — so it declared
+        // "Not enough reagents left to finish" at 0% PROGRESS, before the player had
+        // touched anything, in exactly those four modules. Restarting could never help:
+        // the bottle is absent by design (user, 2026-09-02).
+        string ownProduct = runner != null && runner.Module != null
+            ? DemoMode.ProductFor(runner.Module.moduleId) : null;
+
         var binds = UnityEngine.Object.FindObjectsByType<LiquidTaskBinding>(FindObjectsSortMode.None);
         foreach (var b in binds)
             foreach (var s in b.ExpectedSteps)
             {
                 if (s == null || s.reagent == null || s.requiredMl <= 0f) continue;
+                if (!string.IsNullOrEmpty(ownProduct) && s.reagent.chemicalName == ownProduct) continue;
                 needs.Add(new ReagentSupplyMath.Need
                 {
                     taskId = s.taskId,

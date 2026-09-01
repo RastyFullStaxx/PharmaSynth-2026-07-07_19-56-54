@@ -491,3 +491,34 @@ re-homing.
 > new branch is unreachable on a headset, so the scarred headset behaviour is untouched by
 > construction.
 
+## "Not enough reagents left to finish" at 0% progress
+
+> [!danger] The supply monitor counted the module's OWN PRODUCT as a bench reagent
+> The 2026-07-16 client rule DELETED ready-made bottles of Acetanilide, Chloroform,
+> Benzamide and Wine precisely so the player must synthesise them. Every later step that
+> draws from your own product — the chemical tests, the wash, the racking — then looked to
+> `ReagentSupplyMonitor` like a step needing a bottle that does not exist. It raised
+> `SupplyExhausted` **at 0% progress, before the player had touched anything**, and
+> restarting could never help because the bottle is absent by design.
+>
+> Four of nine experiments were unplayable this way (user, 2026-09-02). It survived every
+> edit-mode check because they all ask "does a bottle run DRY during a run", never the
+> simpler "can the bench satisfy this module before the player starts".
+>
+> **Fixed** by skipping steps whose reagent is `DemoMode.ProductFor(moduleId)`. Pinned by
+> the battery's new **supply-at-start** section, which starts every module on a fresh stage
+> and requires `EvaluateNow()` to be empty.
+
+## Guidance can point at deliberately HIDDEN objects
+
+> [!warning] The target sweep includes inactive objects, and some are hidden ON PURPOSE
+> `TutorialTargets.Build()` matches source bottles over all `LiquidPhysics` including
+> inactive, so it registers things that are deliberately switched off for that module:
+> the module's own end product (`EndProductVisibility`), the methane-only staged props
+> (`MethaneStageVisibility`), and the consumable dispensers' hidden `Template_*` clone
+> sources. Tutorial Mode then glows and points at something the player can never see.
+>
+> The `Template_` case is fixed in `MethaneApparatusRig`; the end-product and staged-prop
+> cases are open (autopilot findings, 2026-09-02) — `Raw_Ethanol`, `Raw_BenzoicAcid`,
+> `Raw_Acetone`, `Prop_reagent-jar`.
+

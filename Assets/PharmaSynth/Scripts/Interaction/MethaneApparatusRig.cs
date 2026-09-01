@@ -163,7 +163,19 @@ public class MethaneApparatusRig : MonoBehaviour
         Add("collect-gas", tube, TargetRole.Station, true);
         // A lit match to the FILLED collection tube — the pop.
         Add("test-gas", collect, TargetRole.Destination, true);
-        if (match.Length > 0) Add("test-gas", match[0].transform, TargetRole.Source, false);
+        // ⚠ NOT simply match[0]. The consumable boxes keep a hidden, DISABLED
+        // "Template_*" matchstick that ConsumableDispenser clones from, and an
+        // inactive-inclusive search finds it first — so Tutorial Mode pointed its
+        // test-gas glow and waypoint at an object that can never be seen or picked up
+        // (found by the play-mode autopilot, 2026-09-02). Prefer a real, live match.
+        Transform pick = null;
+        foreach (var m in match)
+        {
+            if (m == null || m.name.StartsWith("Template_")) continue;
+            if (pick == null) pick = m.transform;
+            if (m.gameObject.activeInHierarchy) { pick = m.transform; break; }
+        }
+        if (pick != null) Add("test-gas", pick, TargetRole.Source, false);
 
         void Add(string taskId, Transform t, TargetRole role, bool stayLit)
             => TaskTargetRegistry.Register(taskId, t, role, stayLit);

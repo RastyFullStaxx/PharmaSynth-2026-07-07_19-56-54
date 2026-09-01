@@ -362,3 +362,11 @@ One command answers "is every experiment doable?": **`Tools ▸ PharmaSynth ▸ 
 - [ ] ⚠ **One console error remains**: `NullReferenceException` in `UnityEngine.XR.Hands.XRHandProviderUtility+SubsystemUpdater.Update`, once, in the cube room. Entirely inside Unity's `com.unity.xr.hands` package — no project code in the stack — and consistent with the hand subsystem updating with no device attached. Expected to disappear on-device; confirm during the headset pass.
 - ⚠ **UI stacking seen in the run-start capture**: Pharmee's welcome bubble, the "Step complete" toast and the HoverInspector card overlap in the centre of view. Cosmetic, but worth a look during the headset pass.
 - ⚠ Re-run the suite if a lone assertion fails straight after an autopilot session — play-mode statics can pollute the first edit-mode run.
+
+## §22 Autopilot sweep + the starvation bug (2026-09-02, W5.42)
+- [x] **Autopilot sweeps all 9 modules** in one session — 9/9 swept, 73 tasks, 143/147 objects pickupable, 108/108 buttons clickable, quiz + grade reached. Per-module cap (150 s) so one bad module becomes one finding, not a dead run.
+- [x] ⭐ **FIXED: four experiments were unplayable.** `ReagentSupplyMonitor` counted the module's OWN product as a bench reagent, so acetanilide / chloroform / benzamide / wine raised "Not enough reagents left to finish" at **0% progress**, un-restartable. Now skips `DemoMode.ProductFor(moduleId)`. → [[Gotchas]]
+- [x] **New battery section: supply-at-start** — every module must start on a fresh stage with no shortfall. This is the check that would have caught it; nothing else asked the question.
+- [x] **FIXED:** methane pointed Tutorial Mode's `test-gas` guidance at the dispenser's hidden `Template_` matchstick.
+- [ ] **Guidance still targets deliberately-hidden objects** (4 autopilot findings): `Raw_Ethanol` (distill), `Raw_BenzoicAcid` (filter-mno2), `Raw_Acetone` (collect-56) are each hidden by `EndProductVisibility` during their OWN module, and `Prop_reagent-jar` is methane-only — yet all four are registered as step targets. Same fix shape as the matchstick. Tutorial Mode would glow an invisible object.
+- [ ] One console error remains: `NullReferenceException` inside Unity's `com.unity.xr.hands` package, once, in the cube room — no project code in the stack; expected to be device-absent-only.
