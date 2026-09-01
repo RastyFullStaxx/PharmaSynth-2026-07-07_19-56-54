@@ -15,9 +15,11 @@ public class TutorialCoach : MonoBehaviour
 
     private string _currentTaskId;
     private float _onStepSince;
-    private int _spokenLevel;
+    private int _shownLevel;
     private int _stepsDone, _corrections;
     private bool _subscribed;
+    private PharmeeGestures _gestures;
+    private VerbDemoPlayer _demo;
 
     /// Pure: 0 = silent, 1 = the watch nudge is enough, 2 = escalate the marker,
     /// 3 = say it out loud. Escalates only while the SAME step stays unsolved, so a
@@ -71,7 +73,7 @@ public class TutorialCoach : MonoBehaviour
     private void OnStarted(ExperimentModuleDefinition _)
     {
         _stepsDone = 0; _corrections = 0;
-        _currentTaskId = null; _spokenLevel = 0; _onStepSince = Time.time;
+        _currentTaskId = null; _shownLevel = 0; _onStepSince = Time.time;
     }
 
     private void OnTaskCompleted(ExperimentTask _) => _stepsDone++;
@@ -98,23 +100,86 @@ public class TutorialCoach : MonoBehaviour
         if (id != _currentTaskId)
         {
             // Progress resets the ladder — the player is moving, leave them alone.
-            _currentTaskId = id; _onStepSince = Time.time; _spokenLevel = 0;
+            _currentTaskId = id; _onStepSince = Time.time; _shownLevel = 0;
             return;
         }
 
+        // Fire each rung exactly once, in order. A `while` rather than an `if` because a
+        // long frame (a stage rebuild, a fade) can step over a threshold entirely, and a
+        // player who waited 30 s should still get the 15 s nudge on the way past.
+        //
+        // ⛔ Levels 1 and 2 existed in LevelFor from the start but Update() returned
+        // unless the level was 3, so the "15 s nudge / 30 s marker" the docs promised had
+        // never once run (found W5.39). LevelFor was right; nothing consumed it.
         int level = LevelFor(Time.time - _onStepSince);
-        if (level < 3 || _spokenLevel >= 3 || string.IsNullOrEmpty(hint)) return;
-        _spokenLevel = 3;
-        Announce(GlyphSafe.Sanitize(hint));
+        while (_shownLevel < level) Escalate(++_shownLevel, id, hint);
     }
 
-    private void Announce(string msg)
+    /// One rung of the stuck ladder. Each is a DIFFERENT channel on purpose — repeating
+    /// the same signal louder is what nagging is; changing the channel is what helping is.
+    private void Escalate(int level, string taskId, string hint)
+    {
+        switch (level)
+        {
+            case 1:      // Silent. The hint is already on the watch — put it in their eyeline.
+                if (!string.IsNullOrEmpty(hint)) ShowText(GlyphSafe.Sanitize(hint));
+                break;
+            case 2:      // Show, don't tell: Pharmee points, and the motion is mimed.
+                PointAtTarget();
+                Demo(taskId);
+                break;
+            case 3:      // Say it out loud, using the step's EXISTING (voiced) hint.
+                if (!string.IsNullOrEmpty(hint)) Announce(GlyphSafe.Sanitize(hint));
+                break;
+        }
+    }
+
+    /// Pharmee turns and points at the step's target. PharmeeGestures already resolves
+    /// tutorial targets off the same registry the glow uses — it was simply never asked
+    /// to point at a step the player was stuck on.
+    private void PointAtTarget()
+    {
+        if (_gestures == null) _gestures = FindAnyObjectByType<PharmeeGestures>();
+        if (_gestures != null) _gestures.Play(PharmeeGesture.Point);
+    }
+
+    private void Demo(string taskId)
+    {
+        if (_demo == null) _demo = FindAnyObjectByType<VerbDemoPlayer>();
+        if (_demo != null) _demo.Show(taskId);
+    }
+
+    /// Everything a poke asks for, at once: point, mime, and say it. Skips the ladder to
+    /// its top because the player has explicitly asked — making them wait out the timers
+    /// after asking for help is the opposite of helping.
+    public void HelpNow()
+    {
+        if (!TutorialSession.Active || runner == null || runner.Graph == null || !runner.IsRunning) return;
+        string id = null, hint = null;
+        foreach (var t in runner.Graph.AvailableTasks()) { id = t.taskId; hint = t.hint; break; }
+        if (string.IsNullOrEmpty(id)) return;
+        PointAtTarget();
+        Demo(id);
+        if (!string.IsNullOrEmpty(hint)) Announce(GlyphSafe.Sanitize(hint));
+        // Restart the ladder from the top rung so the timers do not immediately repeat
+        // what the player just asked for and received.
+        _shownLevel = 3; _onStepSince = Time.time;
+    }
+
+    /// Text only, no voice — the first rung must not interrupt a player who is thinking.
+    private void ShowText(string msg)
     {
         if (string.IsNullOrEmpty(msg)) return;
         Vector3 pos = Camera.main != null
             ? Camera.main.transform.position + Camera.main.transform.forward * 1.4f
             : transform.position + Vector3.up * 1.5f;
         FloatingText.Show(msg, pos, new Color(0.7f, 1f, 0.8f), 1.3f);
+    }
+
+    private void Announce(string msg)
+    {
+        if (string.IsNullOrEmpty(msg)) return;
+        ShowText(msg);
         var narr = FindAnyObjectByType<NPCNarrationController>();
         if (narr != null) narr.Say(msg, 3.5f);
     }

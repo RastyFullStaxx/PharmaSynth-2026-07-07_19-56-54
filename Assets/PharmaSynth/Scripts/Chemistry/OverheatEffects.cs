@@ -36,9 +36,15 @@ public class OverheatEffects : MonoBehaviour
 
     /// The vessel occupying this station (nearest LiquidPhysics within reach)
     /// turns into the ruined mixture — visible, irreversible feedback.
+    ///
+    /// Tutorial Mode keeps the smoke, the hiss, the alarm and the recorded mistake but
+    /// NOT the conversion (W5.39): it is the one genuinely irreversible state in the
+    /// lab, and a practice run that cannot be finished teaches nothing. The player is
+    /// still told, loudly, that they overheated it.
     private void RuinNearestVessel()
     {
         if (_ruined == null || !Application.isPlaying) return;
+        if (TutorialSession.Active) return;
         LiquidPhysics best = null;
         float bestSq = 0.45f * 0.45f;
         foreach (var lp in FindObjectsByType<LiquidPhysics>(FindObjectsSortMode.None))

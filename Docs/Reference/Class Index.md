@@ -1771,6 +1771,7 @@ One highlightable object for one task.
 Transform transform
 TargetRole role
 bool stayLitWhenHeld
+VerbKind verb
 ```
 
 ### `TaskTargetRegistry` <sub>class</sub>
@@ -1779,7 +1780,7 @@ bool stayLitWhenHeld
 taskId → the scene objects that step involves. Formerly ExperimentStationRegistry, which mapped ONE Transform per task and was fed only by ExperimentTaskStation.OnEnable. Since the zone-free conversion (2026-07-17) no module stages a station, so nothing ever registered and every consumer silently got null — WaypointGuide has been calling Hide() every frame in all 9 modules ever since. Widened to a list and fed by the TutorialTargets sweep, which is the single source of truth: components no longer self-register, so there is no second lifetime to keep in sync.
 
 ```csharp
-static void Register(string taskId, Transform t, TargetRole role, bool stayLitWhenHeld)
+static void Register(string taskId, Transform t, TargetRole role, bool stayLitWhenHeld,
 static IReadOnlyList<TaskTarget> Targets(string taskId)
 static int TaskCount
 static void Clear()
@@ -1842,6 +1843,57 @@ static bool ShouldLight(TaskTarget target, bool held, bool taskAvailable)
 static bool GuidanceAllowed(bool running, bool skipping)
 static bool IsHeld(Transform t)
 void SetGlowMaterials(Material source, Material target)
+```
+
+### `VerbKind` <sub>enum</sub>
+<sub>`Assets/PharmaSynth/Scripts/Interaction/VerbDemoMath.cs`</sub>
+
+Which motion a step is asking for. DERIVED in TutorialTargets.Build() from the component that actually completes the step — never authored per task, for the same reason the target sweep is derived: an authored list drifts from the binding it describes, and a demonstration that mimes the wrong verb is worse than none. Deliberately only FIVE. Heat, chill, weigh, litmus, flame and collect are all "carry this vessel to that tool", so they share `Place` rather than each earning a bespoke curve that would look identical on screen.
+
+### `VerbPose` <sub>struct</sub>
+<sub>`Assets/PharmaSynth/Scripts/Interaction/VerbDemoMath.cs`</sub>
+
+Where the demonstration ghost is, at a moment in its loop.
+
+```csharp
+Vector3 position
+Quaternion rotation
+```
+
+### `VerbDemoMath` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Interaction/VerbDemoMath.cs`</sub>
+
+Pure motion curves for Tutorial Mode's verb demonstration (W5.39): given a verb and two world points, where should the ghost be at normalised time t? Pure so the suite can pin the SHAPE of each motion without a headset — that a pour actually tips past horizontal, that a stir completes real revolutions, that a travel arc never sinks through the bench. A curve that looks plausible in code and does nothing useful in VR is exactly what this file exists to prevent. No hand is modelled. The ghost is a copy of the object the player must move, which is both cheaper (no rig, no clips, no new art) and clearer: the thing that moves on screen is the thing they have to pick up.
+
+```csharp
+const float ArcHeight
+const float PourTiltDeg
+const float WorkHeight
+const float CircleRadius
+const float ScoopDipDepth
+const float ScoopTipDeg
+const float DefaultRevs
+static float Ease(float t)
+static float Phase(float t, float a, float b)
+static Vector3 Arc(Vector3 from, Vector3 to, float t01)
+static float StirAngleDeg(float t01, float revs
+static Vector3 TiltAxis(Vector3 from, Vector3 to)
+static VerbPose Sample(VerbKind kind, float t01, Vector3 from, Vector3 to,
+```
+
+### `VerbDemoPlayer` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Interaction/VerbDemoPlayer.cs`</sub>
+
+Tutorial Mode's verb demonstration (W5.39): a translucent ghost of the object the player has to move, miming the actual motion of the step, twice, then gone. ⭐ Deliberately NOT a hand. Rigging and animating a pair of hands is days of art for a hint, and it answers the wrong question — the player already knows what a hand looks like. Ghosting the BOTTLE tells them which object moves, from where, to where, and how it is held at the end of the motion. The mesh-copy machinery is the same one TutorialHighlighter's glow shell already proved. Fires only on request (coach level 2, or poking Pharmee for help). Never loops ambiently: a permanently miming ghost is noise, and it would compete with the glow for the player's attention instead of reinforcing it.
+
+```csharp
+void Bind(ExperimentRunner r, Material ghost)
+void SetGhostMaterial(Material m)
+bool IsPlaying
+static bool Endpoints(IReadOnlyList<TaskTarget> targets,
+void Show(string taskId)
+void ShowCurrent()
+void Stop()
 ```
 
 ### `VesselStatus` <sub>class</sub>
@@ -2495,6 +2547,8 @@ Vector3 Home
 void SetHome(Vector3 localPos)
 void SetGiveWayOffset(Vector3 localOffset)
 Vector3 GiveWay
+void SetGestureOffset(Vector3 localOffset)
+Vector3 Gesture
 static Vector3 JitterOffset(float t, float speed, float amplitude)
 ```
 
@@ -2551,6 +2605,7 @@ Location-triggered Lab Tour (storyboard, 2026-07-10): instead of narrating on a 
 bool IsActive
 int VisitedCount
 int StopCount
+Transform CurrentLandmark
 int Begin(Action<string> say)
 void End()
 static int FirstUnvisitedInRange(Vector3 playerPos, Vector3[] landmarkPos, bool[] visited, float[] radii)
@@ -2593,10 +2648,12 @@ void PlayTutorialNarration()
 ### `PharmeeAttitude` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/NPC/PharmeeAttitude.cs`</sub>
 
-Pharmee flight attitude (user 2026-07-10): lean the body into the movement direction so he reads as flying through air, pulse the hover waves at his base, and add a gentle bob-nod while he talks. Composes with FaceCamera (root yaw) and FloatBob (position) by twisting only the body CHILD. Head-level counter-rotation awaits a rigged model (animation-set bullet).
+Pharmee flight attitude (user 2026-07-10): lean the body into the movement direction so he reads as flying through air, pulse the hover waves at his base, and add a gentle bob-nod while he talks. Composes with FaceCamera (root yaw) and FloatBob (position) by twisting only the body CHILD. W5.38: also folds in the GESTURE pose (PharmeeGestureMath) and aims the model's two hand pivots. Everything still lands in the ONE localRotation assignment below - this class is the sole writer of bodyRoot, and a second component writing it would silently lose or fight per-frame. The model has no skeleton (no skins, no joints, no LimbNodes in either RobotNPC.glb or .fbx), so all of this is procedural by necessity as well as by choice.
 
 ```csharp
 void Bind(Transform body, Transform[] waveRings, FloatBob b, NPCNarrationController n)
+void BindHands(Transform left, Transform right)
+void SetPose(PharmeePose pose)
 static float LeanFor(float speedMps, float degPerMps, float maxDeg)
 ```
 
@@ -2668,6 +2725,67 @@ void OnPanelOption(int index)
 static bool ReviewFlowActive
 ```
 
+### `PharmeeGesture` <sub>enum</sub>
+<sub>`Assets/PharmaSynth/Scripts/NPC/PharmeeGestureMath.cs`</sub>
+
+What Pharmee's body is doing right now, on top of his hover. Deliberately NOT a new state enum: `PharmeeState` (PharmeeBrain.cs) already IS the set, and already drives his line pool, his face and his beep. This is the fourth mapping off the same state, not a parallel machine.
+
+### `PharmeePose` <sub>struct</sub>
+<sub>`Assets/PharmaSynth/Scripts/NPC/PharmeeGestureMath.cs`</sub>
+
+One frame of gesture, in the four channels Pharmee actually has.
+
+```csharp
+Quaternion bodyRot
+Vector3 rootOffset
+float handRaise
+float waveFlare
+static PharmeePose Rest
+```
+
+### `PharmeeGestureTuning` <sub>struct</sub>
+<sub>`Assets/PharmaSynth/Scripts/NPC/PharmeeGestureMath.cs`</sub>
+
+Tunable magnitudes, passed in rather than read from statics so the suite can drive them and the inspector can retune them without a code change. Real motion always needs a calibration knob - the right amplitude is a headset judgement, not an editor one.
+
+```csharp
+float nodDegrees
+float pointLeanDegrees
+float warnRecoilDegrees
+float warnShakeDegrees
+float celebrateRise
+float celebrateSpinDegrees
+float celebrateFlare
+static PharmeeGestureTuning Default
+```
+
+### `PharmeeGestureMath` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/NPC/PharmeeGestureMath.cs`</sub>
+
+Pure gesture curves - no Time.time, no transforms, no Unity state. Every value is a function of (gesture, seconds since it started, tuning), which is what makes the whole animation set checkable in edit mode. There is no headset pass available, so anything that cannot be pinned cannot be trusted. Precedents this matches exactly: PharmeeAttitude.LeanFor, PharmeeGiveWay.SideStep, FloatBob.JitterOffset, LabTourGuide.FirstUnvisitedInRange, SpeakerLedBlink.Level01.
+
+```csharp
+static float DurationOf(PharmeeGesture g)
+static bool IsSustained(PharmeeGesture g)
+static PharmeeGesture ForState(PharmeeState s)
+static PharmeeGesture ForGate(GateState s)
+static PharmeePose Pose(PharmeeGesture g, float t, PharmeeGestureTuning tune)
+static float Envelope(float u)
+static float EaseInOut(float u)
+```
+
+### `PharmeeGestures` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/NPC/PharmeeGestures.cs`</sub>
+
+root-motion-free"). `PharmeeState` already selects his line pool, his face and his beep. This adds the fourth mapping - state to body - and nothing else. It is deliberately THIN: all the curves live in the pure `PharmeeGestureMath` so the suite can pin them, because there is no headset pass available to judge them by eye. It writes NO transform. Like `PharmeeMover` and `PharmeeGiveWay`, it feeds the two components that own Pharmee's transforms: * position -> `FloatBob.SetGestureOffset` (one more term in FloatBob's single sum) * rotation + hands + rings -> `PharmeeAttitude.SetPose` (folded into its single localRotation assignment) Adding a component that wrote `Robot Origin` directly would fight `PharmeeAttitude`, which overwrites it absolutely every LateUpdate.
+
+```csharp
+void Bind(PharmeeAttitude a, FloatBob b, PharmeeBrain br, ExperimentRunner r, LabTourGuide t)
+void SetTuning(PharmeeGestureTuning t)
+PharmeeGesture Current
+void Play(PharmeeGesture g)
+```
+
 ### `PharmeeGiveWay` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/NPC/PharmeeGiveWay.cs`</sub>
 
@@ -2696,8 +2814,8 @@ static readonly string[] Safety
 static readonly string[] ExamGreeting
 static readonly string[] ExamRemarks
 const string TutorialOrientation
+const string TutorialPreview
 static readonly string[] TestsDoneLines
-static readonly string[] JimenezQuizBrief
 ```
 
 ### `PharmeeMood` <sub>class</sub>
@@ -3265,6 +3383,7 @@ void Detach()
 int StepsDone
 int Corrections
 void ShowSummary()
+void HelpNow()
 ```
 
 ### `UIfuncs` <sub>class</sub>
@@ -3310,6 +3429,9 @@ static bool SuppressNpcPokes
 void BindHolo(GameObject panel, TMP_Text title, TMP_Text body)
 void BindHolo(GameObject panel, TMP_Text title, TMP_Text summary, TMP_Text body, TMP_Text reaction)
 void SetReaction(string reaction)
+const float PreviewSeconds
+void ShowProcedurePreview(float seconds
+void CancelPreview()
 static string StepText(string label, string hint, bool tutorial)
 static string BuildSummary(ExperimentRunner runner)
 static bool IsGazingAt(Vector3 headPos, Vector3 headForward, Vector3 targetPos, float dotThreshold)
@@ -4179,6 +4301,15 @@ static void FixHoloScroll()
 <sub>`Assets/PharmaSynth/Scripts/Editor/PharmaSelfTests.cs`</sub>
 
 Re-runnable regression suite for the PharmaSynth engine. Run via menu: Tools ▸ PharmaSynth ▸ Run Self-Tests. Consolidates the assertions that were verified incrementally during W2–W3 into one permanent, one-click check. (Kept as an Editor-menu suite rather than an NUnit asmdef to avoid restructuring the runtime assembly; a formal EditMode asmdef migration can layer on later.)
+
+```csharp
+static void Run()
+```
+
+### `PharmeeGestureSim` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/PharmeeGestureSim.cs`</sub>
+
+Proves Pharmee's animation set actually MOVES HIM, in edit mode. The suite pins the pure curves (`PharmeeGestureSuite`), but a correct curve reaching a transform that is not bound produces exactly nothing while every assertion stays green. That is the failure this menu exists to catch, and it is the same reason `Simulate Tutorial Guidance` exists rather than another pin: it has to drive real scene objects, and the suite is kept side-effect-free. For each gesture it applies the pose at its peak and measures the ACTUAL degrees and millimetres the scene transforms moved, then restores them. Tools > PharmaSynth > Simulate Pharmee Gestures (edit mode, restores what it touches).
 
 ```csharp
 static void Run()

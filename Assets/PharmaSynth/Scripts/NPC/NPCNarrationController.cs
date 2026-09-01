@@ -263,6 +263,13 @@ public class NPCNarrationController : MonoBehaviour
     /// True while ANY narrator is still typing OR still audibly speaking.
     public static bool FloorBusy => s_floor != null && (s_floor.IsRevealing || s_floor.IsVoicing);
 
+    /// Test seam. The floor is a STATIC and survives every suite run inside one editor
+    /// domain, so a previous run's temporary narrators strand it and the NEXT run fails
+    /// "nobody holds the floor when nothing is speaking" - a false red that clears only on a
+    /// domain reload. The suite calls this once at the start so the assertion tests the
+    /// PRODUCT stranding the floor, not the suite doing it to itself.
+    public static void ClearFloor() => s_floor = null;
+
     /// Every live narrator. The music must duck WHENEVER either NPC has something
     /// to say (user 2026-07-27), and keying that off the floor-holder alone missed
     /// two cases: a line started through BeginLine (the cutscene staging path never

@@ -427,6 +427,11 @@ Edit-mode helper (user 2026-07-10: "let me select + reposition the stools in the
 
 • the module picked from its period through the two-step picker, with the real ProgressionFlow.IsUnlocked gating each pick • the honest pour-through of the experiment (SimulatedRun) • the REAL PostLabController quiz — Open, answer, SubmitAndFinish → Finish • the REAL ExperimentGrader result + the floored grade-screen text • the REAL cutscene outro selection + its subtitle beats • the REAL ProgressionService record + ProgressionFlow unlock + UnlockDiff announcement, then the pick of the NEXT expe
 
+### `Tools/PharmaSynth/Simulate Pharmee Gestures`
+<sub>`Assets/PharmaSynth/Scripts/Editor/PharmeeGestureSim.cs`</sub>
+
+Proves Pharmee's animation set actually MOVES HIM, in edit mode. The suite pins the pure curves (`PharmeeGestureSuite`), but a correct curve reaching a transform that is not bound produces exactly nothing while every assertion stays green. That is the failure this menu exists to catch, and it is the same reason `Simulate Tutorial Guidance` exists rather than another pin: it has to drive real scene objects, and the suite is kept side-effect-free. For each gesture it applies the pose at its peak a
+
 ### `Tools/PharmaSynth/Simulate Run/Final 1 — Benzamide`
 <sub>`Assets/PharmaSynth/Scripts/Editor/SimulatedRun.cs`</sub>
 

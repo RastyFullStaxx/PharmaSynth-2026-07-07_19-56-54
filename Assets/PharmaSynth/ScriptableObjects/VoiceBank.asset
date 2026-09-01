@@ -203,6 +203,9 @@ MonoBehaviour:
     id: 35fec635bd79026f
     clip: {fileID: 8300000, guid: 648a40dbe349e5e4092f3d6d23b26311, type: 3}
   - speaker: 0
+    id: 3673db2e33186876
+    clip: {fileID: 8300000, guid: 081dac51d8010ed48a03be948da875e8, type: 3}
+  - speaker: 0
     id: 3888832f8704ff91
     clip: {fileID: 8300000, guid: 727a53db11d72564e89b88c7680329cb, type: 3}
   - speaker: 0
@@ -226,6 +229,9 @@ MonoBehaviour:
   - speaker: 0
     id: 422659ec79212837
     clip: {fileID: 8300000, guid: f16058240edeab7419ef734a8509fac8, type: 3}
+  - speaker: 0
+    id: 4443783ed4b02799
+    clip: {fileID: 8300000, guid: 81806921d5af33b41987d5034bbfa35f, type: 3}
   - speaker: 0
     id: 45528498aa25fb79
     clip: {fileID: 8300000, guid: b6e7c81cc30f8694ca17df505f4ffc23, type: 3}

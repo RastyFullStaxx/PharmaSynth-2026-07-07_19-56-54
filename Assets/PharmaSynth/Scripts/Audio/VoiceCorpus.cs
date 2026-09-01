@@ -42,6 +42,7 @@ public static class VoiceCorpus
         AddPool(lines, VoiceSpeaker.Pharmee, PharmeeLines.CampaignComplete, "Celebrate");
         // Tutorial Mode's one-off orientation (2026-08-07). A single line, not a pool.
         lines.Add(new Line(VoiceSpeaker.Pharmee, PharmeeLines.TutorialOrientation, "Tour"));
+        lines.Add(new Line(VoiceSpeaker.Pharmee, PharmeeLines.TutorialPreview, "Tour"));
 
         // Dr. Jimenez pools (exam voice + review verdicts).
         AddPool(lines, VoiceSpeaker.Jimenez, PharmeeLines.ExamGreeting, "Exam");

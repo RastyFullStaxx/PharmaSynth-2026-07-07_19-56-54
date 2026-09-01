@@ -17255,6 +17255,7 @@ GameObject:
   - component: {fileID: 191569890}
   - component: {fileID: 191569891}
   - component: {fileID: 191569892}
+  - component: {fileID: 191569893}
   m_Layer: 0
   m_Name: ExperimentSystems
   m_TagString: Untagged
@@ -17520,6 +17521,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialCoach
   runner: {fileID: 191569879}
+--- !u!114 &191569893
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 191569878}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 760e03fdf380d114d8f0547b076657ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VerbDemoPlayer
+  runner: {fileID: 191569879}
+  ghostMaterial: {fileID: 2100000, guid: bfeecacf14c14c441a7d99d5a2645def, type: 2}
+  loopSeconds: 3
+  loops: 2
 --- !u!1 &192420906
 GameObject:
   m_ObjectHideFlags: 0
@@ -57883,8 +57900,8 @@ MonoBehaviour:
   blipEveryChars: 4
   voiceBlipKey: jimenez-blip
   blipVolume: 0.5
-  voiceBank: {fileID: 0}
-  speaker: 0
+  voiceBank: {fileID: 11400000, guid: eb5978078915a0645b3f8229a51639f6, type: 2}
+  speaker: 1
   onNarrationFinished:
     m_PersistentCalls:
       m_Calls: []

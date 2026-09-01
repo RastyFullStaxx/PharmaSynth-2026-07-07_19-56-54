@@ -302,6 +302,55 @@ re-homing.
 
 ---
 
+## Pharmee's transform ownership
+
+> [!danger] Four scripts move Pharmee, and they only compose because nothing overlaps
+> | Transform | Sole owner |
+> |---|---|
+> | root **position** | `FloatBob` — one sum: `home + bob + jitter + giveWay + gesture` |
+> | root **rotation** | `FaceCamera` — FloatBob's `applyRotation` is **0** in the scene |
+> | **`Robot Origin`** rotation | `PharmeeAttitude`, in LateUpdate, **overwritten absolutely** |
+> | **`Wave*`** ring scale | `PharmeeAttitude` |
+>
+> `PharmeeMover`, `PharmeeGiveWay` and `PharmeeGestures` write **no transform at all** —
+> they feed `SetHome()` / `SetGiveWayOffset()` / `SetGestureOffset()` + `SetPose()`.
+>
+> **Never add a component that writes `Robot Origin`.** `PharmeeAttitude` assigns it
+> absolutely every LateUpdate, so a second writer either loses silently or fights per frame.
+> New motion composes *into* that one expression. Suite-pinned (`gesture:`), including
+> `applyRotation == 0`, because a stray inspector tick there starts a fight with FaceCamera
+> that looks like a physics bug.
+
+> [!warning] Pharmee has NO skeleton — and the model ships animation that never plays
+> `RobotNPC.glb` and `RobotNPC.fbx` both have zero skins, joints, LimbNodes, Deformers and
+> BindPoses; all 12 of his renderers are `MeshRenderer`. Skeletal animation is impossible
+> without a re-rig, which is why the animation set is procedural.
+>
+> The FBX *does* carry ~364 `AnimationCurveNode` of baked per-node TRS (it is a Sketchfab
+> "Futuristic flying animated Robot"), with `importAnimation: 1` and no controller — so none
+> of it runs. **Do not simply switch it on:** those curves drive the same Wave rings and body
+> node `PharmeeAttitude` already animates, including the `waveSpeedMultiplier = 30` the user
+> asked for.
+>
+> He does have two **hand pivots** (`Hand origin`, `Hand origin.002`) that nothing moved
+> before W5.38 — that is the pointing affordance, already in the mesh.
+> `RobotNPC.glb` is **orphaned**: zero references anywhere.
+
+> [!warning] `Wire NPC Polish` rebuilds Jimenez's subtitle bubble and drops its AudioSource
+> A W5.38 run left `JimenezSubtitles` with **no AudioSource at all** and failed
+> `voice: every narration channel has an AudioSource`. Recovery is
+> **`Voice ▸ Fix Voice Audibility + Music Ducking`**. Same family as the
+> `Build Reagent Cabinets` component wipe — run the repair menu after the builder.
+
+> [!warning] A `FloorBusy` suite failure is usually the PREVIOUS run, not the product
+> `NPCNarrationController.s_floor` is a **static** and survives every suite run inside one
+> editor domain, so temporary narrators from an earlier run strand it and the next run fails
+> *"nobody holds the floor when nothing is speaking"* — a false red that clears only on a
+> domain reload. `Run()` now calls `NPCNarrationController.ClearFloor()` first.
+> **If a suite failure disappears after a domain reload, it was leaked static state.**
+
+---
+
 ## Files, YAML and encoding
 
 > [!warning] Hand-written Unity YAML
@@ -342,3 +391,39 @@ re-homing.
 >
 > **Read hints cold, as a first-timer, and cross-check each ACTION line against the
 > binding.**
+
+## Verifying a type actually reached the DLL
+
+> [!warning] grep the DLL for TYPE and MEMBER names, never for a string literal
+> .NET stores type and member names in the `#Strings` heap as **UTF-8**, but user string
+> literals in the `#US` heap as **UTF-16**. So `grep -a "my assertion text"` against
+> `Library/ScriptAssemblies/*.dll` returns 0 even when the code is definitely there, and
+> reads exactly like "my edit did not compile" (W5.39, 2026-09-02).
+>
+> Check `grep -ac VerbDemoMath …` or `grep -ac EnsureDemoGhostMaterial …` instead.
+> The companion rule still stands: a suite run whose **assertion count did not move**
+> ran the old assembly, whatever the DLL timestamp says.
+
+## A guidance rung that computes but is never consumed
+
+> [!danger] `TutorialCoach.LevelFor` returned 1/2/3; `Update()` returned unless it was 3
+> The 15 s and 30 s rungs of the stuck ladder were fully specified, pinned by the suite
+> (`LevelFor(20f) == 1`), documented in gameplay-flow — and had never once run in the
+> shipped game. The pins tested the *calculation*, not that anything acted on it.
+>
+> This is the same shape as `WaypointGuide` calling `Hide()` in all 9 modules for weeks:
+> **a consumer that silently does nothing reads exactly like a feature that is merely
+> off.** When a pure function returns a value nobody branches on, pin the CONSUMER too.
+
+## A freshly generated voice clip does not import itself
+
+> [!warning] `Import & Wire Voice Clips` will report the OLD count
+> `generate-voice.ps1` writes the mp3 straight to disk from outside Unity, so until the
+> editor imports it there is no `.meta` and no `AudioClip` asset — the wire tool then
+> scans the bank and truthfully reports the previous total, which reads as "the
+> generator silently failed" (2026-09-02).
+>
+> Force `AssetDatabase.ImportAsset(<path>, ForceUpdate)` (or refocus the editor) and run
+> the wire step **again**. Confirm by the count moving, and by grepping
+> `VoiceBank.asset` for the clip id — not by the menu returning success.
+

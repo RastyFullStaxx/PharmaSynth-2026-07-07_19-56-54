@@ -10,7 +10,7 @@
 
 | # | Asset | Current state | Spec | Path when done |
 |---|-------|--------------|------|----------------|
-| A1 | **Pharmee animation set** | static glb, `FloatBob` only | idle-float, talk, gesture-point, celebrate, warn — looping, root-motion-free | `Art/Characters/` anims + Animator |
+| A1 | **Pharmee animation set** | ✅ **DONE 2026-08-28 (W5.38)** | Delivered PROCEDURALLY, not as clips: the model has no skeleton, so an Animator was never viable without a re-rig. `PharmeeGestureMath` + `PharmeeGestures` drive greet / point / warn / celebrate / nod off the existing `PharmeeState`, composed into `FloatBob` and `PharmeeAttitude`. Root-motion-free by construction. | `Scripts/NPC/` |
 | A2 | **Pharmee face states** | `PharmeeFace` points at wrong mesh | happy / neutral / warning / thinking screen-face materials; re-point `PharmeeFace.faceRenderer` at the robot's screen mesh | face material set |
 | A3 | **Fume hood** | `FumeHood_StandIn` (glass shell + working zone) | real hood: sash, extractor grille, interior light; keep the `FumeHoodZone` trigger volume | `Art/Environment/` |
 | A4 | **Dr. Jimenez** | primitive stand-in + label | rigged scientist (coat, glasses, blue tie) + idle/observe/clipboard anims; `ExaminerNPC` component to add | `Art/Characters/` **[store]** |

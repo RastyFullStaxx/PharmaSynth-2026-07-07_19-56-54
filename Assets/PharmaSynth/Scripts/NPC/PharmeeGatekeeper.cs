@@ -247,6 +247,19 @@ public class PharmeeGatekeeper : MonoBehaviour
     public void OnPharmeeTalk()
     {
         if (WristWatchController.SuppressNpcPokes) return;
+
+        // Tutorial Mode: poking him mid-run means "help me", not "let's renegotiate"
+        // (W5.39). He points at the step's target, mimes the motion and says the hint.
+        //
+        // Deliberately handled HERE and not as an FSM transition: GateState.Running has
+        // never accepted TalkRequested, so the poke is currently a no-op and campaign
+        // cannot be reached by this branch even by accident. Adding a transition would
+        // put a new edge in a graph the whole game's flow is pinned against.
+        if (TutorialSession.Active && Model.State == GateState.Running)
+        {
+            UnityEngine.Object.FindAnyObjectByType<TutorialCoach>()?.HelpNow();
+            return;
+        }
         Model.Fire(GateEvent.TalkRequested);
     }
 
@@ -449,6 +462,14 @@ public class PharmeeGatekeeper : MonoBehaviour
             case GateState.ThresholdWarn:
                 Say(lines.thresholdWarn);
                 panel?.Show("The period will start as soon as you walk in.", new List<string> { "Proceed", "Not yet" });
+                // Tutorial Mode: show the whole procedure before the door opens (W5.39).
+                // The stage is already built ARMED by now, so runner.Graph exists and the
+                // board renders the real step list rather than a written-out copy of it.
+                if (TutorialSession.Active)
+                {
+                    UnityEngine.Object.FindAnyObjectByType<WristWatchController>()?.ShowProcedurePreview();
+                    After(lineSeconds * 0.9f, () => Say(PharmeeLines.TutorialPreview));
+                }
                 break;
 
             case GateState.DoorArmed:

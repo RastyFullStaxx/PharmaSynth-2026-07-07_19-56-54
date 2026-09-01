@@ -74,6 +74,23 @@ public class WristWatchController : MonoBehaviour
 
     private void OnTogglePressed(InputAction.CallbackContext _) => _manualVisible = !_manualVisible;
 
+    private float _forcedUntil = -1f;
+
+    /// How long an unprompted preview stays up before the player has to hold their own
+    /// wrist. Long enough to read a nine-step procedure, short enough not to trap them.
+    public const float PreviewSeconds = 12f;
+
+    /// Tutorial Mode's sequence preview (W5.39): put the procedures board up before the
+    /// door opens, so the player walks in knowing the shape of the experiment.
+    ///
+    /// Deliberately just a forced SHOW of the board that already exists. The holo body is
+    /// built from ChecklistPager every frame it is visible, so a preview needs no second
+    /// panel, no second layout and no second text builder that could drift from it.
+    public void ShowProcedurePreview(float seconds = PreviewSeconds)
+        => _forcedUntil = Time.time + Mathf.Max(1f, seconds);
+
+    public void CancelPreview() => _forcedUntil = -1f;
+
     private void Update()
     {
         if (watchAnchor != null)
@@ -93,7 +110,7 @@ public class WristWatchController : MonoBehaviour
                 _gestureVisible = IsGazingAt(headTransform.position, headTransform.forward, watchAnchor.position, gazeThreshold);
         }
 
-        bool show = _gestureVisible || _manualVisible;
+        bool show = _gestureVisible || _manualVisible || Time.time < _forcedUntil;
         // No experiment content, no panels — otherwise the simulator's resting
         // palm-up controllers summon an empty board in the corridor/lab tour.
         if (runner == null || runner.Graph == null) show = false;

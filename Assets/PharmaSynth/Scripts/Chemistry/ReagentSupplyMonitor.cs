@@ -81,6 +81,15 @@ public class ReagentSupplyMonitor : MonoBehaviour
         if (_latched || runner == null || !runner.IsRunning) return;
         if (Time.time < _next) return;
         _next = Time.time + Mathf.Max(0.5f, pollSeconds);
+
+        // Tutorial Mode tops the bottles up UNCONDITIONALLY, before the shortfall
+        // analysis rather than inside it (W5.39). Demo's branch below is REACTIVE —
+        // it only refills once a step has already starved — so a bottle spilled early
+        // would sit empty for the rest of the run even though nothing was short yet.
+        // Practice must never be able to dead-end, so there is no shortfall to find:
+        // the poll already sweeps every LiquidPhysics, so the refill is free here.
+        if (TutorialSession.Active) { RefillSourceBottles(); return; }
+
         var shortfalls = EvaluateNow();
         if (shortfalls.Count > 0)
         {

@@ -316,6 +316,14 @@ public static class TutorialModeBuilder
         coach.Bind(runner);
         EditorUtility.SetDirty(coach);
 
+        // Verb demonstration (W5.39). Its own material, NOT TutorialXray: that one is
+        // ZTest Greater and would draw the miming ghost only where it happens to be
+        // hidden — the exact inverse of what a demonstration needs.
+        var demo = runner.GetComponent<VerbDemoPlayer>();
+        if (demo == null) demo = runner.gameObject.AddComponent<VerbDemoPlayer>();
+        demo.Bind(runner, EnsureDemoGhostMaterial());
+        EditorUtility.SetDirty(demo);
+
         int beacons = 0;
         var mat = EnsureThroughWallMaterial();
         foreach (var guide in Object.FindObjectsByType<WaypointGuide>(FindObjectsInactive.Include, FindObjectsSortMode.None))
@@ -337,7 +345,8 @@ public static class TutorialModeBuilder
 
         EditorSceneManager.MarkAllScenesDirty();
         EditorSceneManager.SaveOpenScenes();
-        Debug.Log("[TutorialModeBuilder] highlighter bound; " + beacons + " waypoint guide(s) revived with a through-wall beacon.");
+        Debug.Log("[TutorialModeBuilder] highlighter + coach + verb demo bound; " + beacons
+                  + " waypoint guide(s) revived with a through-wall beacon.");
     }
 
     /// Unlit + ZTest **Greater** + ZWrite Off: draws the ghost ONLY where the object is
@@ -422,6 +431,15 @@ public static class TutorialModeBuilder
         => EnsureGuideMaterial("TutorialBeacon", new Color(1f, 0.72f, 0.20f, 1f),
                                UnityEngine.Rendering.CompareFunction.Always, 4000);
 
+    /// The miming ghost: ZTest Always so the demonstration is never hidden by the very
+    /// bench it is happening over. A cool near-white, deliberately NEITHER of the two
+    /// guidance colours — amber already means "fetch this" and green "put it here", and
+    /// a third meaning ("watch this") needs a third colour or it reads as a target that
+    /// has come loose and started drifting.
+    static Material EnsureDemoGhostMaterial()
+        => EnsureGuideMaterial("TutorialDemoGhost", new Color(0.62f, 0.90f, 1f, 0.45f),
+                               UnityEngine.Rendering.CompareFunction.Always, 4000);
+
     // ---- end-to-end guidance simulation --------------------------------------
 
     /// Walks every module's REAL task graph step by step with Tutorial Mode on, and
@@ -478,7 +496,7 @@ public static class TutorialModeBuilder
                 TutorialTargets.Build();
 
                 var blind = new List<string>();
-                int steps = 0, guided = 0;
+                int steps = 0, guided = 0, demoable = 0;
                 while (steps++ < 300)
                 {
                     ExperimentTask next = null;
@@ -495,6 +513,12 @@ public static class TutorialModeBuilder
                     if (lit) guided++;
                     else if (!next.autoCompleteWhenOthersDone) blind.Add(next.taskId);
 
+                    // W5.39: can the step also be DEMONSTRATED? Endpoints resolving is the
+                    // whole precondition for the miming ghost, and a step that lights but
+                    // cannot be mimed silently downgrades the coach's level-2 rung to a
+                    // point with nothing to look at.
+                    if (VerbDemoPlayer.Endpoints(targets, out _, out _, out _)) demoable++;
+
                     runner.CompleteTask(next.taskId);
                 }
 
@@ -504,6 +528,7 @@ public static class TutorialModeBuilder
                 report.Append(blind.Count == 0 && untimed ? "  OK   " : "  BAD  ")
                       .Append(def.moduleId)
                       .Append("  guided ").Append(guided).Append('/').Append(guided + blind.Count)
+                      .Append(", demoable ").Append(demoable)
                       .Append(untimed ? ", untimed" : ", CLOCK RAN (" + runner.ElapsedSeconds.ToString("0.0") + "s)");
                 if (blind.Count > 0) report.Append(", blind steps: ").Append(string.Join(", ", blind));
                 report.Append('\n');

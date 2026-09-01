@@ -34,6 +34,7 @@ public static class PharmaSelfTests
     public static void Run()
     {
         _fail = 0; _total = 0; _log.Clear();
+        NPCNarrationController.ClearFloor();   // statics survive the domain; see ClearFloor
 
         TaskGraphSuite();
         MasterySuite();
@@ -3726,6 +3727,88 @@ public static class PharmaSelfTests
                     TutorialCoach.SummaryText(12, 1) == "Practice complete — 12 steps, 1 correction along the way.");
                 A("tutorial: summary pluralises many corrections",
                     TutorialCoach.SummaryText(12, 3) == "Practice complete — 12 steps, 3 corrections along the way.");
+
+                // ---- W5.39 verb demonstration -------------------------------------
+                // The registry carries the VERB as well as the object, derived in the
+                // same sweep, so a demonstration can never mime a different motion from
+                // the one the step's binding will accept.
+                TaskTargetRegistry.Clear();
+                TaskTargetRegistry.Register("t-v", probe.transform, TargetRole.Source, false, VerbKind.Scoop);
+                A("tutorial: registry carries the step's verb",
+                    TaskTargetRegistry.Targets("t-v")[0].verb == VerbKind.Scoop);
+                // Every pre-W5.39 caller (MethaneApparatusRig among them) omits the verb,
+                // so the default has to be the one that suits an unknown step: carry it.
+                TaskTargetRegistry.Register("t-w", probe.transform, TargetRole.Station, true);
+                A("tutorial: an unspecified verb defaults to Place",
+                    TaskTargetRegistry.Targets("t-w")[0].verb == VerbKind.Place);
+
+                var demoB = new GameObject("selftest-demo-dest");
+                try
+                {
+                    var pair = new List<TaskTarget>
+                    {
+                        new TaskTarget { transform = demoB.transform, role = TargetRole.Destination, verb = VerbKind.Pour },
+                        new TaskTarget { transform = probe.transform, role = TargetRole.Source, verb = VerbKind.Pour },
+                    };
+                    A("tutorial: the SOURCE is what the demo ghost moves",
+                        VerbDemoPlayer.Endpoints(pair, out var mover, out var dest, out var kind)
+                        && mover == probe.transform && dest == demoB.transform && kind == VerbKind.Pour);
+
+                    // A verb performed on a vessel already in place (stir, heat, weigh)
+                    // has no source. It must still resolve — degenerating to a motion in
+                    // place — rather than silently refusing to demonstrate.
+                    var stationOnly = new List<TaskTarget>
+                    {
+                        new TaskTarget { transform = demoB.transform, role = TargetRole.Station, verb = VerbKind.Stir },
+                    };
+                    A("tutorial: a source-less step still resolves both ends",
+                        VerbDemoPlayer.Endpoints(stationOnly, out var m2, out var d2, out _)
+                        && m2 == demoB.transform && d2 == demoB.transform);
+                    A("tutorial: an empty target set demonstrates nothing",
+                        !VerbDemoPlayer.Endpoints(new List<TaskTarget>(), out _, out _, out _));
+                }
+                finally { UnityEngine.Object.DestroyImmediate(demoB); }
+
+                // Motion shapes. Pinned because a curve that compiles and looks plausible
+                // can still mime nothing useful, and only a headset would ever notice.
+                var vFrom = new Vector3(0f, 1f, 0f);
+                var vTo = new Vector3(0.6f, 0.95f, 0.2f);
+                foreach (VerbKind k in System.Enum.GetValues(typeof(VerbKind)))
+                    A("tutorial: " + k + " demo starts at the object's resting place",
+                        (VerbDemoMath.Sample(k, 0f, vFrom, vTo).position - vFrom).sqrMagnitude < 1e-6f);
+                A("tutorial: a Place demo ends ON the destination",
+                    (VerbDemoMath.Sample(VerbKind.Place, 1f, vFrom, vTo).position - vTo).sqrMagnitude < 1e-6f);
+
+                // A pour that stops at horizontal reads as hesitation, not as pouring.
+                A("tutorial: the pour demo tips PAST horizontal",
+                    Quaternion.Angle(Quaternion.identity,
+                        VerbDemoMath.Sample(VerbKind.Pour, 0.75f, vFrom, vTo).rotation) > 90f);
+                A("tutorial: the pour demo levels off again",
+                    Quaternion.Angle(Quaternion.identity,
+                        VerbDemoMath.Sample(VerbKind.Pour, 1f, vFrom, vTo).rotation) < 1f);
+
+                // The demo must not teach a shorter stir than the verb will accept.
+                A("tutorial: a stir demo completes the required revolutions",
+                    Mathf.Approximately(VerbDemoMath.StirAngleDeg(1f, 2.5f), 900f));
+                A("tutorial: the stir demo circles rather than sitting still",
+                    (VerbDemoMath.Sample(VerbKind.Stir, 0.4f, vFrom, vTo).position
+                     - VerbDemoMath.Sample(VerbKind.Stir, 0.9f, vFrom, vTo).position).sqrMagnitude > 1e-4f);
+
+                // A ghost that sinks through the bench on its way across reads as a bug.
+                bool arcClears = true;
+                float floorY = Mathf.Min(vFrom.y, vTo.y);
+                for (float t = 0f; t <= 1.0001f; t += 0.05f)
+                    if (VerbDemoMath.Arc(vFrom, vTo, t).y < floorY - 1e-4f) arcClears = false;
+                A("tutorial: a travel arc never dips below either endpoint", arcClears);
+
+                // The vessel must tip TOWARD the destination, not sideways past it.
+                var axis = VerbDemoMath.TiltAxis(vFrom, vTo);
+                Vector3 flat = vTo - vFrom; flat.y = 0f;
+                A("tutorial: the pour axis is horizontal", Mathf.Abs(axis.y) < 1e-4f);
+                A("tutorial: the pour axis is square to the approach",
+                    Mathf.Abs(Vector3.Dot(axis, flat.normalized)) < 1e-4f);
+                A("tutorial: a vertically-stacked pour still has an axis",
+                    VerbDemoMath.TiltAxis(vFrom, vFrom + Vector3.up).sqrMagnitude > 0.9f);
             }
             finally
             {

@@ -15,6 +15,11 @@ public struct TaskTarget
     /// and tools stay lit while held — "this is the right tube" is still the
     /// answer while you're carrying it.
     public bool stayLitWhenHeld;
+
+    /// The motion this step is asking for, for VerbDemoPlayer (W5.39). Derived from
+    /// the component that registered the target, so it cannot disagree with the
+    /// binding for the same reason the target itself cannot.
+    public VerbKind verb;
 }
 
 /// taskId → the scene objects that step involves.
@@ -31,7 +36,8 @@ public static class TaskTargetRegistry
     private static readonly Dictionary<string, List<TaskTarget>> _map =
         new Dictionary<string, List<TaskTarget>>();
 
-    public static void Register(string taskId, Transform t, TargetRole role, bool stayLitWhenHeld)
+    public static void Register(string taskId, Transform t, TargetRole role, bool stayLitWhenHeld,
+                                VerbKind verb = VerbKind.Place)
     {
         if (string.IsNullOrEmpty(taskId) || t == null) return;
         if (!_map.TryGetValue(taskId, out var list))
@@ -41,7 +47,7 @@ public static class TaskTargetRegistry
         }
         for (int i = 0; i < list.Count; i++)
             if (list[i].transform == t) return;              // idempotent: sweeps may overlap
-        list.Add(new TaskTarget { transform = t, role = role, stayLitWhenHeld = stayLitWhenHeld });
+        list.Add(new TaskTarget { transform = t, role = role, stayLitWhenHeld = stayLitWhenHeld, verb = verb });
     }
 
     /// Live targets for a step. Null transforms are filtered on every READ, not just
@@ -93,11 +99,16 @@ public static class TutorialTargets
             {
                 var step = steps[i];
                 if (step == null || string.IsNullOrEmpty(step.taskId)) continue;
-                TaskTargetRegistry.Register(step.taskId, b.transform, TargetRole.Destination, true);
+                // A solid reagent is SCOOPED, a liquid is POURED — the same distinction
+                // the player has to make, read off the chemical itself rather than
+                // authored anywhere.
+                var verb = step.reagent != null && step.reagent.state == PhysicalState.Solid
+                    ? VerbKind.Scoop : VerbKind.Pour;
+                TaskTargetRegistry.Register(step.taskId, b.transform, TargetRole.Destination, true, verb);
                 if (step.reagent == null) continue;
                 foreach (var v in vessels)
                     if (v != null && v.currentChemical == step.reagent && v.transform != b.transform)
-                        TaskTargetRegistry.Register(step.taskId, v.transform, TargetRole.Source, false);
+                        TaskTargetRegistry.Register(step.taskId, v.transform, TargetRole.Source, false, verb);
             }
         }
 
@@ -109,8 +120,11 @@ public static class TutorialTargets
         //     cannot know whose step is running. So sweep the Vessel*Task components:
         //     they sit on the exact glassware the step is about, which is also what
         //     the player needs pointed out.
-        RegisterVerb<GrindController>(c => c.TaskId);
-        RegisterVerb<StirController>(c => c.TaskId);
+        //     The VerbKind is what the demonstration ghost mimes. Only grind and stir
+        //     earn their own curve; everything else is "carry this vessel to that
+        //     tool", which Place already shows correctly.
+        RegisterVerb<GrindController>(c => c.TaskId, VerbKind.Grind);
+        RegisterVerb<StirController>(c => c.TaskId, VerbKind.Stir);
         RegisterVerb<VesselHeatTask>(c => c.TaskId);
         RegisterVerb<VesselChillTask>(c => c.TaskId);
         RegisterVerb<VesselLitmusTask>(c => c.TaskId);
@@ -150,7 +164,8 @@ public static class TutorialTargets
         }
     }
 
-    private static void RegisterVerb<T>(System.Func<T, string> taskIdOf) where T : Component
+    private static void RegisterVerb<T>(System.Func<T, string> taskIdOf,
+                                        VerbKind verb = VerbKind.Place) where T : Component
     {
         foreach (var c in Object.FindObjectsByType<T>(
                      FindObjectsInactive.Include, FindObjectsSortMode.None))
@@ -158,7 +173,7 @@ public static class TutorialTargets
             if (c == null) continue;
             string id = taskIdOf(c);
             if (!string.IsNullOrEmpty(id))
-                TaskTargetRegistry.Register(id, c.transform, TargetRole.Station, true);
+                TaskTargetRegistry.Register(id, c.transform, TargetRole.Station, true, verb);
         }
     }
 

@@ -153,6 +153,12 @@ public static class PharmeeLines
     public const string TutorialOrientation =
         "This is practice mode. Whatever you need next will glow, and the marker points right at it. Nothing here is graded, so take your time — and you can skip a step if you get stuck.";
 
+    /// Spoken at the threshold in Tutorial Mode, while the procedures board is showing
+    /// itself unprompted (W5.39). Fixed, not a pool, for the same reason as the line
+    /// above: it explains a control, and an explanation should not vary.
+    public const string TutorialPreview =
+        "Here is the whole procedure before we start. Read it through, then walk in when you are ready — and poke me any time if you get stuck.";
+
     // ---- Post-experiment review flow (user 2026-07-11: congrats → Jimenez quiz
     // briefing → score remarks → entrance debrief). Finite pools, numbers stay on
     // the grade card so every line is voice-recordable.
