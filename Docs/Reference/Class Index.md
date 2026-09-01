@@ -1142,6 +1142,48 @@ bool PestleInBowl()
 void Tick(float x, float z, bool inside)
 ```
 
+### `GuidePath` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Interaction/GuidePath.cs`</sub>
+
+Tutorial Mode's ground path (W5.44): chevrons on the floor that flow from the player's feet toward whatever the current step needs (user request, 2026-09-02). ⛔ It routes on the NAVMESH, not in a straight line. The lab's benches sit in the middle of the room, so a straight line to a wall shelf points through solid furniture — an arrow that lies about the way there is worse than no arrow. `NavMesh.CalculatePath` needs no agent; it just needs the surface baked (Tools ▸ PharmaSynth ▸ Build Lab NavMesh). ⭐ It never draws at the same time as the beacon. The path answers "which way round the benches", the beacon answers "which object, through that cabinet door" — and Tutorial Mode already spends most of the player's attention budget. `GuidePathMath.ShowPath` owns that split so the rule lives in one testable place.
+
+```csharp
+static GuidePath Instance
+bool PathShown
+int ActiveChevrons
+float LastDistance
+int RouteCorners
+string LastTargetName
+Vector3 LastGoal
+bool StartOnMesh
+bool GoalOnMesh
+void Bind(ExperimentRunner r, Material chevron)
+void SetTuning(float spacingM, float flow, float size)
+```
+
+### `GuidePathMath` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Interaction/GuidePathMath.cs`</sub>
+
+Pure geometry for Tutorial Mode's ground path (W5.44): given the corners of a walkable route, where does each flowing chevron sit and which way does it face? Pure so the suite can pin the SHAPE of the path without a headset — that chevrons are evenly spaced regardless of how unevenly the navmesh corners fall, that they face along the route rather than at the destination, and that the flow runs toward the target and not away from it. A path that compiles and points backwards is not something a compile or a play-mode run would ever complain about.
+
+```csharp
+const float Spacing
+const float FlowSpeed
+const int MaxChevrons
+```
+
+### `Chevron` <sub>struct</sub>
+<sub>`Assets/PharmaSynth/Scripts/Interaction/GuidePathMath.cs`</sub>
+
+```csharp
+static float Length(IReadOnlyList<Vector3> corners)
+static bool Sample(IReadOnlyList<Vector3> corners, float distance,
+static List<Chevron> Build(IReadOnlyList<Vector3> corners, float time,
+const float NearDistance
+static bool ShowPath(float distanceToTarget, bool hasRoute)
+static bool ShowBeacon(float distanceToTarget, bool hasRoute)
+```
+
 ### `HandPoseKind` <sub>enum</sub>
 <sub>`Assets/PharmaSynth/Scripts/Interaction/HandPoseController.cs`</sub>
 
@@ -1783,6 +1825,7 @@ taskId → the scene objects that step involves. Formerly ExperimentStationRegis
 ```csharp
 static void Register(string taskId, Transform t, TargetRole role, bool stayLitWhenHeld,
 static IReadOnlyList<TaskTarget> Targets(string taskId)
+static Transform PickTarget(string taskId)
 static int TaskCount
 static void Clear()
 ```
@@ -3418,6 +3461,7 @@ static string ComposeMixed(string displayName, string ledgerSummary)
 static string HoverLine(string chemName, float ml, string ledgerSummary, int ledgerCount)
 static string HeatLine(string baseLabel, float currentC, float targetC)
 static string TempGoalLine(float currentC, float targetC, bool chill)
+static string NeedLine(string chemName, float have, float required, bool solid
 static string ProgressLine(string baseLabel, string verb, float frac01)
 ```
 
@@ -4071,6 +4115,15 @@ Brightens the lab so it reads as a well-lit laboratory (user 2026-07-10: "a lab 
 static void Build()
 ```
 
+### `LabNavMeshBuilder` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/LabNavMeshBuilder.cs`</sub>
+
+Bakes the walkable surface Tutorial Mode's ground path routes on (W5.44). Without this there is no NavMesh in the project at all, and `GuidePath` silently draws nothing — the floor arrows would look "not implemented" rather than "not baked", which is exactly the sort of silence this codebase has been bitten by before. ⚠ **The bake goes STALE when furniture moves**, precisely like the lightmap bake — the benches ARE the obstacles it routes around. Re-run this in the same breath as `Build Lab Probes` → `Run Lab Lighting Bake` after any `Select Movable Furniture` session, or the arrows will confidently route through a bench that has since moved.
+
+```csharp
+static void Build()
+```
+
 ### `LabNpcPolishBuilder` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Editor/LabNpcPolishBuilder.cs`</sub>
 
@@ -4356,6 +4409,8 @@ static void Build()
 
 ```csharp
 static void Launch()
+static void LaunchTutorial()
+static void Launch(bool tutorial)
 ```
 
 ### `QuizNavButtonsBuilder` <sub>class</sub>

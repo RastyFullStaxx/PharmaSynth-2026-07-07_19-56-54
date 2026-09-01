@@ -58,6 +58,24 @@ public static class VesselStatusMath
     }
 
     /// Generic sim-progress billboard: "5. Filter\nFiltering 40%".
+    /// What this vessel still wants for the step being guided (W5.44).
+    ///
+    /// Pouring is the commonest verb in the game, and until now the have/required readout
+    /// only appeared once the player had ALREADY started pouring into this vessel — so the
+    /// first pour of every step was a guess. Shown on the guided destination only, so the
+    /// bench does not turn into a wall of numbers.
+    ///
+    /// Returns "" when nothing is wanted, which is also what a satisfied step returns —
+    /// the label should go quiet the moment the amount is reached, not sit there reading
+    /// "40 / 40" and inviting an overpour.
+    public static string NeedLine(string chemName, float have, float required, bool solid = false)
+    {
+        if (required <= 0f || string.IsNullOrEmpty(chemName)) return "";
+        if (have >= required - 0.01f) return "";
+        string unit = solid ? " g" : " ml";
+        return chemName + "  " + have.ToString("0.#") + " / " + required.ToString("0.#") + unit;
+    }
+
     public static string ProgressLine(string baseLabel, string verb, float frac01)
         => baseLabel + "\n" + verb + " " + Mathf.RoundToInt(Mathf.Clamp01(frac01) * 100f) + "%";
 }

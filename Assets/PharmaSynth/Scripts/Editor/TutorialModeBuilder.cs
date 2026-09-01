@@ -324,6 +324,17 @@ public static class TutorialModeBuilder
         demo.Bind(runner, EnsureDemoGhostMaterial());
         EditorUtility.SetDirty(demo);
 
+        // Ground path (W5.44). Its own material: a floor chevron must read on top of the
+        // floor it lies on, so ZTest Always, and NEVER a shared bench material.
+        var path = runner.GetComponent<GuidePath>();
+        if (path == null) path = runner.gameObject.AddComponent<GuidePath>();
+        path.Bind(runner, EnsureGuideMaterial("GuideChevron", new Color(0.35f, 0.95f, 1f, 0.75f),
+                                              UnityEngine.Rendering.CompareFunction.Always, 4000));
+        // ⚠ Values pushed explicitly: changing a [SerializeField] default does NOTHING to a
+        // scene that already saved it — the trap that silently un-applied the waypoint fix.
+        path.SetTuning(GuidePathMath.Spacing, GuidePathMath.FlowSpeed, 0.22f);
+        EditorUtility.SetDirty(path);
+
         int beacons = 0;
         var mat = EnsureThroughWallMaterial();
         foreach (var guide in Object.FindObjectsByType<WaypointGuide>(FindObjectsInactive.Include, FindObjectsSortMode.None))
@@ -345,7 +356,7 @@ public static class TutorialModeBuilder
 
         EditorSceneManager.MarkAllScenesDirty();
         EditorSceneManager.SaveOpenScenes();
-        Debug.Log("[TutorialModeBuilder] highlighter + coach + verb demo bound; " + beacons
+        Debug.Log("[TutorialModeBuilder] highlighter + coach + verb demo + ground path bound; " + beacons
                   + " waypoint guide(s) revived with a through-wall beacon.");
     }
 

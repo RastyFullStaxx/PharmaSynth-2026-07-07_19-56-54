@@ -149,15 +149,17 @@ public class WaypointGuide : MonoBehaviour
 
         // ONE arrow, never two — pick the SOURCE first ("go fetch that"), and hop to
         // the destination once it is in hand ("now put it here"). Two simultaneous
-        // arrows would just ask the player which one to follow.
-        Transform station = null;
-        var targets = TaskTargetRegistry.Targets(id);
-        for (int i = 0; i < targets.Count && station == null; i++)
-            if (targets[i].role == TargetRole.Source && targets[i].transform != null
-                && !TutorialHighlighter.IsHeld(targets[i].transform))
-                station = targets[i].transform;
-        for (int i = 0; i < targets.Count && station == null; i++)
-            if (targets[i].transform != null) station = targets[i].transform;
+        // arrows would just ask the player which one to follow. The rule now lives in
+        // TaskTargetRegistry.PickTarget so the floor path picks the SAME object (W5.44);
+        // two navigation cues disagreeing is worse than either alone.
+        Transform station = TaskTargetRegistry.PickTarget(id);
+
+        // ⭐ Stand down while the ground path is showing. The path routes around the
+        // benches and owns the far case; the beacon reads through a cabinet door and owns
+        // the near one. Drawing both spends attention twice to answer one question, and
+        // Tutorial Mode has little of it left to spend (W5.44 design rule).
+        if (station != null && GuidePath.Instance != null && GuidePath.Instance.PathShown)
+        { Hide(); return; }
 
         if (station != null)
         {

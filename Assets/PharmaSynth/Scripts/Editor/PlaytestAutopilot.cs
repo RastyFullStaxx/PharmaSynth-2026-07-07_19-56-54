@@ -50,7 +50,18 @@ public static class PlaytestAutopilot
     }
 
     [MenuItem("Tools/PharmaSynth/Autopilot Playtest (plays the game in Play mode)")]
-    public static void Launch()
+    public static void Launch() => Launch(false);
+
+    /// ⭐ Tutorial Mode had NEVER been played by the autopilot until W5.44b. The campaign
+    /// sweep enters via "Laboratory", so `TutorialSession.Active` stays false and every
+    /// guidance cue — glow, ghost, beacon, spotlight, verb demo, wrong-grab nudge, need
+    /// line, ping, ground path — correctly does nothing. The whole mode was untested in
+    /// motion, and the ground path reported "dist 0.0, no route" in all nine modules for
+    /// exactly that reason.
+    [MenuItem("Tools/PharmaSynth/Autopilot Playtest (TUTORIAL Mode — checks the guidance)")]
+    public static void LaunchTutorial() => Launch(true);
+
+    public static void Launch(bool tutorial)
     {
         if (Application.isPlaying) { Debug.LogWarning("[Autopilot] already in Play mode."); return; }
         // ⛔ Never launch with a compile pending. Unity defers script compilation until
@@ -65,7 +76,7 @@ public static class PlaytestAutopilot
         }
         Directory.CreateDirectory("Logs");
         Directory.CreateDirectory(ShotDir);
-        File.WriteAllText(Request, "run");
+        File.WriteAllText(Request, tutorial ? "tutorial" : "campaign");
         Debug.Log("[Autopilot] entering Play mode — it will drive the game, write "
                   + Report + " and exit on its own.");
         EditorApplication.EnterPlaymode();
@@ -75,8 +86,9 @@ public static class PlaytestAutopilot
     {
         if (change != PlayModeStateChange.EnteredPlayMode) return;
         if (!File.Exists(Request)) return;
+        bool tutorial = File.ReadAllText(Request).Trim() == "tutorial";
         File.Delete(Request);            // consume immediately: a crash must not re-trigger
-        Begin();
+        Begin(tutorial);
     }
 
     // ---- run state (rebuilt fresh each play session) ------------------------------
@@ -127,6 +139,7 @@ public static class PlaytestAutopilot
     /// Modules are FORCE-selected (canSelect => true) rather than waiting for the unlock
     /// chain — the autopilot's job is coverage of what each module does when played, and
     /// the unlock chain itself is already proven 8/8 by the edit-mode campaign sim.
+    static readonly List<string> s_pathLog = new List<string>();
     static readonly List<string> s_queue = new List<string>();
     static readonly List<string> s_moduleLog = new List<string>();
     static int s_moduleIndex;
@@ -135,8 +148,11 @@ public static class PlaytestAutopilot
 
     static string CurrentModule => s_moduleIndex < s_queue.Count ? s_queue[s_moduleIndex] : null;
 
-    static void Begin()
+    static bool s_tutorial;
+
+    static void Begin(bool tutorial)
     {
+        s_tutorial = tutorial;
         s_findings.Clear(); s_errors.Clear(); s_errorBeat.Clear(); s_trace.Clear();
         s_grabChecked.Clear(); s_shots.Clear();
         s_grabsOk = s_grabsTested = s_uiOk = s_uiTested = 0;
@@ -145,7 +161,7 @@ public static class PlaytestAutopilot
         s_reachedLab = s_reachedRunning = s_reachedQuiz = s_reachedGrade = false;
         s_tasksCompleted = 0;
 
-        s_queue.Clear(); s_moduleLog.Clear();
+        s_queue.Clear(); s_moduleLog.Clear(); s_pathLog.Clear();
         foreach (var e in ExperimentCatalog.Entries) if (e != null) s_queue.Add(e.moduleId);
         s_moduleIndex = 0;
         s_startedAt = EditorApplication.timeSinceStartup;
@@ -316,8 +332,8 @@ public static class PlaytestAutopilot
                 Shot("00-cube-room");
                 if (Act("press-laboratory"))
                 {
-                    Trace("pressing Laboratory");
-                    menu.OnLaboratory();
+                    Trace(s_tutorial ? "pressing Tutorial" : "pressing Laboratory");
+                    if (s_tutorial) menu.OnTutorialLaboratory(); else menu.OnLaboratory();
                 }
                 return;
             }
@@ -463,11 +479,34 @@ public static class PlaytestAutopilot
     {
         if (runner == null || runner.Graph == null) { StallCheck("Running with no runner/graph"); return; }
 
-        if (!s_uiCheckedThisRun) { Shot("05-run-start"); CheckUiRaycasts(); s_uiCheckedThisRun = true; }
+        if (!s_uiCheckedThisRun)
+        {
+            Shot("05-run-start");
+            CheckUiRaycasts();
+            SamplePath();
+            s_uiCheckedThisRun = true;
+        }
 
         ExperimentTask next = null;
         foreach (var t in runner.Graph.AvailableTasks()) { next = t; break; }
-        if (next == null) { StallCheck("Running but no task is available — the graph is deadlocked"); return; }
+        if (next == null)
+        {
+            // Tutorial Mode is UNGRADED: ShouldEnterReview() is false, so a finished run
+            // never reaches QuizIntro/ScoreReview — it shows a practice summary and goes
+            // home. Running out of tasks IS the end of the module here.
+            if (s_tutorial && s_moduleTasks > 0)
+            {
+                Trace("practice run complete (" + s_moduleTasks + " steps)");
+                var g = Object.FindAnyObjectByType<PharmeeGatekeeper>();
+                EndModule();
+                if (CurrentModule == null) { Finish("swept every module"); return; }
+                g?.ResetToEntrance();
+                s_lastAction = ""; s_repeats = 0;
+                return;
+            }
+            StallCheck("Running but no task is available — the graph is deadlocked");
+            return;
+        }
 
         // THE point of running in Play mode: can the player actually pick these up?
         s_reachedRunning = true;
@@ -480,6 +519,36 @@ public static class PlaytestAutopilot
         runner.CompleteTask(next.taskId);
         s_tasksCompleted++; s_moduleTasks++;
         SetBeat("run:" + next.taskId);
+    }
+
+    /// What the ground path is doing right now, in numbers.
+    ///
+    /// A screenshot of a floor path is weak evidence: the chevrons are small, the autopilot
+    /// never walks, and the camera may be pointed at a wall. Whether the path DREW, how
+    /// many marks it laid and how far the target was are facts a picture cannot settle.
+    static void SamplePath()
+    {
+        var gp = GuidePath.Instance;
+        if (gp == null)
+        {
+            s_pathLog.Add("  " + (CurrentModule ?? "?").PadRight(30) + "NO GuidePath in the scene");
+            Finding((CurrentModule ?? "?") + ": no GuidePath component — the ground path cannot draw "
+                    + "at all (run Build Tutorial Scene Wiring)");
+            return;
+        }
+        // Report the REASON from the distance itself, not by inferring it from leftover
+        // state — the first version guessed "inside the 2 m handover" for a target 6.1 m
+        // away, which is the sort of confidently-wrong line this harness keeps producing
+        // when it reads one field to explain another.
+        string verdict = gp.PathShown
+            ? "path DRAWN, " + gp.ActiveChevrons + " chevrons over " + gp.RouteCorners + " corners"
+            : gp.LastDistance <= GuidePathMath.NearDistance
+                ? "beacon (within the " + GuidePathMath.NearDistance + " m handover)"
+                : "NO PATH at " + gp.LastDistance.ToString("0.0") + " m [target '"
+                  + gp.LastTargetName + "' at " + gp.LastGoal.ToString("0.0")
+                  + ", startOnMesh=" + gp.StartOnMesh + ", goalOnMesh=" + gp.GoalOnMesh + "]";
+        s_pathLog.Add("  " + (CurrentModule ?? "?").PadRight(30)
+                      + "dist " + gp.LastDistance.ToString("0.0").PadRight(7) + verdict);
     }
 
     /// Force a REAL XRI grab on every object this step needs.
@@ -685,7 +754,8 @@ public static class PlaytestAutopilot
         Application.logMessageReceived -= OnLog;
 
         var sb = new StringBuilder();
-        sb.AppendLine("=== PharmaSynth — autopilot playtest (PLAY MODE) ===");
+        sb.AppendLine("=== PharmaSynth — autopilot playtest (PLAY MODE, "
+                      + (s_tutorial ? "TUTORIAL" : "CAMPAIGN") + ") ===");
         sb.AppendLine("  ended: " + why + " after "
                       + (EditorApplication.timeSinceStartup - s_startedAt).ToString("0") + "s");
         sb.AppendLine();
@@ -703,6 +773,13 @@ public static class PlaytestAutopilot
             foreach (var m in s_moduleLog) sb.AppendLine(m);
             sb.AppendLine();
         }
+        if (s_pathLog.Count > 0)
+        {
+            sb.AppendLine("  ground path at run start (W5.44)");
+            sb.AppendLine("  " + new string('-', 76));
+            foreach (var l in s_pathLog) sb.AppendLine(l);
+            sb.AppendLine();
+        }
         sb.AppendLine("  modules played    : " + s_moduleLog.Count + "/" + s_queue.Count);
         sb.AppendLine("  reached           : lab=" + s_reachedLab + " run=" + s_reachedRunning
                       + " quiz=" + s_reachedQuiz + " grade=" + s_reachedGrade
@@ -714,6 +791,9 @@ public static class PlaytestAutopilot
         // NEGATIVE is worse than a false positive: nobody goes looking for it.
         // Coverage means every module actually played, not just the first one — the same
         // rule that stopped v1 printing CLEAN from the cube room, applied to the sweep.
+        // A practice run never reaches quiz or grade, so coverage there means: every module
+        // actually RAN. Holding tutorial to the campaign bar would report INCONCLUSIVE on a
+        // perfectly good sweep.
         bool covered = s_reachedRunning && s_tasksCompleted > 0 && s_moduleLog.Count == s_queue.Count;
         bool quiet = s_findings.Count == 0 && s_errors.Count == 0;
         bool clean = covered && quiet;

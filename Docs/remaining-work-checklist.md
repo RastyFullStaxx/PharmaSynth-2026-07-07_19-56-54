@@ -370,3 +370,22 @@ One command answers "is every experiment doable?": **`Tools ▸ PharmaSynth ▸ 
 - [x] **FIXED:** methane pointed Tutorial Mode's `test-gas` guidance at the dispenser's hidden `Template_` matchstick.
 - [x] **FIXED: guidance no longer targets deliberately-hidden objects.** One shared rule, `TutorialTargets.Visible` — active in hierarchy, not a `Template_*` clone source — applied to the source and station-tool lookups. All 4 autopilot findings cleared (`Raw_Ethanol`, `Raw_BenzoicAcid`, `Raw_Acetone`, `Prop_reagent-jar`); coverage unchanged at 9/9 81/81 and 73/73; grabs 143/143. Suite-pinned (4 assertions).
 - [ ] One console error remains: `NullReferenceException` inside Unity's `com.unity.xr.hands` package, once, in the cube room — no project code in the stack; expected to be device-absent-only.
+
+## §23 Tutorial navigation & aiming cues (2026-09-02, W5.44) — suite 1510/1510
+Requested: ground arrows flowing toward the target, plus whatever else would help. Design rule for the batch: **every new cue is CONDITIONAL** — attention, not information, is the scarce resource. Mechanism + the appears-when table: [[systems-reference]] §Navigation & aiming cues.
+- [x] **Ground path** — `GuidePath` + pure `GuidePathMath`, chevrons flowing along a NAVMESH route (straight lines point through the benches). New `Build Lab NavMesh`; baked, bounds 10.7 × 11.3 m.
+- [x] **Path and beacon never draw together** — path beyond 2 m, beacon within; `GuidePathMath.ShowPath`/`ShowBeacon` own the split, suite-pinned.
+- [x] **One shared target rule** — `TaskTargetRegistry.PickTarget`, extracted from `WaypointGuide`, so the two cues cannot point at different objects.
+- [x] **Wrong-object nudge on grab** — *"Not that one — you need X"* + a light tick. Prevention, not punishment: it never records a mistake. Rides the existing 5 Hz spotlight sweep, no new wiring.
+- [x] **Need line** — `VesselStatusMath.NeedLine` on the guided vessel (*"Bromine Water 2 / 5 ml"*), silent once satisfied so it never invites an overpour. Tutorial Mode only; campaign still assesses the quantity.
+- [x] **Audio ping** — soft, spatial, once per step change, reusing an existing SoundBank key (no new asset). The mode had zero guidance audio before.
+- [ ] ⬜ **Fill-line band NOT built.** `LiquidPhysics.maxVolume` + the `_Fill` mapping make it straightforward, but the need line already answers "how much" in text; the band is worth adding only if the headset pass says the text is hard to read mid-pour.
+- [ ] **Headset judgement**: whether the arrows read as helpful or as clutter, whether the ping reassures or irritates, and whether 2 m is the right path/beacon handover. Edit mode and the autopilot prove they RUN; only a person can say whether they help.
+- ⚠ **Re-run `Build Lab NavMesh` whenever furniture moves**, alongside the lighting bake. A stale navmesh fails quietly: the arrows still draw, they just route through a bench that moved.
+
+## §24 Autopilot in TUTORIAL Mode (2026-09-02, W5.44b)
+- [x] ⭐ **`Autopilot Playtest (TUTORIAL Mode)`** — the campaign sweep enters via "Laboratory", so `TutorialSession.Active` stayed false and **every guidance cue had never run in play mode**. The ground path reported "dist 0.0, no route" in all 9 modules for exactly that reason. A practice run is ungraded, so the sweep ends a module when its tasks run out rather than waiting for a quiz that never comes.
+- [x] **Result: 9/9 modules, 0 findings, 143/143 grabs, 50/50 buttons, 123 s.** All the W5.44 cues execute in play mode without throwing.
+- [x] **Arrows verified by NUMBERS, not pixels** — the report prints whether the path drew, its chevron count and the distance. 8/9 draw (14–18 chevrons over 6–8 m routes).
+- [ ] ⬜ **midterm-acetone draws no path** — `Eq_Beaker_100mL` at y = 1.3 sits on a bench top, which bakes as a walkable ISLAND disconnected from the floor: both ends report on-mesh and `CalculatePath` still fails. Degrades to the beacon by design. Fix: `NavMeshModifier` Not Walkable on furniture, or bake the floor only. ⛔ Widening the goal radius 3 → 5 m was tried and changed nothing.
+- [x] Fixed on the way: `GuidePath` kept a stale route after hiding, so a module could be asked about the path and answer with the previous module's corners.

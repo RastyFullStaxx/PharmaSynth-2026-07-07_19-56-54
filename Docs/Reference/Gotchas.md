@@ -528,3 +528,52 @@ re-homing.
 > `Audit Tutorial Targets` still 9/9 81/81, `Simulate Tutorial Guidance` still 73/73, and
 > the autopilot's four findings went to zero (143/143 objects pickupable).
 
+## Two bakes go stale when furniture moves, not one
+
+> [!warning] The NavMesh bake has the same shelf life as the lightmap bake
+> `Build Lab NavMesh` (W5.44) feeds Tutorial Mode's ground path, and the benches ARE the
+> obstacles it routes around — so moving furniture invalidates it exactly as it
+> invalidates the lighting. Re-run **both** after any `Select Movable Furniture` session:
+> `Build Lab NavMesh` · `Build Lab Probes` → `Run Lab Lighting Bake`.
+>
+> A stale navmesh fails quietly and confidently: the arrows still draw, they simply route
+> through a bench that has since moved.
+
+## Two cues answering one question
+
+> [!tip] Attention is the scarce resource in Tutorial Mode, not information
+> The mode already carries glow, x-ray ghost, beacon, spotlight dim, labels, watch hint,
+> coach ladder and the verb demo. Every cue added makes the others weaker, so W5.44's rule
+> is that new cues are **conditional** and mutually exclusive where they overlap: the
+> ground path owns "which way round the benches" beyond 2 m, the beacon owns "which object,
+> through that door" within it, and `GuidePathMath.ShowPath`/`ShowBeacon` keep that split in
+> one suite-pinned place rather than in two components that can drift.
+
+## Baking a NavMesh silently rewrote the whole SCENE as binary
+
+> [!danger] `NavMeshSurface.BuildNavMesh()` leaves its data IN the scene unless you save it
+> `BuildNavMesh` produces a NavMeshData object owned by the surface in memory. Saving the
+> scene then serialises it INTO the scene — and NavMeshData cannot be written as YAML, so
+> Unity **ignores ForceText and rewrites the scene as binary**. `SampleScene.unity` went
+> from 5.08 MB of readable YAML to 1.88 MB of bytes, `git diff` reported only
+> `Bin 5080510 -> 1879714`, and `gen-vault-reference.py` parsed **0** objects out of it and
+> cheerfully reported "15 Scene Objects" (all from MainMenu). Nothing warned (W5.44).
+>
+> The content was never lost — only the format — but a binary scene destroys diffs, merges
+> and every text-based audit this project relies on.
+>
+> **Fix:** persist the data as its own asset immediately after the bake
+> (`AssetDatabase.CreateAsset`, or `CopySerialized` onto the existing one so the surface's
+> guid survives) → `Assets/Scenes/LabNavMesh.asset`. The scene stays YAML.
+>
+> **Check after ANY new scene-saving builder:** `head -c 10 Assets/Scenes/SampleScene.unity`
+> must print `%YAML 1.1`. A size that DROPS sharply is the tell.
+
+## Reopen the scene before running a builder that SAVES
+
+> [!warning] Simulators mutate the open scene; builders save it
+> `Simulate Everything`, `Audit Tutorial Targets` and `Simulate Tutorial Guidance` all build
+> stages into the open scene by design, and say so. Running a builder that calls
+> `SaveOpenScenes()` afterwards commits that mutated state to disk. Reopen SampleScene
+> between the two, every time — the reports say so for a reason.
+

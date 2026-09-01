@@ -59,6 +59,8 @@ public class TutorialHighlighter : MonoBehaviour
         TutorialTargets.Build();
         _lit.Clear();
         _droppedAt.Clear();
+        _held.Clear();
+        _lastTaskId = null;
         // Cached per run, not per poll: the sweep is over every grabbable in the lab
         // (~79 of them), and the set only changes when the stage is rebuilt.
         _allHighlights = Object.FindObjectsByType<HoverHighlight>(
@@ -66,6 +68,63 @@ public class TutorialHighlighter : MonoBehaviour
     }
 
     private HoverHighlight[] _allHighlights;
+
+    /// Everything currently in a hand, so a GRAB is an edge and not a level. Reuses the
+    /// per-run HoverHighlight sweep that the spotlight already pays for.
+    private readonly HashSet<Transform> _held = new HashSet<Transform>();
+    private string _lastTaskId;
+
+    /// Fired when the player picks up something the current step does NOT want.
+    ///
+    /// ⚠ PREVENTION, NOT PUNISHMENT. It must never call RecordMistake: nothing has gone
+    /// wrong yet — they are holding a bottle, not pouring it — and telling them now is the
+    /// difference between a correction and a penalty. Silent outside a guided step, so
+    /// browsing the bench between steps stays quiet.
+    private void CheckWrongGrab(string taskId)
+    {
+        if (_allHighlights == null || string.IsNullOrEmpty(taskId)) return;
+        var wanted = TaskTargetRegistry.Targets(taskId);
+        if (wanted.Count == 0) return;
+
+        for (int i = 0; i < _allHighlights.Length; i++)
+        {
+            var hh = _allHighlights[i];
+            if (hh == null) continue;
+            var t = hh.transform;
+            bool held = IsHeld(t);
+            if (!held) { _held.Remove(t); continue; }
+            if (!_held.Add(t)) continue;                 // already counted this grab
+            if (hh.IsGuided) continue;                   // the right thing: say nothing
+
+            bool isTarget = false;
+            for (int k = 0; k < wanted.Count && !isTarget; k++) isTarget = wanted[k].transform == t;
+            if (isTarget) continue;
+
+            string want = null;
+            for (int k = 0; k < wanted.Count && want == null; k++)
+                if (wanted[k].transform != null && wanted[k].role == TargetRole.Source)
+                    want = Mishandling.DisplayNameFor(wanted[k].transform.gameObject);
+
+            FloatingText.Show(
+                want != null ? "Not that one — you need " + want : "Not that one for this step",
+                t.position + Vector3.up * 0.16f, new Color(1f, 0.85f, 0.5f), 1.2f);
+            LabHaptics.Pulse(0.35f, 0.05f);              // a nudge, NOT the mistake buzz
+        }
+    }
+
+    /// A soft directional ping from whatever the step needs (W5.44).
+    ///
+    /// The mode was entirely visual before this, so a player looking the wrong way had no
+    /// cue at all. Fires ONCE on a step change — never on a loop, which is the fastest way
+    /// to make someone mute the game — and reuses an existing SoundBank key so it costs no
+    /// new audio asset.
+    private void PingTarget(string taskId)
+    {
+        var t = TaskTargetRegistry.PickTarget(taskId);
+        if (t == null) return;
+        AudioService.TryPlayAt("ui-click",
+            ExperimentSceneBuilder.SolidWorldBounds(t.gameObject).center, 0.35f);
+    }
 
     /// Push every grabbable that is NOT part of the current step into the background.
     /// Only touches objects whose state actually changes, so a step that lasts a minute
@@ -107,6 +166,16 @@ public class TutorialHighlighter : MonoBehaviour
         // Self-heal: a restart path that re-furnishes the stage without re-firing
         // ExperimentStarted would otherwise leave us pointing at destroyed objects.
         if (TaskTargetRegistry.TaskCount == 0) TutorialTargets.Build();
+
+        // One id drives the conditional cues: the step the player is actually on.
+        string current = null;
+        foreach (var t0 in runner.Graph.AvailableTasks()) { current = t0.taskId; break; }
+        if (current != _lastTaskId)
+        {
+            _lastTaskId = current;
+            PingTarget(current);
+        }
+        CheckWrongGrab(current);
 
         _wanted.Clear();
         foreach (var task in runner.Graph.AvailableTasks())

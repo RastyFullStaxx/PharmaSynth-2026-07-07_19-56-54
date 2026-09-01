@@ -18,7 +18,7 @@ Up: [[Home]] - [[The Lab Scene]] - [[Gotchas]]
 ## SampleScene (the lab)
 <sub>`Assets/Scenes/SampleScene.unity`</sub>
 
-### Root objects (45)
+### Root objects (46)
 
 | Object | local Y |
 |---|---|
@@ -49,6 +49,7 @@ Up: [[Home]] - [[The Lab Scene]] - [[Gotchas]]
 | `LabDoorController` | 0.000 |
 | `LabLights` | 0.000 |
 | `LabMusicPlayer` | 0.000 |
+| `LabNavMesh` | 0.000 |
 | `LabProbes` | 0.000 |
 | `LabSpeaker` | 0.910 |
 | `LabThresholdTrigger` | 1.200 |

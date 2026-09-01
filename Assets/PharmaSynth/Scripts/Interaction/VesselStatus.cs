@@ -70,8 +70,42 @@ public class VesselStatus : MonoBehaviour
                     : chill != null && chill.Relevant
                         ? VesselStatusMath.TempGoalLine(_lp.currentTempC, chill.RequiredC, true) : "";
         if (goal.Length > 0) s += "\n" + goal;
+        // Tutorial Mode only: how much of what this step still wants (W5.44). Queried
+        // fresh each refresh for the same reason the heat/chill goals are — the builder's
+        // teardown strips the binding between modules. Campaign is untouched: working out
+        // the quantity is part of what it assesses.
+        if (TutorialSession.Active)
+        {
+            string need = NeedLineNow();
+            if (need.Length > 0) s += NewLine + need;
+        }
+
         if (s == _last) return;
         _last = s;
         _label.SetLabel(GlyphSafe.Sanitize(s), _showDist);
+    }
+
+    const string NewLine = "\n";
+
+    /// The guided step's outstanding amount for THIS vessel, or "" when it is not the
+    /// vessel currently being asked for. Only the guided step is shown: every bound vessel
+    /// printing its whole shopping list would turn the bench into a wall of numbers.
+    private string NeedLineNow()
+    {
+        var binding = GetComponent<LiquidTaskBinding>();
+        if (binding == null || binding.ExpectedSteps == null) return "";
+        var runner = FindAnyObjectByType<ExperimentRunner>();
+        if (runner == null || runner.Graph == null || !runner.IsRunning) return "";
+
+        foreach (var task in runner.Graph.AvailableTasks())
+            foreach (var step in binding.ExpectedSteps)
+            {
+                if (step == null || step.reagent == null || step.taskId != task.taskId) continue;
+                if (step.requiredMl <= 0f) continue;
+                return VesselStatusMath.NeedLine(step.reagent.chemicalName,
+                    binding.AccumulatedFor(step.taskId, step.reagent), step.requiredMl,
+                    step.reagent.state == PhysicalState.Solid);
+            }
+        return "";
     }
 }

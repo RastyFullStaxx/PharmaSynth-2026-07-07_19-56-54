@@ -17256,6 +17256,7 @@ GameObject:
   - component: {fileID: 191569891}
   - component: {fileID: 191569892}
   - component: {fileID: 191569893}
+  - component: {fileID: 191569894}
   m_Layer: 0
   m_Name: ExperimentSystems
   m_TagString: Untagged
@@ -17537,6 +17538,25 @@ MonoBehaviour:
   ghostMaterial: {fileID: 2100000, guid: bfeecacf14c14c441a7d99d5a2645def, type: 2}
   loopSeconds: 3
   loops: 2
+--- !u!114 &191569894
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 191569878}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3144186c1299eb045af46c67f7760d6b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GuidePath
+  runner: {fileID: 191569879}
+  chevronMaterial: {fileID: 2100000, guid: def149861ab35f7479289423e652178d, type: 2}
+  spacing: 0.45
+  flowSpeed: 0.7
+  chevronSize: 0.22
+  floorLift: 0.02
+  repathSeconds: 0.25
 --- !u!1 &192420906
 GameObject:
   m_ObjectHideFlags: 0
@@ -55355,6 +55375,70 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49d3145cc4494954b9cc0572d7cf234c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VesselStatus
+--- !u!1 &825548595
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 825548597}
+  - component: {fileID: 825548596}
+  m_Layer: 0
+  m_Name: LabNavMesh
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &825548596
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 825548595}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshSurface
+  m_SerializedVersion: 0
+  m_AgentTypeID: 0
+  m_CollectObjects: 0
+  m_Size: {x: 10, y: 10, z: 10}
+  m_Center: {x: 0, y: 2, z: 0}
+  m_LayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_UseGeometry: 0
+  m_DefaultArea: 0
+  m_GenerateLinks: 0
+  m_IgnoreNavMeshAgent: 1
+  m_IgnoreNavMeshObstacle: 1
+  m_OverrideTileSize: 0
+  m_TileSize: 256
+  m_OverrideVoxelSize: 1
+  m_VoxelSize: 0.08
+  m_MinRegionArea: 2
+  m_NavMeshData: {fileID: 23800000, guid: 6d208028f60cb2d48b707c87828f3a9a, type: 2}
+  m_BuildHeightMesh: 0
+--- !u!4 &825548597
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 825548595}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &827877441
 GameObject:
   m_ObjectHideFlags: 0
@@ -172221,3 +172305,4 @@ SceneRoots:
   - {fileID: 73715247}
   - {fileID: 1838746882}
   - {fileID: 979679858}
+  - {fileID: 825548597}

@@ -3759,6 +3759,62 @@ public static class PharmaSelfTests
                         !TutorialTargets.Visible(template.transform));
                     A("tutorial: a null component is never a target",
                         !TutorialTargets.Visible(null));
+
+                // ---- W5.44 ground path + aiming cues -------------------------------
+                var route = new List<Vector3>
+                {
+                    new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 2f), new Vector3(3f, 0f, 2f),
+                };
+                A("path: length follows the polyline, not the straight line",
+                    Mathf.Abs(GuidePathMath.Length(route) - 5f) < 0.001f);
+                A("path: a single point has no length", GuidePathMath.Length(
+                    new List<Vector3> { Vector3.zero }) == 0f);
+                A("path: a null route has no length", GuidePathMath.Length(null) == 0f);
+
+                // Sampling must follow the CORNER, not cut across it — the whole point of
+                // routing on a navmesh is that the path bends around the benches.
+                GuidePathMath.Sample(route, 3f, out var mid, out var midFwd);
+                A("path: sampling past a corner turns with it",
+                    Mathf.Abs(mid.x - 1f) < 0.001f && Mathf.Abs(mid.z - 2f) < 0.001f);
+                A("path: direction follows the segment being walked",
+                    Vector3.Dot(midFwd, Vector3.right) > 0.99f);
+                GuidePathMath.Sample(route, -5f, out var atStart, out _);
+                A("path: a negative distance clamps to the start", atStart == route[0]);
+                GuidePathMath.Sample(route, 99f, out var atEnd, out _);
+                A("path: an overlong distance clamps to the end", atEnd == route[2]);
+
+                // ⭐ The flow must run TOWARD the destination. A sign error here produces a
+                // path that visibly pulls the player backwards, and nothing in a compile or
+                // a play-mode run would ever complain about it.
+                var t0 = GuidePathMath.Build(route, 0f);
+                var t1 = GuidePathMath.Build(route, 0.2f);
+                A("path: chevrons are laid along the route", t0.Count > 3);
+                A("path: the pattern flows toward the destination",
+                    t1.Count > 0 && t0.Count > 0 && t1[0].along01 > t0[0].along01);
+                A("path: a degenerate route draws nothing",
+                    GuidePathMath.Build(new List<Vector3> { Vector3.zero }, 0f).Count == 0);
+                A("path: chevron count is capped",
+                    GuidePathMath.Build(new List<Vector3> { Vector3.zero, new Vector3(0f, 0f, 500f) },
+                        0f).Count <= GuidePathMath.MaxChevrons);
+
+                // Path and beacon answer the same question and must never both draw.
+                A("path: the floor route owns the far case",
+                    GuidePathMath.ShowPath(5f, true) && !GuidePathMath.ShowBeacon(5f, true));
+                A("path: the beacon owns the near case",
+                    !GuidePathMath.ShowPath(1f, true) && GuidePathMath.ShowBeacon(1f, true));
+                A("path: with no route the beacon always takes over",
+                    !GuidePathMath.ShowPath(5f, false) && GuidePathMath.ShowBeacon(5f, false));
+
+                // The pour readout goes QUIET once satisfied — a label reading "40 / 40"
+                // invites an overpour rather than stopping one.
+                A("aim: an outstanding pour shows have / needs",
+                    VesselStatusMath.NeedLine("Bromine Water", 2f, 5f) == "Bromine Water  2 / 5 ml");
+                A("aim: a satisfied step says nothing",
+                    VesselStatusMath.NeedLine("Bromine Water", 5f, 5f) == "");
+                A("aim: solids are grams, not millilitres",
+                    VesselStatusMath.NeedLine("Brown Sugar", 1f, 12f, true) == "Brown Sugar  1 / 12 g");
+                A("aim: a step with no requirement shows nothing",
+                    VesselStatusMath.NeedLine("Ethanol", 0f, 0f) == "");
                 }
                 finally
                 {

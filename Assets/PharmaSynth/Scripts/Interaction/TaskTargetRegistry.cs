@@ -60,6 +60,24 @@ public static class TaskTargetRegistry
         return list;
     }
 
+    /// The ONE object a navigation cue should point at for this step.
+    ///
+    /// Source first ("go fetch that"), hopping to the destination once the source is in
+    /// hand ("now put it here"). Extracted from WaypointGuide (W5.44) so the floor path
+    /// and the beacon cannot pick different targets — two cues disagreeing about where to
+    /// go is worse than either one alone.
+    public static Transform PickTarget(string taskId)
+    {
+        var targets = Targets(taskId);
+        for (int i = 0; i < targets.Count; i++)
+            if (targets[i].role == TargetRole.Source && targets[i].transform != null
+                && !TutorialHighlighter.IsHeld(targets[i].transform))
+                return targets[i].transform;
+        for (int i = 0; i < targets.Count; i++)
+            if (targets[i].transform != null) return targets[i].transform;
+        return null;
+    }
+
     public static int TaskCount => _map.Count;
 
     public static void Clear() => _map.Clear();

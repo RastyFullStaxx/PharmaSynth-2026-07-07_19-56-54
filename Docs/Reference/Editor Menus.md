@@ -62,6 +62,11 @@ Asks the one question the run simulator structurally cannot: a step can be mecha
 
 Builds every module's stage IN EDIT MODE and reports which steps resolve to no scene object — i.e. where Tutorial Mode would tell the player to act with nothing to point at. NOT a self-test pin, deliberately: this has to Build() each stage, which mutates the open scene, and the suite must stay side-effect-free. Run it by hand after changing a module's tasks, layout, or verb wiring. Like Reveal Stage, it leaves the LAST module's stage standing — rebuild or reopen the scene afterwards.
 
+### `Tools/PharmaSynth/Autopilot Playtest (TUTORIAL Mode — checks the guidance)`
+<sub>`Assets/PharmaSynth/Scripts/Editor/PlaytestAutopilot.cs`</sub>
+
+⭐ Tutorial Mode had NEVER been played by the autopilot until W5.44b. The campaign sweep enters via "Laboratory", so `TutorialSession.Active` stays false and every guidance cue — glow, ghost, beacon, spotlight, verb demo, wrong-grab nudge, need line, ping, ground path — correctly does nothing. The whole mode was untested in motion, and the ground path reported "dist 0.0, no route" in all nine modules for exactly that reason.
+
 ### `Tools/PharmaSynth/Autopilot Playtest (plays the game in Play mode)`
 <sub>`Assets/PharmaSynth/Scripts/Editor/PlaytestAutopilot.cs`</sub>
 
@@ -111,6 +116,11 @@ Builds the lab's hazard-alarm fixture (manuscript: "flashing lights, warning mes
 <sub>`Assets/PharmaSynth/Scripts/Editor/MusicSpeakerBuilder.cs`</sub>
 
 Builds the corner music speaker in the lab (user 2026-07-10): a floor-standing speaker cabinet in the empty back-right corner that plays the Background_Music/Lab playlist as a 3D positional source (louder as you approach) and fades in/out with the screen fade on menu<->lab transitions. Also disables the old 2D LabMusicPlayer bed and re-points the menu-room music to the user's supplied track. Tools ▸ PharmaSynth ▸ Build Lab Music Speaker (SampleScene, edit mode, idempotent).
+
+### `Tools/PharmaSynth/Build Lab NavMesh (ground path routing)`
+<sub>`Assets/PharmaSynth/Scripts/Editor/LabNavMeshBuilder.cs`</sub>
+
+Bakes the walkable surface Tutorial Mode's ground path routes on (W5.44). Without this there is no NavMesh in the project at all, and `GuidePath` silently draws nothing — the floor arrows would look "not implemented" rather than "not baked", which is exactly the sort of silence this codebase has been bitten by before. ⚠ **The bake goes STALE when furniture moves**, precisely like the lightmap bake — the benches ARE the obstacles it routes around. Re-run this in the same breath as `Build Lab Prob
 
 ### `Tools/PharmaSynth/Build Lab Probes`
 <sub>`Assets/PharmaSynth/Scripts/Editor/LabProbeBuilder.cs`</sub>

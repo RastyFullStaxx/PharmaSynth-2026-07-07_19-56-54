@@ -250,6 +250,48 @@ Ungraded guided practice. Player-facing behaviour → `gameplay-flow.md` §14. T
 
 **Orientation.** `PharmeeLines.TutorialOrientation`, spoken once after the ordinary greeting when the mode is active. A single fixed `const`, not a pool — it is an instruction, and a first-timer should hear the same words every time. ⚠ Any new spoken line must ALSO be added to `VoiceCorpus` or the suite fails (`voice: every PharmeeLines pool reaches VoiceCorpus`) — that pin caught this one immediately.
 
+**Navigation & aiming cues (W5.44).** ⭐ **The design rule is that every cue is
+CONDITIONAL** — Tutorial Mode already spends most of the player's attention, so a new
+channel that is always on makes the existing ones weaker. Each cue below states when it
+appears; *that* is the part a future session will break if it is not written down.
+
+| Cue | Appears when | Never |
+|---|---|---|
+| **Ground path** (`GuidePath` + pure `GuidePathMath`) — chevrons flowing along the floor | a route exists AND the target is > 2 m away | while the beacon shows |
+| **Beacon** (`WaypointGuide`) | within 2 m, or when no route exists (target inside a cabinet) | while the path shows |
+| **Wrong-object nudge** | you pick up something the guided step does not want | outside a guided step; and it NEVER records a mistake |
+| **Need line** (`VesselStatusMath.NeedLine`) | on the guided destination, until the amount is met | once satisfied — a "40 / 40" label invites an overpour |
+| **Audio ping** (`AudioService.TryPlayAt`) | once, on a step change | never on a loop |
+
+⛔ **The path routes on a NAVMESH, not in a straight line.** The benches sit in the middle
+of the room, so a straight line to a wall shelf points through solid furniture — an arrow
+that lies about the way there is worse than no arrow. `NavMesh.CalculatePath` needs no
+agent, only a baked surface: **`Tools ▸ PharmaSynth ▸ Build Lab NavMesh`**. When no route
+exists the path draws nothing and the beacon takes over — a fallback, not a failure.
+
+⚠ **Known gap: bench-top navmesh islands.** `Build Lab NavMesh` collects render meshes for
+the whole scene, so flat bench tops bake as walkable surfaces that are NOT connected to the
+floor. When a step's target sits on one, `NavMesh.SamplePosition` snaps the goal to that
+island — both ends report on-mesh, and `CalculatePath` still finds no route. Verified on
+**midterm-acetone** (`Eq_Beaker_100mL` at y = 1.3, `startOnMesh=True goalOnMesh=True`, no
+path); the other 8 modules route fine. It degrades exactly as designed — the beacon takes
+over — so it is a quality gap, not a break. Fix when convenient: mark furniture
+Not Walkable with `NavMeshModifier`, or bake the floor only. ⛔ Widening the goal search
+radius 3 → 5 m was tried and changed nothing; the radius is not the cause.
+
+⚠ **The NavMesh bake goes STALE when furniture moves**, exactly like the lightmap bake —
+the benches ARE the obstacles it routes around. Re-run it in the same breath as
+`Build Lab Probes` → `Run Lab Lighting Bake`.
+
+Both navigation cues pick their target through **`TaskTargetRegistry.PickTarget`** (source
+first, hopping to the destination once the source is in hand), extracted from
+`WaypointGuide` so the path and the beacon cannot point at different objects — two cues
+disagreeing about where to go is worse than either alone.
+
+The wrong-object nudge rides the `TutorialHighlighter` poll that the spotlight already pays
+for (~79 cached `HoverHighlight`s at 5 Hz), so it added no new sweep. It is **prevention,
+not punishment**: the player is holding a bottle, not pouring it, and nothing is scored.
+
 **Nothing dead-ends (W5.39).** Three states in the lab are irreversible; practice waives exactly the one that is. (1) `ReagentSupplyMonitor.Update` refills **before** `EvaluateNow()` in tutorial and returns — deliberately not folded into the demo branch below it, which is REACTIVE (it refills only once a step has already starved, so a bottle spilled early would sit empty for the rest of the run). The poll already sweeps every `LiquidPhysics`, so the refill is free. `SupplyPrompt` is therefore structurally unreachable in practice, not merely unlikely. (2) `OverheatEffects.RuinNearestVessel` early-returns — the smoke, hiss, alarm and recorded mistake all still fire, only the Ruined-Mixture conversion is skipped. (3) Nothing needed for breakage or consumables: a broken vessel goes home with its home contents while its `LiquidTaskBinding` accumulator survives (`GoHome()` teleports, it does not destroy), and the four consumable boxes have always been endless (`ConsumableDispenser`) — matches included, so a burnt-out match is never the last one.
 
 **Verb demonstration (W5.39).** `Interaction/VerbDemoMath.cs` (pure) + `VerbDemoPlayer.cs` (thin). ⭐ **Deliberately not a hand**: rigging and animating hands is days of art for a hint, and it answers a question the player never asked. Ghosting the OBJECT says which thing moves, from where, to where, and how it is held at the end. `VerbDemoPlayer.Show(taskId)` reads the registry (Source/Tool = mover, Destination/Station = target — a source-less verb like stir or heat degenerates to a motion in place, which is correct), copies the mover's solid meshes and drives them along `VerbDemoMath.Sample` for 3 s × 2, then destroys them. Curves: `Pour` carries over then tips **past** horizontal (115° — stopping at 90° reads as hesitation) and levels off; `Scoop` dips, lifts, carries, tips; `Stir`/`Grind` circle at the vessel for the controller's **own** `OrbitMath.requiredRevs` (a demo of a shorter motion than the step accepts teaches the player to give up early); `Place` is an arc that never dips below either endpoint. All suite-pinned — a curve that compiles and looks plausible can still mime nothing useful, and only a headset would ever notice.
