@@ -1795,6 +1795,7 @@ Builds the taskId → objects map by sweeping the live scene once per run. Delib
 ```csharp
 static readonly List<string> LastUnresolved
 static void Build()
+static bool Visible(Component c)
 static void AuditAgainst(IEnumerable<ExperimentTask> tasks)
 ```
 

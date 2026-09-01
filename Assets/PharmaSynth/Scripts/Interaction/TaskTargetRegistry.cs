@@ -107,7 +107,7 @@ public static class TutorialTargets
                 TaskTargetRegistry.Register(step.taskId, b.transform, TargetRole.Destination, true, verb);
                 if (step.reagent == null) continue;
                 foreach (var v in vessels)
-                    if (v != null && v.currentChemical == step.reagent && v.transform != b.transform)
+                    if (v != null && Visible(v) && v.currentChemical == step.reagent && v.transform != b.transform)
                         TaskTargetRegistry.Register(step.taskId, v.transform, TargetRole.Source, false, verb);
             }
         }
@@ -159,10 +159,28 @@ public static class TutorialTargets
         {
             if (st == null || string.IsNullOrEmpty(st.TaskId) || string.IsNullOrEmpty(st.RequiredItemId)) continue;
             foreach (var it in items)
-                if (it != null && it.itemId == st.RequiredItemId)
+                if (it != null && Visible(it) && it.itemId == st.RequiredItemId)
                     TaskTargetRegistry.Register(st.TaskId, it.transform, TargetRole.Tool, true);
         }
     }
+
+    /// Never point the player at something they cannot see.
+    ///
+    /// The sweep searches with FindObjectsInactive.Include on purpose — a stage's own
+    /// objects can be momentarily inactive while it is being built — but some objects are
+    /// switched off DELIBERATELY for the module being played: the module's own end product
+    /// (`EndProductVisibility`, so you must synthesise it), the methane-only staged props
+    /// (`MethaneStageVisibility`), and the consumable dispensers' hidden `Template_*` clone
+    /// sources. Registering those made Tutorial Mode glow, ghost and aim a waypoint at an
+    /// invisible object — `Raw_Ethanol` during ethyl-alcohol, `Raw_BenzoicAcid` during
+    /// benzoic-acid, `Raw_Acetone` during acetone, `Prop_reagent-jar` during acetone
+    /// (play-mode autopilot, 2026-09-02).
+    ///
+    /// Safe for coverage by construction: the pour branch registers the DESTINATION before
+    /// it ever looks for a source, and the verb branch registers the station before the
+    /// tool — so dropping a hidden source can never leave a step with nothing to point at.
+    public static bool Visible(Component c)
+        => c != null && c.gameObject.activeInHierarchy && !c.gameObject.name.StartsWith("Template_");
 
     private static void RegisterVerb<T>(System.Func<T, string> taskIdOf,
                                         VerbKind verb = VerbKind.Place) where T : Component

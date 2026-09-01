@@ -518,7 +518,13 @@ re-homing.
 > (`MethaneStageVisibility`), and the consumable dispensers' hidden `Template_*` clone
 > sources. Tutorial Mode then glows and points at something the player can never see.
 >
-> The `Template_` case is fixed in `MethaneApparatusRig`; the end-product and staged-prop
-> cases are open (autopilot findings, 2026-09-02) — `Raw_Ethanol`, `Raw_BenzoicAcid`,
-> `Raw_Acetone`, `Prop_reagent-jar`.
+> **Fixed** by one shared rule, `TutorialTargets.Visible(Component)`: a target must be
+> `activeInHierarchy` and must not be a `Template_*` clone source. Applied to the source
+> lookup and the station-tool lookup.
+>
+> **Safe for coverage by construction** — the pour branch registers the DESTINATION before
+> it looks for a source, and the verb branch registers the station before the tool, so
+> dropping a hidden object can never leave a step with nothing to point at. Verified:
+> `Audit Tutorial Targets` still 9/9 81/81, `Simulate Tutorial Guidance` still 73/73, and
+> the autopilot's four findings went to zero (143/143 objects pickupable).
 

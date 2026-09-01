@@ -3742,6 +3742,30 @@ public static class PharmaSelfTests
                 A("tutorial: an unspecified verb defaults to Place",
                     TaskTargetRegistry.Targets("t-w")[0].verb == VerbKind.Place);
 
+                // W5.42: never point the player at something they cannot see. Hidden
+                // objects here are hidden ON PURPOSE — the module's own end product, the
+                // methane-only staged props, the dispensers' Template_ clone sources —
+                // and glowing one is glowing nothing.
+                A("tutorial: an active object is a valid target",
+                    TutorialTargets.Visible(probe.transform));
+                var hidden = new GameObject("selftest-hidden-target");
+                var template = new GameObject("Template_selftest-source");
+                try
+                {
+                    hidden.SetActive(false);
+                    A("tutorial: a deliberately hidden object is never a target",
+                        !TutorialTargets.Visible(hidden.transform));
+                    A("tutorial: a dispenser Template_ source is never a target",
+                        !TutorialTargets.Visible(template.transform));
+                    A("tutorial: a null component is never a target",
+                        !TutorialTargets.Visible(null));
+                }
+                finally
+                {
+                    UnityEngine.Object.DestroyImmediate(hidden);
+                    UnityEngine.Object.DestroyImmediate(template);
+                }
+
                 var demoB = new GameObject("selftest-demo-dest");
                 try
                 {
