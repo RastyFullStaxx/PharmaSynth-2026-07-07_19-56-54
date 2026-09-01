@@ -354,3 +354,11 @@ One command answers "is every experiment doable?": **`Tools ▸ PharmaSynth ▸ 
 - ⛔ **Two edit-mode traps, both general:** a component that subscribes in `OnEnable` never hears `ExperimentStarted` in edit mode (the methane rig's five conditions silently never registered — the verb read as broken), and a sim whose `Update` drives it (`TemperatureSim`) never advances. Prime the seam and tick the sim; do not "fix" the game.
 - ⛔ **The harness's first pass produced 11 confident false positives** — shared runs, reference-vs-name matching, and asserting task completion for a task with several reagents. A contaminating probe is worse than no probe.
 - [ ] Still only mechanism: it cannot feel a grab, judge a glow, or read a label at arm's length. The headset pass remains the answer to how it FEELS.
+
+## §21 Play-mode autopilot (2026-09-02, W5.41) — suite 1488/1488
+**`Tools ▸ PharmaSynth ▸ Autopilot Playtest`** → `Logs/autopilot-report.txt` + screenshots in `Logs/autopilot/`. Plays the game for real, no headset. Mechanism: [[systems-reference]] §The play-mode autopilot.
+- [x] **Current verdict: full loop reached** — lab → run → quiz → grade, 5/5 objects pick up cleanly, 12/12 buttons clickable, 0 findings.
+- [x] ⭐ **FIXED: you spawned inside the floor with no headset.** `SeatedHeightBoost` never applied its offset because an untracked HMD reports exactly (0,0,0). Headset path untouched. → [[Gotchas]]
+- [ ] ⚠ **One console error remains**: `NullReferenceException` in `UnityEngine.XR.Hands.XRHandProviderUtility+SubsystemUpdater.Update`, once, in the cube room. Entirely inside Unity's `com.unity.xr.hands` package — no project code in the stack — and consistent with the hand subsystem updating with no device attached. Expected to disappear on-device; confirm during the headset pass.
+- ⚠ **UI stacking seen in the run-start capture**: Pharmee's welcome bubble, the "Step complete" toast and the HoverInspector card overlap in the centre of view. Cosmetic, but worth a look during the headset pass.
+- ⚠ Re-run the suite if a lone assertion fails straight after an autopilot session — play-mode statics can pollute the first edit-mode run.

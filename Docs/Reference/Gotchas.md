@@ -472,3 +472,22 @@ re-homing.
 > script's path forces the import and the recompile. `Unity_RunCommand` frequently answers
 > "Unity not detected" in the same state.
 
+## With no headset you spawn INSIDE THE FLOOR
+
+> [!danger] `SeatedHeightBoost` never calibrates without a tracked pose
+> The rig uses `RequestedTrackingOriginMode: Floor`, and the fixed-eye-height driver only
+> applies its offset when `cameraTransform.localPosition.sqrMagnitude > 0.0001f`. An
+> untracked HMD reports **exactly (0,0,0) forever**, so in PC Dev Mode the guard never
+> passes, the offset stays 0, and the eye sits on the rig root — at floor level. The lower
+> half of the view fills with the floor plane seen from inside it, which reads as "the room
+> is dark" or "there is a big blue wall" rather than as a height bug (user, 2026-09-02).
+>
+> On a Quest `head.y` is non-zero from the first tracked frame, so the headset path was
+> always fine — which is why months of edit-mode verification never saw it, and why it was
+> the play-mode autopilot's very first screenshot that caught it.
+>
+> **Fixed** by distinguishing *never tracked* (place the eye at the authored height) from
+> *tracking dropped mid-session* (hold the last offset, as before) via `_everTracked`. The
+> new branch is unreachable on a headset, so the scarred headset behaviour is untouched by
+> construction.
+

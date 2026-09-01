@@ -4348,6 +4348,15 @@ Builds the mirror-only first-person avatar (user 2026-07-10). Expects a rigged h
 static void Build()
 ```
 
+### `PlaytestAutopilot` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/PlaytestAutopilot.cs`</sub>
+
+⭐ Why this exists on top of Simulate Everything: that battery runs in EDIT mode, where Update never ticks, coroutines never run, physics never steps, XRI never selects anything and no audio plays. Every bug that only exists in MOTION is invisible to it — which is precisely where the §13 playtest findings live (items vanishing, dialogue stomping mid-typing, the holo panel not scrolling, quiz buttons not clickable), and where W5.34's "711 errors/second from SpawnVFX" lived. ⭐ No headset needed: PC Dev Mode leaves OpenXR auto-init OFF on Standalone and the scene's XR Device Simulator drives the rig. ⛔ Deliberately an EDITOR-assembly script ticked by EditorApplication.update (which keeps running during play) rather than a runtime MonoBehaviour. That way it can reuse the editor-only simulators, and nothing it does can ever leak into a player build.
+
+```csharp
+static void Launch()
+```
+
 ### `QuizNavButtonsBuilder` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Editor/QuizNavButtonsBuilder.cs`</sub>
 

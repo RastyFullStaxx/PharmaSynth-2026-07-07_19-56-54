@@ -67,6 +67,9 @@ public class SeatedHeightBoost : MonoBehaviour
     private float _lastY;
     private int _stable;
     private bool _done;
+    /// Has a real tracked pose EVER arrived? Separates "no headset" (place the eye at the
+    /// authored height) from "tracking dropped" (hold the last offset).
+    private bool _everTracked;
     private float _nextDebug;
 
     public float TargetEyeHeight { get { return targetEyeHeight; } }
@@ -88,7 +91,7 @@ public class SeatedHeightBoost : MonoBehaviour
     public void SetTarget(float eyeHeight) { targetEyeHeight = eyeHeight; }
 
     /// Fresh measurement (scene load does this automatically via OnEnable).
-    public void Recalibrate() { _done = false; _stable = 0; _applied = 0f; }
+    public void Recalibrate() { _done = false; _stable = 0; _applied = 0f; _everTracked = false; }
 
     private void OnEnable() { Recalibrate(); }
 
@@ -122,7 +125,23 @@ public class SeatedHeightBoost : MonoBehaviour
         // snapping to 0. NOTE: this also cancels physical crouching (bending down
         // no longer lowers the view) — the intended trade for a uniform height.
         if (head.sqrMagnitude > 0.0001f)
+        {
+            _everTracked = true;
             _applied = HeightCalibration.FixedOffset(targetEyeHeight, head.y);
+        }
+        else if (!_everTracked)
+        {
+            // NO DEVICE AT ALL (PC Dev Mode / XR Device Simulator): an untracked HMD
+            // reports exactly (0,0,0) forever, so the guard above never fires, the offset
+            // stays 0, and the eye sits on the rig root — i.e. you spawn INSIDE THE FLOOR
+            // (user 2026-09-02, caught by the play-mode autopilot's first screenshot).
+            //
+            // Distinguished from LOSING tracking mid-session, which must still hold the
+            // last offset rather than snap: that is what _everTracked separates. On a
+            // headset head.y is non-zero from the first tracked frame, so this branch is
+            // unreachable there and the (scarred) headset path is untouched by construction.
+            _applied = HeightCalibration.FixedOffset(targetEyeHeight, 0f);
+        }
 
         // Spawn gate only: once a valid, settled pose confirms the offset is real,
         // mark Calibrated so the entrance teleport (which waits on it) never fires

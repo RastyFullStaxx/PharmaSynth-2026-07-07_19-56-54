@@ -62,6 +62,11 @@ Asks the one question the run simulator structurally cannot: a step can be mecha
 
 Builds every module's stage IN EDIT MODE and reports which steps resolve to no scene object — i.e. where Tutorial Mode would tell the player to act with nothing to point at. NOT a self-test pin, deliberately: this has to Build() each stage, which mutates the open scene, and the suite must stay side-effect-free. Run it by hand after changing a module's tasks, layout, or verb wiring. Like Reveal Stage, it leaves the LAST module's stage standing — rebuild or reopen the scene afterwards.
 
+### `Tools/PharmaSynth/Autopilot Playtest (plays the game in Play mode)`
+<sub>`Assets/PharmaSynth/Scripts/Editor/PlaytestAutopilot.cs`</sub>
+
+⭐ Why this exists on top of Simulate Everything: that battery runs in EDIT mode, where Update never ticks, coroutines never run, physics never steps, XRI never selects anything and no audio plays. Every bug that only exists in MOTION is invisible to it — which is precisely where the §13 playtest findings live (items vanishing, dialogue stomping mid-typing, the holo panel not scrolling, quiz buttons not clickable), and where W5.34's "711 errors/second from SpawnVFX" lived. ⭐ No headset needed: PC
+
 ### `Tools/PharmaSynth/Brighten Lab Lighting`
 <sub>`Assets/PharmaSynth/Scripts/Editor/LabLightingBuilder.cs`</sub>
 

@@ -79,6 +79,58 @@ All under **Tools ▸ PharmaSynth**. Everything is idempotent; run in EDIT mode 
 ## 9. Save/data locations
 Progression: `Application.persistentDataPath/pharmasynth_progress.json` (+`_demo`). Demo config: `StreamingAssets/demo-config.json` (+persistent override). Results export: `ResultsExport`. Off-repo handoff backups: `C:\Users\MSI\PharmaSynth-handoff-backup\`; raw art sources (gitignored): `Docs/raw-art-sources/` (incl. `tripo-refs/` — the purged Tripo reference images). Tripo model prefabs stay in `Art/Generated/Refs/` (code path-loads them by exact name — e.g. `FilterPaper`, `LitmusStripSingle`, `CottonSwabSingle`).
 
+## The play-mode autopilot (W5.41, 2026-09-02)
+**`Tools ▸ PharmaSynth ▸ Autopilot Playtest`** — enters Play mode, drives the whole loop
+(cube room → door → picker → PPE → threshold → run → quiz → grade), watches the console,
+screenshots each beat, writes `Logs/autopilot-report.txt` and exits on its own. **No
+headset**: PC Dev Mode leaves OpenXR auto-init OFF on Standalone and the scene's XR Device
+Simulator drives the rig.
+
+It exists because the playability battery below runs in EDIT mode, where `Update` never
+ticks, coroutines never run, physics never steps, XRI never selects and no audio plays.
+Everything that only breaks in MOTION is invisible to it — which is where the §13 findings
+live, and where the floor-spawn below hid for months.
+
+⛔ **An EDITOR-assembly script ticked by `EditorApplication.update`** (which keeps running
+during play), not a runtime MonoBehaviour: it can then reuse the editor-only simulators,
+and nothing can leak into a player build. The run plan lives in `Logs/autopilot-request.txt`
+because entering Play mode causes a domain reload that wipes statics — **`Logs/`, not
+`Temp/`**, which Unity deletes.
+
+**What it uniquely checks:** every console error/exception (deduplicated with a count and
+the beat + first stack frames — one bad particle system otherwise writes 711 identical
+lines a second) · that every object a step needs really enters the SELECTED state through
+`XRInteractionManager.SelectEnter` · that nothing falls through the world on release ·
+that every `Button` sits on a canvas with a `GraphicRaycaster` · a screenshot at each beat
+and at the moment of any finding.
+
+⛔ **Do NOT use `XRInteractionManager.CanSelect` to ask "is this grabbable".** It also asks
+whether the interactable is a valid target *right now* — i.e. whether the hand is near it —
+so it returns false for everything across the room and reported all five methane props as
+unpickupable. Test the CAPABILITY instead (enabled · solid collider · overlapping
+interaction layers) and then force the select.
+
+⛔ **`FindAnyObjectByType` skips INACTIVE objects.** The Near-Far Interactors live under
+Left/Right Controller, which are not active at run start with no device attached — so the
+autopilot concluded "nothing in this game can be picked up at all" about a scene with two
+of them.
+
+⚠ **A driver must PACE itself.** The first version acted on every editor tick, re-pressing
+"Laboratory" hundreds of times a second and restarting the scene load forever; because it
+set the beat twice per tick, the stall watchdog's timer reset continuously and never fired.
+It then reported **CLEAN** having never left the cube room. **Coverage is now part of the
+verdict** — a run that never reached a live experiment reports INCONCLUSIVE, never CLEAN.
+A false negative is worse than a false positive: nobody goes looking for it.
+
+⚠ **Screenshot after the boot fade.** `ScreenFader.Start()` sets alpha to 1 and fades in,
+so a first-frame capture is a photograph of the fade — which is exactly how the first run
+"proved" the cube room was pitch black.
+
+⚠ **A play-mode session can false-fail the NEXT edit-mode suite run** (statics and
+`Time`-based state survive into it — `examiner: guided → Pharmee gives a hint` failed once,
+then passed immediately on a re-run). Same class as the `FloorBusy` static in W5.38. Re-run
+before believing a lone failure after an autopilot session.
+
 ## The playability battery (W5.40, 2026-09-02)
 **`Tools ▸ PharmaSynth ▸ Simulate Everything (full playability check)`** — one command,
 one report (`Logs/simulate-everything.txt`), one verdict. It answers "is every experiment
