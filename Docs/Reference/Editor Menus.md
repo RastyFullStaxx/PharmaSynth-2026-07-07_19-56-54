@@ -52,6 +52,11 @@ Stamps the HazardousMix flags (isOxidizer / isConcentratedAcid) onto every Chemi
 
 W5.12 reagent-nature audit (user: "double check the reagents if all by nature are really liquid and needed to be scooped"). Dumps every ChemicalData's state/flags to Temp/chemical-state-audit.md and flags chemicals that are solids in their common lab form but are marked Liquid (manuscript solutions like "10% NaOH" are correctly liquid — only pure solids that get weighed/scooped are suspects).
 
+### `Tools/PharmaSynth/Audit Reachability`
+<sub>`Assets/PharmaSynth/Scripts/Editor/ReachabilityAudit.cs`</sub>
+
+Asks the one question the run simulator structurally cannot: a step can be mechanically perfect while the bottle it needs sits inside a closed cabinet or above head height. `SimulatedRun` reaches every object by reference, so it will never notice — only a headset would, which is exactly the cost this is here to avoid. Its input is already built and already verified: `TutorialTargets.Build()` resolves taskId → the objects each step is about, for all 9 modules. So the audit asks, of every object a
+
 ### `Tools/PharmaSynth/Audit Tutorial Targets`
 <sub>`Assets/PharmaSynth/Scripts/Editor/TutorialModeBuilder.cs`</sub>
 
@@ -427,6 +432,16 @@ Edit-mode helper (user 2026-07-10: "let me select + reposition the stools in the
 
 • the module picked from its period through the two-step picker, with the real ProgressionFlow.IsUnlocked gating each pick • the honest pour-through of the experiment (SimulatedRun) • the REAL PostLabController quiz — Open, answer, SubmitAndFinish → Finish • the REAL ExperimentGrader result + the floored grade-screen text • the REAL cutscene outro selection + its subtitle beats • the REAL ProgressionService record + ProgressionFlow unlock + UnlockDiff announcement, then the pick of the NEXT expe
 
+### `Tools/PharmaSynth/Simulate Everything (full playability check)`
+<sub>`Assets/PharmaSynth/Scripts/Editor/SimulateEverything.cs`</sub>
+
+ONE command that plays the whole game and answers one question: is every experiment actually doable right now? (user 2026-09-02: "there are too many experiments and it would take me time to play and find bugs each by each"). It adds no new simulation of its own — `SimulatedRun.Run` and `SimulatedCampaign.Run` were already public and already return structured results. What was missing was a single entry point and a single verdict: before this you clicked 8 Simulate Run items, then Campaign, then 
+
+### `Tools/PharmaSynth/Simulate Imperfect Play`
+<sub>`Assets/PharmaSynth/Scripts/Editor/SimulatedMisplay.cs`</sub>
+
+Simulates the player who gets it WRONG. Every other simulator plays a flawless run, which answers "does correct play work?". It does not answer the question that actually decides whether nine experiments are doable by a student: **after a mistake, can they still finish?** A contaminated vessel, an out-of-order attempt or an exhausted bottle that quietly makes a run unfinishable looks identical to a clean sim — the perfect path never touches it. Each probe asserts two things, and the second is th
+
 ### `Tools/PharmaSynth/Simulate Pharmee Gestures`
 <sub>`Assets/PharmaSynth/Scripts/Editor/PharmeeGestureSim.cs`</sub>
 
@@ -468,6 +483,11 @@ Proves Pharmee's animation set actually MOVES HIM, in edit mode. The suite pins 
 • correct play being flagged as a mistake (mis-authored bindings) HOW it simulates — the PLAYER PATH, not the plumbing (user 2026-07-17: "do not cheat by programmatically connecting things; you wouldn't see issues"): builder.Build() wires the real scene, runner.StartExperiment() opens the real graph, and every reagent is then TRANSFERRED the way a hand would — drawn out of the actual bench source bottle (PourOut) and landed through LiquidPhysics.AddLiquid in VERB-CONTRACT increments (1 ml a sque
 
 ### `Tools/PharmaSynth/Simulate Run/Prelim 2 — Ethyl Alcohol`
+<sub>`Assets/PharmaSynth/Scripts/Editor/SimulatedRun.cs`</sub>
+
+• correct play being flagged as a mistake (mis-authored bindings) HOW it simulates — the PLAYER PATH, not the plumbing (user 2026-07-17: "do not cheat by programmatically connecting things; you wouldn't see issues"): builder.Build() wires the real scene, runner.StartExperiment() opens the real graph, and every reagent is then TRANSFERRED the way a hand would — drawn out of the actual bench source bottle (PourOut) and landed through LiquidPhysics.AddLiquid in VERB-CONTRACT increments (1 ml a sque
+
+### `Tools/PharmaSynth/Simulate Run/Tutorial — Methane`
 <sub>`Assets/PharmaSynth/Scripts/Editor/SimulatedRun.cs`</sub>
 
 • correct play being flagged as a mistake (mis-authored bindings) HOW it simulates — the PLAYER PATH, not the plumbing (user 2026-07-17: "do not cheat by programmatically connecting things; you wouldn't see issues"): builder.Build() wires the real scene, runner.StartExperiment() opens the real graph, and every reagent is then TRANSFERRED the way a hand would — drawn out of the actual bench source bottle (PourOut) and landed through LiquidPhysics.AddLiquid in VERB-CONTRACT increments (1 ml a sque

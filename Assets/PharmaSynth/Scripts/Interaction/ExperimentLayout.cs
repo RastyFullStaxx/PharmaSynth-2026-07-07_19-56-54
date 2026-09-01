@@ -4,7 +4,7 @@ using UnityEngine;
 
 /// Data description of one experiment's physical setup: where its stations, grabbable
 /// props and reagent vessels go. The ExperimentSceneBuilder spawns this on module load,
-/// so all 11 experiments share one lab scene instead of 11 hand-built scenes.
+/// so all 9 experiments share one lab scene instead of 9 hand-built scenes.
 /// Positions are WORLD-space (the lab is a fixed room).
 /// How a station completes. None = the prop simply entering the zone completes the
 /// step. Heat/Crystallise/Filter/Collect run a sustained chemistry sim while the

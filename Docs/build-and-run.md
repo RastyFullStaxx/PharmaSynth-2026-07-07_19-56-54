@@ -86,9 +86,9 @@ Order is enforced by the runner: a wrong prop is ignored; the right prop out of 
 
 ## 3. The regression suite
 
-**Menu: `Tools ▸ PharmaSynth ▸ Run Self-Tests`** — `Assets/PharmaSynth/Scripts/Editor/PharmaSelfTests.cs`. Runs **969 assertions** entirely in edit mode (no Play button, no headset) across 50+ suites incl.: TaskGraph, Mastery (BKT), Score, Grader, Runner, Progression, ChemVisual, UI, W4 (cutscenes/crystallization/filtration/hazards), Interaction, ProgressionFlow, Library, and Content (loads and solves **all 11 experiment modules** to 100%).
+**Menu: `Tools ▸ PharmaSynth ▸ Run Self-Tests`** — `Assets/PharmaSynth/Scripts/Editor/PharmaSelfTests.cs`. Runs the whole suite entirely in edit mode (no Play button, no headset) across 50+ suites incl.: TaskGraph, Mastery (BKT), Score, Grader, Runner, Progression, ChemVisual, UI, W4 (cutscenes/crystallization/filtration/hazards), Interaction, ProgressionFlow, Library, and Content (loads and solves **all 9 experiment modules** to 100%).
 
-- **Green:** one console line — `PharmaSynth Self-Tests: 157/157 passed — ALL GREEN`.
+- **Green:** one console line — `PharmaSynth Self-Tests: N/N passed — ALL GREEN`, also written to `Logs/selftest-result.txt` (read that rather than wrapping the run in a capture script).
 - **Red:** an error log listing every failed assertion by name.
 
 **The gate is two-part: all assertions pass AND the console is otherwise zero-error.** Run it:
@@ -107,9 +107,9 @@ Two scenes are in Build Settings (`ProjectSettings/EditorBuildSettings.asset`), 
 | Index | Scene | Role |
 |---|---|---|
 | 0 | `Assets/Scenes/MainMenu.unity` | Main menu — Tutorial / Laboratory / Settings / Quit |
-| 1 | `Assets/Scenes/SampleScene.unity` | The laboratory (all 11 experiments run here; experiments are data, not scenes) |
+| 1 | `Assets/Scenes/SampleScene.unity` | The laboratory (all 9 experiments run here; experiments are data, not scenes) |
 
-**Menu → lab wiring:** `MainMenuController` (`Scripts/UI/MainMenuController.cs`) writes the chosen experiment id into the static **`GameFlow.SelectedModuleId`** (`Scripts/Progression/GameFlow.cs`; defaults to `"tutorial-methane"`) and calls `SceneManager.LoadScene("SampleScene")`. *Tutorial* selects the tutorial; *Laboratory* selects the player's next unlocked-but-unpassed experiment via `ProgressionFlow.NextExperiment()` (fallback: tutorial). In the lab scene, **`ExperimentLauncher`** (`Scripts/Interaction/ExperimentLauncher.cs`) reads `GameFlow.SelectedModuleId` (with `launchSelectedOnStart`), resolves the module asset through **`ExperimentLibrary.asset`** (`ScriptableObjects/ExperimentLibrary.asset`, runtime-safe refs to all 11 modules), swaps it into the `ExperimentRunner`, raises `onModuleLoaded` so scene wiring can rebuild, and starts a fresh attempt. Cross-scene state is deliberately tiny — persistent progress lives in `ProgressionService`'s JSON save, not in `GameFlow`.
+**Menu → lab wiring:** `MainMenuController` (`Scripts/UI/MainMenuController.cs`) writes the chosen experiment id into the static **`GameFlow.SelectedModuleId`** (`Scripts/Progression/GameFlow.cs`; defaults to `"tutorial-methane"`) and calls `SceneManager.LoadScene("SampleScene")`. *Tutorial* selects the tutorial; *Laboratory* selects the player's next unlocked-but-unpassed experiment via `ProgressionFlow.NextExperiment()` (fallback: tutorial). In the lab scene, **`ExperimentLauncher`** (`Scripts/Interaction/ExperimentLauncher.cs`) reads `GameFlow.SelectedModuleId` (with `launchSelectedOnStart`), resolves the module asset through **`ExperimentLibrary.asset`** (`ScriptableObjects/ExperimentLibrary.asset`, runtime-safe refs to all 9 modules), swaps it into the `ExperimentRunner`, raises `onModuleLoaded` so scene wiring can rebuild, and starts a fresh attempt. Cross-scene state is deliberately tiny — persistent progress lives in `ProgressionService`'s JSON save, not in `GameFlow`.
 
 ## 5. Quest 3 build
 

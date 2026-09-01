@@ -80,6 +80,11 @@ public class TaskGraph
             _conditions[taskId] = condition;
     }
 
+    /// Is a world-state predicate bound to this task? Diagnostic only: a verb whose
+    /// condition never registered looks identical, from the outside, to a verb the
+    /// player performed badly — and the simulator's report should tell them apart.
+    public bool HasCondition(string taskId) => taskId != null && _conditions.ContainsKey(taskId);
+
     /// Evaluate registered conditions and auto-complete any available task whose
     /// condition is satisfied. Only available tasks are checked, so this is cheap.
     public void Tick()

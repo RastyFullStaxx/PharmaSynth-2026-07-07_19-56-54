@@ -427,3 +427,48 @@ re-homing.
 > the wire step **again**. Confirm by the count moving, and by grepping
 > `VoiceBank.asset` for the clip id — not by the menu returning success.
 
+## Edit-mode simulation: the component never woke up
+
+> [!danger] `OnEnable` subscriptions and `Update`-driven sims are both absent in edit mode
+> `MethaneApparatusRig` wires itself to `ExperimentStarted` from `OnEnable`, so in edit mode
+> the event passed it by and **none of its five completion conditions registered**. The
+> symptom is vicious: the verb is performed perfectly — the grind reported
+> `progress 1.00, IsGrindComplete=true` — and the step still never completes, which reads
+> as a broken verb rather than a missing subscription. Separately `TemperatureSim.Update`
+> (`→ Tick(deltaTime)`) never runs, so a lit burner held to a tube never warms it: the rig
+> only ever calls `SetHeating`.
+>
+> **Prime the seam and drive the sim** — call the component's own public handler and tick
+> the sims the simulator replaces. Do not "fix" the game for a frame that edit mode simply
+> does not run. Refactor `Update()` into a public `Step(float dt)` so the simulator drives
+> the REAL frame rather than a reimplementation that can drift.
+>
+> `TaskGraph.HasCondition(taskId)` exists to tell these apart: a verb nothing is listening
+> for looks identical, from the outside, to a verb performed badly.
+
+## A test harness that contaminates itself
+
+> [!danger] The first `SimulatedMisplay` pass reported 11 bugs. All 11 were the harness.
+> Three independent mistakes, each of which produced confident, plausible, wrong findings:
+> - **Shared state between probes.** `StartExperiment` rebuilds the task graph but NOT the
+>   scene, and a `LiquidTaskBinding` accumulator lives on the component — so the
+>   wrong-reagent probe delivered the step in full and the starvation probe then blamed the
+>   supply monitor for correctly seeing no shortfall. Rebuild the stage per probe.
+> - **Matching by reference where the code matches by name.** The drain compared
+>   `currentChemical` by asset reference; `ReagentSupplyMath` keys availability by
+>   `chemicalName`. Same-named bottles stayed full.
+> - **Asserting the wrong contract.** Recovery was measured on TASK completion, but a task
+>   may name several reagents and the probe pours one — the evidence was in the message
+>   the whole time ("needs 40.0, accumulated 42.0").
+>
+> **Make the failure message print the state it judged.** Every one of these was diagnosed
+> the moment the report quoted its own numbers instead of just saying "failed".
+
+## Unity_ManageAsset: the action is `Import`
+
+> [!tip] `Refresh` and `Reimport` are not valid AssetActions
+> When the editor stops auto-refreshing (MCP menu executes run against the STALE assembly
+> and the DLL timestamp never moves), `Unity_ManageAsset` with `action: "Import"` and the
+> script's path forces the import and the recompile. `Unity_RunCommand` frequently answers
+> "Unity not detected" in the same state.
+

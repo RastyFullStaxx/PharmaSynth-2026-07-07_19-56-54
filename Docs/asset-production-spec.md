@@ -40,6 +40,6 @@
 ## D. Order of production (when greenlit)
 1. Audio placeholder pass (B1 beeps + B2 core SFX) — cheapest, biggest feel uplift, wire `AudioService`.
 2. Pharmee anims + face (A1/A2) — unblocks cutscene staging quality.
-3. Reagent labels (A6) + VFX (A7) — visible polish across all 11 experiments.
+3. Reagent labels (A6) + VFX (A7) — visible polish across all 9 experiments.
 4. Fume hood (A3), PPE (A5), Dr. Jimenez (A4).
 5. ILO cards (A8) + demo videos (C1) — capture last, after art-complete.

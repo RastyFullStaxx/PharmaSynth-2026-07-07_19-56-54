@@ -1,6 +1,6 @@
 # Gameplay Flow — start to finish
 
-**Written 2026-07-12 (W5.11), reflecting the W5.9-audited flow (suite 963+).** This is the canonical description of everything the player experiences, in order, plus every branch (fail, retry, abandon, starvation, restart). Open this when working on flow, states, transitions, grading, progression, NPC staging or the review sequence. The pure state machine is `NPC/GatekeeperModel.cs`; the scene driver is `NPC/PharmeeGatekeeper.cs`.
+**Written 2026-07-12 (W5.11), kept current in place.** This is the canonical description of everything the player experiences, in order, plus every branch (fail, retry, abandon, starvation, restart). Open this when working on flow, states, transitions, grading, progression, NPC staging or the review sequence. The pure state machine is `NPC/GatekeeperModel.cs`; the scene driver is `NPC/PharmeeGatekeeper.cs`.
 
 ## 1. Boot & scenes
 - Build order: `MainMenu` (0) → `SampleScene` (1). In-editor, Play ALWAYS boots into MainMenu via `PlayFromMenuBootstrap` (toggle: Tools ▸ PharmaSynth ▸ Play Starts In Cube Room).
@@ -34,7 +34,7 @@ Pure FSM: `GatekeeperModel` (suite-pinned). Door physically opens/closes per sta
 | **ScoreReview** | Grade screen shows (floored %, PASSED/TRY AGAIN, breakdown, confetti on pass) while the success/failure **outro cutscene** plays (always, unless data missing — suite asserts all 22 outros exist). After the outro: Jimenez speaks the pass/fail verdict, Pharmee follows up (banded pools; numbers stay on the card). Buttons: **Continue** (pass only) / **Retry** / **Choose Another** (fail only). | continue → Returning; retry → Loading (re-armed at door, teleport inside fade); abandon → Blocked (full reset, no debrief) |
 | **Returning** | One fade: full lab reset (props re-seated, wearables back on pegs) + teleport home. | → Debrief |
 | **Debrief** | AT the entrance, after the fade-in reveals the scene: quiz congrats + banded performance remark (campaign-flavoured on the final pass). | → UnlockAnnounce |
-| **UnlockAnnounce** | Newly-unlocked experiments/periods announced. **Campaign complete** (all 11 passed): dedicated celebration lines + confetti + pass sting instead. | → Blocked (loop repeats) |
+| **UnlockAnnounce** | Newly-unlocked experiments/periods announced. **Campaign complete** (all 9 passed): dedicated celebration lines + confetti + pass sting instead. | → Blocked (loop repeats) |
 
 ## 4. Inside a run — how tasks complete
 - The module's **TaskGraph** enforces order via prerequisites; wrong-order attempts record a **WrongStep** mistake. Progress bar = weighted task completion. Phases: ReagentPrep → Synthesis → ChemicalTests → DataSheet; completing ChemicalTests fires the review flow (modules without a ChemicalTests phase route off Synthesis).
@@ -52,7 +52,7 @@ Computed once at `runner.Finish` (double-finish returns the same recorded result
 - Result persisted (`ResultRecorder` → `ProgressionService` JSON, versioned + .bak): attempts++, best grade/mastery kept, `passed` latches. Failed attempts are recorded (incl. supply-starvation restarts, by design).
 
 ## 6. Progression
-Linear 11-module chain (`ExperimentCatalog`): each unlock requires the previous module PASSED; periods unlock when every earlier period is fully passed. `ProgressionFlow` answers all gate queries. Save: `pharmasynth_progress.json` (demo sessions → `_demo` file). Campaign completion = all 11 passed → celebration (§3 UnlockAnnounce) — there is deliberately no "next challenge" text after the last one.
+Linear 9-module chain (`ExperimentCatalog`): each unlock requires the previous module PASSED; periods unlock when every earlier period is fully passed. `ProgressionFlow` answers all gate queries. Save: `pharmasynth_progress.json` (demo sessions → `_demo` file). Campaign completion = all 9 passed → celebration (§3 UnlockAnnounce) — there is deliberately no "next challenge" text after the last one.
 
 ## 7. The review corner
 Built by Tools ▸ PharmaSynth ▸ Build Review Corner: `ReviewCornerSpawn` facing the PostLabTablet + Jimenez. Jimenez (`ExaminerNPC`) has his own narration bubble + "Talking" animator bool; he roams 4 proctor points during runs (never during review; watchdogs prevent wall-escapes) and goes home when a run ends.

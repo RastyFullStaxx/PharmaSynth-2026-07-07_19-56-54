@@ -39,6 +39,8 @@ public static class SimulatedRun
         public bool Clean => bugs.Count == 0 && completedTasks == totalTasks && mistakes == 0;
     }
 
+    [MenuItem("Tools/PharmaSynth/Simulate Run/Tutorial — Methane")]
+    public static void SimMethane() => Menu("tutorial-methane");
     [MenuItem("Tools/PharmaSynth/Simulate Run/Prelim 1 — Chemical Compounding")]
     public static void SimCompounding() => Menu("prelim-chemical-compounding");
     [MenuItem("Tools/PharmaSynth/Simulate Run/Prelim 2 — Ethyl Alcohol")]
@@ -97,6 +99,20 @@ public static class SimulatedRun
         builder.Build(moduleId);
         runner.SetModule(module);
         runner.StartExperiment();
+
+        // ⛔ EDIT-MODE SEAM (W5.40). MethaneApparatusRig wires itself to
+        // ExperimentStarted from OnEnable — which does not fire in edit mode, so the
+        // event passes it by and NONE of its five completion conditions register. The
+        // symptom is brutal to read: the verb is performed perfectly (the grind measured
+        // progress 1.00, IsGrindComplete true) and the step still never completes,
+        // which looks exactly like a broken verb rather than a missing subscription.
+        //
+        // Calling the rig's own public handler is the house Bind()-seam rule, not a
+        // shortcut: it performs the subscription play mode would have, then every
+        // condition still has to be satisfied by the real verbs below.
+        foreach (var rig in Object.FindObjectsByType<MethaneApparatusRig>(
+                     FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (rig != null) rig.HandleExperimentStarted(module);
 
         // The module's own END PRODUCT is hidden from the bench during its run
         // ("the player must craft it") — a shelf bottle of it therefore CANNOT
@@ -254,7 +270,9 @@ public static class SimulatedRun
                               || SimulateChillTask(runner, id, res, log)
                               || SimulateVesselHeat(runner, id, null, res, log)   // heat with no reagents of its own (Exp 6's heat-glow)
                               || SimulateWeigh(runner, id, null, res, log)        // weigh with no pours of its own (Exp 7's weigh-product)
-                              || SimulateStir(runner, id, res, log);              // stir with no pours of its own (Exp 8's stir & stand)
+                              || SimulateStir(runner, id, res, log)               // stir with no pours of its own (Exp 8's stir & stand)
+                              || SimulateGrind(runner, id, res, log)              // pestle in the mortar (methane's prepare-mixture)
+                              || SimulateMethane(runner, id, res, log);           // the hand-built tutorial rig
 
                 if (!handled)
                 {
@@ -759,6 +777,165 @@ public static class SimulatedRun
             runner.CompleteTask(id);
         }
         return true;
+    }
+
+    /// Circle the pestle in the mortar. Same shape as the stir verb — GrindController
+    /// carries its own OrbitMath and the same Tick(x, z, inside) seam — and it had no
+    /// simulator at all until W5.40, which is part of why the methane tutorial went
+    /// unplayed by every automated check.
+    static bool SimulateGrind(ExperimentRunner runner, string id, Result res, StringBuilder log)
+    {
+        GrindController grind = null;
+        foreach (var g in Object.FindObjectsByType<GrindController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (g != null && g.TaskId == id) { grind = g; break; }
+        if (grind == null) return false;
+
+        int samples = 0;
+        for (int i = 0; i < 300 && !runner.Graph.IsComplete(id); i++)
+        {
+            float a = i * 10f * Mathf.Deg2Rad;
+            grind.Tick(Mathf.Cos(a) * 0.04f, Mathf.Sin(a) * 0.04f, true);
+            samples++;
+            if (i % 18 == 0) runner.Graph.Tick();
+        }
+        runner.Graph.Tick();
+        if (runner.Graph.IsComplete(id))
+            log.AppendLine("  OK ground the mixture in " + grind.name + " - "
+                           + (samples / 36f).ToString("0.#") + " revolutions of the pestle");
+        else
+        {
+            res.bugs.Add(id + ": circling the pestle " + (samples / 36f).ToString("0.#")
+                         + " revolutions never completed the grind"
+                         + " [swept " + grind.Math.SweptDegrees.ToString("0") + " deg"
+                         + ", needs " + grind.Math.requiredRevs + " revs"
+                         + ", progress " + grind.Math.Progress01.ToString("0.00")
+                         + ", IsGrindComplete=" + grind.IsGrindComplete()
+                         + ", condition registered=" + runner.Graph.HasCondition(id) + "]");
+            runner.CompleteTask(id);
+        }
+        return true;
+    }
+
+    /// The methane tutorial's four rig steps. Everything here is driven by the rig's own
+    /// per-frame logic — which is why no simulator covered it before W5.40: Update and
+    /// Time do not exist in edit mode. MethaneApparatusRig.Step(dt) is that same frame
+    /// with the timestep injected, so this plays the REAL rig rather than a copy of it.
+    ///
+    /// Props are carried into position and put back afterwards, exactly as SimulateFlame
+    /// already holds a dish to the burner: "bring the burner to the tube" IS the player
+    /// action, and a sim that teleported the completion instead would prove nothing.
+    static bool SimulateMethane(ExperimentRunner runner, string id, Result res, StringBuilder log)
+    {
+        var rig = Object.FindAnyObjectByType<MethaneApparatusRig>(FindObjectsInactive.Include);
+        if (rig == null) return false;
+        if (id != "setup-apparatus" && id != "heat-mixture" && id != "collect-gas" && id != "test-gas")
+            return false;
+
+        Transform tube = FindItemTransform("glass-tube");
+        Transform collect = FindItemTransform("collection-tube");
+        if (tube == null)
+        {
+            res.bugs.Add(id + ": no 'glass-tube' on the bench — the methane rig has nothing to heat");
+            runner.CompleteTask(id);
+            return true;
+        }
+
+        var moved = new List<(Transform t, Vector3 pos)>();
+        void Carry(Transform t, Vector3 to) { if (t != null) { moved.Add((t, t.position)); t.position = to; } }
+
+        try
+        {
+            if (id == "setup-apparatus")
+            {
+                // Scoop the ground mixture from the reagent jar into the hard-glass tube.
+                var lp = tube.GetComponent<LiquidPhysics>();
+                var jar = FindItemTransform("reagent-jar");
+                var src = jar != null ? jar.GetComponent<LiquidPhysics>() : null;
+                if (lp == null)
+                    res.bugs.Add(id + ": the hard-glass tube has no LiquidPhysics — nothing can be loaded into it");
+                else
+                {
+                    var chem = src != null ? src.PourOut(4f) : null;
+                    lp.AddLiquid(chem != null ? chem : lp.currentChemical, 4f);
+                }
+                runner.Graph.Tick();
+            }
+            else
+            {
+                // Heat, collect and the splint test all need a LIT burner held at the tube.
+                var burner = Object.FindAnyObjectByType<BurnerController>(FindObjectsInactive.Include);
+                if (burner == null)
+                {
+                    res.bugs.Add(id + ": no BurnerController in the scene — the methane tutorial cannot be heated");
+                    runner.CompleteTask(id);
+                    return true;
+                }
+                Carry(burner.transform, tube.position + Vector3.down * 0.12f);
+                burner.Ignite();
+
+                if (id == "collect-gas" || id == "test-gas") Carry(collect, tube.position + Vector3.up * 0.06f);
+
+                Matchstick match = null;
+                if (id == "test-gas")
+                {
+                    foreach (var m in Object.FindObjectsByType<Matchstick>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                        if (m != null) { match = m; break; }
+                    if (match == null)
+                    {
+                        res.bugs.Add(id + ": no Matchstick in the scene — the splint test is unplayable");
+                        runner.CompleteTask(id);
+                        return true;
+                    }
+                    Carry(match.transform, (collect != null ? collect.position : tube.position) + Vector3.up * 0.05f);
+                    match.Ignite();
+                }
+
+                // 60 s of rig time at 20 Hz — generous on purpose, so a failure here is a
+                // real one and not the simulator running out of patience.
+                // In play mode TWO Updates run: the rig's, and the temperature sim's own
+                // (TemperatureSim.Update -> Tick(deltaTime)). The rig only ever calls
+                // SetHeating; nothing advances the heat but that second Update. Edit mode
+                // runs neither, so the sim drives both — a burner held to a tube that
+                // never warms is not a game bug, it is a missing frame.
+                var sims = Object.FindObjectsByType<TemperatureSim>(
+                    FindObjectsInactive.Include, FindObjectsSortMode.None);
+                for (int i = 0; i < 1200 && !runner.Graph.IsComplete(id); i++)
+                {
+                    rig.Step(0.05f);
+                    foreach (var ts in sims) if (ts != null) ts.Tick(0.05f);
+                    if (i % 5 == 0) runner.Graph.Tick();
+                }
+                runner.Graph.Tick();
+                burner.Extinguish();
+                if (match != null) match.Extinguish(true);
+            }
+        }
+        finally
+        {
+            foreach (var (t, pos) in moved) if (t != null) t.position = pos;
+        }
+
+        if (runner.Graph.IsComplete(id))
+            log.AppendLine("  OK methane rig: " + id + " completed through the rig's own frame");
+        else
+        {
+            res.bugs.Add(id + ": the methane rig never completed this step (60 s of held apparatus)"
+                         + " [rig active=" + rig.gameObject.activeInHierarchy
+                         + ", tube=" + (tube != null ? tube.name : "MISSING")
+                         + ", tubeMl=" + (tube != null && tube.GetComponent<LiquidPhysics>() != null
+                                          ? tube.GetComponent<LiquidPhysics>().currentLiquidVolume.ToString("0.0") : "n/a")
+                         + ", collect=" + (collect != null ? collect.name : "MISSING")
+                         + ", condition registered=" + runner.Graph.HasCondition(id) + "]");
+            runner.CompleteTask(id);
+        }
+        return true;
+    }
+
+    static Transform FindItemTransform(string itemId)
+    {
+        foreach (var li in Object.FindObjectsByType<LabItem>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (li != null && li.itemId == itemId) return li.transform;
+        return null;
     }
 
     /// The zone-free FLAMMABILITY confirmation (Exp 7): the sample is poured

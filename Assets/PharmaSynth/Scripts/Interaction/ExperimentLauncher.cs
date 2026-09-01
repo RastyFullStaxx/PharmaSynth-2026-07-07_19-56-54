@@ -8,7 +8,7 @@ using UnityEngine.Events;
 ///  StageOnly    — stage furnished, runner untouched (scene-load default + Lab Tour).
 public enum LaunchMode { FullStart, PrepareArmed, StageOnly }
 
-/// Loads any of the 11 experiments into the lab scene by moduleId: it swaps the
+/// Loads any of the 9 experiments into the lab scene by moduleId: it swaps the
 /// ExperimentRunner's active module (from the ExperimentLibrary) and readies an
 /// attempt per LaunchMode. The menu / period hub / door gate call Launch(); on
 /// lab-scene entry it can auto-launch whatever GameFlow.SelectedModuleId holds.

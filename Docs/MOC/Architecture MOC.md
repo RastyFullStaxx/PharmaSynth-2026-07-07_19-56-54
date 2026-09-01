@@ -32,7 +32,7 @@ Examples across the codebase:
 | `AssemblyMath` | `ApparatusSnap` | which parts snap to which |
 | `MasteryModel` | `ExperimentGrader` | BKT mastery |
 
-This is *why* the self-test suite can assert ~1,350 behaviours without entering Play
+This is *why* the self-test suite can assert well over a thousand behaviours without entering Play
 mode. It is also the reason a whole class of bug is invisible to the suite — see the
 warning at the end of this note.
 
@@ -71,7 +71,7 @@ Assets/PharmaSynth/Scripts/
   Safety/        PPE, fume hood, hazard zones
   Audio/         AudioService, SoundBank, voice
   Tutorial/      ungraded guided practice mode
-  Editor/        the self-test suite + ~108 builder menus (editor-only assembly)
+  Editor/        the self-test suite + 100+ builder menus (editor-only assembly)
 ```
 
 Rough size: **294 files, ~44,000 lines**, of which the `Editor/` folder is ~19,500 —
@@ -99,7 +99,7 @@ This means:
 ## The flow spine
 
 ```
-GameFlow ──▶ ProgressionFlow ──▶ ExperimentCatalog (the 11-chain)
+GameFlow ──▶ ProgressionFlow ──▶ ExperimentCatalog (the 9-chain)
                   │
                   ▼
          GatekeeperModel (pure FSM)  ◀── the actual state machine of the game

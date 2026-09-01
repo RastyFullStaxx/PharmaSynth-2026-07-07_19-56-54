@@ -3,7 +3,7 @@ using UnityEngine;
 
 /// A runtime-safe registry of every ExperimentModuleDefinition, referenced directly
 /// (serialized asset refs — no Resources/AssetDatabase needed in a build). One asset
-/// instance is referenced by the ExperimentLauncher so any of the 11 experiments can
+/// instance is referenced by the ExperimentLauncher so any of the 9 experiments can
 /// be loaded by moduleId from the menu / period hub / experiment-select.
 [CreateAssetMenu(fileName = "ExperimentLibrary", menuName = "PharmaSynth/Experiment Library")]
 public class ExperimentLibrary : ScriptableObject

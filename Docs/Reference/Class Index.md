@@ -168,9 +168,9 @@ bool PrerequisitesMet(string taskId)
 bool IsAvailable(string taskId)
 IEnumerable<ExperimentTask> AvailableTasks()
 void RegisterCondition(string taskId, Func<bool> condition)
+bool HasCondition(string taskId)
 void Tick()
 TaskCompletionResult TryComplete(string taskId)
-float Progress01
 ```
 
 ### `TaskPhase` <sub>enum</sub>
@@ -942,7 +942,7 @@ How Launch() leaves the runner: FullStart    — legacy behavior: stage built AN
 ### `ExperimentLauncher` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Interaction/ExperimentLauncher.cs`</sub>
 
-Loads any of the 11 experiments into the lab scene by moduleId: it swaps the ExperimentRunner's active module (from the ExperimentLibrary) and readies an attempt per LaunchMode. The menu / period hub / door gate call Launch(); on lab-scene entry it can auto-launch whatever GameFlow.SelectedModuleId holds.
+Loads any of the 9 experiments into the lab scene by moduleId: it swaps the ExperimentRunner's active module (from the ExperimentLibrary) and readies an attempt per LaunchMode. The menu / period hub / door gate call Launch(); on lab-scene entry it can auto-launch whatever GameFlow.SelectedModuleId holds.
 
 ```csharp
 UnityEvent<ExperimentModuleDefinition> onModuleLoaded
@@ -959,7 +959,7 @@ ExperimentModuleDefinition Launch(string moduleId, LaunchMode mode)
 ### `StationSim` <sub>enum</sub>
 <sub>`Assets/PharmaSynth/Scripts/Interaction/ExperimentLayout.cs`</sub>
 
-Data description of one experiment's physical setup: where its stations, grabbable props and reagent vessels go. The ExperimentSceneBuilder spawns this on module load, so all 11 experiments share one lab scene instead of 11 hand-built scenes. Positions are WORLD-space (the lab is a fixed room). How a station completes. None = the prop simply entering the zone completes the step. Heat/Crystallise/Filter/Collect run a sustained chemistry sim while the prop occupies the zone. Stir/Grind/Weigh (W5.8, append-only — serialized ints stay valid) are TOOL verbs: circle the rod in the vessel, work the pestle in the mortar, rest the right load on the balance pan.
+Data description of one experiment's physical setup: where its stations, grabbable props and reagent vessels go. The ExperimentSceneBuilder spawns this on module load, so all 9 experiments share one lab scene instead of 9 hand-built scenes. Positions are WORLD-space (the lab is a fixed room). How a station completes. None = the prop simply entering the zone completes the step. Heat/Crystallise/Filter/Collect run a sustained chemistry sim while the prop occupies the zone. Stir/Grind/Weigh (W5.8, append-only — serialized ints stay valid) are TOOL verbs: circle the rod in the vessel, work the pestle in the mortar, rest the right load on the balance pan.
 
 ### `ExperimentLayout` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Interaction/ExperimentLayout.cs`</sub>
@@ -983,7 +983,7 @@ List<Vessel> vessels
 ### `ExperimentSceneBuilder` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Interaction/ExperimentSceneBuilder.cs`</sub>
 
-Spawns an experiment's physical setup (stations, grabbable props, reagent vessels) from its ExperimentLayout when a module loads — so all 11 experiments live in one lab scene. The hand-built Methane objects stay as a grouped stage that is simply toggled; every other experiment is built into a DynamicStage that is cleared and rebuilt on each module change.
+Spawns an experiment's physical setup (stations, grabbable props, reagent vessels) from its ExperimentLayout when a module loads — so all 9 experiments live in one lab scene. The hand-built Methane objects stay as a grouped stage that is simply toggled; every other experiment is built into a DynamicStage that is cleared and rebuilt on each module change.
 
 ```csharp
 void SetRefs(ExperimentRunner r, SceneAssetLibrary a, ReactionRegistry reg, List<ExperimentLayout> ls)
@@ -1413,6 +1413,7 @@ static bool WithinReach(float distance, float reach)
 void Bind(ExperimentRunner r, TemperatureSim t, GasCollection g)
 void HandleExperimentStarted(ExperimentModuleDefinition module)
 void RegisterTutorialTargets()
+void Step(float dt)
 static float GlowFor(float currentC, float targetC)
 ```
 
@@ -2293,7 +2294,7 @@ static int Count
 ### `ExperimentLibrary` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Progression/ExperimentLibrary.cs`</sub>
 
-A runtime-safe registry of every ExperimentModuleDefinition, referenced directly (serialized asset refs — no Resources/AssetDatabase needed in a build). One asset instance is referenced by the ExperimentLauncher so any of the 11 experiments can be loaded by moduleId from the menu / period hub / experiment-select.
+A runtime-safe registry of every ExperimentModuleDefinition, referenced directly (serialized asset refs — no Resources/AssetDatabase needed in a build). One asset instance is referenced by the ExperimentLauncher so any of the 9 experiments can be loaded by moduleId from the menu / period hub / experiment-select.
 
 ```csharp
 List<ExperimentModuleDefinition> modules
@@ -2506,7 +2507,7 @@ void Skip()
 ### `CutsceneLibrary` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/NPC/CutsceneLibrary.cs`</sub>
 
-moduleId → the four cutscenes for that experiment (Intro, ReagentPrep, Success, Failure). Lets the single scene CutsceneDirector serve all 11 experiments: on ExperimentStarted it swaps its set from here instead of holding one hand-wired set.
+moduleId → the four cutscenes for that experiment (Intro, ReagentPrep, Success, Failure). Lets the single scene CutsceneDirector serve all 9 experiments: on ExperimentStarted it swaps its set from here instead of holding one hand-wired set.
 
 ### `Entry` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/NPC/CutsceneLibrary.cs`</sub>
@@ -4376,6 +4377,28 @@ Adopts every scene item's CURRENT transform as its DropRespawn home (user 2026-0
 static void Adopt()
 ```
 
+### `ReachabilityAudit` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/ReachabilityAudit.cs`</sub>
+
+Asks the one question the run simulator structurally cannot: a step can be mechanically perfect while the bottle it needs sits inside a closed cabinet or above head height. `SimulatedRun` reaches every object by reference, so it will never notice — only a headset would, which is exactly the cost this is here to avoid. Its input is already built and already verified: `TutorialTargets.Build()` resolves taskId → the objects each step is about, for all 9 modules. So the audit asks, of every object a step needs, "could a player standing in this room actually get to it?" Deliberately GEOMETRIC rather than a navmesh walk. The player has continuous locomotion over the whole lab floor, so "can I stand near it" is nearly always true; what actually goes wrong is height and enclosure. A navmesh would be a week of work to answer a question two raycasts answer.
+
+```csharp
+const float HardHigh
+const float HardLow
+const float Clearance
+```
+
+### `Verdict` <sub>enum</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/ReachabilityAudit.cs`</sub>
+
+```csharp
+static Verdict HeightVerdict(float y)
+static bool IsEnclosed(bool[] blockedPerDirection)
+static bool[] ProbeDirections(GameObject go, Bounds b)
+static void RunMenu()
+static List<string> RunAll(StringBuilder log)
+```
+
 ### `ReagentCabinetBuilder` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Editor/ReagentCabinetBuilder.cs`</sub>
 
@@ -4499,6 +4522,18 @@ static void Wire()
 static Material EnsureFxMaterial()
 ```
 
+### `SimulateEverything` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/SimulateEverything.cs`</sub>
+
+ONE command that plays the whole game and answers one question: is every experiment actually doable right now? (user 2026-09-02: "there are too many experiments and it would take me time to play and find bugs each by each"). It adds no new simulation of its own — `SimulatedRun.Run` and `SimulatedCampaign.Run` were already public and already return structured results. What was missing was a single entry point and a single verdict: before this you clicked 8 Simulate Run items, then Campaign, then two tutorial audits, and read 11 separate log files hoping to spot the one line that mattered. Everything lands in Logs/simulate-everything.txt, worst module FIRST — a report you have to scroll to find the failure in is a report that gets skimmed.
+
+```csharp
+static void RunMenu()
+```
+
+### `Row` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/SimulateEverything.cs`</sub>
+
 ### `SimulatedCampaign` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Editor/SimulatedCampaign.cs`</sub>
 
@@ -4512,6 +4547,16 @@ static void RunMenu()
 static Result Run(StringBuilder log)
 ```
 
+### `SimulatedMisplay` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/SimulatedMisplay.cs`</sub>
+
+Simulates the player who gets it WRONG. Every other simulator plays a flawless run, which answers "does correct play work?". It does not answer the question that actually decides whether nine experiments are doable by a student: **after a mistake, can they still finish?** A contaminated vessel, an out-of-order attempt or an exhausted bottle that quietly makes a run unfinishable looks identical to a clean sim — the perfect path never touches it. Each probe asserts two things, and the second is the important one: the mistake is reported AND the run remains completable afterwards.
+
+```csharp
+static void RunMenu()
+static List<string> RunAll(StringBuilder log)
+```
+
 ### `SimulatedRun` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Editor/SimulatedRun.cs`</sub>
 
@@ -4521,6 +4566,7 @@ static Result Run(StringBuilder log)
 <sub>`Assets/PharmaSynth/Scripts/Editor/SimulatedRun.cs`</sub>
 
 ```csharp
+static void SimMethane()
 static void SimCompounding()
 static void SimEthyl()
 static void SimBenzoic()

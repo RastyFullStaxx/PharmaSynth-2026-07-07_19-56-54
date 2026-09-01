@@ -10,7 +10,14 @@ Unity MCP bridge is unavailable.
 
 ## The self-test suite
 
-`Tools ▸ PharmaSynth ▸ Run Self-Tests` — roughly **1,350 assertions**, all in
+> [!tip] Is the game actually playable? One command.
+> `Tools ▸ PharmaSynth ▸ Simulate Everything (full playability check)` plays all 9
+> experiments, the campaign loop, the recovery paths and a reachability audit, and writes
+> a single ranked verdict to `Logs/simulate-everything.txt`. Run it after any change to a
+> module's tasks, layout or verb wiring — then **reopen SampleScene**, because every
+> simulator in it mutates the open scene by design. See [[systems-reference]].
+
+`Tools ▸ PharmaSynth ▸ Run Self-Tests` — **well over a thousand assertions**, all in
 **edit mode**.
 
 > [!warning] Two things make a green suite look broken

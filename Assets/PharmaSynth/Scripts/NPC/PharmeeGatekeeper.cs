@@ -882,7 +882,7 @@ public class PharmeeGatekeeper : MonoBehaviour
         Say(UnlockDiff.AnnouncementFor(newly));
     }
 
-    /// All 11 experiments passed (checked fresh from disk).
+    /// All 9 experiments passed (checked fresh from disk).
     private bool AllCampaignComplete()
     {
         var svc = new ProgressionService();

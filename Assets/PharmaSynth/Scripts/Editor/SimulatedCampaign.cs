@@ -85,7 +85,23 @@ public static class SimulatedCampaign
         foreach (var p in new[] { save, save + ".bak" }) if (File.Exists(p)) File.Delete(p);
         var svc = new ProgressionService(save);
         svc.Load();
-        // Pre-pass the tutorial so Exp 2 is the first unlocked graded module.
+        // PLAY the tutorial rather than assume it (W5.40). It used to be recorded as
+        // passed outright, purely so Exp 2 would unlock — which meant the first
+        // experiment any player ever touches was the one module no simulator covered.
+        //
+        // A failure here is reported but does NOT cascade: the tutorial is still recorded
+        // as passed so the graded chain can be evaluated too. One broken module should
+        // cost you one finding, not the other eight.
+        log.AppendLine("\n-- Tutorial: methane (ungraded, unlocks Exp 2) --");
+        var methane = SimulatedRun.Run("tutorial-methane", log);
+        if (methane == null || !methane.Clean)
+        {
+            string why = methane == null ? "the simulator could not run it"
+                : methane.completedTasks + "/" + methane.totalTasks + " tasks, "
+                  + methane.bugs.Count + " bug(s), " + methane.mistakes + " mistake(s)";
+            res.findings.Add("tutorial-methane: the tutorial does not play clean (" + why
+                             + ") — a first-timer meets this before anything else");
+        }
         svc.RecordResult("tutorial-methane",
             new ExperimentResult { passed = true, gradePassed = true, masteryPassed = true, overallMastery = 1f });
         var flow = new ProgressionFlow(svc, false);

@@ -2,7 +2,7 @@
 
 Everything still to do before the **2026-08-31** turnover, consolidated **2026-07-09** after the W5.6 client-workflow batch (suite **385/385** green). Check items off as they land. `[ ]` open · **bold** = Tier-1 contract-critical (Tutorial + Prelims + Benzoic Acid + Aspirin). Companion docs: [gameplay-flow.md](gameplay-flow.md) + [experiments-reference.md](experiments-reference.md) + [systems-reference.md](systems-reference.md) (the system references), [on-device-test-plan.md](on-device-test-plan.md), [client-signoff-request.md](client-signoff-request.md), CLAUDE.md (session bootstrap).
 
-**DONE and out of scope of this list** (see CLAUDE.md for detail): engine + scoring/BKT + progression persistence, all 11 experiments as data + auto-built stages + sim-rig verbs (17/42 stations), pour path + depletion (finite bottles, restart prompt), door-gated campaign flow (choice panel → episode → lab-coat → armed load → walk-in timer → debrief → teleport return → unlock announce), screen-locked HUD + Pharmee dialogue bar + only-while-speaking bubble, ScreenFader, in-lab Settings/Restart/Quit, MainMenu spawn room, real-size pass (RealSizes, 42 prefabs), labcoat PPE in the locker (click to don), swinging lab door (solid open + closed), head-collision pushback, 44 cutscene SOs wired, 33-MCQ post-lab quiz + yield stepper, CC0 audio wired (beeps/UI/glass/alarm/music), hub/select UI, results CSV backend.
+**DONE and out of scope of this list** (see CLAUDE.md for detail): engine + scoring/BKT + progression persistence, all 9 experiments as data + auto-built stages + sim-rig verbs (17/42 stations), pour path + depletion (finite bottles, restart prompt), door-gated campaign flow (choice panel → episode → lab-coat → armed load → walk-in timer → debrief → teleport return → unlock announce), screen-locked HUD + Pharmee dialogue bar + only-while-speaking bubble, ScreenFader, in-lab Settings/Restart/Quit, MainMenu spawn room, real-size pass (RealSizes, 42 prefabs), labcoat PPE in the locker (click to don), swinging lab door (solid open + closed), head-collision pushback, 44 cutscene SOs wired, 33-MCQ post-lab quiz + yield stepper, CC0 audio wired (beeps/UI/glass/alarm/music), hub/select UI, results CSV backend.
 
 ---
 
@@ -81,7 +81,7 @@ Everything still to do before the **2026-08-31** turnover, consolidated **2026-0
 - [x] **Hover-info panes (learn-as-you-play)** (user 2026-07-10 batch 4) — DONE: point the right-hand ray (gaze fallback) at any reagent bottle, apparatus or NPC and a smoothly fading/scaling card names it and explains it — what-it's-for + quick how-to for equipment, trivia + hazard for reagents, role for Pharmee/Dr. Jimenez. `HoverInfoPanel` (world-space card, eases in/out, rides a readable ≤1.5 m in front along the sightline, billboarded) + `HoverInspector` (per-frame raycast resolver) + `LabInfoDatabase` (pure: 31 equipment + 37 reagents + 2 NPCs, keyed by `LiquidPhysics.currentChemical` / `LabItem` / prop name / NPC marker). Built by **Tools ▸ PharmaSynth ▸ Build Hover Info Panel**; card layout DevCapture-verified; 25 new assertions. *Distance/opacity/dwell feel wants a headset pass.*
 - [x] **Table-pad + wrist-holo text fixed** (user 2026-07-10 batch 4) — DONE: LiberationSans SDF (the tablet/holo font) is missing `☑ ☐ ▶ → Δ ↑` (they rendered as blank boxes; the `- Fallback.asset` the user was editing has 0 glyphs). `GlyphSafe.Sanitize` (pure, tested) maps them to font-safe forms at display time (→ `->`, ↑ `(g)`, Δ `(heat)`, ⇌ `<=>`, ▶ `»`), and the checklist markers became coloured font-safe `• » □`; applied in `TabletChecklistController` (procedure pad + reaction footer) and `WristWatchController` (mini-panel + holo board). Source data left clean. *Marker/reaction rendering confirmed by glyph analysis; see it live in a Play-mode experiment.*
 - [x] **Watch gesture panel verified** (user 2026-07-10 batch 4) — VERIFIED + fixed: the wrist-flip (supination + gaze, only during an experiment) shows the compact MiniPanel AND the large holo checklist — all refs (runner/anchor/head/holo) were wired; the one gap was a **null `summaryText`** (MiniPanel rendered blank), now pointed at its `Summary` TMP so it shows step/progress/mastery. Holo board also benefits from the glyph fix above. *Watch MODEL is still a placeholder cube; `toggleAction` fallback left unset (gesture-driven) — add a dev key if headset testing needs it.*
-- [ ] Dialogue copy pass for all 11 experiments → **client sign-off**.
+- [ ] Dialogue copy pass for all 9 experiments → **client sign-off**.
 
 ## 6. On-device & release (needs the Quest 3)
 
@@ -343,3 +343,14 @@ scheduled maintenance, not a fix.
     bridge works today.
   - **Worth it later:** `unity eval` drives the Editor directly — faster and cheaper in
     tokens than MCP, which compounds across a session.
+
+## §20 Playability battery (2026-09-02, W5.40) — suite 1488/1488
+One command answers "is every experiment doable?": **`Tools ▸ PharmaSynth ▸ Simulate Everything (full playability check)`** → `Logs/simulate-everything.txt`. Mechanism: [[systems-reference]] §The playability battery.
+- [x] **Current verdict: CLEAN** — 9/9 modules play end to end, campaign 8/8 COMPLETE, every step has something to guide the player to, nothing is out of reach, every recovery path holds.
+- [x] `tutorial-methane` simulated for the first time (5/5, 0 bugs). It was never covered: the campaign sim recorded it passed purely to unlock Exp 2.
+- [x] `SimulatedMisplay` — wrong reagent, wrong order, starvation, and the full restart matrix (§9) through the real FSM.
+- [x] `ReachabilityAudit` — height band + six-ray enclosure over every object the tutorial sweep resolves.
+- ⚠ **Every stage in the battery mutates the open scene. Reopen SampleScene afterwards.**
+- ⛔ **Two edit-mode traps, both general:** a component that subscribes in `OnEnable` never hears `ExperimentStarted` in edit mode (the methane rig's five conditions silently never registered — the verb read as broken), and a sim whose `Update` drives it (`TemperatureSim`) never advances. Prime the seam and tick the sim; do not "fix" the game.
+- ⛔ **The harness's first pass produced 11 confident false positives** — shared runs, reference-vs-name matching, and asserting task completion for a task with several reagents. A contaminating probe is worse than no probe.
+- [ ] Still only mechanism: it cannot feel a grab, judge a glow, or read a label at arm's length. The headset pass remains the answer to how it FEELS.

@@ -33,7 +33,7 @@ Capture with the Unity Profiler / OVR Metrics on the worst-case scene (all burne
 - [ ] Foveated Rendering on; single-pass instanced confirmed (both eyes render).
 - [ ] Textures ASTC; atlas/batch where draw calls spike.
 
-## 4. Interaction UAT — per experiment (all 11)
+## 4. Interaction UAT — per experiment (all 9)
 For each experiment (drive via the hub select → build spawns it): 
 - [ ] Grab reagent bottles; tilt-pour into the vessel completes the mapped step in order.
 - [ ] Wrong reagent → WrongReagent mistake + Pharmee warns; out-of-order → WrongStep.

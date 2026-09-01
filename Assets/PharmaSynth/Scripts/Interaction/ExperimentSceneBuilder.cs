@@ -7,7 +7,7 @@ using TeleAnchor = UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.T
 using TeleArea = UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation.TeleportationArea;
 
 /// Spawns an experiment's physical setup (stations, grabbable props, reagent vessels)
-/// from its ExperimentLayout when a module loads — so all 11 experiments live in one
+/// from its ExperimentLayout when a module loads — so all 9 experiments live in one
 /// lab scene. The hand-built Methane objects stay as a grouped stage that is simply
 /// toggled; every other experiment is built into a DynamicStage that is cleared and
 /// rebuilt on each module change.

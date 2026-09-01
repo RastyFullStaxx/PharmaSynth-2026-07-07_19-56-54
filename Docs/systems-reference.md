@@ -1,6 +1,6 @@
 # Systems Reference — mechanics, builders & content authoring
 
-**Written 2026-07-12 (W5.11), current through W5.10 (suite 969).** Open this when working on any interaction mechanic, running builder menus, or authoring content. Companion: `Docs/gameplay-flow.md` (what the player experiences), `Docs/experiments-reference.md` (per-experiment data). Code convention everywhere: **thin MonoBehaviours over pure, suite-tested C# cores**, every component with a `Bind()` seam (edit-mode `AddComponent` fires no `Awake`/`OnEnable`).
+**Written 2026-07-12 (W5.11), kept current in place.** Open this when working on any interaction mechanic, running builder menus, or authoring content. Companion: `Docs/gameplay-flow.md` (what the player experiences), `Docs/experiments-reference.md` (per-experiment data). Code convention everywhere: **thin MonoBehaviours over pure, suite-tested C# cores**, every component with a `Bind()` seam (edit-mode `AddComponent` fires no `Awake`/`OnEnable`).
 
 ## 1. Liquids
 - **`LiquidPhysics`** (on every bottle/vessel; needs a Renderer host): `maxVolume` 1000, default volume **0** (the wake-from-empty contract). `AddLiquid`: capacity guard first (overflow → `LiquidRejected`, never completes tasks) → `LiquidAdded` fires → EMPTY vessel adopts the incoming chemical (+visuals); same chemical tops up; different chemical + registry → `FindReaction` hit = swap to `resultLiquid` (+precipitate, colour lerp, SFX, `ReactionOccurred`) / miss = volume adds + `WrongReagentMixed`. `SetContents(chem, ml)` = builder/test seam (edit-safe, resets the **`Ledger`** — a pure `VesselLedger` "Ethanol 120 ml + NaOH 50 ml" story used by hover/popups). `PourOut` leaves `currentChemical` at 0 ml (display shows "empty" via `IsEmpty`). Visual contract: `mainRenderer` must carry the `PharmaSynth/Liquid` shader (`_Fill/_LiquidColour/...`); play-mode-only material work.
@@ -59,7 +59,7 @@
 
 ## 7. Builders & REBUILD ORDERS (operational)
 All under **Tools ▸ PharmaSynth**. Everything is idempotent; run in EDIT mode only.
-- **Self-tests**: Run Self-Tests → expect 1457/1457 (+3 deliberate warnings). ALWAYS after any change.
+- **Self-tests**: Run Self-Tests → expect ALL GREEN (+3 deliberate warnings); the count is in `Logs/selftest-result.txt`. ALWAYS after any change.
 - **Cabinet/shelf chain** (after cabinet/consumable/product changes): `Build Reagent Cabinets` → `Generate Reagent Labels` → `Wire End-Product Gate` → `Wire Shelf Pourers` → `Re-Home Scene Items (Adopt Current)`.
 - **End products**: `Stock End-Product Shelf` then the label→gate→pourer→re-home tail above.
 - **Layout/verb data** (after layout or module-task data edits): `Apply W5.8 Verb Data` → `Apply W5.9 Manuscript Data` (both idempotent appliers) → `Tidy Experiment Layouts` → suite.
@@ -78,6 +78,71 @@ All under **Tools ▸ PharmaSynth**. Everything is idempotent; run in EDIT mode 
 
 ## 9. Save/data locations
 Progression: `Application.persistentDataPath/pharmasynth_progress.json` (+`_demo`). Demo config: `StreamingAssets/demo-config.json` (+persistent override). Results export: `ResultsExport`. Off-repo handoff backups: `C:\Users\MSI\PharmaSynth-handoff-backup\`; raw art sources (gitignored): `Docs/raw-art-sources/` (incl. `tripo-refs/` — the purged Tripo reference images). Tripo model prefabs stay in `Art/Generated/Refs/` (code path-loads them by exact name — e.g. `FilterPaper`, `LitmusStripSingle`, `CottonSwabSingle`).
+
+## The playability battery (W5.40, 2026-09-02)
+**`Tools ▸ PharmaSynth ▸ Simulate Everything (full playability check)`** — one command,
+one report (`Logs/simulate-everything.txt`), one verdict. It answers "is every experiment
+actually doable right now?" without a headset. Composed of, in order:
+
+1. **All NINE modules** through `SimulatedRun.Run` — the real player path (pours drawn out
+   of real bottles in verb-contract increments; completion only through the real event
+   chain). Per-module transcripts stay at `Logs/simrun-<moduleId>.txt`.
+2. **The campaign loop** (`SimulatedCampaign.Run`) — gate FSM, picker, quiz, grader,
+   cutscenes, unlock chain → `Logs/simcampaign.txt`.
+3. **Tutorial guidance coverage** — every step must resolve to an object to point at.
+4. **Reachability** (`ReachabilityAudit`) — see below.
+5. **Imperfect play** (`SimulatedMisplay`) — see below.
+
+⚠ Every stage in it MUTATES the open scene; the report's own footer says to reopen
+SampleScene afterwards. Vessel contents are snapshotted and restored, as in `SimulatedRun`.
+
+**`tutorial-methane` is now simulated** (it was the only module nothing covered — the
+campaign sim used to `RecordResult` it as passed purely to unlock Exp 2). Two new handlers
+in `SimulatedRun`: `SimulateGrind` (circles the pestle, same shape as `SimulateStir`) and
+`SimulateMethane`, which carries the burner/collection tube/match into position and puts
+them back — the same "hold the dish to the flame" pattern `SimulateFlame` already used.
+
+⛔ **Two edit-mode traps cost a full debugging pass here, and both generalise.** The rig
+wires itself to `ExperimentStarted` from `OnEnable`, which does not fire in edit mode, so
+**none of its five conditions registered** — the grind measured `progress 1.00,
+IsGrindComplete=true` and the step still never completed, which reads exactly like a broken
+verb. And `TemperatureSim.Update` (`→ Tick(deltaTime)`) does not run either, so a lit
+burner held to the tube never warmed it: the rig only ever calls `SetHeating`. The sim now
+calls the rig's public `HandleExperimentStarted` and ticks the temperature sims itself.
+`MethaneApparatusRig.Update` was refactored to `Step(float dt)` (public, with an internal
+`_clock` replacing `Time.time`) so the simulator drives the REAL frame, not a copy of it.
+
+**`SimulatedMisplay`** — the player who gets it WRONG, which is the question that actually
+decides whether the experiments are doable. Per module, on a freshly built stage each
+time: pour the wrong reagent into a task vessel (must be flagged, and the binding must
+still count the correct reagent afterwards), attempt an out-of-order step (must be refused
+AND flagged), and drain a required reagent (`ReagentSupplyMonitor.EvaluateNow` must name
+the task, and `RefillSourceBottles` must restock it — that call is the whole of Tutorial
+Mode's no-dead-end guarantee). Plus the **restart matrix** (gameplay-flow §9) driven
+through the real `GatekeeperModel`, walked legally from `Blocked` each time rather than
+force-set, so the walk itself proves the path in.
+
+**`ReachabilityAudit`** — the one thing the run sim structurally cannot see: a step can be
+mechanically perfect while its bottle sits inside a closed cabinet or above head height.
+The run sim reaches everything by reference. Input is the already-verified
+`TutorialTargets` sweep. Two geometric checks, deliberately not a navmesh (the player has
+continuous locomotion, so "can I stand near it" is almost always true): a height band
+(0.05–2.1 m hard, 0.25–1.9 m comfortable) and an enclosure probe (six rays; blocked on
+**every** side = walled in — one open side is an open shelf and must not be flagged).
+
+⚠ **Probe hygiene is load-bearing.** The first `SimulatedMisplay` pass reported 11 bugs and
+**every one was the harness, not the game**: the probes shared a run, so the wrong-reagent
+probe delivered the step in full and the starvation probe then blamed the monitor for
+correctly seeing no shortfall; the drain matched by asset REFERENCE while
+`ReagentSupplyMath` keys availability by `chemicalName`; and recovery was asserted on TASK
+completion when a task may name several reagents and the probe pours one. Each probe now
+rebuilds the stage (`StartExperiment` rebuilds the graph but **not** the scene, and a
+`LiquidTaskBinding` accumulator lives on the component). Findings are worth nothing if the
+harness contaminates itself — confident nonsense is worse than no coverage.
+
+**`TaskGraph.HasCondition(taskId)`** exists for exactly this: a verb whose condition never
+registered is indistinguishable, from the outside, from a verb the player performed badly.
+The simulator's failure messages print it.
 
 ## Tutorial Mode (2026-08-07)
 Ungraded guided practice. Player-facing behaviour → `gameplay-flow.md` §14. This section is the mechanism.

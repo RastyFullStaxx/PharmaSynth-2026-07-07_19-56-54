@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// moduleId → the four cutscenes for that experiment (Intro, ReagentPrep, Success,
-/// Failure). Lets the single scene CutsceneDirector serve all 11 experiments: on
+/// Failure). Lets the single scene CutsceneDirector serve all 9 experiments: on
 /// ExperimentStarted it swaps its set from here instead of holding one hand-wired set.
 [CreateAssetMenu(fileName = "CutsceneLibrary", menuName = "PharmaSynth/Cutscene Library")]
 public class CutsceneLibrary : ScriptableObject

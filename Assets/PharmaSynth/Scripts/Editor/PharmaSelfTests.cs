@@ -3809,6 +3809,39 @@ public static class PharmaSelfTests
                     Mathf.Abs(Vector3.Dot(axis, flat.normalized)) < 1e-4f);
                 A("tutorial: a vertically-stacked pour still has an axis",
                     VerbDemoMath.TiltAxis(vFrom, vFrom + Vector3.up).sqrMagnitude > 0.9f);
+
+                // ---- W5.40 playability battery -------------------------------------
+                // Reachability: the band a standing VR player can actually work in.
+                A("reach: bench height is fine", ReachabilityAudit.HeightVerdict(1.0f) == ReachabilityAudit.Verdict.Fine);
+                A("reach: shoulder height is fine", ReachabilityAudit.HeightVerdict(1.6f) == ReachabilityAudit.Verdict.Fine);
+                A("reach: a top shelf is an awkward stretch",
+                    ReachabilityAudit.HeightVerdict(1.95f) == ReachabilityAudit.Verdict.Awkward);
+                A("reach: above the hard ceiling is unreachable",
+                    ReachabilityAudit.HeightVerdict(2.4f) == ReachabilityAudit.Verdict.Unreachable);
+                A("reach: on the floor is unreachable",
+                    ReachabilityAudit.HeightVerdict(0.01f) == ReachabilityAudit.Verdict.Unreachable);
+
+                // Enclosure: ONE open side is enough. Flagging open shelves would bury the
+                // real failures (a closed cabinet) in noise.
+                A("reach: blocked on every side is enclosed",
+                    ReachabilityAudit.IsEnclosed(new[] { true, true, true, true, true, true }));
+                A("reach: one open side is reachable",
+                    !ReachabilityAudit.IsEnclosed(new[] { true, true, true, true, true, false }));
+                A("reach: a bottle standing on a bench is not enclosed",
+                    !ReachabilityAudit.IsEnclosed(new[] { false, true, false, false, false, false }));
+                A("reach: no probe data is never enclosed",
+                    !ReachabilityAudit.IsEnclosed(new bool[0]));
+
+                // HasCondition exists so the simulator can tell "the player did the verb
+                // badly" apart from "nothing was listening" — the two look identical
+                // otherwise, and that ambiguity cost a whole methane debugging pass.
+                {
+                    var g = new TaskGraph(new List<ExperimentTask> { new ExperimentTask { taskId = "hc-a" } });
+                    A("graph: no condition until one is registered", !g.HasCondition("hc-a"));
+                    g.RegisterCondition("hc-a", () => false);
+                    A("graph: a registered condition is visible", g.HasCondition("hc-a"));
+                    A("graph: an unknown task never has a condition", !g.HasCondition("hc-nope"));
+                }
             }
             finally
             {
@@ -4253,8 +4286,8 @@ public static class PharmaSelfTests
             UnityEngine.Object.DestroyImmediate(module); UnityEngine.Object.DestroyImmediate(lay);
         }
 
-        // All 11 experiments must build a physical setup from their ExperimentLayout —
-        // Methane uses its hand-built stage (0 dynamic roots), the other 10 spawn from data.
+        // All 9 experiments must build a physical setup from their ExperimentLayout —
+        // Methane uses its hand-built stage (0 dynamic roots), the other 8 spawn from data.
         var allLayouts = new List<ExperimentLayout>();
         foreach (var g in AssetDatabase.FindAssets("t:ExperimentLayout", new[] { "Assets/PharmaSynth/ScriptableObjects/Layouts" }))
             allLayouts.Add(AssetDatabase.LoadAssetAtPath<ExperimentLayout>(AssetDatabase.GUIDToAssetPath(g)));

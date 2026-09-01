@@ -28,6 +28,9 @@ public class MethaneApparatusRig : MonoBehaviour
 
     private const string ModuleId = "tutorial-methane";
     private bool _active, _prevHeating, _splintFired;
+    /// Run-local clock, advanced by Step's dt. Replaces Time.time so the rig can be
+    /// stepped by the editor simulator; only ever read as a DURATION since collection.
+    private float _clock;
     private float _collectedAt = -1f;
     public const float SplintMatchDistance = 0.25f;
     public const float SplintAutoSeconds = 20f;
@@ -92,7 +95,7 @@ public class MethaneApparatusRig : MonoBehaviour
     {
         bool wasActive = _active;
         _active = module != null && module.moduleId == ModuleId && runner != null && runner.Graph != null;
-        _prevHeating = false; _splintFired = false; _collectedAt = -1f;
+        _prevHeating = false; _splintFired = false; _collectedAt = -1f; _clock = 0f;
         if (!_active) { if (wasActive) ReleaseMortar(); return; }
 
         EnsureSims();
@@ -216,9 +219,23 @@ public class MethaneApparatusRig : MonoBehaviour
 
     // ---- per-frame action detection ----------------------------------------
 
-    private void Update()
+    private void Update() => Step(Time.deltaTime);
+
+    /// One frame of the rig, with the timestep injected.
+    ///
+    /// ⭐ Public so the editor simulator can play the methane tutorial through the REAL
+    /// logic instead of a copy of it (W5.40). It was the only module no simulator covered,
+    /// precisely because everything here is driven by Update and Time — neither of which
+    /// exists in edit mode. Extracting the step rather than duplicating it means the sim
+    /// cannot pass against a stale reimplementation of what the game actually does.
+    ///
+    /// Time.time is deliberately gone: the only thing it was ever used for is the DURATION
+    /// the gas has been collected, so an internal clock advanced by dt is both more honest
+    /// and drivable. In play mode Update feeds it Time.deltaTime, so nothing changes.
+    public void Step(float dt)
     {
         if (!_active || runner == null || !runner.IsRunning) return;
+        _clock += Mathf.Max(0f, dt);
         FindItems();
         if (_tube == null) return;
 
@@ -240,13 +257,13 @@ public class MethaneApparatusRig : MonoBehaviour
                           && WithinReach(Vector3.Distance(_tube.position, _collect.position), collectDistance);
         if (collecting)
         {
-            gas.AddGas(gasMlPerSecond * Time.deltaTime);
+            gas.AddGas(gasMlPerSecond * dt);
             CollectAnimation();
         }
 
         // Splint: LIT match brought to the FILLED collection tube → pop.
         bool collected = gas != null && gas.Collected(collectedFraction);
-        if (collected && _collectedAt < 0f) _collectedAt = Time.time;
+        if (collected && _collectedAt < 0f) _collectedAt = _clock;
         if (!collected) _collectedAt = -1f;
         if (!_splintFired && collected && _collect != null)
         {
@@ -257,7 +274,7 @@ public class MethaneApparatusRig : MonoBehaviour
                 anyLit = true;
                 best = Mathf.Min(best, Vector3.Distance(m.transform.position, _collect.position));
             }
-            if (SplintShouldFire(true, _splintFired, anyLit ? best : float.MaxValue, anyLit, Time.time - _collectedAt))
+            if (SplintShouldFire(true, _splintFired, anyLit ? best : float.MaxValue, anyLit, _clock - _collectedAt))
             {
                 EffectVfx.FlamePop(_collect.position + Vector3.up * 0.1f);
                 FloatingText.Show("Pop! Methane confirmed", _collect.position + Vector3.up * 0.2f, new Color(0.7f, 1f, 0.7f));
