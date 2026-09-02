@@ -1101,11 +1101,20 @@ public class ExperimentSceneBuilder : MonoBehaviour
         if (inst == null) return;
         fill01 = Mathf.Clamp01(fill01);
         Renderer heap = null;
+        var owner = inst.GetComponent<LiquidPhysics>();
         foreach (var r in inst.GetComponentsInChildren<Renderer>(true))
         {
             if (r.name == "Powder") heap = r;
             else if (r.name == "Liquid")   // an earlier liquid-fill twin — drop it
             {
+                // ⛔ Null any LiquidPhysics.mainRenderer that points at this child BEFORE
+                // destroying it. Otherwise UpdateFillPhysics reads `.enabled` on a
+                // destroyed renderer every frame — 5106 MissingReferenceExceptions in one
+                // run when a solid is scooped into a vessel that was set up for liquid
+                // (W5.45 visual sweep caught this; the old autopilot never scooped so it
+                // never fired). Same for the precipitate layer, defensively.
+                if (owner != null && owner.mainRenderer == r) owner.mainRenderer = null;
+                if (owner != null && owner.precipitateRenderer == r) owner.precipitateRenderer = null;
                 if (Application.isPlaying) Destroy(r.gameObject); else DestroyImmediate(r.gameObject);
             }
         }

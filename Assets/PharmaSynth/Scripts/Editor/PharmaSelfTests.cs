@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -95,6 +95,7 @@ public static class PharmaSelfTests
         WatchMathSuite();
         ShelfPourWiringSuite();
         FxMaterialSuite();
+        VisualSweepSuite();
         ChecklistPagerSuite();
         DemoModeSuite();
         DemoActionsSuite();
@@ -6213,6 +6214,61 @@ public static class PharmaSelfTests
         A("fxmat: alpha blend", m != null && m.GetInt("_SrcBlend") == (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
         A("fxmat: no zwrite", m != null && m.GetInt("_ZWrite") == 0);
         A("fxmat: resources-loadable", Resources.Load<Material>("FxParticleUnlit") != null);
+    }
+    // The VISUAL autopilot's judge (W5.45): pure rules over what the probe saw, so a
+    // FAIL in Logs/visual-sweep-report.txt means what it says. Thresholds are the ones the
+    // sweep uses — a 4% fill is invisible in VR (SimulatedRun's rule), 0.08 RGB is a change
+    // a headset shows, and a gas outcome must have a live emitter or it is text-only.
+    static void VisualSweepSuite()
+    {
+        var o = new VisualSweep.Obs { found = true, ml = 5f, fill01 = 0.05f, rendererOn = true, tempC = 25f,
+                                      particleNames = "", popups = "", chem = "x" };
+        A("visual: a visible fill passes", VisualSweep.Judge(VisualSweep.Expect.Fill, o, null, 0f, 100f).status == "OK");
+        var thin = o; thin.fill01 = 0.01f;
+        A("visual: a 1% fill is invisible in VR", VisualSweep.Judge(VisualSweep.Expect.Fill, thin, null, 0f, 100f).Fail);
+        A("visual: gas with no live emitter FAILS", VisualSweep.Judge(VisualSweep.Expect.Gas, o, null, 0f, 100f).Fail);
+        var gas = o; gas.particles = 1; gas.particleNames = "EffectVfx_Smoke(20)";
+        A("visual: gas with a live emitter passes", !VisualSweep.Judge(VisualSweep.Expect.Gas, gas, null, 0f, 100f).Fail);
+        var ppt = o; ppt.pptOn = true; ppt.pptMl = 2f;
+        A("visual: a precipitate needs visible ppt volume",
+            VisualSweep.Judge(VisualSweep.Expect.Precipitate, o, null, 0f, 100f).Fail
+            && !VisualSweep.Judge(VisualSweep.Expect.Precipitate, ppt, null, 0f, 100f).Fail);
+        // A solid can land in a liquid (the wine must) — a visible fill satisfies Powder too.
+        var dry = new VisualSweep.Obs { found = true, powderOn = true, particleNames = "", popups = "", chem = "x" };
+        A("visual: a powder mound satisfies a solid delivery", !VisualSweep.Judge(VisualSweep.Expect.Powder, dry, null, 0f, 100f).Fail);
+        A("visual: a solid dissolved in a visible liquid also passes",
+            !VisualSweep.Judge(VisualSweep.Expect.Powder, o, null, 0f, 100f).Fail);
+        var hot = o; hot.tempC = 100f; hot.boil = 0f;
+        A("visual: at the boiling point the liquid must churn", VisualSweep.Judge(VisualSweep.Expect.Heat, hot, null, 100f, 100f).Fail);
+        hot.boil = 0.6f;
+        A("visual: boiling at temperature passes", !VisualSweep.Judge(VisualSweep.Expect.Heat, hot, null, 100f, 100f).Fail);
+        var warm = o; warm.tempC = 60f;
+        A("visual: a 50 C goal below the boil ramp needs no churn", !VisualSweep.Judge(VisualSweep.Expect.Heat, warm, null, 50f, 100f).Fail);
+        A("visual: an odour is only ever a popup", VisualSweep.Judge(VisualSweep.Expect.Odor, o, null, 0f, 100f).Fail);
+        A("visual: a step with no contract is SKIP, never OK", VisualSweep.Judge(VisualSweep.Expect.None, o, null, 0f, 100f).status == "SKIP");
+        A("visual: colour distance is Euclidean RGB", Near(VisualSweep.ColourDistance(Color.black, Color.red), 1f));
+
+        // Expectation derivation: the fired rule outranks the verb; gas outranks the rest.
+        var rule = ScriptableObject.CreateInstance<ReactionRule>();
+        try
+        {
+            rule.outcome = ReactionOutcome.ColorChange; rule.evolvesGas = true;
+            A("visual: a gas-evolving rule expects visible gas", VisualSweep.ExpectFor("pour", rule) == VisualSweep.Expect.Gas);
+            rule.evolvesGas = false; rule.outcome = ReactionOutcome.Precipitate;
+            A("visual: a precipitate rule expects visible ppt", VisualSweep.ExpectFor("pour", rule) == VisualSweep.Expect.Precipitate);
+            rule.outcome = ReactionOutcome.None; rule.hasPrecipitate = false; rule.resultLiquid = null;
+            A("visual: a bare rule still expects a visible fill", VisualSweep.ExpectFor("pour", rule) == VisualSweep.Expect.Fill);
+            // A deliberate negative test authors product == reactant — never judge it as a
+            // colour change (acetone vs Tollens/Schiff: "no mirror" is the intended result).
+            var same = ScriptableObject.CreateInstance<ChemicalData>();
+            rule.outcome = ReactionOutcome.ColorChange; rule.inputChemicalA = same; rule.resultLiquid = same;
+            A("visual: a no-change negative test is not a colour change", VisualSweep.ExpectFor("pour", rule) == VisualSweep.Expect.Fill);
+            UnityEngine.Object.DestroyImmediate(same);
+        }
+        finally { UnityEngine.Object.DestroyImmediate(rule); }
+        A("visual: no rule — a heat step expects temperature", VisualSweep.ExpectFor("heat", null) == VisualSweep.Expect.Heat);
+        A("visual: no rule — a solid delivery expects a mound", VisualSweep.ExpectFor("solid", null) == VisualSweep.Expect.Powder);
+        A("visual: no rule — a flame confirm has only its picture", VisualSweep.ExpectFor("flame", null) == VisualSweep.Expect.None);
     }
 }
 #endif

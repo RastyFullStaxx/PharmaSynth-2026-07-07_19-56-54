@@ -93,36 +93,8 @@ public class ScoopController : MonoBehaviour
             if (col == null || col.transform.IsChildOf(transform)) continue;
             var lp = col.GetComponentInParent<LiquidPhysics>();
             if (lp == null) continue;
-            if (!Carrying)
-            {
-                if (lp.currentChemical == null
-                    || !ScoopMath.CanPickUp(false, lp.currentChemical.state, lp.currentLiquidVolume)) continue;
-                float charge = ScoopMath.ScoopCharge(lp.currentLiquidVolume, gramsPerDip);
-                var chem = lp.PourOut(charge);
-                if (chem == null) continue;
-                _carrying = chem; _carryingG = charge; _lastSource = lp;
-                _readyAt = Time.time + actionCooldown;
-                ShowHeap(chem);
-                RefreshPowder(lp);                                  // source mound shrinks
-                // GRANULAR, never liquid (user 2026-07-15): a dry blade-into-powder
-                // dig. No "pour" fallback — silence beats the wrong material's sound.
-                AudioService.TryPlayFirstAt(probe, 0.55f, "scoop");
-                FloatingText.Show("+" + charge.ToString("0.#") + " g " + chem.chemicalName,
-                                  probe + Vector3.up * 0.05f, new Color(1f, 0.95f, 0.6f), 0.8f);
-                return;
-            }
-            if (!ScoopMath.CanDeposit(true, lp == _lastSource)) continue;
-            var deposited = _carrying;
-            lp.AddLiquid(_carrying, _carryingG);
-            RefreshPowder(lp);                                      // receiver mound grows
-            // Solid tipping out of the scoop — a granular patter, not a liquid pour.
-            AudioService.TryPlayFirstAt(probe, 0.85f, "powder-pour", "scoop");
-            FloatingText.Show(ScoopMath.DepositLabel(deposited.chemicalName, _carryingG, lp.currentLiquidVolume),
-                              probe + Vector3.up * 0.05f, new Color(0.6f, 1f, 0.7f), 0.8f);
-            _carrying = null; _carryingG = 0f; _lastSource = null;
-            _readyAt = Time.time + actionCooldown;
-            HideHeap();
-            return;
+            if (!Carrying) { if (Dip(lp)) return; continue; }
+            if (Deposit(lp)) return;
         }
         // Once the loaded scoop has LEFT its source jar, forget it — so a later
         // deliberate return to the same jar deposits back instead of being
@@ -135,6 +107,53 @@ public class ScoopController : MonoBehaviour
             if (!stillTouching) _lastSource = null;
         }
     }
+
+    /// One DIP into a solid store: the charge leaves the jar, the tinted heap rides the
+    /// blade. Public so the play-mode visual sweep can perform the REAL verb (W5.45)
+    /// instead of teleporting grams; Update() calls it on blade contact. False when
+    /// nothing can be picked up (empty jar, a liquid, already carrying).
+    public bool Dip(LiquidPhysics lp)
+    {
+        if (lp == null || Carrying || lp.currentChemical == null
+            || !ScoopMath.CanPickUp(false, lp.currentChemical.state, lp.currentLiquidVolume)) return false;
+        float charge = ScoopMath.ScoopCharge(lp.currentLiquidVolume, gramsPerDip);
+        var chem = lp.PourOut(charge);
+        if (chem == null) return false;
+        _carrying = chem; _carryingG = charge; _lastSource = lp;
+        _readyAt = Time.time + actionCooldown;
+        ShowHeap(chem);
+        RefreshPowder(lp);                                  // source mound shrinks
+        var probe = ProbeCenter();
+        // GRANULAR, never liquid (user 2026-07-15): a dry blade-into-powder
+        // dig. No "pour" fallback — silence beats the wrong material's sound.
+        AudioService.TryPlayFirstAt(probe, 0.55f, "scoop");
+        FloatingText.Show("+" + charge.ToString("0.#") + " g " + chem.chemicalName,
+                          probe + Vector3.up * 0.05f, new Color(1f, 0.95f, 0.6f), 0.8f);
+        return true;
+    }
+
+    /// Tip the carried charge into a vessel through the normal contents path
+    /// (AddLiquid — reactions, bindings and the mound all follow). False when not
+    /// carrying or when the "vessel" is the jar it just came from.
+    public bool Deposit(LiquidPhysics lp)
+    {
+        if (lp == null || !ScoopMath.CanDeposit(Carrying, lp == _lastSource)) return false;
+        var deposited = _carrying; float grams = _carryingG;
+        lp.AddLiquid(_carrying, _carryingG);
+        RefreshPowder(lp);                                      // receiver mound grows
+        var probe = ProbeCenter();
+        // Solid tipping out of the scoop — a granular patter, not a liquid pour.
+        AudioService.TryPlayFirstAt(probe, 0.85f, "powder-pour", "scoop");
+        FloatingText.Show(ScoopMath.DepositLabel(deposited.chemicalName, grams, lp.currentLiquidVolume),
+                          probe + Vector3.up * 0.05f, new Color(0.6f, 1f, 0.7f), 0.8f);
+        _carrying = null; _carryingG = 0f; _lastSource = null;
+        _readyAt = Time.time + actionCooldown;
+        HideHeap();
+        return true;
+    }
+
+    /// Where the blade is right now (world) — lets a simulator hold it over a jar.
+    public Vector3 BladeTip => ProbeCenter();
 
     /// The scooping BLADE tip — the far end of the tool's longest axis (user
     /// 2026-07-13: the pick-up probe and the carried heap were at the whole-tool

@@ -131,6 +131,52 @@ so a first-frame capture is a photograph of the fade — which is exactly how th
 then passed immediately on a re-run). Same class as the `FloorBusy` static in W5.38. Re-run
 before believing a lone failure after an autopilot session.
 
+## The VISUAL autopilot (W5.45, 2026-09-02) — photograph every step, honestly
+**`Tools ▸ PharmaSynth ▸ Autopilot Playtest (VISUAL — honest verbs + vessel close-ups)`** — the
+campaign loop again, but each step is performed the way a HAND would and then PHOTOGRAPHED.
+Report `Logs/visual-sweep-report.txt`, pictures `Logs/visual-sweep/<nn>-<module>/<tt>-<task>.png`
+(+ `-mid-<verb>.png` for a verb in flight), one row per step in `manifest.tsv`, and
+`python Tools/visual-sheet.py` tiles them into one captioned contact sheet per module.
+
+⭐ **Why a third mode**: the campaign/tutorial sweeps complete steps with `runner.CompleteTask`,
+so nothing ever happens in a vessel and their screenshots show an empty bench; the edit-mode
+battery pours for real but no shader lerps, no `_Boil`, no particle ever renders there. VISUAL
+joins the two: `SimulatedRun.Session` (the per-run indexes + reaction watchers extracted out of
+`Run()`, behaviour-identical — the `simrun:` pins are its lock) performs **one step per tick**
+in Play mode; `VisualSweep` frames the vessel the step happened in (`SimulatedRun.LastVessel`,
+noted by each handler), renders a DevCapture-style close-up from the player's side, swinging to
+the next clear vantage when a bench or cabinet blocks the line of sight, and **probes the numbers
+behind the picture** (fill %, `_LiquidColour`, precipitate, `BoilAmount`, temperature, live
+particle systems and popups within 0.6 m, heap on the blade, powder mound).
+`VisualSweepMath`-style pure `ExpectFor`/`Judge` decide OK / FAIL / SKIP from the fired
+`ReactionRule` (its `expectedObservation` is the manuscript's word) or the verb's own contract
+(fill visible · mound shown · at temperature · boiling at the bp · chilled), suite-pinned.
+
+**Play-mode-only verb upgrades** (edit mode keeps the direct path, so the pins stay
+byte-identical): solids go through the REAL scoop verb — `ScoopController.Dip`/`Deposit`
+(extracted from `Update`) on the bench scoopula/spatula, carried to the jar and the vessel,
+**the heap on the blade is photographed mid-verb**; the litmus read uses a real bench strip so
+its colour is in the picture; the dish at the flame, the vessel on the balance and the methane
+rig are shot mid-verb with nearby particle systems fast-forwarded 0.35 s (a burst spawned this
+frame has no particles yet) and billboards turned (a popup spawned this frame still faces +Z).
+
+⛔ **What it caught on its first run** — a real bug months of verification could not see:
+scooping a solid into a vessel set up for liquid made `EnsurePowderVisual` destroy the `Liquid`
+child while `LiquidPhysics.mainRenderer` still pointed at it → **5106 MissingReferenceExceptions**
+in one run and the liquid never rendered again in that vessel. The old autopilot never scooped.
+Fixed at the source (the reference is nulled before the destroy).
+
+⚠ **Read the verdicts, not just the count.** FAIL = the manuscript promised something the
+vessel does not show (a precipitate under the 1 ml visibility cutoff, a colour rule whose product
+is authored the same colour as its reactant, a fill under 4 %). FORCED = the honest verbs could
+not complete the step in Play mode and it was pushed past — the edit-mode battery is the
+authority on completion; a FORCED step in VISUAL is a *pacing* question first (a vapor/ferment
+controller's own `Update` runs between the sweep's 0.75 s ticks). SKIP = the picture is the
+only evidence (flame confirms, the methane rig).
+
+⚠ **Never edit a script while it plays.** A pending compile can starve the editor update loop
+(the launch guard says why); the run survived it once, do not count on that.
+
 ## The playability battery (W5.40, 2026-09-02)
 **`Tools ▸ PharmaSynth ▸ Simulate Everything (full playability check)`** — one command,
 one report (`Logs/simulate-everything.txt`), one verdict. It answers "is every experiment

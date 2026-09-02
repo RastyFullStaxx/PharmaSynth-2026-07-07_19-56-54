@@ -67,6 +67,11 @@ Builds every module's stage IN EDIT MODE and reports which steps resolve to no s
 
 ⭐ Tutorial Mode had NEVER been played by the autopilot until W5.44b. The campaign sweep enters via "Laboratory", so `TutorialSession.Active` stays false and every guidance cue — glow, ghost, beacon, spotlight, verb demo, wrong-grab nudge, need line, ping, ground path — correctly does nothing. The whole mode was untested in motion, and the ground path reported "dist 0.0, no route" in all nine modules for exactly that reason.
 
+### `Tools/PharmaSynth/Autopilot Playtest (VISUAL — honest verbs + vessel close-ups)`
+<sub>`Assets/PharmaSynth/Scripts/Editor/PlaytestAutopilot.cs`</sub>
+
+⭐ VISUAL (W5.45): the campaign loop again, but every step is performed HONESTLY through SimulatedRun's verbs (real pours and scoop dips, the water bath, the ice bucket, the glass rod, a real litmus strip...) and then PHOTOGRAPHED — a close-up of the vessel the step happened in, plus the numbers behind the picture, judged against the fired reaction's manuscript observation. The other two modes complete steps by calling CompleteTask, so nothing ever happens in a vessel and their screenshots show a
+
 ### `Tools/PharmaSynth/Autopilot Playtest (plays the game in Play mode)`
 <sub>`Assets/PharmaSynth/Scripts/Editor/PlaytestAutopilot.cs`</sub>
 

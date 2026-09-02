@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -61,7 +61,19 @@ public static class PlaytestAutopilot
     [MenuItem("Tools/PharmaSynth/Autopilot Playtest (TUTORIAL Mode — checks the guidance)")]
     public static void LaunchTutorial() => Launch(true);
 
-    public static void Launch(bool tutorial)
+    public static void Launch(bool tutorial) => Launch(tutorial ? "tutorial" : "campaign");
+
+    /// ⭐ VISUAL (W5.45): the campaign loop again, but every step is performed HONESTLY
+    /// through SimulatedRun's verbs (real pours and scoop dips, the water bath, the ice
+    /// bucket, the glass rod, a real litmus strip...) and then PHOTOGRAPHED — a close-up
+    /// of the vessel the step happened in, plus the numbers behind the picture, judged
+    /// against the fired reaction's manuscript observation. The other two modes complete
+    /// steps by calling CompleteTask, so nothing ever happens in a vessel and their
+    /// screenshots show an empty bench. Report: Logs/visual-sweep-report.txt.
+    [MenuItem("Tools/PharmaSynth/Autopilot Playtest (VISUAL — honest verbs + vessel close-ups)")]
+    public static void LaunchVisual() => Launch("visual");
+
+    public static void Launch(string mode)
     {
         if (Application.isPlaying) { Debug.LogWarning("[Autopilot] already in Play mode."); return; }
         // ⛔ Never launch with a compile pending. Unity defers script compilation until
@@ -76,7 +88,7 @@ public static class PlaytestAutopilot
         }
         Directory.CreateDirectory("Logs");
         Directory.CreateDirectory(ShotDir);
-        File.WriteAllText(Request, tutorial ? "tutorial" : "campaign");
+        File.WriteAllText(Request, mode);
         Debug.Log("[Autopilot] entering Play mode — it will drive the game, write "
                   + Report + " and exit on its own.");
         EditorApplication.EnterPlaymode();
@@ -86,9 +98,9 @@ public static class PlaytestAutopilot
     {
         if (change != PlayModeStateChange.EnteredPlayMode) return;
         if (!File.Exists(Request)) return;
-        bool tutorial = File.ReadAllText(Request).Trim() == "tutorial";
+        string mode = File.ReadAllText(Request).Trim();
         File.Delete(Request);            // consume immediately: a crash must not re-trigger
-        Begin(tutorial);
+        Begin(mode);
     }
 
     // ---- run state (rebuilt fresh each play session) ------------------------------
@@ -150,9 +162,13 @@ public static class PlaytestAutopilot
 
     static bool s_tutorial;
 
-    static void Begin(bool tutorial)
+    static void Begin(string mode)
     {
-        s_tutorial = tutorial;
+        s_tutorial = mode == "tutorial";
+        s_visual = mode == "visual";
+        s_session = null; s_pending = null; s_stepIndex = 0; s_honest = 0;
+        SimulatedRun.MidVerb = s_visual ? VisualSweep.MidVerb : (System.Action<GameObject, string>)null;
+        if (s_visual) VisualSweep.BeginRun();
         s_findings.Clear(); s_errors.Clear(); s_errorBeat.Clear(); s_trace.Clear();
         s_grabChecked.Clear(); s_shots.Clear();
         s_grabsOk = s_grabsTested = s_uiOk = s_uiTested = 0;
@@ -231,6 +247,8 @@ public static class PlaytestAutopilot
 
     static void EndModule()
     {
+        if (s_pending != null) CaptureStep();
+        if (s_session != null) { s_session.End(); s_session = null; }
         int found = s_findings.Count - s_moduleFindingsAt;
         s_moduleLog.Add("  " + (CurrentModule ?? "?").PadRight(30)
                         + (s_moduleTasks + " tasks").PadRight(11)
@@ -263,6 +281,10 @@ public static class PlaytestAutopilot
         // act on the last input.
         if (now < s_nextActAt) return;
         s_nextActAt = now + ActEverySeconds;
+
+        // VISUAL: the step performed on the previous tick has had ~0.75 s of frames (the
+        // colour lerp is 0.5 s; smoke lives 2.4 s; a popup 2.5 s) — photograph it now.
+        if (s_pending != null) { CaptureStep(); return; }
 
         // Per-module ceiling — checked BEFORE Drive so a wedged module cannot skip it.
         if (CurrentModule != null && now - s_moduleStartedAt > ModuleCapSeconds)
@@ -516,7 +538,7 @@ public static class PlaytestAutopilot
         // exists to ADVANCE the flow so the live systems around it — fades, cutscenes,
         // audio, the quiz tablet, the grade card — all get exercised for real.
         if (!Act("task:" + next.taskId)) return;
-        runner.CompleteTask(next.taskId);
+        if (s_visual) PerformHonestly(runner, next); else runner.CompleteTask(next.taskId);
         s_tasksCompleted++; s_moduleTasks++;
         SetBeat("run:" + next.taskId);
     }
@@ -649,6 +671,89 @@ public static class PlaytestAutopilot
         }
     }
 
+    // ---- VISUAL mode (W5.45) -------------------------------------------------------
+
+    static bool s_visual;
+    static SimulatedRun.Session s_session;
+    static SimulatedRun.Result s_sessionRes;
+    static readonly StringBuilder s_sessionLog = new StringBuilder();
+    static int s_stepIndex, s_honest;
+
+    sealed class Pending
+    {
+        public ExperimentTask task; public string kind, module; public LiquidPhysics vessel;
+        public List<ReactionRule> rules; public float targetC; public bool honest;
+    }
+    static Pending s_pending;
+
+    /// Serve the step the way a hand would, through the same Session the edit-mode
+    /// simulator drives — but ONE step per tick, so the live systems get frames between
+    /// verbs and the photographer gets something to see. A step the honest verbs cannot
+    /// complete is a completion-detection FINDING; it is then forced so the sweep goes on.
+    static void PerformHonestly(ExperimentRunner runner, ExperimentTask next)
+    {
+        if (s_session == null)
+        {
+            s_sessionRes = new SimulatedRun.Result { totalTasks = runner.Graph.Tasks.Count };
+            s_sessionLog.Clear();
+            s_session = new SimulatedRun.Session();
+            s_session.Begin(runner, CurrentModule, s_sessionRes, s_sessionLog);
+            TaskTargetRegistry.Clear(); TutorialTargets.Build();      // this module's stage, not the last one's
+            s_stepIndex = 0;
+        }
+        s_stepIndex++;
+        VisualSweep.BeginStep(s_moduleIndex + 1, CurrentModule, s_stepIndex, next.taskId);
+        int bugsBefore = s_sessionRes.bugs.Count;
+        bool honest;
+        try { honest = s_session.Perform(next); }
+        catch (System.Exception e)
+        {
+            honest = false;
+            s_sessionRes.bugs.Add("the honest verbs THREW: " + e.GetType().Name + ": " + e.Message);
+        }
+        for (int i = bugsBefore; i < s_sessionRes.bugs.Count; i++)
+            Finding(CurrentModule + " / " + next.taskId + ": " + s_sessionRes.bugs[i]);
+        if (!runner.Graph.IsComplete(next.taskId))
+        {
+            Finding(CurrentModule + " / " + next.taskId + ": the honest verbs did NOT complete this step in Play mode"
+                    + " (condition registered=" + runner.Graph.HasCondition(next.taskId) + ") — forcing past it");
+            runner.CompleteTask(next.taskId);
+        }
+        else if (honest) s_honest++;
+
+        var vessel = SimulatedRun.LastVessel;
+        if (vessel == null) vessel = DestinationOf(next.taskId);
+        s_pending = new Pending
+        {
+            task = next, kind = SimulatedRun.LastKind, module = CurrentModule, vessel = vessel,
+            rules = new List<ReactionRule>(SimulatedRun.LastReactions), targetC = SimulatedRun.LastTargetC, honest = honest,
+        };
+    }
+
+    static LiquidPhysics DestinationOf(string taskId)
+    {
+        foreach (var t in TaskTargetRegistry.Targets(taskId))
+        {
+            if (t.role != TargetRole.Destination || t.transform == null) continue;
+            var lp = t.transform.GetComponent<LiquidPhysics>();
+            if (lp != null) return lp;
+        }
+        return null;
+    }
+
+    static void CaptureStep()
+    {
+        var p = s_pending; s_pending = null;
+        try
+        {
+            var v = VisualSweep.Record(p.module, p.task, p.kind, p.vessel, p.rules, p.targetC, p.honest);
+            Trace("visual " + v.status + " " + p.task.taskId + " — " + v.reason);
+            // The close-up IS the evidence — no Shot() of the player's view on top of it.
+            if (v.Fail) s_findings.Add("VISUAL " + p.module + " / " + p.task.taskId + " (" + p.task.label + "): " + v.reason);
+        }
+        catch (System.Exception e) { Finding("visual capture threw at " + p.task.taskId + ": " + e.Message); }
+    }
+
     // ---- quiz + grade --------------------------------------------------------------
 
     static void DriveQuiz()
@@ -753,9 +858,15 @@ public static class PlaytestAutopilot
         EditorApplication.update -= Tick;
         Application.logMessageReceived -= OnLog;
 
+        if (s_session != null) { s_session.End(); s_session = null; }
+        SimulatedRun.MidVerb = null;
+        if (s_visual)
+            VisualSweep.WriteReport("ended: " + why + " · " + s_moduleLog.Count + "/" + s_queue.Count + " modules · "
+                                    + s_honest + "/" + s_tasksCompleted + " steps completed by the honest verbs");
+
         var sb = new StringBuilder();
         sb.AppendLine("=== PharmaSynth — autopilot playtest (PLAY MODE, "
-                      + (s_tutorial ? "TUTORIAL" : "CAMPAIGN") + ") ===");
+                      + (s_tutorial ? "TUTORIAL" : s_visual ? "VISUAL" : "CAMPAIGN") + ") ===");
         sb.AppendLine("  ended: " + why + " after "
                       + (EditorApplication.timeSinceStartup - s_startedAt).ToString("0") + "s");
         sb.AppendLine();
@@ -778,6 +889,15 @@ public static class PlaytestAutopilot
             sb.AppendLine("  ground path at run start (W5.44)");
             sb.AppendLine("  " + new string('-', 76));
             foreach (var l in s_pathLog) sb.AppendLine(l);
+            sb.AppendLine();
+        }
+        if (s_visual)
+        {
+            sb.AppendLine("  visual sweep (W5.45): " + VisualSweep.Photographed + " close-ups · OK " + VisualSweep.Ok
+                          + " · FAIL " + VisualSweep.Fails + " · SKIP " + VisualSweep.Skips
+                          + " · honest completions " + s_honest + "/" + s_tasksCompleted);
+            foreach (var m in s_queue) sb.AppendLine("    " + m.PadRight(30) + VisualSweep.Summary(m));
+            sb.AppendLine("    report → " + VisualSweep.Report + "   pictures → " + VisualSweep.Dir + "/");
             sb.AppendLine();
         }
         sb.AppendLine("  modules played    : " + s_moduleLog.Count + "/" + s_queue.Count);

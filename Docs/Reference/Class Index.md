@@ -1650,6 +1650,9 @@ void SetGramsPerDip(float grams)
 float GramsPerDip
 void SetHeapScale(Vector3 s)
 Vector3 HeapScale
+bool Dip(LiquidPhysics lp)
+bool Deposit(LiquidPhysics lp)
+Vector3 BladeTip
 static float MoundFill(float grams, float fullAtG
 ```
 
@@ -4411,7 +4414,12 @@ static void Build()
 static void Launch()
 static void LaunchTutorial()
 static void Launch(bool tutorial)
+static void LaunchVisual()
+static void Launch(string mode)
 ```
+
+### `Pending` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/PlaytestAutopilot.cs`</sub>
 
 ### `QuizNavButtonsBuilder` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Editor/QuizNavButtonsBuilder.cs`</sub>
@@ -4641,7 +4649,16 @@ static void SimChloroform()
 static void SimBenzamide()
 static void SimWine()
 static Result Run(string moduleId, StringBuilder log)
+static LiquidPhysics LastVessel
+static string LastKind
+static float LastTargetC
+static readonly List<ReactionRule> LastReactions
 ```
+
+### `Session` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/SimulatedRun.cs`</sub>
+
+One honest run's working state: the mechanisms the build produced, the reaction watchers, the supply/visibility tallies. Run() drives it to the end in edit mode; the VISUAL autopilot performs one step per frame in Play mode and photographs each.
 
 ### `SpatulaPorcelain` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Editor/SpatulaPorcelain.cs`</sub>
@@ -4699,6 +4716,46 @@ static void BuildMenuButton()
 static void FixMenuLayout()
 static void BuildRoomFx()
 static void BuildSceneWiring()
+```
+
+### `VisualSweep` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/VisualSweep.cs`</sub>
+
+The photographer behind the VISUAL autopilot (W5.45): after each honestly-performed step it frames the vessel the step happened in, renders a close-up, reads the numbers behind the picture (fill, colour, precipitate, boil, temperature, live particles, popups) and judges them against what the fired ReactionRule / the verb promised. One manifest row per step feeds Tools/visual-sheet.py (a captioned contact sheet per module). ⭐ Why numbers as well as pixels: a screenshot cannot say "the flask is at 3% fill" or "no particle system is alive within 60 cm" — and a reviewer skimming seventy thumbnails misses both. Every verdict names the exact quantity it judged, so a FAIL is actionable on its own (the W5.40 lesson: make the failure message print the state it judged).
+
+```csharp
+const string Dir
+const string Manifest
+const string Report
+const float NearM
+```
+
+### `Expect` <sub>enum</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/VisualSweep.cs`</sub>
+
+### `Obs` <sub>struct</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/VisualSweep.cs`</sub>
+
+What the probe saw. Plain data so the judge is pure and pinnable.
+
+### `Verdict` <sub>struct</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/VisualSweep.cs`</sub>
+
+```csharp
+static Expect ExpectFor(string kind, ReactionRule rule)
+static float ColourDistance(Color a, Color b)
+const float FillFloor
+static Verdict Judge(Expect e, Obs o, ReactionRule rule, float targetC, float boilingPointC)
+static Obs Probe(LiquidPhysics lp)
+static string LastFrame
+static string Snap(GameObject target, string file, bool fastForwardFx)
+static int Ok, Fails, Skips, Photographed
+static void BeginRun()
+static void BeginStep(int moduleIndex, string module, int step, string taskId)
+static void MidVerb(GameObject go, string tag)
+static Verdict Record(string module, ExperimentTask task, string kind, LiquidPhysics vessel,
+static string Summary(string module)
+static void WriteReport(string headline)
 ```
 
 ### `VoiceAudioBuilder` <sub>class</sub>

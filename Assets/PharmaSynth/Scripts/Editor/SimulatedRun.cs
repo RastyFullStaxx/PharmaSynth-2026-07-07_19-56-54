@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Text;
 using UnityEditor;
@@ -114,88 +114,17 @@ public static class SimulatedRun
                      FindObjectsInactive.Include, FindObjectsSortMode.None))
             if (rig != null) rig.HandleExperimentStarted(module);
 
-        // The module's own END PRODUCT is hidden from the bench during its run
-        // ("the player must craft it") — a shelf bottle of it therefore CANNOT
-        // be a source, however the edit-mode scene looks. Round one poured the
-        // litmus sample straight from the (play-mode-hidden) Raw_BenzoicAcid.
-        s_hiddenProduct = EndProductVisibility.HiddenProductFor(moduleId, false);
-        // The product IDENTITY (independent of whether a shelf bottle exists to
-        // hide): a bound vessel holding ONLY this substance is the player's own
-        // purified product — the preferred source for every test draw.
-        s_moduleProduct = DemoMode.ProductFor(moduleId);
-
         var res = new Result { totalTasks = module.graphTasks.Count };
         log.AppendLine("=== Simulated run: " + moduleId + " (" + res.totalTasks + " tasks) ===");
 
-        // Every mistake as it lands, in context — a count alone can't tell a
-        // mis-authored binding from a fume-hood rule firing on a bench pour.
-        System.Action<LabErrorType, string> onMistake =
-            (type, msg) => log.AppendLine("  ⚠ MISTAKE [" + type + "] " + msg);
-        runner.Mistakes.MistakeRecorded += onMistake;
-
-        // Heat-gate watchdog (user 2026-07-17: "achieve the needed in the
-        // procedure first, before these reactions come"): any temperature-gated
-        // rule that fires while its vessel is still COLD is a broken gate.
-        // ALSO the reaction TRANSCRIPT (strict pass 2026-07-18): every fire is
-        // logged with its observation, so "did the violet discharge / did the
-        // buff precipitate drop" is read straight off the log instead of being
-        // proven only transitively by the next step's source lookup.
-        var firedRules = new HashSet<string>();
-        var watchers = new List<(LiquidPhysics lp, System.Action<ReactionRule> h)>();
-        foreach (var wlp in Object.FindObjectsByType<LiquidPhysics>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-        {
-            var cap = wlp;
-            System.Action<ReactionRule> h = rule =>
-            {
-                if (rule == null) return;
-                if (!rule.TemperatureSatisfied(cap.currentTempC))
-                    res.bugs.Add(cap.name + ": " + rule.name + " fired at " + cap.currentTempC.ToString("0")
-                                 + " C but needs " + rule.minTemperatureC.ToString("0") + " C — the heat gate is broken");
-                if (firedRules.Add(rule.name + "@" + cap.name))   // first fire per vessel — bursts stay one line
-                    log.AppendLine("  ⚗ " + rule.name + " in " + cap.name
-                                   + (string.IsNullOrEmpty(rule.expectedObservation) ? "" : " — " + rule.expectedObservation));
-                // A precipitate rule must leave VISIBLE precipitate volume, or
-                // the observation text lies to the player.
-                if (rule.hasPrecipitate && rule.resultPrecipitate != null && cap.currentPptVolume <= 0.01f)
-                    res.bugs.Add(cap.name + ": " + rule.name + " claims a precipitate but the vessel shows none");
-            };
-            cap.ReactionOccurred += h;
-            watchers.Add((cap, h));
-        }
-
-        // FUNNEL audit (strict pass 2026-07-18): a funnel WITHOUT the
-        // LiquidPassthrough marker EATS any pour aimed through it (the stream
-        // lands on its collider as a puddle — the W5.15 headset bug). The hints
-        // tell the player to pour through the funnel, so a bad funnel breaks
-        // the filter step even though a direct pour would work.
-        foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            if ((t.name.StartsWith("Eq_Funnel") || t.name.StartsWith("Funnel_"))
-                && t.GetComponent<LiquidPassthrough>() == null)
-                res.bugs.Add(t.name + " has NO LiquidPassthrough — a pour through it is wasted (run Apply W5.8 Verb Data)");
-
-        // Index the mechanisms the build produced.
-        var bindings = Object.FindObjectsByType<LiquidTaskBinding>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        var racks = Object.FindObjectsByType<RackTaskGroup>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        var simStations = Object.FindObjectsByType<ZoneSimStation>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        var zoneStations = Object.FindObjectsByType<ExperimentTaskStation>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        var temps = Object.FindObjectsByType<TemperatureSim>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        var labItems = Object.FindObjectsByType<LabItem>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-
-        var stepsByTask = new Dictionary<string, List<(LiquidTaskBinding b, LiquidTaskBinding.ReagentStep s)>>();
-        foreach (var b in bindings)
-            foreach (var s in b.ExpectedSteps)
-            {
-                if (s == null || string.IsNullOrEmpty(s.taskId)) continue;
-                if (!stepsByTask.TryGetValue(s.taskId, out var l)) stepsByTask[s.taskId] = l = new List<(LiquidTaskBinding, LiquidTaskBinding.ReagentStep)>();
-                l.Add((b, s));
-            }
-
-        var demand = new Dictionary<ChemicalData, float>();          // supply audit
-        var pouredInto = new Dictionary<LiquidTaskBinding, float>(); // fill-visibility audit
-        var done = new HashSet<string>();
+        // Everything a step needs (indexes, reaction watchers, audits) lives in the Session
+        // so the PLAY-MODE visual sweep (W5.45) can perform ONE honest step per frame and
+        // photograph it; this edit-mode walk just drives the same session to the end.
+        var session = new Session();
+        session.Begin(runner, moduleId, res, log);
 
         // Walk until finished or stuck. Each pass serves every currently-available task.
-        for (int pass = 0; pass < res.totalTasks + 2 && done.Count < res.totalTasks; pass++)
+        for (int pass = 0; pass < res.totalTasks + 2 && session.Done.Count < res.totalTasks; pass++)
         {
             bool progressed = false;
             // Reconcile first: a wrap-up ("record observations") or a condition
@@ -203,104 +132,28 @@ public static class SimulatedRun
             // (e.g. the ester heat loop ticks the graph). Count it here or the
             // walk false-deadlocks — it's already complete, so never "available".
             foreach (var gt in runner.Graph.Tasks)
-                if (runner.Graph.IsComplete(gt.taskId) && !done.Contains(gt.taskId))
-                { done.Add(gt.taskId); res.completedTasks++; progressed = true;
+                if (runner.Graph.IsComplete(gt.taskId) && !session.Done.Contains(gt.taskId))
+                { session.Done.Add(gt.taskId); res.completedTasks++; progressed = true;
                   log.AppendLine("\n» " + gt.taskId + " — auto-completed (wrap-up / condition)"); }
 
             foreach (var t in new List<ExperimentTask>(runner.Graph.AvailableTasks()))
             {
-                string id = t.taskId;
-                if (done.Contains(id)) continue;
-                log.AppendLine("\n» " + id + " — \"" + t.label + "\"");
-
-                bool handled;
-                if (stepsByTask.TryGetValue(id, out var steps))
-                {
-                    handled = true;
-                    // A vapor-collect task's "reagent" is PRODUCED by the hot
-                    // source tube, never poured from a bottle — own it first.
-                    if (SimulateVapor(runner, id, steps, pouredInto, res, log)) { }
-                    else if (SimulatePours(runner, id, steps, demand, pouredInto, res, log)
-                        && !runner.Graph.IsComplete(id))
-                    {
-                        // Delivery done but completion belongs elsewhere: a rack
-                        // group (comparison sets) or a station (pour THEN heat —
-                        // Exp 2's hydrolysis boil is exactly this handoff).
-                        bool deferred = false;
-                        foreach (var (_, s) in steps) if (!s.completesTask) deferred = true;
-                        RackTaskGroup rack = null;
-                        foreach (var r in racks) if (r != null && r.TaskId == id) rack = r;
-                        if (rack != null)
-                        {
-                            if (!rack.ShouldFire())
-                            {
-                                res.bugs.Add(id + ": rack group refuses to fire after every member was served ("
-                                             + rack.MemberCount + " members)");
-                                log.AppendLine("  ✗ rack not ready after full service");
-                            }
-                            else
-                            {
-                                runner.CompleteTask(id);   // exactly what the group's Update does in play
-                                log.AppendLine("  ✓ rack fired (" + rack.MemberCount + " tubes)");
-                            }
-                        }
-                        else if (SimulateVesselHeat(runner, id, steps, res, log)) { }
-                        else if (SimulateFermentation(runner, id, steps, res, log)) { }
-                        else if (SimulateChillTask(runner, id, res, log)) { }   // chill WITH reagents (Exp 5's ice water)
-                        else if (SimulateWeigh(runner, id, steps, res, log)) { }
-                        else if (SimulateLitmus(runner, id, steps, res, log)) { }
-                        else if (SimulateFlame(runner, id, steps, res, log)) { }   // flammability confirm (Exp 7)
-                        else if (SimulateStation(runner, id, simStations, zoneStations, temps, labItems, res, log)) { }
-                        else if (deferred)
-                        {
-                            res.bugs.Add(id + ": steps defer completion (completesTask:false) but NO rack group, heat task, or station owns it");
-                            log.AppendLine("  ✗ deferred but ownerless");
-                        }
-                        else
-                            res.bugs.Add(id + ": every step delivered its full amount yet the task did not complete");
-                    }
-                    else if (runner.Graph.IsComplete(id))
-                        log.AppendLine("  ✓ completed by delivery");
-                    // The procedure's heat step, played: mixes held cold go into
-                    // the water bath and must fire there.
-                    if (runner.Graph.IsComplete(id)) WarmAtBath(id, steps, res, log);
-                }
-                else
-                    handled = SimulateStation(runner, id, simStations, zoneStations, temps, labItems, res, log)
-                              || SimulateChillTask(runner, id, res, log)
-                              || SimulateVesselHeat(runner, id, null, res, log)   // heat with no reagents of its own (Exp 6's heat-glow)
-                              || SimulateWeigh(runner, id, null, res, log)        // weigh with no pours of its own (Exp 7's weigh-product)
-                              || SimulateStir(runner, id, res, log)               // stir with no pours of its own (Exp 8's stir & stand)
-                              || SimulateGrind(runner, id, res, log)              // pestle in the mortar (methane's prepare-mixture)
-                              || SimulateMethane(runner, id, res, log);           // the hand-built tutorial rig
-
-                if (!handled)
-                {
-                    // No binding, no station: maybe an externally-registered condition.
-                    runner.Graph.Tick();
-                    if (!runner.Graph.IsComplete(id))
-                    {
-                        res.bugs.Add(id + ": NO mechanism completes this task (no binding, station, or satisfied condition)");
-                        log.AppendLine("  ✗ no mechanism — the player could never finish this step");
-                        done.Add(id);           // skip so the walk can report what else breaks
-                        runner.CompleteTask(id); // force past it to keep exploring downstream
-                    }
-                }
-
-                if (runner.Graph.IsComplete(id)) { done.Add(id); res.completedTasks++; progressed = true; }
+                if (session.Done.Contains(t.taskId)) continue;
+                session.Perform(t);
+                if (runner.Graph.IsComplete(t.taskId)) { session.Done.Add(t.taskId); res.completedTasks++; progressed = true; }
             }
-            if (!progressed && done.Count < res.totalTasks)
+            if (!progressed && session.Done.Count < res.totalTasks)
             {
                 var avail = new List<string>();
                 foreach (var t in runner.Graph.AvailableTasks()) avail.Add(t.taskId);
-                res.bugs.Add("DEADLOCK after " + done.Count + "/" + res.totalTasks
+                res.bugs.Add("DEADLOCK after " + session.Done.Count + "/" + res.totalTasks
                              + " tasks; available-but-stuck: " + string.Join(", ", avail));
                 break;
             }
         }
 
-        AuditSupplies(demand, labItems, res, log);
-        AuditVisibility(pouredInto, res, log);
+        AuditSupplies(session.Demand, session.LabItems, res, log);
+        AuditVisibility(session.PouredInto, res, log);
 
         res.mistakes = runner.MistakeCount;
         if (res.mistakes > 0)
@@ -318,8 +171,7 @@ public static class SimulatedRun
         // scene after every suite run; the user kept hand-deleting DynLabels and
         // TeleAnchors that the next run resurrected (2026-07-17). Use Reveal Stage
         // when you WANT the built stage to inspect.
-        runner.Mistakes.MistakeRecorded -= onMistake;
-        foreach (var (wlp, wh) in watchers) if (wlp != null) wlp.ReactionOccurred -= wh;
+        session.End();
         builder.Build("tutorial-methane");
 
         // Put every drop back: bottles refill, tubes empty — the scene must be
@@ -332,6 +184,226 @@ public static class SimulatedRun
             lp.currentPptVolume = pptMl;
         }
         return res;
+    }
+
+    // ---- play-mode visual sweep seams (W5.45) ----------------------------------
+    /// What the last Perform acted ON, so a photographer can point a camera at it
+    /// without re-deriving the handler's choice: the vessel the step happened in, the
+    /// verb kind, the temperature goal of a heat/chill step, and every reaction rule
+    /// that fired during the step (its expectedObservation is what gets judged).
+    public static LiquidPhysics LastVessel;
+    public static string LastKind = "";
+    public static float LastTargetC;
+    public static readonly List<ReactionRule> LastReactions = new List<ReactionRule>();
+    /// Mid-verb hook: photograph a verb IN FLIGHT — the loaded scoop over the jar, the
+    /// dish at the flame, the vessel on the balance. Null outside the visual sweep.
+    public static System.Action<GameObject, string> MidVerb;
+
+    static void Note(string kind, LiquidPhysics lp, float targetC = 0f)
+    { LastKind = kind; if (lp != null) LastVessel = lp; if (targetC > 0f) LastTargetC = targetC; }
+
+    /// The bench tool that dips exactly `grams` per action (scoopula 2 g, porcelain
+    /// spatula 0.1 g) — the verb contract's tool choice, mirrored.
+    static ScoopController FindScoopTool(float grams)
+    {
+        foreach (var sc in Object.FindObjectsByType<ScoopController>(FindObjectsSortMode.None))
+            if (sc != null && sc.gameObject.activeInHierarchy && !sc.name.StartsWith("Template_")
+                && Mathf.Abs(sc.GramsPerDip - grams) < 0.001f) return sc;
+        return null;
+    }
+
+    /// Carry the tool so its blade sits at the vessel's mouth, as a hand would.
+    static void HoldBladeAt(ScoopController tool, LiquidPhysics vessel)
+    {
+        var b = ExperimentSceneBuilder.SolidWorldBounds(vessel.gameObject);
+        tool.transform.position += new Vector3(b.center.x, b.max.y + 0.01f, b.center.z) - tool.BladeTip;
+    }
+
+    /// One honest run's working state: the mechanisms the build produced, the reaction
+    /// watchers, the supply/visibility tallies. Run() drives it to the end in edit mode;
+    /// the VISUAL autopilot performs one step per frame in Play mode and photographs each.
+    public sealed class Session
+    {
+        public ExperimentRunner Runner; public Result Res; public StringBuilder Log;
+        public Dictionary<string, List<(LiquidTaskBinding b, LiquidTaskBinding.ReagentStep s)>> StepsByTask;
+        public RackTaskGroup[] Racks; public ZoneSimStation[] SimStations; public ExperimentTaskStation[] ZoneStations;
+        public TemperatureSim[] Temps; public LabItem[] LabItems;
+        public readonly Dictionary<ChemicalData, float> Demand = new Dictionary<ChemicalData, float>();          // supply audit
+        public readonly Dictionary<LiquidTaskBinding, float> PouredInto = new Dictionary<LiquidTaskBinding, float>(); // fill-visibility audit
+        public readonly HashSet<string> Done = new HashSet<string>();
+        readonly HashSet<string> _firedRules = new HashSet<string>();
+        readonly List<(LiquidPhysics lp, System.Action<ReactionRule> h)> _watchers = new List<(LiquidPhysics, System.Action<ReactionRule>)>();
+        System.Action<LabErrorType, string> _onMistake;
+
+        public void Begin(ExperimentRunner runner, string moduleId, Result res, StringBuilder log)
+        {
+            Runner = runner; Res = res; Log = log;
+
+            // The module's own END PRODUCT is hidden from the bench during its run
+            // ("the player must craft it") — a shelf bottle of it therefore CANNOT
+            // be a source, however the edit-mode scene looks. Round one poured the
+            // litmus sample straight from the (play-mode-hidden) Raw_BenzoicAcid.
+            s_hiddenProduct = EndProductVisibility.HiddenProductFor(moduleId, false);
+            // The product IDENTITY (independent of whether a shelf bottle exists to
+            // hide): a bound vessel holding ONLY this substance is the player's own
+            // purified product — the preferred source for every test draw.
+            s_moduleProduct = DemoMode.ProductFor(moduleId);
+
+            // Every mistake as it lands, in context — a count alone can't tell a
+            // mis-authored binding from a fume-hood rule firing on a bench pour.
+            _onMistake = (type, msg) => log.AppendLine("  ⚠ MISTAKE [" + type + "] " + msg);
+            runner.Mistakes.MistakeRecorded += _onMistake;
+
+            // Heat-gate watchdog (user 2026-07-17: "achieve the needed in the
+            // procedure first, before these reactions come"): any temperature-gated
+            // rule that fires while its vessel is still COLD is a broken gate.
+            // ALSO the reaction TRANSCRIPT (strict pass 2026-07-18): every fire is
+            // logged with its observation, so "did the violet discharge / did the
+            // buff precipitate drop" is read straight off the log instead of being
+            // proven only transitively by the next step's source lookup.
+            foreach (var wlp in Object.FindObjectsByType<LiquidPhysics>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                var cap = wlp;
+                System.Action<ReactionRule> h = rule =>
+                {
+                    if (rule == null) return;
+                    LastReactions.Add(rule);
+                    if (!rule.TemperatureSatisfied(cap.currentTempC))
+                        res.bugs.Add(cap.name + ": " + rule.name + " fired at " + cap.currentTempC.ToString("0")
+                                     + " C but needs " + rule.minTemperatureC.ToString("0") + " C — the heat gate is broken");
+                    if (_firedRules.Add(rule.name + "@" + cap.name))   // first fire per vessel — bursts stay one line
+                        log.AppendLine("  ⚗ " + rule.name + " in " + cap.name
+                                       + (string.IsNullOrEmpty(rule.expectedObservation) ? "" : " — " + rule.expectedObservation));
+                    // A precipitate rule must leave VISIBLE precipitate volume, or
+                    // the observation text lies to the player.
+                    if (rule.hasPrecipitate && rule.resultPrecipitate != null && cap.currentPptVolume <= 0.01f)
+                        res.bugs.Add(cap.name + ": " + rule.name + " claims a precipitate but the vessel shows none");
+                };
+                cap.ReactionOccurred += h;
+                _watchers.Add((cap, h));
+            }
+
+            // FUNNEL audit (strict pass 2026-07-18): a funnel WITHOUT the
+            // LiquidPassthrough marker EATS any pour aimed through it (the stream
+            // lands on its collider as a puddle — the W5.15 headset bug). The hints
+            // tell the player to pour through the funnel, so a bad funnel breaks
+            // the filter step even though a direct pour would work.
+            foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if ((t.name.StartsWith("Eq_Funnel") || t.name.StartsWith("Funnel_"))
+                    && t.GetComponent<LiquidPassthrough>() == null)
+                    res.bugs.Add(t.name + " has NO LiquidPassthrough — a pour through it is wasted (run Apply W5.8 Verb Data)");
+
+            // Index the mechanisms the build produced.
+            var bindings = Object.FindObjectsByType<LiquidTaskBinding>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            Racks = Object.FindObjectsByType<RackTaskGroup>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            SimStations = Object.FindObjectsByType<ZoneSimStation>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            ZoneStations = Object.FindObjectsByType<ExperimentTaskStation>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            Temps = Object.FindObjectsByType<TemperatureSim>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            LabItems = Object.FindObjectsByType<LabItem>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+            StepsByTask = new Dictionary<string, List<(LiquidTaskBinding b, LiquidTaskBinding.ReagentStep s)>>();
+            foreach (var b in bindings)
+                foreach (var s in b.ExpectedSteps)
+                {
+                    if (s == null || string.IsNullOrEmpty(s.taskId)) continue;
+                    if (!StepsByTask.TryGetValue(s.taskId, out var l)) StepsByTask[s.taskId] = l = new List<(LiquidTaskBinding, LiquidTaskBinding.ReagentStep)>();
+                    l.Add((b, s));
+                }
+        }
+
+        /// Serve ONE available task the way a hand would. True only when the task
+        /// completed through the real chain with no new bug logged — a handler that
+        /// had to force past a broken step returns false (the bug is in Res.bugs).
+        public bool Perform(ExperimentTask t)
+        {
+            var runner = Runner; var res = Res; var log = Log;   // the handlers' names
+            string id = t.taskId;
+            int bugsBefore = res.bugs.Count;
+            LastVessel = null; LastKind = ""; LastTargetC = 0f; LastReactions.Clear();
+            log.AppendLine("\n» " + id + " — \"" + t.label + "\"");
+
+            bool handled;
+            if (StepsByTask.TryGetValue(id, out var steps))
+            {
+                handled = true;
+                // A vapor-collect task's "reagent" is PRODUCED by the hot
+                // source tube, never poured from a bottle — own it first.
+                if (SimulateVapor(runner, id, steps, PouredInto, res, log)) { }
+                else if (SimulatePours(runner, id, steps, Demand, PouredInto, res, log)
+                    && !runner.Graph.IsComplete(id))
+                {
+                    // Delivery done but completion belongs elsewhere: a rack
+                    // group (comparison sets) or a station (pour THEN heat —
+                    // Exp 2's hydrolysis boil is exactly this handoff).
+                    bool deferred = false;
+                    foreach (var (_, s) in steps) if (!s.completesTask) deferred = true;
+                    RackTaskGroup rack = null;
+                    foreach (var r in Racks) if (r != null && r.TaskId == id) rack = r;
+                    if (rack != null)
+                    {
+                        if (!rack.ShouldFire())
+                        {
+                            res.bugs.Add(id + ": rack group refuses to fire after every member was served ("
+                                         + rack.MemberCount + " members)");
+                            log.AppendLine("  ✗ rack not ready after full service");
+                        }
+                        else
+                        {
+                            runner.CompleteTask(id);   // exactly what the group's Update does in play
+                            log.AppendLine("  ✓ rack fired (" + rack.MemberCount + " tubes)");
+                        }
+                    }
+                    else if (SimulateVesselHeat(runner, id, steps, res, log)) { }
+                    else if (SimulateFermentation(runner, id, steps, res, log)) { }
+                    else if (SimulateChillTask(runner, id, res, log)) { }   // chill WITH reagents (Exp 5's ice water)
+                    else if (SimulateWeigh(runner, id, steps, res, log)) { }
+                    else if (SimulateLitmus(runner, id, steps, res, log)) { }
+                    else if (SimulateFlame(runner, id, steps, res, log)) { }   // flammability confirm (Exp 7)
+                    else if (SimulateStation(runner, id, SimStations, ZoneStations, Temps, LabItems, res, log)) { }
+                    else if (deferred)
+                    {
+                        res.bugs.Add(id + ": steps defer completion (completesTask:false) but NO rack group, heat task, or station owns it");
+                        log.AppendLine("  ✗ deferred but ownerless");
+                    }
+                    else
+                        res.bugs.Add(id + ": every step delivered its full amount yet the task did not complete");
+                }
+                else if (runner.Graph.IsComplete(id))
+                    log.AppendLine("  ✓ completed by delivery");
+                // The procedure's heat step, played: mixes held cold go into
+                // the water bath and must fire there.
+                if (runner.Graph.IsComplete(id)) WarmAtBath(id, steps, res, log);
+            }
+            else
+                handled = SimulateStation(runner, id, SimStations, ZoneStations, Temps, LabItems, res, log)
+                          || SimulateChillTask(runner, id, res, log)
+                          || SimulateVesselHeat(runner, id, null, res, log)   // heat with no reagents of its own (Exp 6's heat-glow)
+                          || SimulateWeigh(runner, id, null, res, log)        // weigh with no pours of its own (Exp 7's weigh-product)
+                          || SimulateStir(runner, id, res, log)               // stir with no pours of its own (Exp 8's stir & stand)
+                          || SimulateGrind(runner, id, res, log)              // pestle in the mortar (methane's prepare-mixture)
+                          || SimulateMethane(runner, id, res, log);           // the hand-built tutorial rig
+
+            if (!handled)
+            {
+                // No binding, no station: maybe an externally-registered condition.
+                runner.Graph.Tick();
+                if (!runner.Graph.IsComplete(id))
+                {
+                    res.bugs.Add(id + ": NO mechanism completes this task (no binding, station, or satisfied condition)");
+                    log.AppendLine("  ✗ no mechanism — the player could never finish this step");
+                    Done.Add(id);           // skip so the walk can report what else breaks
+                    runner.CompleteTask(id); // force past it to keep exploring downstream
+                }
+            }
+            return runner.Graph.IsComplete(id) && res.bugs.Count == bugsBefore;
+        }
+
+        public void End()
+        {
+            if (Runner != null && _onMistake != null) Runner.Mistakes.MistakeRecorded -= _onMistake;
+            foreach (var (wlp, wh) in _watchers) if (wlp != null) wlp.ReactionOccurred -= wh;
+            _watchers.Clear();
+        }
     }
 
     /// Deliver every reagent step of one task THE WAY A HAND WOULD: draw each
@@ -394,6 +466,7 @@ public static class SimulatedRun
         foreach (var (b, s, src, vesselSource, scoopDraw, inc, n) in plan)
         {
             var lp = b.GetComponent<LiquidPhysics>();
+            Note(scoopDraw || (IsSolid(s) && !vesselSource) ? "solid" : "pour", lp);
 
             // FUME HOOD (Exp 5): a toxic/volatile reagent is only sanctioned
             // while the DESTINATION vessel sits inside the hood — so the sim
@@ -424,16 +497,42 @@ public static class SimulatedRun
 
             float before = b.AccumulatedFor(id, s.reagent);
             int poured = 0;
+            // PLAY MODE (W5.45): solids go through the REAL scoop verb — the bench
+            // scoopula/spatula dips the jar (the heap rides its blade), is carried to
+            // the vessel and tipped in. Edit mode keeps the direct path below: Dip
+            // builds runtime objects, and the suite's simrun pins must not move.
+            ScoopController scoop = null;
+            if (Application.isPlaying && (scoopDraw || (IsSolid(s) && !vesselSource))
+                && src.currentChemical != null
+                && ScoopMath.CanPickUp(false, src.currentChemical.state, src.currentLiquidVolume))
+                scoop = FindScoopTool(inc);
+            Vector3 scoopHome = scoop != null ? scoop.transform.position : Vector3.zero;
             for (int k = 0; k < n; k++)
             {
-                var chem = src.PourOut(inc);                    // out of the real bottle
-                if (chem == null)
+                if (scoop != null)
                 {
-                    res.warnings.Add(id + ": source " + src.name + " ran DRY mid-step ("
-                                     + s.reagent.chemicalName + ") — starvation");
-                    break;
+                    HoldBladeAt(scoop, src);
+                    if (!scoop.Dip(src))
+                    {
+                        res.warnings.Add(id + ": source " + src.name + " ran DRY mid-step ("
+                                         + s.reagent.chemicalName + ") — starvation");
+                        break;
+                    }
+                    if (k == 0) MidVerb?.Invoke(scoop.gameObject, "scoop");
+                    HoldBladeAt(scoop, lp);
+                    scoop.Deposit(lp);                          // AddLiquid inside — the real chemistry path
                 }
-                lp.AddLiquid(chem, inc);                        // the real chemistry path
+                else
+                {
+                    var chem = src.PourOut(inc);                    // out of the real bottle
+                    if (chem == null)
+                    {
+                        res.warnings.Add(id + ": source " + src.name + " ran DRY mid-step ("
+                                         + s.reagent.chemicalName + ") — starvation");
+                        break;
+                    }
+                    lp.AddLiquid(chem, inc);                        // the real chemistry path
+                }
                 doneActions++; poured++;
                 if (runner.Graph.IsComplete(id))
                 {
@@ -447,6 +546,7 @@ public static class SimulatedRun
                     break;   // the ✓ showed — a player stops pouring
                 }
             }
+            if (scoop != null) scoop.transform.position = scoopHome;
             // The pour happened; did the BINDING hear it? Silent-unsubscribed is
             // exactly the bug that hard-stuck the 2026-07-17 headset run.
             if (s.requiredMl > 0f && b.AccumulatedFor(id, s.reagent) <= before + 0.001f
@@ -564,6 +664,7 @@ public static class SimulatedRun
             res.bugs.Add(id + ": fermentation has no limewater vessel to cloud (pour limewater into a tube first)");
             return true;
         }
+        Note("ferment", lime);
         if (!fc.Fermenting)
         {
             res.bugs.Add(id + ": flask is not fermenting (is prepare-must complete + the must in the flask?)");
@@ -603,6 +704,7 @@ public static class SimulatedRun
             foreach (var h in Object.FindObjectsByType<VesselHeatTask>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 if (h != null && h.TaskId == id) { heat = h; tube = h.GetComponent<LiquidPhysics>(); break; }
         if (heat == null || tube == null) return false;
+        Note("heat", tube, heat.RequiredC);
 
         if (heat.RequiredC > WaterBathMath.BathMaxC)
         {
@@ -669,6 +771,7 @@ public static class SimulatedRun
         if (chill == null) return false;
 
         var lp = chill.GetComponent<LiquidPhysics>();
+        Note("chill", lp, chill.RequiredC);
         var ice = Object.FindAnyObjectByType<IceBathController>();
         if (ice == null)
         {
@@ -709,6 +812,7 @@ public static class SimulatedRun
             if (l != null && l.TaskId == id) { lt = l; tube = b.GetComponent<LiquidPhysics>(); break; }
         }
         if (lt == null) return false;
+        Note("litmus", tube);
 
         // The player tears a strip off the bench litmus box — it must exist,
         // and at least one dispensable strip must CARRY the LitmusStrip
@@ -724,13 +828,34 @@ public static class SimulatedRun
         if (!stripWired)
             res.bugs.Add(id + ": no litmus strip in the scene carries a Collider — a physical touch can never register in play");
 
-        var stripGo = new GameObject("SimLitmusStrip");
-        try
+        // PLAY MODE (W5.45): use a REAL bench strip when one is out, so the strip's own
+        // colour (LitmusMath.ColorForPH) is what gets photographed. Edit mode keeps the
+        // renderer-less stand-in.
+        LitmusStrip real = null;
+        if (Application.isPlaying)
+            foreach (var st in Object.FindObjectsByType<LitmusStrip>(FindObjectsSortMode.None))
+                if (st != null && !st.Used && st.gameObject.activeInHierarchy && !st.name.StartsWith("Template_"))
+                { real = st; break; }
+        if (real != null)
         {
-            stripGo.AddComponent<LitmusStrip>().TouchVessel(tube);
+            Vector3 stripHome = real.transform.position;
+            var tb = ExperimentSceneBuilder.SolidWorldBounds(tube.gameObject);
+            real.transform.position = new Vector3(tb.center.x, tb.max.y + 0.02f, tb.center.z);
+            real.TouchVessel(tube);
             runner.Graph.Tick();
+            MidVerb?.Invoke(real.gameObject, "litmus");
+            real.transform.position = stripHome;
         }
-        finally { Object.DestroyImmediate(stripGo); }
+        else
+        {
+            var stripGo = new GameObject("SimLitmusStrip");
+            try
+            {
+                stripGo.AddComponent<LitmusStrip>().TouchVessel(tube);
+                runner.Graph.Tick();
+            }
+            finally { Object.DestroyImmediate(stripGo); }
+        }
 
         if (runner.Graph.IsComplete(id))
             log.AppendLine("  ✓ touched a litmus strip to " + tube.name + " — mixture pH "
@@ -757,6 +882,7 @@ public static class SimulatedRun
         foreach (var s in Object.FindObjectsByType<StirController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             if (s != null && s.TaskId == id) { stir = s; break; }
         if (stir == null) return false;
+        Note("stir", stir.GetComponent<LiquidPhysics>());
 
         int samples = 0;
         for (int i = 0; i < 200 && !runner.Graph.IsComplete(id); i++)
@@ -789,6 +915,7 @@ public static class SimulatedRun
         foreach (var g in Object.FindObjectsByType<GrindController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             if (g != null && g.TaskId == id) { grind = g; break; }
         if (grind == null) return false;
+        Note("grind", grind.GetComponent<LiquidPhysics>());
 
         int samples = 0;
         for (int i = 0; i < 300 && !runner.Graph.IsComplete(id); i++)
@@ -838,6 +965,10 @@ public static class SimulatedRun
             res.bugs.Add(id + ": no 'glass-tube' on the bench — the methane rig has nothing to heat");
             runner.CompleteTask(id);
             return true;
+        }
+        {
+            var mlp = (id == "collect-gas" || id == "test-gas") && collect != null ? collect.GetComponent<LiquidPhysics>() : null;
+            Note("methane:" + id, mlp != null ? mlp : tube.GetComponent<LiquidPhysics>());
         }
 
         var moved = new List<(Transform t, Vector3 pos)>();
@@ -906,6 +1037,7 @@ public static class SimulatedRun
                     if (i % 5 == 0) runner.Graph.Tick();
                 }
                 runner.Graph.Tick();
+                MidVerb?.Invoke((id == "test-gas" && collect != null ? collect : tube).gameObject, id);
                 burner.Extinguish();
                 if (match != null) match.Extinguish(true);
             }
@@ -953,6 +1085,7 @@ public static class SimulatedRun
             if (f != null && f.TaskId == id) { flame = f; dish = b.GetComponent<LiquidPhysics>(); break; }
         }
         if (flame == null || dish == null) return false;
+        Note("flame", dish);
 
         var burner = Object.FindAnyObjectByType<BurnerController>(FindObjectsInactive.Include);
         if (burner == null)
@@ -966,6 +1099,7 @@ public static class SimulatedRun
         dish.transform.position = FlameTestMath.FlamePos(burner);   // hold the sample AT the flame
         flame.PollFlames();
         runner.Graph.Tick();
+        MidVerb?.Invoke(dish.gameObject, "flame");
         dish.transform.position = home;
         burner.Extinguish();
         if (runner.Graph.IsComplete(id))
@@ -1000,6 +1134,7 @@ public static class SimulatedRun
             runner.CompleteTask(id);
             return true;
         }
+        Note("vapor", receiver);
         // Keep the source at temperature (the flame again — the player leaves
         // the tube over the burner while collecting).
         var flame = Object.FindAnyObjectByType<NakedFlameHeat>(FindObjectsInactive.Include);
@@ -1053,9 +1188,11 @@ public static class SimulatedRun
             runner.CompleteTask(id);
             return true;
         }
+        Note("weigh", tube);
         station.ForceLoad(null, tube, 5f);   // rested + settled on the pan
         runner.Graph.Tick();
         bool done = runner.Graph.IsComplete(id);
+        MidVerb?.Invoke(station.gameObject, "weigh");
         station.ForceLoad(null, null, 0f);   // lift it back off
         if (done)
             log.AppendLine("  ✓ set " + tube.name + " on the balance — "
