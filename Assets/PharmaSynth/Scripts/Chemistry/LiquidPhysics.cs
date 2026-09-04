@@ -367,7 +367,15 @@ public class LiquidPhysics : MonoBehaviour
         // check let a vessel the player had spilled empty carry its old story into
         // the refill, so the name tag kept naming reagents that were no longer in
         // there (user 2026-07-27).
-        if (currentLiquidVolume <= 0.1f && currentPptVolume <= 0.1f)
+        // ⛔ `currentChemical == null` MUST wake too, even with precipitate still in the
+        // glass. PourOut drops the identity once the liquid runs dry but leaves the
+        // settled precipitate behind, so a tube emptied after a test holds residue and NO
+        // chemical — and the old guard (both columns near-empty) then refused to adopt
+        // anything poured in next. The liquid piled up with no identity at all, which
+        // makes `FindReaction(null, x)` miss forever: no reaction, no colour, no product.
+        // The W5.45 visual sweep caught it as two unplayable experiments — Exp 7 carried
+        // 5 ml of residue into its flask, so the chloroform reaction could never fire.
+        if (currentChemical == null || (currentLiquidVolume <= 0.1f && currentPptVolume <= 0.1f))
         {
             Ledger.Clear();
             Ledger.Add(incomingChemical.chemicalName, amountToAdd, solid);

@@ -6221,6 +6221,27 @@ public static class PharmaSelfTests
     // a headset shows, and a gas outcome must have a live emitter or it is text-only.
     static void VisualSweepSuite()
     {
+        // A vessel emptied after a test keeps its settled precipitate but loses its liquid
+        // identity — it must still adopt the next thing poured in, or FindReaction(null, x)
+        // misses forever and the glass fills with nameless liquid (W5.45: two experiments
+        // were unplayable this way).
+        var residue = new GameObject("selftest-residue-vessel");
+        try
+        {
+            var rlp = residue.AddComponent<MeshRenderer>().gameObject.AddComponent<LiquidPhysics>();
+            var chem = ScriptableObject.CreateInstance<ChemicalData>();
+            chem.chemicalName = "Probe Reagent";
+            try
+            {
+                rlp.currentChemical = null; rlp.currentLiquidVolume = 0f; rlp.currentPptVolume = 5f;
+                rlp.AddLiquid(chem, 10f);
+                A("liquid: a vessel holding only residue still adopts what is poured in",
+                    rlp.currentChemical == chem && Near(rlp.currentLiquidVolume, 10f));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(chem); }
+        }
+        finally { UnityEngine.Object.DestroyImmediate(residue); }
+
         var o = new VisualSweep.Obs { found = true, ml = 5f, fill01 = 0.05f, rendererOn = true, tempC = 25f,
                                       particleNames = "", popups = "", chem = "x" };
         A("visual: a visible fill passes", VisualSweep.Judge(VisualSweep.Expect.Fill, o, null, 0f, 100f).status == "OK");

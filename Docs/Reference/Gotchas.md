@@ -577,3 +577,65 @@ re-homing.
 > `SaveOpenScenes()` afterwards commits that mutated state to disk. Reopen SampleScene
 > between the two, every time — the reports say so for a reason.
 
+
+## A vessel with residue can never hold anything again
+
+> [!danger] `AddLiquid` refused to adopt while a precipitate sat in the glass
+> `PourOut` drops `currentChemical` once the liquid runs dry but leaves the settled
+> precipitate behind. The wake-from-empty guard required **both** columns near-empty, so a
+> tube emptied after a test held residue and NO chemical — and every later pour piled up
+> with no identity at all. `FindReaction(null, x)` misses forever: no reaction, no colour,
+> no product, and nothing anywhere says why.
+>
+> It made **two experiments unplayable** and no edit-mode check could see it, because the
+> edit-mode simulator snapshots and restores every vessel around each run while the play
+> sweep inherits the previous module's glassware (W5.45).
+>
+> **Fixed:** `currentChemical == null` now wakes the vessel too. Pinned by
+> `liquid: a vessel holding only residue still adopts what is poured in`.
+
+## A product stream that delivers to the wrong glass
+
+> [!danger] "Expected now" is true for every later step, not just this one
+> `VaporCollectController.Update` picked the nearest binding satisfying
+> `IsExpectedNow(product)`. In Exp 7 four later steps also draw on chloroform, so the
+> redistillate condensed into a downstream test tube, emptied the source flask, and
+> `dry-redistil` could never complete — while the class doc claimed the stream was
+> "targeted, so it can never pollute a bystander tube".
+>
+> **Fixed** by scoping the receiver search to a binding expecting the product **for the
+> controller's own task** (`ExpectsForThisStep`). When a controller owns one task, match on
+> that task — a chemical-only match silently spans the whole module.
+
+## Glassware laid on its side drains itself
+
+> [!danger] `LiquidPourer` measures the ROOT transform up, so a rotated prefab pours forever
+> Both `DistillingFlask` objects sat at **90° from upright** (a -90° X rotation, the shape a
+> glTF import takes). `PourTick` fires on
+> `Vector3.Angle(Vector3.up, transform.up) > pourThreshold`, so the flasks drained every drop
+> poured into them: a false `SpilledReagent` mistake on a *perfect* Exp 3 run, and an empty
+> source for Exp 7's redistillation.
+>
+> Nothing caught it for months because edit-mode simulation never runs `Update`, so nothing
+> ever poured. **Scan before trusting a vessel:** compute each vessel transform tilt from
+> world up; only these two were wrong.
+>
+> **Fixed** by standing them upright and re-running `Re-Home Scene Items (Adopt Current)` —
+> the baked home carries the rotation too, so re-homing is part of the fix, not optional.
+
+## A harness that completes steps for the player proves nothing
+
+> [!danger] The escape hatch that makes an edit-mode audit useful is a lie in Play mode
+> `SimulatedRun`'s handlers call `runner.CompleteTask(id)` — "force past to keep exploring
+> downstream" — in 22 places. That is the right trade for a static audit: one broken step
+> should not hide the other twelve. Run the same handlers in PLAY mode and those same lines
+> silently mark steps done that no player could have done, which is the one thing a
+> play-mode sweep exists to detect (user, 2026-09-02: "no programmatically cheating
+> through").
+>
+> **`SimulatedRun.NeverForce`** disables all 22 while the visual sweep plays. The sweep
+> instead waits ~12 s of real frames, re-applies the player physical hold each tick,
+> re-serves once, and then reports the step **UNPLAYED** and stops the module.
+>
+> The first no-force run went from "10 steps forced, everything green" to two genuinely
+> unplayable experiments — both of which turned out to be real game bugs.

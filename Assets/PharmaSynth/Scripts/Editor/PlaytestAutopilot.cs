@@ -39,6 +39,7 @@ public static class PlaytestAutopilot
     /// Nine modules at ~50 s each, plus slack for the slowest (13-task) ones. Still a
     /// hard ceiling: the editor must never be left sitting in Play mode.
     const float HardCapSeconds = 1800f;
+    const float VisualHardCapSeconds = 4200f;
     /// Generous on purpose: the review briefing is two spoken beats behind a fade, and a
     /// watchdog that fires mid-cutscene reports a stall that is really just dialogue.
     const float BeatTimeout = 60f;
@@ -134,6 +135,13 @@ public static class PlaytestAutopilot
     /// cannot be reset by anything the game does, which is the whole point: one bad
     /// module becomes one finding, not a dead run and zero data about the other eight.
     const float ModuleCapSeconds = 150f;
+    /// VISUAL mode performs every step for REAL and then waits for the game to finish it,
+    /// so a module legitimately takes minutes rather than seconds.
+    const float VisualModuleCapSeconds = 420f;
+    /// How many ticks a performed step may take to complete on real frames before the
+    /// sweep re-applies the player's hold, and again before it is called unplayed.
+    /// ~0.75 s a tick: 16 ticks is 12 s of the game actually running the step.
+    const int VisualWaitTicks = 16;
 
     static double s_nextActAt;
     static string s_lastAction = "";
@@ -168,6 +176,9 @@ public static class PlaytestAutopilot
         s_visual = mode == "visual";
         s_session = null; s_pending = null; s_stepIndex = 0; s_honest = 0;
         SimulatedRun.MidVerb = s_visual ? VisualSweep.MidVerb : (System.Action<GameObject, string>)null;
+        // Set AFTER the domain reload that entering Play mode causes — a static assigned
+        // before it would be wiped on the way in.
+        SimulatedRun.NeverForce = s_visual;
         if (s_visual) VisualSweep.BeginRun();
         s_findings.Clear(); s_errors.Clear(); s_errorBeat.Clear(); s_trace.Clear();
         s_grabChecked.Clear(); s_shots.Clear();
@@ -237,6 +248,7 @@ public static class PlaytestAutopilot
 
     static void BeginModule()
     {
+        s_flight = null; s_moduleStopped = false; s_handled.Clear();
         s_moduleStartedAt = EditorApplication.timeSinceStartup;
         s_moduleTasks = 0; s_moduleGrabsOk = 0; s_moduleGrabsTested = 0;
         s_moduleFindingsAt = s_findings.Count;
@@ -248,7 +260,21 @@ public static class PlaytestAutopilot
     static void EndModule()
     {
         if (s_pending != null) CaptureStep();
-        if (s_session != null) { s_session.End(); s_session = null; }
+        if (s_session != null)
+        {
+            s_session.End(); s_session = null;
+            // The play-mode transcript, in the same shape as Logs/simrun-<module>.txt —
+            // without it a step that behaves differently in play than in edit mode can
+            // only be guessed at.
+            try
+            {
+                Directory.CreateDirectory(VisualSweep.Dir);
+                File.WriteAllText(VisualSweep.Dir + "/" + (s_moduleIndex + 1).ToString("00") + "-"
+                                  + CurrentModule + "-play.txt", s_sessionLog.ToString());
+            }
+            catch (System.Exception e) { Trace("could not write the play transcript: " + e.Message); }
+        }
+        s_flight = null;
         int found = s_findings.Count - s_moduleFindingsAt;
         s_moduleLog.Add("  " + (CurrentModule ?? "?").PadRight(30)
                         + (s_moduleTasks + " tasks").PadRight(11)
@@ -275,7 +301,7 @@ public static class PlaytestAutopilot
         if (!Application.isPlaying) { Finish("play mode ended early"); return; }
 
         double now = EditorApplication.timeSinceStartup;
-        if (now - s_startedAt > HardCapSeconds) { Finding("HARD TIMEOUT — the run never completed"); Finish("hard cap"); return; }
+        if (now - s_startedAt > (s_visual ? VisualHardCapSeconds : HardCapSeconds)) { Finding("HARD TIMEOUT — the run never completed"); Finish("hard cap"); return; }
 
         // Pace the driver. Everything below this line assumes the game has had frames to
         // act on the last input.
@@ -287,7 +313,7 @@ public static class PlaytestAutopilot
         if (s_pending != null) { CaptureStep(); return; }
 
         // Per-module ceiling — checked BEFORE Drive so a wedged module cannot skip it.
-        if (CurrentModule != null && now - s_moduleStartedAt > ModuleCapSeconds)
+        if (CurrentModule != null && now - s_moduleStartedAt > (s_visual ? VisualModuleCapSeconds : ModuleCapSeconds))
         {
             var g = Object.FindAnyObjectByType<PharmeeGatekeeper>();
             Finding(CurrentModule + ": module TIMED OUT after " + ModuleCapSeconds
@@ -509,6 +535,16 @@ public static class PlaytestAutopilot
             s_uiCheckedThisRun = true;
         }
 
+        if (s_moduleStopped)
+        {
+            var gStop = Object.FindAnyObjectByType<PharmeeGatekeeper>();
+            EndModule();
+            if (CurrentModule == null) { Finish("swept every module"); return; }
+            gStop?.ResetToEntrance();
+            s_lastAction = ""; s_repeats = 0;
+            return;
+        }
+
         ExperimentTask next = null;
         foreach (var t in runner.Graph.AvailableTasks()) { next = t; break; }
         if (next == null)
@@ -537,8 +573,9 @@ public static class PlaytestAutopilot
         // Completion itself is already proven rigorously by the edit-mode battery; here it
         // exists to ADVANCE the flow so the live systems around it — fades, cutscenes,
         // audio, the quiz tablet, the grade card — all get exercised for real.
+        if (s_visual) { DriveVisualStep(runner, next); return; }
         if (!Act("task:" + next.taskId)) return;
-        if (s_visual) PerformHonestly(runner, next); else runner.CompleteTask(next.taskId);
+        runner.CompleteTask(next.taskId);
         s_tasksCompleted++; s_moduleTasks++;
         SetBeat("run:" + next.taskId);
     }
@@ -686,49 +723,215 @@ public static class PlaytestAutopilot
     }
     static Pending s_pending;
 
-    /// Serve the step the way a hand would, through the same Session the edit-mode
-    /// simulator drives — but ONE step per tick, so the live systems get frames between
-    /// verbs and the photographer gets something to see. A step the honest verbs cannot
-    /// complete is a completion-detection FINDING; it is then forced so the sweep goes on.
-    static void PerformHonestly(ExperimentRunner runner, ExperimentTask next)
+    /// A step that has been PERFORMED and is now finishing on real frames.
+    sealed class InFlight
+    {
+        public ExperimentTask task; public string kind; public LiquidPhysics vessel;
+        public List<ReactionRule> rules = new List<ReactionRule>(); public float targetC;
+        public int waits; public bool retried;
+    }
+    static InFlight s_flight;
+    static bool s_moduleStopped;
+
+    /// NO PROGRAMMATIC SHORTCUTS (user, 2026-09-02: "no programmatically cheating
+    /// through"). A step is served the way a hand would serve it and then the sweep WAITS
+    /// for the game to finish it. The vapor stream, the fermentation, the bath and the ice
+    /// bucket all self-drive from Update; the first version fought them by hammering their
+    /// public seams inside a single tick and then called CompleteTask when that did not
+    /// take. Nothing is completed by fiat here: a step that never finishes is reported
+    /// UNPLAYED and the module STOPS, because a forced step proves nothing about whether a
+    /// player could have done it.
+    static void DriveVisualStep(ExperimentRunner runner, ExperimentTask next)
+    {
+        if (s_flight != null)
+        {
+            var f = s_flight;
+            if (runner.Graph.IsComplete(f.task.taskId)) { LandStep(true); return; }
+
+            // Keep holding it there — the player action for every self-driving step, and
+            // what gives the real Update loops something to work with.
+            if (f.waits++ < VisualWaitTicks) { SustainStep(runner, f); return; }
+
+            if (!f.retried)
+            {
+                f.retried = true; f.waits = 0;
+                Trace("re-serving " + f.task.taskId + " (not complete after " + VisualWaitTicks
+                      + " ticks of real frames)");
+                RunHandler(runner, f.task);
+                return;
+            }
+
+            Finding(CurrentModule + " / " + f.task.taskId + ": UNPLAYED — the real verbs never "
+                    + "completed this step in Play mode after " + (VisualWaitTicks * 2) + " ticks "
+                    + "(condition registered=" + runner.Graph.HasCondition(f.task.taskId)
+                    + ", kind=" + (string.IsNullOrEmpty(f.kind) ? "?" : f.kind)
+                    + "). Nothing is forced, so the module stops here.");
+            LandStep(false);
+            s_moduleStopped = true;
+            return;
+        }
+
+        if (!Act("task:" + next.taskId)) return;
+        RunHandler(runner, next);
+    }
+
+    /// Serve one step through the same Session the edit-mode simulator drives.
+    static void RunHandler(ExperimentRunner runner, ExperimentTask next)
     {
         if (s_session == null)
         {
             s_sessionRes = new SimulatedRun.Result { totalTasks = runner.Graph.Tasks.Count };
             s_sessionLog.Clear();
+            s_sessionLog.AppendLine("=== " + CurrentModule + " — played in PLAY MODE by the visual sweep ===");
+            // Start every module from the bench the game itself hands a player at the start
+            // of a run: bottles full, glassware home, burners out, consumables restocked.
+            // Without it the sweep inherits the previous module's residue — which is how
+            // Exp 7 began with 5 ml of precipitate already in its flask.
+            DropRespawn.ResetAllHome();
             s_session = new SimulatedRun.Session();
             s_session.Begin(runner, CurrentModule, s_sessionRes, s_sessionLog);
-            TaskTargetRegistry.Clear(); TutorialTargets.Build();      // this module's stage, not the last one's
+            TaskTargetRegistry.Clear(); TutorialTargets.Build();      // this module stage, not the last one
             s_stepIndex = 0;
         }
-        s_stepIndex++;
-        VisualSweep.BeginStep(s_moduleIndex + 1, CurrentModule, s_stepIndex, next.taskId);
+        bool fresh = s_flight == null;
+        if (fresh)
+        {
+            s_stepIndex++;
+            VisualSweep.BeginStep(s_moduleIndex + 1, CurrentModule, s_stepIndex, next.taskId);
+            AuditHandling(next.taskId);
+        }
         int bugsBefore = s_sessionRes.bugs.Count;
-        bool honest;
-        try { honest = s_session.Perform(next); }
+        try { s_session.Perform(next); }
         catch (System.Exception e)
         {
-            honest = false;
             s_sessionRes.bugs.Add("the honest verbs THREW: " + e.GetType().Name + ": " + e.Message);
         }
         for (int i = bugsBefore; i < s_sessionRes.bugs.Count; i++)
             Finding(CurrentModule + " / " + next.taskId + ": " + s_sessionRes.bugs[i]);
-        if (!runner.Graph.IsComplete(next.taskId))
-        {
-            Finding(CurrentModule + " / " + next.taskId + ": the honest verbs did NOT complete this step in Play mode"
-                    + " (condition registered=" + runner.Graph.HasCondition(next.taskId) + ") — forcing past it");
-            runner.CompleteTask(next.taskId);
-        }
-        else if (honest) s_honest++;
 
-        var vessel = SimulatedRun.LastVessel;
-        if (vessel == null) vessel = DestinationOf(next.taskId);
+        if (s_flight == null) s_flight = new InFlight();
+        s_flight.task = next;
+        if (!string.IsNullOrEmpty(SimulatedRun.LastKind)) s_flight.kind = SimulatedRun.LastKind;
+        if (SimulatedRun.LastVessel != null) s_flight.vessel = SimulatedRun.LastVessel;
+        if (s_flight.vessel == null) s_flight.vessel = DestinationOf(next.taskId);
+        if (SimulatedRun.LastTargetC > 0f) s_flight.targetC = SimulatedRun.LastTargetC;
+        foreach (var r in SimulatedRun.LastReactions) if (!s_flight.rules.Contains(r)) s_flight.rules.Add(r);
+        SetBeat("run:" + next.taskId);
+    }
+
+    /// The player keeps holding it there while the game systems work. Each branch
+    /// re-applies exactly the physical arrangement the step needs; nothing completes a
+    /// task here, it only keeps the real mechanism supplied.
+    static void SustainStep(ExperimentRunner runner, InFlight f)
+    {
+        string id = f.task.taskId;
+
+        // The distillate stream: keep the receiver at the delivery tube and the source at
+        // temperature, then let VaporCollectController.Update run the condensation.
+        foreach (var v in Object.FindObjectsByType<VaporCollectController>(FindObjectsSortMode.None))
+        {
+            if (v == null || v.VaporTaskId != id || v.Source == null) continue;
+            var receiver = DestinationOf(id);
+            if (receiver != null && receiver != v.Source)
+            {
+                float d = Vector3.Distance(receiver.transform.position, v.Source.transform.position);
+                if (d > VaporMath.DeliveryRadius * 0.6f)
+                    receiver.transform.position = v.Source.transform.position
+                                                  + v.Source.transform.right * (VaporMath.DeliveryRadius * 0.5f);
+            }
+            HoldAtHeat(v.Source, 0.25f, v.RequiredC);
+        }
+
+        // CO2 into the limewater: the delivery tube stays in the tube.
+        foreach (var fc in Object.FindObjectsByType<FermentationController>(FindObjectsSortMode.None))
+        {
+            if (fc == null || fc.FermentTaskId != id || fc.Limewater == null) continue;
+            var lime = DestinationOf(id);
+            if (lime != null && lime.currentChemical == fc.Limewater) fc.BubbleInto(lime);
+        }
+
+        // The non-flammability confirm: the player keeps a lit flame at the sample until
+        // it is satisfied that the liquid will not catch (Exp 7). One PollFlames inside a
+        // single tick is a glance, not the act of holding it there.
+        foreach (var ft in Object.FindObjectsByType<VesselFlameTask>(FindObjectsSortMode.None))
+        {
+            if (ft == null || ft.TaskId != id) continue;
+            // ⛔ An ACTIVE burner only. Including inactive ones hands back the methane-only
+            // Prop_burner, which is switched off in every other module — igniting it does
+            // nothing and the dish gets carried to a hidden object instead of a flame.
+            BurnerController burner = null;
+            foreach (var bu in Object.FindObjectsByType<BurnerController>(FindObjectsSortMode.None))
+                if (bu != null && bu.gameObject.activeInHierarchy) { burner = bu; break; }
+            var dish = ft.GetComponent<LiquidPhysics>();
+            if (burner == null || dish == null) continue;
+            burner.Ignite();
+            dish.transform.position = FlameTestMath.FlamePos(burner);
+            ft.PollFlames();
+        }
+
+        // Heat / chill steps: the vessel stays in the bath or in the ice.
+        foreach (var h in Object.FindObjectsByType<VesselHeatTask>(FindObjectsSortMode.None))
+            if (h != null && h.TaskId == id) HoldAtHeat(h.GetComponent<LiquidPhysics>(), 0.25f, h.RequiredC);
+        foreach (var c in Object.FindObjectsByType<VesselChillTask>(FindObjectsSortMode.None))
+            if (c != null && c.TaskId == id)
+            {
+                var ice = Object.FindAnyObjectByType<IceBathController>();
+                if (ice != null) ice.ChillVessel(c.GetComponent<LiquidPhysics>());
+            }
+
+        runner.Graph.Tick();
+    }
+
+    /// Hold a vessel at its heat source: the water bath for anything up to 100 C, a lit
+    /// bench burner beyond it. Mirrors what the player physically does.
+    static void HoldAtHeat(LiquidPhysics vessel, float dt, float needC)
+    {
+        if (vessel == null) return;
+        // Above the bath ceiling the procedure is an OPEN FLAME (Exp 6 dry distillation):
+        // light the bench burner and hold the tube in it. At or below it, the water bath.
+        if (needC > WaterBathMath.BathMaxC)
+        {
+            var flame = Object.FindAnyObjectByType<NakedFlameHeat>();
+            var burner = flame != null ? flame.GetComponent<BurnerController>() : null;
+            if (flame != null && burner != null) { burner.Ignite(); flame.HeatVessel(vessel, dt); }
+            return;
+        }
+        var bath = Object.FindAnyObjectByType<WaterBathController>();
+        if (bath != null && bath.HasWater) { bath.DriveForTest(dt); bath.HeatVessel(vessel); }
+    }
+
+    /// Land the step: photograph it next tick, count it, clear the flight.
+    static void LandStep(bool honest)
+    {
+        var f = s_flight; s_flight = null;
+        if (f == null) return;
+        if (honest) s_honest++;
+        s_tasksCompleted++; s_moduleTasks++;
         s_pending = new Pending
         {
-            task = next, kind = SimulatedRun.LastKind, module = CurrentModule, vessel = vessel,
-            rules = new List<ReactionRule>(SimulatedRun.LastReactions), targetC = SimulatedRun.LastTargetC, honest = honest,
+            task = f.task, kind = f.kind, module = CurrentModule, vessel = f.vessel,
+            rules = new List<ReactionRule>(f.rules), targetC = f.targetC, honest = honest,
         };
+        s_lastAction = ""; s_repeats = 0;      // the next step is a new situation
     }
+
+    /// Can a player actually HANDLE what this step needs? The chemistry can be perfect
+    /// while the bottle cannot be tipped. GrabTest already proves the grab machinery; this
+    /// adds the pour affordance (user, 2026-09-02: "spillable, grabbable, activatable").
+    static void AuditHandling(string taskId)
+    {
+        foreach (var t in TaskTargetRegistry.Targets(taskId))
+        {
+            if (t.transform == null || !s_handled.Add(t.transform)) continue;
+            var lp = t.transform.GetComponent<LiquidPhysics>();
+            if (lp == null) continue;
+            if (t.transform.GetComponent<XRGrab>() == null) continue;   // fixed apparatus pours nothing
+            if (t.transform.GetComponent<LiquidPourer>() == null)
+                Finding(CurrentModule + " / " + taskId + ": " + t.transform.name + " holds liquid and can "
+                        + "be picked up, but has NO LiquidPourer — tipping it spills nothing");
+        }
+    }
+    static readonly HashSet<Transform> s_handled = new HashSet<Transform>();
 
     static LiquidPhysics DestinationOf(string taskId)
     {
@@ -860,6 +1063,7 @@ public static class PlaytestAutopilot
 
         if (s_session != null) { s_session.End(); s_session = null; }
         SimulatedRun.MidVerb = null;
+        SimulatedRun.NeverForce = false;   // edit-mode audits still force past to keep walking
         if (s_visual)
             VisualSweep.WriteReport("ended: " + why + " · " + s_moduleLog.Count + "/" + s_queue.Count + " modules · "
                                     + s_honest + "/" + s_tasksCompleted + " steps completed by the honest verbs");

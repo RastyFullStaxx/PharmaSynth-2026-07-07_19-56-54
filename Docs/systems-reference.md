@@ -152,6 +152,19 @@ particle systems and popups within 0.6 m, heap on the blade, powder mound).
 `ReactionRule` (its `expectedObservation` is the manuscript's word) or the verb's own contract
 (fill visible · mound shown · at temperature · boiling at the bp · chilled), suite-pinned.
 
+⛔ **NOTHING is completed by fiat** (user, 2026-09-02: "no programmatically cheating
+through"). Each step is served, then the sweep WAITS up to 16 ticks (~12 s of real frames)
+while `SustainStep` keeps re-applying the player's physical hold — the receiver at the
+delivery tube, the flask in the bath, the vessel in the ice, a lit flame at the sample,
+the tube in the limewater. Only then is the step re-served once; if it still will not
+finish it is reported **UNPLAYED** and the module STOPS. `SimulatedRun.NeverForce` disables
+the 22 `CompleteTask` escape hatches the edit-mode handlers use to keep walking, because in
+Play mode those would silently mark a step no player could have done. Each module also
+starts from `DropRespawn.ResetAllHome()`, the same bench the game hands a player, and
+writes its own transcript to `Logs/visual-sweep/<nn>-<module>-play.txt` in the shape of
+`Logs/simrun-<module>.txt`, with a `→ <vessel> holds <chem> <ml> [ledger]` line after every
+served step. **Current: 63/63 steps completed by the real verbs, 9/9 modules.**
+
 **Play-mode-only verb upgrades** (edit mode keeps the direct path, so the pins stay
 byte-identical): solids go through the REAL scoop verb — `ScoopController.Dip`/`Deposit`
 (extracted from `Update`) on the bench scoopula/spatula, carried to the jar and the vessel,
@@ -160,11 +173,29 @@ its colour is in the picture; the dish at the flame, the vessel on the balance a
 rig are shot mid-verb with nearby particle systems fast-forwarded 0.35 s (a burst spawned this
 frame has no particles yet) and billboards turned (a popup spawned this frame still faces +Z).
 
-⛔ **What it caught on its first run** — a real bug months of verification could not see:
-scooping a solid into a vessel set up for liquid made `EnsurePowderVisual` destroy the `Liquid`
-child while `LiquidPhysics.mainRenderer` still pointed at it → **5106 MissingReferenceExceptions**
-in one run and the liquid never rendered again in that vessel. The old autopilot never scooped.
-Fixed at the source (the reference is nulled before the destroy).
+⛔ **Four real bugs it caught, none of which any edit-mode check could see.** All fixed:
+1. **5106 MissingReferenceExceptions/run.** Scooping a solid into a vessel set up for liquid
+   made `EnsurePowderVisual` destroy the `Liquid` child while `LiquidPhysics.mainRenderer`
+   still pointed at it. The old autopilot never scooped, so it never fired. The reference is
+   now nulled before the destroy.
+2. **A vessel holding only residue could never accept another chemical.** `PourOut` drops the
+   liquid identity once a vessel runs dry but leaves the settled precipitate, and
+   `AddLiquid`'s wake-from-empty guard required BOTH columns empty — so `currentChemical`
+   stayed null, `FindReaction(null, x)` missed forever, and the glass filled with nameless
+   liquid. Two experiments were unplayable: Exp 7 carried 5 ml of residue into its flask, so
+   the chloroform reaction could not fire, and Exp 9's must never became Wine. `AddLiquid`
+   now adopts whenever `currentChemical` is null.
+3. **The distillate stream ran into the wrong glass.** `VaporCollectController.Update` chose
+   any binding that `IsExpectedNow(product)`, which is true for every LATER step that draws
+   on the product — so Exp 7's redistillate poured into a downstream test tube, emptied the
+   flask, and `dry-redistil` could never finish. It now delivers only to a binding expecting
+   the product **for its own task** (`ExpectsForThisStep`).
+4. **Both Distilling Flasks lay on their side** (90° from upright), so `LiquidPourer` read
+   them as permanently tipped and drained anything poured in — a false `SpilledReagent`
+   mistake on a perfect Exp 3 run, and an empty source for Exp 7's redistillation. Stood
+   upright and re-homed. ⚠ `LiquidPourer` measures `Vector3.Angle(Vector3.up, transform.up)`
+   on the ROOT, so any prefab whose authored up is not +Y pours forever; only these two were
+   affected (scan: 2 of every vessel in the scene).
 
 ⚠ **Read the verdicts, not just the count.** FAIL = the manuscript promised something the
 vessel does not show (a precipitate under the 1 ml visibility cutoff, a colour rule whose product

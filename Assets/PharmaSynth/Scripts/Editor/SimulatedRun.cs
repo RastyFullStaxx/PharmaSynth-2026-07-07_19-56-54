@@ -186,6 +186,20 @@ public static class SimulatedRun
         return res;
     }
 
+    /// ⛔ NEVER complete a task by fiat while the VISUAL sweep is playing (user,
+    /// 2026-09-02: "no programmatically cheating through"). In edit mode a handler that
+    /// cannot finish a step forces past it so the walk can report what ELSE breaks — that
+    /// is the right trade for a static audit. In Play mode it would silently mark a step
+    /// done that no player could have done, which is the one thing the sweep exists to
+    /// detect; the autopilot waits, re-serves, and finally reports the step UNPLAYED.
+    public static bool NeverForce;
+
+    static void ForcePast(ExperimentRunner runner, string id)
+    {
+        if (NeverForce || runner == null) return;
+        runner.CompleteTask(id);
+    }
+
     // ---- play-mode visual sweep seams (W5.45) ----------------------------------
     /// What the last Perform acted ON, so a photographer can point a camera at it
     /// without re-deriving the handler's choice: the vessel the step happened in, the
@@ -201,6 +215,21 @@ public static class SimulatedRun
 
     static void Note(string kind, LiquidPhysics lp, float targetC = 0f)
     { LastKind = kind; if (lp != null) LastVessel = lp; if (targetC > 0f) LastTargetC = targetC; }
+
+    /// What a vessel actually holds, for a transcript line. Print this beside any failure
+    /// rather than describing the failure alone (the W5.40 harness lesson).
+    public static string StateOf(LiquidPhysics lp)
+    {
+        if (lp == null) return "(no vessel)";
+        string ledger = "";
+        foreach (var n in lp.Ledger.Names) ledger += (ledger.Length > 0 ? " + " : "") + n;
+        return lp.name + " holds "
+               + (lp.currentChemical != null ? lp.currentChemical.chemicalName : "NOTHING")
+               + " " + lp.currentLiquidVolume.ToString("0.#") + " ml"
+               + (lp.currentPptVolume > 0.01f ? " (+ppt " + lp.currentPptVolume.ToString("0.#") + ")" : "")
+               + " at " + lp.currentTempC.ToString("0") + " C"
+               + (ledger.Length > 0 ? " [" + ledger + "]" : " [empty ledger]");
+    }
 
     /// The bench tool that dips exactly `grams` per action (scoopula 2 g, porcelain
     /// spatula 0.1 g) — the verb contract's tool choice, mirrored.
@@ -392,7 +421,7 @@ public static class SimulatedRun
                     res.bugs.Add(id + ": NO mechanism completes this task (no binding, station, or satisfied condition)");
                     log.AppendLine("  ✗ no mechanism — the player could never finish this step");
                     Done.Add(id);           // skip so the walk can report what else breaks
-                    runner.CompleteTask(id); // force past it to keep exploring downstream
+                    ForcePast(runner, id); // force past it to keep exploring downstream
                 }
             }
             return runner.Graph.IsComplete(id) && res.bugs.Count == bugsBefore;
@@ -575,6 +604,14 @@ public static class SimulatedRun
                 log.AppendLine("  (returned " + b.name + " to the bench)");
             }
         }
+        // What the glass holds once the step is served — the single most useful line in
+        // the transcript when Play mode and edit mode disagree.
+        var seenDest = new HashSet<LiquidPhysics>();
+        foreach (var (b, _, _, _, _, _, _) in plan)
+        {
+            var dlp = b != null ? b.GetComponent<LiquidPhysics>() : null;
+            if (dlp != null && seenDest.Add(dlp)) log.AppendLine("    → " + StateOf(dlp));
+        }
         return true;
     }
 
@@ -680,7 +717,7 @@ public static class SimulatedRun
         else
         {
             res.bugs.Add(id + ": bubbled CO₂ but the limewater never clouded / task never completed");
-            runner.CompleteTask(id);
+            ForcePast(runner, id);
         }
         return true;
     }
@@ -715,7 +752,7 @@ public static class SimulatedRun
             {
                 res.bugs.Add(id + ": needs " + heat.RequiredC.ToString("0")
                              + " C (open flame) but no burner carries NakedFlameHeat (run Apply W5.8 Verb Data)");
-                runner.CompleteTask(id);
+                ForcePast(runner, id);
                 return true;
             }
             fburner.Ignite();
@@ -733,7 +770,7 @@ public static class SimulatedRun
             {
                 res.bugs.Add(id + ": open-flame heating never completed the step (tube "
                              + tube.currentTempC.ToString("0") + " C / needs " + heat.RequiredC.ToString("0") + " C)");
-                runner.CompleteTask(id);
+                ForcePast(runner, id);
             }
             return true;
         }
@@ -754,7 +791,7 @@ public static class SimulatedRun
         {
             res.bugs.Add(id + ": bath heating never completed the step (tube " + tube.currentTempC.ToString("0")
                          + " C / needs " + heat.RequiredC.ToString("0") + " C, bath " + bath.BathC.ToString("0") + " C)");
-            runner.CompleteTask(id);   // force past to keep exploring downstream
+            ForcePast(runner, id);   // force past to keep exploring downstream
         }
         return true;
     }
@@ -776,7 +813,7 @@ public static class SimulatedRun
         if (ice == null)
         {
             res.bugs.Add(id + ": no IceBathController in the scene — chill steps are unplayable (run Apply W5.8 Verb Data)");
-            runner.CompleteTask(id);
+            ForcePast(runner, id);
             return true;
         }
         for (int i = 0; i < 40 && !runner.Graph.IsComplete(id); i++)
@@ -793,7 +830,7 @@ public static class SimulatedRun
             res.bugs.Add(id + ": ice bath never completed the chill (vessel "
                          + (lp != null ? lp.currentTempC.ToString("0") + " C holding " + (lp.currentLiquidVolume + lp.currentPptVolume).ToString("0.#") + " ml" : "missing")
                          + " / needs <= " + chill.RequiredC.ToString("0") + " C with contents)");
-            runner.CompleteTask(id);   // force past to keep exploring downstream
+            ForcePast(runner, id);   // force past to keep exploring downstream
         }
         return true;
     }
@@ -867,7 +904,7 @@ public static class SimulatedRun
             res.bugs.Add(id + ": the litmus touch did not complete the task (mixture pH "
                          + (tube != null ? tube.CurrentPH.ToString("0.#") : "?")
                          + ", definitive needs <= " + LitmusMath.AcidPH + " or >= " + LitmusMath.BasePH + ")");
-            runner.CompleteTask(id);   // force past to keep exploring downstream
+            ForcePast(runner, id);   // force past to keep exploring downstream
         }
         return true;
     }
@@ -900,7 +937,7 @@ public static class SimulatedRun
         {
             res.bugs.Add(id + ": circling the rod " + (samples / 36f).ToString("0.#")
                          + " revolutions never completed the stir");
-            runner.CompleteTask(id);
+            ForcePast(runner, id);
         }
         return true;
     }
@@ -938,7 +975,7 @@ public static class SimulatedRun
                          + ", progress " + grind.Math.Progress01.ToString("0.00")
                          + ", IsGrindComplete=" + grind.IsGrindComplete()
                          + ", condition registered=" + runner.Graph.HasCondition(id) + "]");
-            runner.CompleteTask(id);
+            ForcePast(runner, id);
         }
         return true;
     }
@@ -963,7 +1000,7 @@ public static class SimulatedRun
         if (tube == null)
         {
             res.bugs.Add(id + ": no 'glass-tube' on the bench — the methane rig has nothing to heat");
-            runner.CompleteTask(id);
+            ForcePast(runner, id);
             return true;
         }
         {
@@ -998,7 +1035,7 @@ public static class SimulatedRun
                 if (burner == null)
                 {
                     res.bugs.Add(id + ": no BurnerController in the scene — the methane tutorial cannot be heated");
-                    runner.CompleteTask(id);
+                    ForcePast(runner, id);
                     return true;
                 }
                 Carry(burner.transform, tube.position + Vector3.down * 0.12f);
@@ -1014,7 +1051,7 @@ public static class SimulatedRun
                     if (match == null)
                     {
                         res.bugs.Add(id + ": no Matchstick in the scene — the splint test is unplayable");
-                        runner.CompleteTask(id);
+                        ForcePast(runner, id);
                         return true;
                     }
                     Carry(match.transform, (collect != null ? collect.position : tube.position) + Vector3.up * 0.05f);
@@ -1058,7 +1095,7 @@ public static class SimulatedRun
                                           ? tube.GetComponent<LiquidPhysics>().currentLiquidVolume.ToString("0.0") : "n/a")
                          + ", collect=" + (collect != null ? collect.name : "MISSING")
                          + ", condition registered=" + runner.Graph.HasCondition(id) + "]");
-            runner.CompleteTask(id);
+            ForcePast(runner, id);
         }
         return true;
     }
@@ -1091,7 +1128,7 @@ public static class SimulatedRun
         if (burner == null)
         {
             res.bugs.Add(id + ": no bench burner to take a flame from — the flammability test is unplayable");
-            runner.CompleteTask(id);
+            ForcePast(runner, id);
             return true;
         }
         Vector3 home = dish.transform.position;
@@ -1108,7 +1145,7 @@ public static class SimulatedRun
         else
         {
             res.bugs.Add(id + ": holding a lit flame to the served sample did not complete the flammability test");
-            runner.CompleteTask(id);
+            ForcePast(runner, id);
         }
         return true;
     }
@@ -1131,10 +1168,12 @@ public static class SimulatedRun
         if (receiver == null)
         {
             res.bugs.Add(id + ": vapor task has no receiver vessel bound");
-            runner.CompleteTask(id);
+            ForcePast(runner, id);
             return true;
         }
         Note("vapor", receiver);
+        log.AppendLine("    source " + StateOf(vapor.Source));
+        log.AppendLine("    receiver " + StateOf(receiver));
         // Keep the source at temperature (the flame again — the player leaves
         // the tube over the burner while collecting).
         var flame = Object.FindAnyObjectByType<NakedFlameHeat>(FindObjectsInactive.Include);
@@ -1157,7 +1196,7 @@ public static class SimulatedRun
             res.bugs.Add(id + ": the vapor stream never filled the receiver (emitted "
                          + emitted.ToString("0.#") + " ml; source "
                          + (vapor.Source != null ? vapor.Source.currentTempC.ToString("0") + " C, " + vapor.Source.currentLiquidVolume.ToString("0.#") + " ml left" : "missing") + ")");
-            runner.CompleteTask(id);
+            ForcePast(runner, id);
         }
         return true;
     }
@@ -1185,7 +1224,7 @@ public static class SimulatedRun
         if (station == null)
         {
             res.bugs.Add(id + ": no WeighStation on the bench balance — weigh steps are unplayable (run Apply W5.8 Verb Data)");
-            runner.CompleteTask(id);
+            ForcePast(runner, id);
             return true;
         }
         Note("weigh", tube);
@@ -1201,7 +1240,7 @@ public static class SimulatedRun
         else
         {
             res.bugs.Add(id + ": resting the served vessel on the balance did not complete the step");
-            runner.CompleteTask(id);
+            ForcePast(runner, id);
         }
         return true;
     }
@@ -1387,7 +1426,7 @@ public static class SimulatedRun
             {
                 res.bugs.Add(id + ": " + st.Kind + " station never reached its target in 300 sim-seconds");
                 log.AppendLine("  ✗ sim stalled");
-                runner.CompleteTask(id);   // force past to keep exploring downstream
+                ForcePast(runner, id);   // force past to keep exploring downstream
             }
             // The boil itself: the bath at target heats the vessels bound to
             // this task, which is what fires their high-threshold pending
@@ -1423,7 +1462,7 @@ public static class SimulatedRun
             {
                 res.bugs.Add(id + ": station wants item '" + st.RequiredItemId + "' but NOTHING on the bench has that itemId");
                 log.AppendLine("  ✗ required item missing from the scene");
-                runner.CompleteTask(id);
+                ForcePast(runner, id);
             }
             else
             {

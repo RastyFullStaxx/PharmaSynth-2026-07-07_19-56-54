@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// Pure rules for NAKED-FLAME heating (Exp 6's dry distillation — the ONE step
 /// in any experiment that heats over an open flame; everything else is a
@@ -89,6 +89,8 @@ public class VaporCollectController : MonoBehaviour
 
     public string VaporTaskId => _taskId;
     public LiquidPhysics Source => _source;
+    /// The source temperature the stream needs, so a driver can hold it there.
+    public float RequiredC => _requiredC;
 
     public void Bind(ExperimentRunner runner, LiquidPhysics source, string taskId,
                      ChemicalData product, float requiredC)
@@ -111,11 +113,26 @@ public class VaporCollectController : MonoBehaviour
         foreach (var b in FindObjectsByType<LiquidTaskBinding>(FindObjectsSortMode.None))
         {
             var lp = b.GetComponent<LiquidPhysics>();
-            if (lp == null || lp == _source || !b.IsExpectedNow(_product)) continue;
+            if (lp == null || lp == _source || !ExpectsForThisStep(b)) continue;
             float d = Vector3.Distance(lp.transform.position, _source.transform.position);
             if (d <= VaporMath.DeliveryRadius && d < best) { best = d; receiver = lp; }
         }
         if (receiver != null) EmitTick(receiver);
+    }
+
+    /// ⛔ The stream may only fill the glass THIS step names. `IsExpectedNow` asks merely
+    /// "does some step of this binding want the product", which is true for every later
+    /// test that draws on it — so in Exp 7 the redistillate ran into a test tube belonging
+    /// to a downstream step, emptied the flask, and `dry-redistil` could never finish
+    /// (found by the W5.45 visual sweep; the class doc already promised the stream was
+    /// "targeted, so it can never pollute a bystander tube" — this makes that true across
+    /// TASKS, not just within one).
+    public bool ExpectsForThisStep(LiquidTaskBinding b)
+    {
+        if (b == null) return false;
+        foreach (var s in b.ExpectedSteps)
+            if (s != null && s.taskId == _taskId && s.reagent == _product) return true;
+        return false;
     }
 
     /// One condensation tick into a receiver (public: the sim's stand-in for

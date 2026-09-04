@@ -389,3 +389,18 @@ Requested: ground arrows flowing toward the target, plus whatever else would hel
 - [x] **Arrows verified by NUMBERS, not pixels** — the report prints whether the path drew, its chevron count and the distance. 8/9 draw (14–18 chevrons over 6–8 m routes).
 - [ ] ⬜ **midterm-acetone draws no path** — `Eq_Beaker_100mL` at y = 1.3 sits on a bench top, which bakes as a walkable ISLAND disconnected from the floor: both ends report on-mesh and `CalculatePath` still fails. Degrades to the beacon by design. Fix: `NavMeshModifier` Not Walkable on furniture, or bake the floor only. ⛔ Widening the goal radius 3 → 5 m was tried and changed nothing.
 - [x] Fixed on the way: `GuidePath` kept a stale route after hiding, so a module could be asked about the path and answer with the previous module's corners.
+
+## §25 Visual autopilot (2026-09-04, W5.45) — suite 1531/1531
+Asked for: a way to SEE the chemistry — what is in the flask, smoke, scooped particles — and whether the game detects each step properly, without playing all nine by hand. Then: run every step through for real, no programmatic shortcuts.
+- [x] ⭐ **`Autopilot Playtest (VISUAL)`** — every module played in Play mode with the real verbs, one framed close-up per step + a mid-verb shot for scoop/flame/weigh/litmus, judged against the manuscript observation. Mechanism: [[systems-reference]] §The VISUAL autopilot.
+- [x] **No cheating** — `SimulatedRun.NeverForce` disables all 22 force-past hatches; a step gets ~12 s of real frames and one re-serve, then is UNPLAYED and stops the module. **Result: 63/63 steps completed by the real verbs, 9/9 modules.**
+- [x] **Handling audit** — every liquid-holding grabbable a step needs must carry a `LiquidPourer`, so "spillable" is checked as well as grabbable.
+- [x] **4 real bugs found and fixed** — dangling `mainRenderer` after a scoop (5106 exceptions/run); residue-blocked `AddLiquid` (Exp 7 + Exp 9 unplayable); vapor delivered to the wrong glass (Exp 7); both Distilling Flasks lying on their side and draining themselves (false spill mistake in Exp 3). Each is a [[Gotchas]] entry.
+- [ ] ⬜ **14 visual FAILs remain — the game shows less than the manuscript promises.** Grouped, with the numbers in `Logs/visual-sweep-report.txt`:
+      - **7× precipitate invisible** — the rules deposit exactly **1 ml** of precipitate and `UpdateFillPhysics` only enables the precipitate renderer above `> 1f`, so the milky limewater, both iodoform yellows, the acetanilide plates, its hydrolysis crystals and the benzamide solid all show nothing. One threshold or a larger deposit fixes all seven.
+      - **3× gas evolved, nothing visible** — `ReactionRule.evolvesGas` and the `Fizzing`/`GasEvolved` outcomes have **zero visual consumers**; CO₂ bubbling, the ammonia boil and the wine ferment are text-only.
+      - **1× Tollens silver mirror** deposits 0 ml, so the headline observation of Exp 2 cannot appear.
+      - **1× KMnO₄ colour** — the shader still reads purple `#7D1C99` when the product is brown `#594026` (Δ 0.49).
+      - **1× liquid invisible after a scoop** — `EnsurePowderVisual` destroys the `Liquid` child, so liquid added to that vessel afterwards never renders (Exp 2 hydrolysis tube, 54% full).
+      - **2× correct but tiny** — aniline 0.8% and acetic 1.6% of a big Florence flask: right quantity, unreadable in VR.
+- [ ] ⬜ Headset pass still owns feel: grab comfort, whether a glow reads as a hint, label legibility, motion comfort, frame budget.

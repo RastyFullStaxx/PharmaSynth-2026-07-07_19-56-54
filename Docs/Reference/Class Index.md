@@ -886,8 +886,10 @@ The dry-distillation product stream, zone-free (the fermentation pattern): once 
 ```csharp
 string VaporTaskId
 LiquidPhysics Source
+float RequiredC
 void Bind(ExperimentRunner runner, LiquidPhysics source, string taskId,
 void Detach()
+bool ExpectsForThisStep(LiquidTaskBinding b)
 bool EmitTick(LiquidPhysics receiver)
 ```
 
@@ -4421,6 +4423,11 @@ static void Launch(string mode)
 ### `Pending` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Editor/PlaytestAutopilot.cs`</sub>
 
+### `InFlight` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/PlaytestAutopilot.cs`</sub>
+
+A step that has been PERFORMED and is now finishing on real frames.
+
 ### `QuizNavButtonsBuilder` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Editor/QuizNavButtonsBuilder.cs`</sub>
 
@@ -4649,10 +4656,10 @@ static void SimChloroform()
 static void SimBenzamide()
 static void SimWine()
 static Result Run(string moduleId, StringBuilder log)
+static bool NeverForce
 static LiquidPhysics LastVessel
 static string LastKind
 static float LastTargetC
-static readonly List<ReactionRule> LastReactions
 ```
 
 ### `Session` <sub>class</sub>
