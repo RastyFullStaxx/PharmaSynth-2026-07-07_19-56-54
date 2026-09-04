@@ -2644,6 +2644,25 @@ static string[] ForModule(string moduleId)
 static float BeatSeconds(string line)
 ```
 
+### `JimenezRigMath` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/NPC/JimenezRigMath.cs`</sub>
+
+Pure rules for correcting an auto-rigger's weight bleed (suite-pinned). Dr. Jimenez is a Tripo auto-rig: ONE SkinnedMeshRenderer over 41 bones, with the lab coat baked into the body mesh. Nothing can be unparented — the coat follows his arm because coat vertices carry weight on the arm bones. Auto-riggers assign weights by proximity, so a coat panel hanging near the elbow picks up elbow weight even though a real coat would hang from the shoulders. The correction is geometric: a vertex that carries arm weight while sitting well OUTSIDE the arm is bleed, and its weight belongs on the spine.
+
+```csharp
+const float SleeveRadiusFraction
+static float SleeveRadiusFor(float meshHeight)
+static bool IsArmBone(string boneName)
+static bool IsTwistBone(string boneName)
+static bool IsBetterSegmentEnd(float candidateDistance, float bestSoFar)
+static bool IsTorsoBone(string boneName)
+static bool IsBleed(float distanceToBone, float sleeveRadius)
+static float DistanceToSegment(Vector3 p, Vector3 a, Vector3 b)
+static float Redistribute(ref BoneWeight w, int fromBone, int toBone)
+static void Normalise(ref BoneWeight w)
+static float Sum(BoneWeight w)
+```
+
 ### `LabTourGuide` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/NPC/LabTourGuide.cs`</sub>
 
@@ -2850,24 +2869,30 @@ static Vector3 SideStep(Vector3 pharmeePos, Vector3 playerPos, Vector3 playerFor
 ### `PharmeeGlowMath` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/NPC/PharmeeGlow.cs`</sub>
 
-Pure rules for Pharmee's body glow (suite-pinned).
+Pure rules for how bright Pharmee reads (suite-pinned).
 
 ```csharp
 const float DefaultIntensity
+const float DefaultShellAlbedo
 static Color Emission(Color hue, float intensity)
+static bool Blooms(Color emission, float bloomThreshold
 static bool IsGlowPart(string rendererName)
+static bool IsShellPart(string rendererName)
 ```
 
 ### `PharmeeGlow` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/NPC/PharmeeGlow.cs`</sub>
 
-Dims the light Pharmee gives off (user 2026-09-05: "too flashy when she speaks"). The robot's FBX ships one embedded material, `Blue_Light`, with an HDR emission of (0.46, 2.75, 8.0) — eight times white — on the body's light panels and all four hover rings. Only the eyes and mouth were ever overridden (PharmeeFace); the rest bloomed into a white ball that wobbled with every talk nod. This writes a readable emission through a MaterialPropertyBlock, the same pattern PharmeeFace uses: no material is instanced, the FBX and its importer stay untouched, and `intensity` is tunable live in the inspector. Thin over PharmeeGlowMath; Bind() seam because AddComponent fires no Awake in edit mode.
+Keeps Pharmee from blowing out (user 2026-09-05: "too flashy", then a screenshot of a white ball while she speaks). TWO separate causes, measured rather than guessed: 1. The robot FBX ships one emissive material, `Blue_Light`, at HDR (0.46, 2.75, 8.0) — eight times white — on the body panel and all four hover rings. Dimmed here. 2. Her `White_Glossy` shell has NO emission at all and still blooms, because albedo 0.91 under the nearby fill light pushes the lit result past the 1.0 bloom threshold. Dimming the emissive alone therefore could not have fixed it. Everything is written through a MaterialPropertyBlock, the same pattern `PharmeeFace` uses: no material is instanced, the FBX and its importer stay untouched, and both values are tunable live in the inspector. Thin over pure `PharmeeGlowMath`; `Bind*` seams exist because AddComponent fires no Awake in edit mode.
 
 ```csharp
 Renderer[] Renderers
+Renderer[] ShellRenderers
 float Intensity
+float ShellAlbedo
 Color Hue
 void BindRenderers(params Renderer[] rs)
+void BindShell(params Renderer[] rs)
 void Apply()
 ```
 
@@ -2931,6 +2956,20 @@ Makes Pharmee interactable: poking/selecting the robot repeats the current step'
 ```csharp
 void SetBrain(PharmeeBrain b)
 void Poke()
+```
+
+### `PharmeeThrusterMath` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/NPC/PharmeeThrusterMath.cs`</sub>
+
+Pure motion for Pharmee's hover rings, read as THRUSTER EXHAUST (suite-pinned). ⛔ What they used to do: `scale = 1 + 0.12 * sin(t * 2.2 * 30)`. That is a ±12% LATERAL pulse at about 10 Hz on a flat horizontal ring — a sideways shimmy, which is what the user saw ("they shake sideways, which a thruster shouldn't"). Nothing ever translated them, so nothing ever flowed anywhere. What they do now: each ring is a puff of exhaust. It is born at the emitter, travels DOWN, spreads slightly as it goes, and fades out at the bottom while the next one is already on its way — so the four rings read as one continuous jet.
+
+```csharp
+const float DefaultFlowSpeed
+const float DefaultTravel
+const float DefaultSpread
+static float Phase(float time, int index, int count, float flowSpeed)
+static float Drop(float phase01, float travel)
+static float Swell(float phase01, float spread)
 ```
 
 ### `ProctorRoamModel` <sub>class</sub>
@@ -4105,6 +4144,16 @@ Injects each experiment's ILO beats into its Intro cutscene (user 2026-07-10: Ph
 static readonly (string moduleId, string prefix)[] Modules
 static void Inject()
 static int InjectInto(CutsceneData data, string moduleId)
+```
+
+### `JimenezCoatRig` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/JimenezCoatRig.cs`</sub>
+
+lab coat moves with it, which it is not supposed to"). ⛔ There is nothing to unparent. He is a Tripo auto-rig: ONE SkinnedMeshRenderer over 41 bones, with the coat baked into the body mesh. The coat follows the arm because coat VERTICES carry weight on the arm bones — an auto-rigger assigns weight by proximity, so a coat panel hanging near the elbow picks up elbow weight even though a real coat hangs from the shoulders. This finds that bleed geometrically (a vertex carrying arm weight while sitting well outside the arm) and hands the weight to the spine. The sleeve is kept: anything within `sleeveRadius` of the arm bone still follows it, or he would wear a rigid tube. ⛔ It ALWAYS rebuilds from the ORIGINAL imported mesh, never from its own output, so re-running at a different radius cannot compound. The source .glb is never modified and the change is undone by clearing the mesh override 
+
+```csharp
+static void Run()
+static void Run(float sleeveRadius)
 ```
 
 ### `JimenezHudPortraitBuilder` <sub>class</sub>

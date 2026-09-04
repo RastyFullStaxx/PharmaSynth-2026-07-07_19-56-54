@@ -773,3 +773,59 @@ re-homing.
 > [!warning] Asset writes during a run can hitch the editor
 > Still good practice — a play session's verdict is only as stable as the editor it ran in —
 > but note that this was NOT the cause of the chloroform failure above.
+
+## An auto-rigged character has no coat to unparent
+
+> [!danger] The lab coat is baked into the body mesh, so the fix is weights, not hierarchy
+> Dr. Jimenez's coat swung with his arm. There is no coat object: he is a Tripo auto-rig
+> with **one** `SkinnedMeshRenderer` over 41 bones and the coat baked into the body mesh.
+> Nothing can be unparented, hidden or re-parented. The coat follows the arm because coat
+> VERTICES carry weight on the arm bones — an auto-rigger assigns weight by proximity, so a
+> panel hanging near the elbow picks up elbow weight even though a real coat hangs from the
+> shoulders. `Fix Jimenez Coat Rig` finds that bleed geometrically and hands it to `Spine02`.
+>
+> Three traps inside that fix, each of which produced a *confidently wrong* result that
+> still compiled, still passed every pure test, and had to be caught by looking at a render:
+>
+> 1. **The radius is in the MESH's own units, not metres.** This mesh is 0.5 units tall and
+>    the prefab scales it to a 1.75 m man, so a "0.11 m" sleeve radius was half the
+>    character's width: it classified the entire coat as sleeve and freed **43 vertices out
+>    of 6992**. Derive it from `source.bounds.size.y` (`SleeveRadiusFor`, 7% of height) and
+>    it survives a re-export at any scale.
+> 2. **A LEAF bone has no segment, so distance to it is meaningless.** This rig has no
+>    finger bones, which makes `L_Hand` a leaf: its "segment" collapses to a point at the
+>    wrist, every fingertip measured as far away, the whole hand was reclassified as coat
+>    and handed to the spine — his fingers rendered as **ribbons hanging off the wrists**.
+>    Same shape for `L_UpperarmTwist02`/`L_ForearmTwist02`, also leaves, which tore the
+>    **sleeve** clean off the arm. The hand is now excluded (a coat has no geometry past the
+>    wrist) and a twist bone borrows its PARENT limb's segment (`IsTwistBone`).
+> 3. **Take the FARTHEST child as the segment end, never the nearest.** Every twist bone sits
+>    at EXACTLY its parent's position, so "nearest child" gave `L_Upperarm` a segment of
+>    length **0.000** and "distance along the arm" silently became "distance from the
+>    shoulder joint".
+>
+> 🔎 **Verify by BAKING, not by rendering a posed rig.** `SkinnedMeshRenderer` does not
+> re-skin on a manual edit-mode `cam.Render()`, so the first before/after pair came back
+> pixel-identical and looked like the fix had done nothing. `BakeMesh` forces the CPU skin;
+> compare rest against posed and count how far vertices travel, bucketed by distance from
+> the arm. That turns "does the coat still follow?" into a number: 745 coat vertices dragged
+> (worst 65 cm) before, **0** after, sleeve unchanged.
+
+## A "direction" conversion silently drops the parent's scale
+
+> [!danger] `InverseTransformDirection` ignores scale; `InverseTransformVector` does not
+> Pharmee's thruster rings hang off a model node scaled about **24x**. Converting world
+> "down" into their local space with `InverseTransformDirection` returns a unit direction
+> with the scale thrown away, so a `flowTravel` of 0.16 became **3.9 metres** of world
+> movement and each exhaust puff shot through the floor. `InverseTransformVector` carries
+> the scale, so the serialized number honestly means metres.
+>
+> The pure math could not see this — `Drop(phase, travel)` was correct at every step. Only
+> the transform chain was wrong, so the pin has to live in the SCENE: move a ring by exactly
+> what the drive loop would write, measure the world distance, put it back
+> (`thruster: a puff falls a hand's width, not through the floor`).
+>
+> ⚠ Related, and it wasted three captures: **`RobotNPC.forward` is near-vertical** because
+> the model carries a 90 deg axis fix. A camera placed with `fwd.y = 0; fwd.Normalize()`
+> gets a ZERO vector, lands exactly on the target, and photographs the inside of her head.
+> Frame from an explicit world offset, not from a character's forward.

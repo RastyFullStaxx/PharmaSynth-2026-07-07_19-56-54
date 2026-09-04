@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// Pharmee flight attitude (user 2026-07-10): lean the body into the movement
 /// direction so he reads as flying through air, pulse the hover waves at his
@@ -19,8 +19,19 @@ public class PharmeeAttitude : MonoBehaviour
     [SerializeField] private float maxLeanDeg = 14f;
     [SerializeField] private float leanPerMps = 22f;             // degrees per m/s
     [SerializeField] private float leanSharpness = 5f;
-    [SerializeField] private float wavePulse = 0.12f;
-    [SerializeField] private float waveSpeedMultiplier = 30f;    // user 2026-07-10: waves 30x faster
+    // ⛔ RETIRED (2026-09-05). These drove a pure SCALE pulse — on a flat horizontal ring
+    // that is a sideways shimmy, not a thruster, and at 30x it was a ~10 Hz blur. Kept only
+    // so the serialized scene values still deserialize; the rings now FLOW (see below).
+    [SerializeField, HideInInspector] private float wavePulse = 0.12f;
+    [SerializeField, HideInInspector] private float waveSpeedMultiplier = 30f;
+
+    [Header("Thrusters (W5.47) — the rings flow DOWN like exhaust")]
+    [Tooltip("Cycles per second for the exhaust stream.")]
+    [SerializeField] private float flowSpeed = PharmeeThrusterMath.DefaultFlowSpeed;
+    [Tooltip("How far a ring falls before it fades out, in local units.")]
+    [SerializeField] private float flowTravel = PharmeeThrusterMath.DefaultTravel;
+    [Tooltip("How much wider a ring gets by the end of its fall.")]
+    [SerializeField] private float flowSpread = PharmeeThrusterMath.DefaultSpread;
 
     [Header("Talk motion (W5.38)")]
     // These were HARDCODED at 2.5 and 1.8 degrees against a 14-degree lean cap, i.e. not
@@ -37,6 +48,9 @@ public class PharmeeAttitude : MonoBehaviour
 
     private Quaternion _baseLocal;
     private Vector3[] _waveBase = new Vector3[0];
+    private Vector3[] _waveBasePos = new Vector3[0];
+    private Vector3[] _waveDown = new Vector3[0];
+    private int[] _ringRoots = new int[0];
     private Vector3 _prevHome;
     private bool _hasPrev, _talking, _cached;
     private float _lean;
@@ -87,8 +101,40 @@ public class PharmeeAttitude : MonoBehaviour
         if (_cached || bodyRoot == null) return;
         _baseLocal = bodyRoot.localRotation;
         _waveBase = new Vector3[waves.Length];
+        _waveBasePos = new Vector3[waves.Length];
+        _waveDown = new Vector3[waves.Length];
         for (int i = 0; i < waves.Length; i++)
-            if (waves[i] != null) _waveBase[i] = waves[i].localScale;
+        {
+            if (waves[i] == null) continue;
+            _waveBase[i] = waves[i].localScale;
+            _waveBasePos[i] = waves[i].localPosition;
+            // The model carries a 90-degree axis fix, so a raw local Vector3.down is NOT
+            // down. Ask the parent what down means in the space we are about to write.
+            //
+            // ⛔ InverseTransformVECTOR, not InverseTransformDIRECTION. Direction ignores
+            // scale, and these rings sit under a model node scaled about 24x — so a travel of
+            // 0.16 became 3.9 METRES of world movement and the exhaust shot through the floor
+            // (measured 2026-09-05). Vector carries the scale, so this is one world metre of
+            // "down" expressed locally, and flowTravel is honestly in metres.
+            _waveDown[i] = waves[i].parent != null
+                ? waves[i].parent.InverseTransformVector(Vector3.down)
+                : Vector3.down;
+        }
+
+        // ⛔ Drive only the ring ROOTS. The array holds the four model nodes (Wave,
+        // Wave.001-003) AND their four "_Blue_Light_0" mesh children; animating both
+        // double-moves and double-scales them. Checked by ancestry, not by name, so a
+        // re-export that renames the meshes cannot silently reintroduce the doubling.
+        var roots = new System.Collections.Generic.List<int>();
+        for (int i = 0; i < waves.Length; i++)
+        {
+            if (waves[i] == null) continue;
+            bool nested = false;
+            for (int j = 0; j < waves.Length && !nested; j++)
+                if (j != i && waves[j] != null && waves[i].IsChildOf(waves[j])) nested = true;
+            if (!nested) roots.Add(i);
+        }
+        _ringRoots = roots.ToArray();
         _cached = true;
     }
 
@@ -146,13 +192,20 @@ public class PharmeeAttitude : MonoBehaviour
             if (handRight != null) handRight.localRotation = _handRightBase * swing;
         }
 
-        // Hover waves: staggered breathing pulse, faster while moving.
-        float rate = (2.2f + Mathf.Min(vel.magnitude * 2f, 2f)) * Mathf.Max(0.01f, waveSpeedMultiplier);
-        for (int i = 0; i < waves.Length && i < _waveBase.Length; i++)
+        // THRUSTERS: each ring is a puff of exhaust — born at the emitter, falling, spreading
+        // and fading, staggered so the four read as one continuous jet. Faster while moving,
+        // the way a real thruster works harder to shift a mass.
+        float speed = flowSpeed * (1f + Mathf.Min(vel.magnitude, 1.5f));
+        for (int k = 0; k < _ringRoots.Length; k++)
         {
+            int i = _ringRoots[k];
             if (waves[i] == null) continue;
-            float s = 1f + wavePulse * Mathf.Sin(Time.time * rate + i * 0.9f);
-            waves[i].localScale = _waveBase[i] * s * _pose.waveFlare;   // celebrate flares the rings
+            float phase = PharmeeThrusterMath.Phase(Time.time, k, _ringRoots.Length, speed);
+            waves[i].localPosition = _waveBasePos[i]
+                                     + _waveDown[i] * PharmeeThrusterMath.Drop(phase, flowTravel);
+            waves[i].localScale = _waveBase[i]
+                                  * PharmeeThrusterMath.Swell(phase, flowSpread)
+                                  * _pose.waveFlare;   // celebrate still flares the rings
         }
     }
 }

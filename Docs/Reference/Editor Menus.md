@@ -227,6 +227,11 @@ Tutorial Mode scene wiring (2026-08-07). Mirrors DemoModeBuilder's shape so the 
 
 W5.12 (user: "instruction step is one continuous row — wrap the texts and make the panel scrollable"): every holo text wraps, and the checklist body moves inside a masked, scrollable viewport with big ^ / v page buttons (poke/ray-friendly) driven by HoloScroller. Idempotent.
 
+### `Tools/PharmaSynth/Fix Jimenez Coat Rig`
+<sub>`Assets/PharmaSynth/Scripts/Editor/JimenezCoatRig.cs`</sub>
+
+lab coat moves with it, which it is not supposed to"). ⛔ There is nothing to unparent. He is a Tripo auto-rig: ONE SkinnedMeshRenderer over 41 bones, with the coat baked into the body mesh. The coat follows the arm because coat VERTICES carry weight on the arm bones — an auto-rigger assigns weight by proximity, so a coat panel hanging near the elbow picks up elbow weight even though a real coat hangs from the shoulders. This finds that bleed geometrically (a vertex carrying arm weight while sitt
+
 ### `Tools/PharmaSynth/Fix Methane Apparatus Grab`
 <sub>`Assets/PharmaSynth/Scripts/Editor/MethaneApparatusGrab.cs`</sub>
 

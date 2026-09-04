@@ -50,11 +50,24 @@ public static class LabNpcPolishBuilder
         var glow = robot.GetComponentInChildren<PharmeeGlow>(true);
         if (glow == null) glow = robot.AddComponent<PharmeeGlow>();
         var glowParts = new List<Renderer>();
+        var shellParts = new List<Renderer>();
         foreach (var r in robot.GetComponentsInChildren<Renderer>(true))
+        {
             if (PharmeeGlowMath.IsGlowPart(r.name)) glowParts.Add(r);
+            else if (PharmeeGlowMath.IsShellPart(r.name)) shellParts.Add(r);
+        }
         glow.BindRenderers(glowParts.ToArray());
+        glow.BindShell(shellParts.ToArray());
+        // ENFORCE the tuned values (same reason as PharmeeAttitude below: the component is
+        // authored in the SCENE, so a changed C# default never reaches the saved instance).
+        var soGlow = new SerializedObject(glow);
+        SetFloat(soGlow, "intensity", PharmeeGlowMath.DefaultIntensity);
+        SetFloat(soGlow, "shellAlbedo", PharmeeGlowMath.DefaultShellAlbedo);
+        soGlow.ApplyModifiedProperties();
+        glow.Apply();
         EditorUtility.SetDirty(glow);
-        Debug.Log("[NpcPolish] glow renderers: " + glowParts.Count + " (" + string.Join(", ", glowParts.ConvertAll(r => r.name)) + ")");
+        Debug.Log("[NpcPolish] glow renderers: " + glowParts.Count + " emissive + " + shellParts.Count
+                  + " shell (" + string.Join(", ", shellParts.ConvertAll(r => r.name)) + ")");
 
         var narration = robot.GetComponentInChildren<NPCNarrationController>(true);
         var mood = robot.GetComponent<PharmeeMood>();
@@ -120,6 +133,9 @@ public static class LabNpcPolishBuilder
             SetFloat(soAtt, "talkRollDegrees", 3.5f);
             SetFloat(soAtt, "handRaiseDegrees", 55f);
             SetFloat(soAtt, "handSharpness", 8f);
+            SetFloat(soAtt, "flowSpeed", PharmeeThrusterMath.DefaultFlowSpeed);
+            SetFloat(soAtt, "flowTravel", PharmeeThrusterMath.DefaultTravel);
+            SetFloat(soAtt, "flowSpread", PharmeeThrusterMath.DefaultSpread);
             soAtt.ApplyModifiedProperties();
             EditorUtility.SetDirty(attitude);
 

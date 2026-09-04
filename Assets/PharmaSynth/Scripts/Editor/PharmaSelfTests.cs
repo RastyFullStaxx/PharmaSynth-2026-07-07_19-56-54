@@ -6356,13 +6356,134 @@ public static class PharmaSelfTests
         A("glow: the eyes and mouth belong to the face, not the glow",
             !PharmeeGlowMath.IsGlowPart("Eyes_Blue_Light_0") && !PharmeeGlowMath.IsGlowPart("Mouth_Blue_Light_0"));
         var e = PharmeeGlowMath.Emission(new Color(0.06f, 0.35f, 1f), PharmeeGlowMath.DefaultIntensity);
-        A("glow: the default reads lit but does not blaze", e.maxColorComponent > 1f && e.maxColorComponent < 2f && Near(e.a, 1f));
+        // ⛔ UNDER the scene's Bloom threshold (1.0). At 1.45 she still fed bloom and read as
+        // a glowing ball; this is the property that actually removes the halo.
+        A("glow: the default emissive cannot feed bloom",
+            !PharmeeGlowMath.Blooms(e) && e.maxColorComponent > 0.5f && Near(e.a, 1f));
+        A("glow: an 8x emissive would bloom", PharmeeGlowMath.Blooms(PharmeeGlowMath.Emission(Color.white, 8f)));
+        // Her white shell has NO emission and blooms anyway: albedo 0.91 under the nearby
+        // 1.1 fill plus the 1.4 directional clears 1.0 on lighting alone.
+        A("glow: the shell albedo is pulled under the clipping point",
+            PharmeeGlowMath.DefaultShellAlbedo < 0.8f && PharmeeGlowMath.DefaultShellAlbedo > 0.5f);
+        A("glow: the shell parts are the White_Glossy meshes, not the emissive ones",
+            PharmeeGlowMath.IsShellPart("Robot_White_Glossy_0")
+            && PharmeeGlowMath.IsShellPart("hANDS_White_Glossy_0")
+            && !PharmeeGlowMath.IsShellPart("Robot_Blue_Light_0"));
         var robot = GameObject.Find("RobotNPC");
         var glow = robot != null ? robot.GetComponentInChildren<PharmeeGlow>(true) : null;
         A("glow: Pharmee carries the dimmer bound to her 5 light parts (run Wire NPC Polish)",
             glow != null && glow.Renderers != null && glow.Renderers.Length == 5);
-        A("glow: the scene intensity stays under 2x — no white ball",
-            glow != null && PharmeeGlowMath.Emission(glow.Hue, glow.Intensity).maxColorComponent < 2f);
+        A("glow: the SCENE emissive cannot feed bloom either",
+            glow != null && !PharmeeGlowMath.Blooms(PharmeeGlowMath.Emission(glow.Hue, glow.Intensity)));
+        A("glow: the scene shell is tamed too (3 White_Glossy parts)",
+            glow != null && glow.ShellRenderers != null && glow.ShellRenderers.Length == 3
+            && glow.ShellAlbedo < 0.8f);
+
+        // ---- Thrusters: the rings FLOW DOWN, they do not shimmy sideways ----
+        A("thruster: a ring starts at the emitter",
+            Near(PharmeeThrusterMath.Drop(0f, PharmeeThrusterMath.DefaultTravel), 0f));
+        A("thruster: a ring ends a full travel below it",
+            Near(PharmeeThrusterMath.Drop(1f, PharmeeThrusterMath.DefaultTravel), PharmeeThrusterMath.DefaultTravel));
+        A("thruster: the fall is monotonic",
+            PharmeeThrusterMath.Drop(0.25f, 1f) < PharmeeThrusterMath.Drop(0.75f, 1f));
+        // Zero at BOTH ends is what makes the loop invisible — a ring that simply repeated
+        // would pop back to full size at the top of every cycle.
+        A("thruster: a ring fades in and out, so the loop never pops",
+            Near(PharmeeThrusterMath.Swell(0f, 0.45f), 0f) && Near(PharmeeThrusterMath.Swell(1f, 0.45f), 0f)
+            && PharmeeThrusterMath.Swell(0.5f, 0.45f) > 1f);
+        A("thruster: it spreads as it falls",
+            PharmeeThrusterMath.Swell(0.6f, 0.45f) > PharmeeThrusterMath.Swell(0.4f, 0f));
+        A("thruster: the four rings are evenly staggered",
+            Near(PharmeeThrusterMath.Phase(0f, 0, 4, 1f), 0f)
+            && Near(PharmeeThrusterMath.Phase(0f, 2, 4, 1f), 0.5f));
+        A("thruster: the cycle wraps", Near(PharmeeThrusterMath.Phase(1f, 0, 4, 1f), 0f));
+        // ⛔ The SCENE check, because the pure math cannot see a parent's scale. The rings
+        // hang off a model node scaled about 24x, so the first build converted "down" with
+        // InverseTransformDirection (which ignores scale) and each puff fell 3.9 METRES,
+        // straight through the floor. Measured by actually moving a ring and putting it back.
+        {
+            var att = UnityEngine.Object.FindFirstObjectByType<PharmeeAttitude>(FindObjectsInactive.Include);
+            if (att != null)
+            {
+                var attSo = new SerializedObject(att);
+                var ringsProp = attSo.FindProperty("waves");
+                float travel = attSo.FindProperty("flowTravel").floatValue;
+                float worst = 0f; int driven = 0;
+                for (int i = 0; i < ringsProp.arraySize; i++)
+                {
+                    var ring = ringsProp.GetArrayElementAtIndex(i).objectReferenceValue as Transform;
+                    if (ring == null || ring.parent == null) continue;
+                    bool nested = false;
+                    for (int j = 0; j < ringsProp.arraySize && !nested; j++)
+                    {
+                        var other = ringsProp.GetArrayElementAtIndex(j).objectReferenceValue as Transform;
+                        if (j != i && other != null && ring.IsChildOf(other)) nested = true;
+                    }
+                    if (nested) continue;
+                    driven++;
+                    Vector3 saved = ring.localPosition, from = ring.position;
+                    try
+                    {
+                        ring.localPosition = saved + ring.parent.InverseTransformVector(Vector3.down)
+                                                     * PharmeeThrusterMath.Drop(1f, travel);
+                        worst = Mathf.Max(worst, Vector3.Distance(from, ring.position));
+                    }
+                    finally { ring.localPosition = saved; }
+                }
+                A("thruster: a puff falls a hand's width, not through the floor (worst "
+                  + worst.ToString("0.00") + " m over " + driven + " rings)",
+                    driven == 4 && worst > 0.02f && worst < 0.40f);
+            }
+        }
+
+        // ---- Jimenez: the coat is re-weighted, not unparented ----
+        A("rig: the arm bones swing the coat, the clavicle legitimately carries the shoulder",
+            JimenezRigMath.IsArmBone("L_Upperarm") && JimenezRigMath.IsArmBone("R_ForearmTwist01")
+            && !JimenezRigMath.IsArmBone("L_Clavicle") && !JimenezRigMath.IsArmBone("Spine02"));
+        // ⛔ The HAND is not an arm bone. This rig has no finger bones, so L_Hand is a LEAF
+        // with no segment; treating it as an arm measured every fingertip from the wrist
+        // joint, called the whole hand "coat", and rendered his fingers as ribbons.
+        A("rig: the hand is never re-weighted (it is a leaf bone, and a coat has no fingers)",
+            !JimenezRigMath.IsArmBone("L_Hand") && !JimenezRigMath.IsArmBone("R_Hand"));
+        // ⛔ Twist bones sit at EXACTLY their parent's position, so the nearest child gives
+        // the upper arm a zero-length segment and "along the arm" becomes "from the shoulder".
+        A("rig: a bone's segment runs to its FARTHEST child, not its nearest",
+            JimenezRigMath.IsBetterSegmentEnd(0.15f, 0.0f)
+            && !JimenezRigMath.IsBetterSegmentEnd(0.0f, 0.15f));
+        // ⛔ L_UpperarmTwist02 is a LEAF, so judged against itself its "segment" is a point at
+        // the elbow: the whole sleeve reads as far away, is freed to the spine, and stays
+        // behind when the arm lifts. A twist bone must borrow its parent limb's segment.
+        A("rig: twist bones are measured against the parent limb, not themselves",
+            JimenezRigMath.IsTwistBone("L_UpperarmTwist02")
+            && JimenezRigMath.IsTwistBone("R_ForearmTwist01")
+            && !JimenezRigMath.IsTwistBone("L_Upperarm") && !JimenezRigMath.IsTwistBone("Spine02"));
+        // ⛔ The radius is in the MESH's own units. Jimenez's mesh is ~0.5 units tall and the
+        // prefab scales it to a 1.75 m man, so a radius picked in metres was half his width
+        // and classified the whole coat as sleeve — the first run freed 43 of 6992 vertices.
+        {
+            float r = JimenezRigMath.SleeveRadiusFor(0.5f);
+            A("rig: the sleeve radius scales with the model, not with metres",
+                r > 0.03f && r < 0.04f
+                && Near(JimenezRigMath.SleeveRadiusFor(1.0f), 2f * r));
+            A("rig: weight far from the arm is bleed, weight on the sleeve is not",
+                JimenezRigMath.IsBleed(0.09f, r) && !JimenezRigMath.IsBleed(0.02f, r));
+        }
+        A("rig: distance is to the whole BONE, not just its joint",
+            Near(JimenezRigMath.DistanceToSegment(new Vector3(0.5f, 0f, 0f), Vector3.zero, new Vector3(1f, 0f, 0f)), 0f)
+            && Near(JimenezRigMath.DistanceToSegment(new Vector3(0.5f, 0.2f, 0f), Vector3.zero, new Vector3(1f, 0f, 0f)), 0.2f));
+        {
+            // The invariant that matters: a re-weighted vertex is still normalised, or the
+            // mesh deforms at the wrong scale and the fix looks like a modelling error.
+            var bw = new BoneWeight { boneIndex0 = 7, weight0 = 0.6f, boneIndex1 = 3, weight1 = 0.4f };
+            float moved = JimenezRigMath.Redistribute(ref bw, 7, 3);
+            A("rig: arm weight moves to the spine", Near(moved, 0.6f));
+            A("rig: the vertex stays normalised", Near(JimenezRigMath.Sum(bw), 1f));
+            A("rig: the spine ends up carrying all of it",
+                Near(bw.boneIndex1 == 3 ? bw.weight1 : 0f, 1f));
+            var untouched = new BoneWeight { boneIndex0 = 2, weight0 = 1f };
+            A("rig: a vertex with no arm weight is left alone",
+                Near(JimenezRigMath.Redistribute(ref untouched, 7, 3), 0f) && Near(untouched.weight0, 1f));
+        }
 
         // ⛔ A vessel whose RESTING pose already reads as "tipped" pours itself forever:
         // LiquidPourer.Update fires on Vector3.Angle(Vector3.up, transform.up) > pourThreshold,

@@ -1,11 +1,17 @@
 using UnityEngine;
 
-/// Pure rules for Pharmee's body glow (suite-pinned).
+/// Pure rules for how bright Pharmee reads (suite-pinned).
 public static class PharmeeGlowMath
 {
-    /// Readable, not blazing. The bloom threshold is 1.0, so a peak just above it gives a
-    /// faint halo — a lit robot — where the model's authored 8.0 gave a white ball.
-    public const float DefaultIntensity = 1.45f;
+    /// ⛔ Must stay STRICTLY UNDER the scene's Bloom threshold (1.0). At 1.45 she still fed
+    /// bloom and read as a glowing ball; under 1.0 she is lit but contributes no halo at all.
+    public const float DefaultIntensity = 0.95f;
+
+    /// Her shell albedo. The pack ships 0.91 (near-white), and with a 1.1 point fill about a
+    /// metre away plus the 1.4 directional the LIT surface clears 1.0 and blooms with no
+    /// emission whatsoever — which is most of the white ball. 0.72 still reads as a white
+    /// robot once lit, without clipping.
+    public const float DefaultShellAlbedo = 0.72f;
 
     /// The emission colour to write: the hue scaled to an HDR intensity, alpha pinned.
     public static Color Emission(Color hue, float intensity)
@@ -15,54 +21,87 @@ public static class PharmeeGlowMath
         return c;
     }
 
-    /// Which renderers this component owns: the body's light panels and the four hover
-    /// rings. The eyes and mouth share the same material but belong to PharmeeFace, which
-    /// colours them per expression — two writers on one renderer would fight.
+    /// Would this emission feed the bloom pass at the given threshold?
+    public static bool Blooms(Color emission, float bloomThreshold = 1f)
+        => emission.maxColorComponent > bloomThreshold;
+
+    /// The EMISSIVE parts: the body's light panel and the four hover rings. The eyes and
+    /// mouth share the same material but belong to PharmeeFace, which colours them per
+    /// expression — two writers on one renderer would fight.
     public static bool IsGlowPart(string rendererName)
         => rendererName == "Robot_Blue_Light_0"
            || (rendererName.StartsWith("Wave") && rendererName.EndsWith("_Blue_Light_0"));
+
+    /// The white SHELL parts (body + both hands), which clip on lighting alone.
+    public static bool IsShellPart(string rendererName)
+        => rendererName != null && rendererName.EndsWith("_White_Glossy_0");
 }
 
-/// Dims the light Pharmee gives off (user 2026-09-05: "too flashy when she speaks").
+/// Keeps Pharmee from blowing out (user 2026-09-05: "too flashy", then a screenshot of a
+/// white ball while she speaks).
 ///
-/// The robot's FBX ships one embedded material, `Blue_Light`, with an HDR emission of
-/// (0.46, 2.75, 8.0) — eight times white — on the body's light panels and all four hover
-/// rings. Only the eyes and mouth were ever overridden (PharmeeFace); the rest bloomed into
-/// a white ball that wobbled with every talk nod. This writes a readable emission through a
-/// MaterialPropertyBlock, the same pattern PharmeeFace uses: no material is instanced, the
-/// FBX and its importer stay untouched, and `intensity` is tunable live in the inspector.
-/// Thin over PharmeeGlowMath; Bind() seam because AddComponent fires no Awake in edit mode.
+/// TWO separate causes, measured rather than guessed:
+///   1. The robot FBX ships one emissive material, `Blue_Light`, at HDR (0.46, 2.75, 8.0) —
+///      eight times white — on the body panel and all four hover rings. Dimmed here.
+///   2. Her `White_Glossy` shell has NO emission at all and still blooms, because albedo
+///      0.91 under the nearby fill light pushes the lit result past the 1.0 bloom threshold.
+///      Dimming the emissive alone therefore could not have fixed it.
+///
+/// Everything is written through a MaterialPropertyBlock, the same pattern `PharmeeFace`
+/// uses: no material is instanced, the FBX and its importer stay untouched, and both values
+/// are tunable live in the inspector. Thin over pure `PharmeeGlowMath`; `Bind*` seams exist
+/// because AddComponent fires no Awake in edit mode.
 public class PharmeeGlow : MonoBehaviour
 {
+    [Header("Emissive panels + hover rings")]
     [SerializeField] private Renderer[] glowRenderers = new Renderer[0];
     [Tooltip("The panel/ring hue. Emission = hue x intensity.")]
     [SerializeField] private Color hue = new Color(0.06f, 0.35f, 1f);
-    [Tooltip("HDR intensity. 1.0 = no bloom at all; ~1.45 = a faint halo; 8 = the authored blaze.")]
+    [Tooltip("HDR intensity. Keep under the scene's Bloom threshold (1.0) or she halos.")]
     [SerializeField] private float intensity = PharmeeGlowMath.DefaultIntensity;
+
+    [Header("White shell (blooms on lighting alone)")]
+    [SerializeField] private Renderer[] shellRenderers = new Renderer[0];
+    [Tooltip("Base colour for the white shell. The pack's 0.91 clips under the nearby fill light.")]
+    [SerializeField] private float shellAlbedo = PharmeeGlowMath.DefaultShellAlbedo;
 
     private MaterialPropertyBlock _mpb;
 
     public Renderer[] Renderers => glowRenderers;
+    public Renderer[] ShellRenderers => shellRenderers;
     public float Intensity => intensity;
+    public float ShellAlbedo => shellAlbedo;
     public Color Hue => hue;
 
-    /// Editor-builder seam.
+    /// Editor-builder seams.
     public void BindRenderers(params Renderer[] rs) { glowRenderers = rs ?? new Renderer[0]; Apply(); }
+    public void BindShell(params Renderer[] rs) { shellRenderers = rs ?? new Renderer[0]; Apply(); }
 
     private void Start() => Apply();
     private void OnValidate() => Apply();
 
     public void Apply()
     {
-        if (glowRenderers == null) return;
         if (_mpb == null) _mpb = new MaterialPropertyBlock();
         Color e = PharmeeGlowMath.Emission(hue, intensity);
-        foreach (var r in glowRenderers)
-        {
-            if (r == null) continue;
-            r.GetPropertyBlock(_mpb);
-            _mpb.SetColor("_EmissionColor", e);
-            r.SetPropertyBlock(_mpb);
-        }
+        if (glowRenderers != null)
+            foreach (var r in glowRenderers)
+            {
+                if (r == null) continue;
+                r.GetPropertyBlock(_mpb);
+                _mpb.SetColor("_EmissionColor", e);
+                r.SetPropertyBlock(_mpb);
+            }
+
+        var shell = new Color(shellAlbedo, shellAlbedo, shellAlbedo, 1f);
+        if (shellRenderers != null)
+            foreach (var r in shellRenderers)
+            {
+                if (r == null) continue;
+                r.GetPropertyBlock(_mpb);
+                _mpb.SetColor("_BaseColor", shell);
+                _mpb.SetColor("_Color", shell);      // whichever name the shader exposes
+                r.SetPropertyBlock(_mpb);
+            }
     }
 }
