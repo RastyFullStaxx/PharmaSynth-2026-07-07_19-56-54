@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -31,7 +31,10 @@ public class NPCNarrationController : MonoBehaviour
     // 32 cps ≈ 384 wpm — far past comfortable reading, and it read as Pharmee
     // "speaking rapidly" (user 2026-07-19). 22 cps ≈ 260 wpm: brisk but legible.
     [SerializeField] private float charsPerSecond = 22f;
-    [SerializeField] private int blipEveryChars = 4;            // a voice blip every N revealed non-space chars
+    // Every 6 characters, not 2 or 4: at 22 cps that is ~4 soft ticks a second. The old
+    // Pharmee value of 2 with a ±12% random pitch was a machine-gun stutter — the sound
+    // the user described as "a broken machine" whenever a line had no clip (2026-09-05).
+    [SerializeField] private int blipEveryChars = 6;            // a voice blip every N revealed non-space chars
     [SerializeField] private string voiceBlipKey = "";          // this speaker's talking blip (SoundBank key)
     [SerializeField, Range(0f, 1f)] private float blipVolume = 0.5f;
 
@@ -115,7 +118,8 @@ public class NPCNarrationController : MonoBehaviour
         => voiceBank != null ? voiceBank.Get(speaker, VoiceLineId.For(subtitle)) : null;
 
     /// Assign this speaker's talking blip (SoundBank key) — played per few chars as the line types.
-    public void SetVoiceBlip(string key, float volume = 0.5f) { voiceBlipKey = key; blipVolume = Mathf.Clamp01(volume); }
+    public void SetVoiceBlip(string key, float volume = 0.5f, int everyChars = 6)
+    { voiceBlipKey = key; blipVolume = Mathf.Clamp01(volume); blipEveryChars = Mathf.Max(1, everyChars); }
 
     private void Start()
     {
@@ -214,6 +218,14 @@ public class NPCNarrationController : MonoBehaviour
     private IEnumerator SayRoutine(string subtitle, float seconds, AudioClip clip)
     {
         if (clip == null) clip = ResolveVoice(subtitle);   // voice-over by text hash
+#if UNITY_EDITOR
+        // A line with no clip is a content bug the ear finds last. Name it once, in the
+        // editor only, so the next play session's console shows exactly which text is
+        // falling back to blips (2026-09-05: the practice summary and the campaign finale
+        // had been doing so for weeks).
+        if (clip == null && voiceBank != null && !string.IsNullOrEmpty(subtitle) && s_warnedUnvoiced.Add(subtitle))
+            Debug.LogWarning("[Voice] " + speaker + " has NO clip for: \"" + subtitle + "\" — playing blips");
+#endif
         float waitSeconds = Mathf.Max(0.1f, seconds);
         _voiceActive = false;
         ClaimFloor();                                      // own the floor for the WHOLE line
@@ -250,6 +262,10 @@ public class NPCNarrationController : MonoBehaviour
     // instead of talking over. Only the reveal is protected — the post-reveal
     // read hold is interruptible, so conversation still feels responsive.
     private static NPCNarrationController s_floor;
+#if UNITY_EDITOR
+    private static readonly System.Collections.Generic.HashSet<string> s_warnedUnvoiced
+        = new System.Collections.Generic.HashSet<string>();
+#endif
 
     /// True while THIS narrator's actual voice clip is still sounding.
     ///
@@ -418,7 +434,7 @@ public class NPCNarrationController : MonoBehaviour
             _blip = go.AddComponent<AudioSource>();
             _blip.playOnAwake = false; _blip.spatialBlend = 0f;   // 2D — reads with the HUD line
         }
-        _blip.pitch = AudioService.JitteredPitch(0.12f, UnityEngine.Random.value);
+        _blip.pitch = AudioService.JitteredPitch(0.04f, UnityEngine.Random.value);   // barely varied: a tick, not a stutter
         _blip.PlayOneShot(e.clip, Mathf.Clamp01(e.volume) * blipVolume);
     }
 

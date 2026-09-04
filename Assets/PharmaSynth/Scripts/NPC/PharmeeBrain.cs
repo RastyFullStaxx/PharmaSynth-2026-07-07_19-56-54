@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 /// Pharmee's expressions, driven onto the robot's screen-face (material/animator).
@@ -231,19 +231,11 @@ public class PharmeeBrain : MonoBehaviour
         _lastLineTime = Time.time;
         _face?.SetExpression(face);
         if (narration != null) narration.Say(line, lineSeconds);
-        // Pharmee's robotic "voice" — a beep per mood (no-op if no AudioService/clip).
-        if (AudioService.Instance != null) AudioService.Instance.Play(BeepKey(state));
-    }
-
-    private static string BeepKey(PharmeeState s)
-    {
-        switch (s)
-        {
-            case PharmeeState.Warning: return "pharmee-warn";
-            case PharmeeState.Celebrating: return "pharmee-celebrate";
-            case PharmeeState.Greeting: return "pharmee-greet";
-            default: return "pharmee-instruct";
-        }
+        // ⛔ No mood beep. Until 2026-09-05 every line ALSO fired a SoundBank buzzer
+        // (pharmee-instruct / -greet / -celebrate / -warn) on top of the real clip. It was
+        // "Pharmee's robotic voice" from before voice-over existed; with 344 real clips it
+        // read as an error tone announcing each sentence ("like a broken machine"). The
+        // keys stay in the SoundBank; nothing runtime plays them any more.
     }
 
     private string WarnLineFor(LabErrorType type)

@@ -96,6 +96,7 @@ public static class PharmaSelfTests
         ShelfPourWiringSuite();
         FxMaterialSuite();
         VisualSweepSuite();
+        PharmeePolishSuite();
         ChecklistPagerSuite();
         DemoModeSuite();
         DemoActionsSuite();
@@ -6342,6 +6343,53 @@ public static class PharmaSelfTests
         A("visual: no rule — a heat step expects temperature", VisualSweep.ExpectFor("heat", null) == VisualSweep.Expect.Heat);
         A("visual: no rule — a solid delivery expects a mound", VisualSweep.ExpectFor("solid", null) == VisualSweep.Expect.Powder);
         A("visual: no rule — a flame confirm has only its picture", VisualSweep.ExpectFor("flame", null) == VisualSweep.Expect.None);
+    }
+
+    // W5.46: Pharmee's light and voice (user 2026-09-05: "like a broken machine", "too flashy").
+    static void PharmeePolishSuite()
+    {
+        // The FBX's Blue_Light material blazes at 8x on the body panels and hover rings;
+        // PharmeeGlow owns exactly those, never the eyes/mouth PharmeeFace colours.
+        A("glow: the body light panel is a glow part", PharmeeGlowMath.IsGlowPart("Robot_Blue_Light_0"));
+        A("glow: the hover rings are glow parts",
+            PharmeeGlowMath.IsGlowPart("Wave_Blue_Light_0") && PharmeeGlowMath.IsGlowPart("Wave.003_Blue_Light_0"));
+        A("glow: the eyes and mouth belong to the face, not the glow",
+            !PharmeeGlowMath.IsGlowPart("Eyes_Blue_Light_0") && !PharmeeGlowMath.IsGlowPart("Mouth_Blue_Light_0"));
+        var e = PharmeeGlowMath.Emission(new Color(0.06f, 0.35f, 1f), PharmeeGlowMath.DefaultIntensity);
+        A("glow: the default reads lit but does not blaze", e.maxColorComponent > 1f && e.maxColorComponent < 2f && Near(e.a, 1f));
+        var robot = GameObject.Find("RobotNPC");
+        var glow = robot != null ? robot.GetComponentInChildren<PharmeeGlow>(true) : null;
+        A("glow: Pharmee carries the dimmer bound to her 5 light parts (run Wire NPC Polish)",
+            glow != null && glow.Renderers != null && glow.Renderers.Length == 5);
+        A("glow: the scene intensity stays under 2x — no white ball",
+            glow != null && PharmeeGlowMath.Emission(glow.Hue, glow.Intensity).maxColorComponent < 2f);
+
+        // The visual sweep buffers a handler's "not complete yet" complaint until the step
+        // lands on real frames; a chemistry bug is never buffered away.
+        A("noise: a completion complaint is noise once the step lands",
+            PlaytestAutopilot.IsCompletionNoise("test-ester: bath heating never completed the step (tube 100 C / needs 50 C)"));
+        A("noise: a broken heat gate is never noise",
+            !PlaytestAutopilot.IsCompletionNoise("Kit_TestTube_5: Iodoform fired at 25 C but needs 40 C — the heat gate is broken"));
+
+        // Every line the corpus can speak must have a clip — the pin that would have caught
+        // the campaign finale playing as blips for weeks (both DebriefRemark overloads).
+        var bank = AssetDatabase.LoadAssetAtPath<VoiceBank>("Assets/PharmaSynth/ScriptableObjects/VoiceBank.asset");
+        int unvoiced = 0; string first = "";
+        if (bank != null)
+            foreach (var l in VoiceCorpus.CodeLines())
+                if (bank.Get(l.speaker, VoiceLineId.For(l.text)) == null) { unvoiced++; if (first.Length == 0) first = l.text; }
+        A("voice: every corpus line has a clip (" + unvoiced + " unvoiced" + (first.Length > 0 ? ", e.g. \"" + first + "\"" : "") + ")",
+            bank != null && unvoiced == 0);
+
+        // Exp 2's two ferric-chloride tests promise violet; the rules used to have no product,
+        // so nothing in the tube ever changed colour.
+        foreach (var name in new[] { "Test_EnolPhenolFeCl3", "Test_HydrolysateFeCl3" })
+        {
+            var rule = AssetDatabase.LoadAssetAtPath<ReactionRule>("Assets/PharmaSynth/ScriptableObjects/Reactions/" + name + ".asset");
+            A("content: " + name + " turns the tube a colour the player can see",
+                rule != null && rule.resultLiquid != null && rule.inputChemicalA != null
+                && VisualSweep.ColourDistance(rule.resultLiquid.liquidColor, rule.inputChemicalA.liquidColor) >= VisualSweep.VisibleDelta);
+        }
     }
 }
 #endif

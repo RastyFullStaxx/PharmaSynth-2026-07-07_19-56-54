@@ -687,3 +687,84 @@ re-homing.
 > non-empty column at `MinVisibleFill01` (6%) so "there is something in here" reads, while
 > every number the player is shown or graded on stays exact. Floor the DRAWING, never the
 > data.
+
+## An emissive baked inside an FBX is invisible to every material scan
+
+> [!danger] Pharmee blazed for months and no `.mat` in the project could explain it
+> The robot's glow comes from `Blue_Light`, a material **embedded in `RobotNPC.fbx`**
+> (`materialImportMode: 2`, no extracted assets), at HDR `(0.46, 2.75, 8.0)` — eight times
+> white — on the body panels and all four hover rings. Grepping `Assets/**/*.mat` for high
+> `_EmissionColor` finds nine materials and **none of them is this one**, because it does
+> not exist as a file. `PharmeeFace` overrode only the eyes and mouth, so everything else
+> bloomed into a white ball that wobbled with every talk nod and read as "flashy when she
+> speaks" (user, 2026-09-05).
+>
+> **Read the live renderer, not the asset folder**: `r.sharedMaterials[i].GetColor("_EmissionColor")`
+> in a `Unity_RunCommand` found it in one pass. Fixed with `PharmeeGlow`, an MPB writer —
+> the FBX and its importer stay untouched and the value stays tunable.
+
+## A voiced character that still beeps
+
+> [!warning] The beep predated the voice-over and nobody removed it
+> `PharmeeBrain.Speak` ended with `AudioService.Play(BeepKey(state))` — a per-mood buzzer
+> whose own comment called it "Pharmee's robotic voice". That was true before voice-over;
+> with 344 real clips it became an error tone fired **under every single line**, which the
+> user heard as "a broken machine" (2026-09-05).
+>
+> **When a system is replaced, grep for what the old one still triggers.** The beep keys are
+> still in the SoundBank; only the callers are gone.
+
+## A line assembled at runtime can never have a clip
+
+> [!danger] Clips are keyed by the hash of the WHOLE subtitle
+> `VoiceLineId.For(text)` hashes the entire string, so anything built with `+` at runtime
+> matches nothing and drops to blips forever. Two shipped that way: the tutorial's
+> `"Practice complete — " + steps + " steps, …"` (every practice run ended in blips) and
+> the campaign finale.
+>
+> **Speak a fixed STEM under the dynamic text** — `Say(subtitle, seconds, clip)` already
+> takes the clip explicitly, so the bubble keeps the numbers and the voice says the stem.
+
+## Enumerate BOTH overloads in the voice corpus
+
+> [!danger] `DebriefRemark(grade)` was in the corpus; `DebriefRemark(grade, campaignComplete)` was not
+> The very last thing Pharmee says in the entire campaign had no clip and played as blips.
+> `VoiceCorpus.CodeLines()` is hand-enumerated, so an overload added later (W5.9) is simply
+> missed — and the old pin only covered the GATE lines, not the corpus.
+>
+> **Fixed** and pinned: `voice: every corpus line has a clip (N unvoiced)` walks all of
+> `CodeLines()`. It caught 3 the moment it was written.
+
+## The distillate stream drains a flask the player has not started distilling yet
+
+> [!danger] `midterm-chloroform / dry-redistil` cannot be played by the sweep (OPEN, 2026-09-05)
+> `VaporCollectController.Update` fires as soon as its task is AVAILABLE, the source is at
+> temperature, and any bound receiver sits within 0.5 m. In Exp 7 the DistillingFlask is
+> heated to 65 C by `dry-cacl2` and is still ~70 C the instant that step completes — which
+> is the instant `dry-redistil` becomes available. The flask empties before the player (or
+> the sweep) has begun the redistillation, and `dry-redistil` then has nothing to distil:
+>
+> ```
+> » dry-cacl2      → DistillingFlask holds Chloroform 12 ml at 25 C   ✓ held in the bath to 65 C
+> » dry-redistil   → source DistillingFlask holds NOTHING 0 ml at 70 C [empty ledger]
+>                    receiver Kit_TestTube_14 holds NOTHING 0 ml [empty ledger]
+> ```
+>
+> ⚠ **The cleared LEDGER is the tell** — `PourOut` shrinks a ledger, `SetContents` clears
+> it — so the emptying is not (only) the vapor stream moving liquid to the receiver, which
+> is itself empty. Both ends lost it. Not yet root-caused.
+>
+> This is a **game** question, not only a harness one: the same auto-fire would strip a real
+> player's product between steps. The edit-mode `SimulatedRun` completes Exp 7 13/13 because
+> nothing runs between its synchronous steps, which is exactly why only a play-mode sweep
+> could see it. The module stops honestly (nothing is forced) and the sweep reports it.
+>
+> ⛔ **Do not "explain" it as an editor hitch.** It was first blamed on writing voice mp3s
+> into `Assets/` during the run; a clean re-run with nothing touching the project reproduced
+> it identically. It is deterministic.
+
+## Let a play-mode sweep finish before touching the project
+
+> [!warning] Asset writes during a run can hitch the editor
+> Still good practice — a play session's verdict is only as stable as the editor it ran in —
+> but note that this was NOT the cause of the chloroform failure above.

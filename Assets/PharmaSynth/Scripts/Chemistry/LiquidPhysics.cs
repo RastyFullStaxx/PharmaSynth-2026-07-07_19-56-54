@@ -93,6 +93,7 @@ public class LiquidPhysics : MonoBehaviour
     /// Blank contents = chem null + 0 ml arms the wake-from-empty branch.
     public void SetContents(ChemicalData chem, float ml)
     {
+        ProbeDrain("SetContents(" + (chem != null ? chem.chemicalName : "null") + ", " + ml + ")");
         currentChemical = chem;
         if (chem != null) LastChemical = chem;
         currentLiquidVolume = chem != null ? Mathf.Max(0f, ml) : 0f;
@@ -608,6 +609,19 @@ public class LiquidPhysics : MonoBehaviour
     /// would keep a phantom chemical alive forever.
     private const float DryMl = 0.5f;
 
+    /// ⛔ "Who emptied this vessel?" — set to a name prefix and any vessel matching it logs a
+    /// STACK TRACE whenever its contents are cleared. Editor-only. A vessel losing its charge
+    /// between two steps is otherwise undebuggable: every reader sees the aftermath and none
+    /// sees the caller (W5.46, the chloroform redistillation).
+    public static string DrainProbeName;
+
+    [System.Diagnostics.Conditional("UNITY_EDITOR")]
+    private void ProbeDrain(string how)
+    {
+        if (string.IsNullOrEmpty(DrainProbeName) || name == null || !name.StartsWith(DrainProbeName)) return;
+        Debug.LogWarning("[DrainProbe] " + name + " cleared via " + how + "\n" + System.Environment.StackTrace);
+    }
+
     /// Pour/scoop the vessel out. The ledger follows the liquid: a PARTIAL pour
     /// shrinks every entry proportionally, and a vessel taken to dry forgets what
     /// it held entirely — so spilling a tube and refilling it starts a clean story
@@ -631,6 +645,7 @@ public class LiquidPhysics : MonoBehaviour
     /// the next pour cleanly. (SetContents(null, 0) does the same for builders.)
     public void ClearContents()
     {
+        ProbeDrain("ClearContents");
         currentLiquidVolume = 0f;
         currentPptVolume = 0f;
         currentChemical = null;

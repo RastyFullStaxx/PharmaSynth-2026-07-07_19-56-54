@@ -946,6 +946,13 @@
             "group": "Tour"
         },
         {
+            "id": "891a954e3b02572b",
+            "speaker": "Pharmee",
+            "text": "Practice complete.",
+            "chars": 18,
+            "group": "Tour"
+        },
+        {
             "id": "00f6abf3dc62695c",
             "speaker": "Pharmee",
             "text": "A flawless run — truly impressive work.",
@@ -965,6 +972,20 @@
             "text": "A solid pass — keep practising and the tricky steps will feel natural.",
             "chars": 70,
             "group": "Review"
+        },
+        {
+            "id": "e809da0f952c9fbc",
+            "speaker": "Pharmee",
+            "text": "And what a way to finish — a flawless final experiment!",
+            "chars": 55,
+            "group": "Celebrate"
+        },
+        {
+            "id": "b7b457aa0135c04f",
+            "speaker": "Pharmee",
+            "text": "And that was the very last experiment — you've done it!",
+            "chars": 55,
+            "group": "Celebrate"
         },
         {
             "id": "acf6b68b8a66e290",

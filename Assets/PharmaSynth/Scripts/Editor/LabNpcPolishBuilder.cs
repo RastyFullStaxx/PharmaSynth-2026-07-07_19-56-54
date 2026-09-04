@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System.Collections.Generic;
 using TMPro;
 using UnityEditor;
@@ -45,11 +45,22 @@ public static class LabNpcPolishBuilder
         if (faceParts.Count > 0) face.BindRenderers(faceParts.ToArray());
         Debug.Log("[NpcPolish] face renderers: " + faceParts.Count + " (" + string.Join(", ", faceParts.ConvertAll(r => r.name)) + ")");
 
+        // ---- 1b. Body glow (2026-09-05): the FBX's Blue_Light material blazes at 8x on the
+        // body panels and hover rings; PharmeeFace only covers the eyes and mouth.
+        var glow = robot.GetComponentInChildren<PharmeeGlow>(true);
+        if (glow == null) glow = robot.AddComponent<PharmeeGlow>();
+        var glowParts = new List<Renderer>();
+        foreach (var r in robot.GetComponentsInChildren<Renderer>(true))
+            if (PharmeeGlowMath.IsGlowPart(r.name)) glowParts.Add(r);
+        glow.BindRenderers(glowParts.ToArray());
+        EditorUtility.SetDirty(glow);
+        Debug.Log("[NpcPolish] glow renderers: " + glowParts.Count + " (" + string.Join(", ", glowParts.ConvertAll(r => r.name)) + ")");
+
         var narration = robot.GetComponentInChildren<NPCNarrationController>(true);
         var mood = robot.GetComponent<PharmeeMood>();
         if (mood == null) mood = robot.AddComponent<PharmeeMood>();
         mood.Bind(narration, face);
-        if (narration != null) { narration.SetVoiceBlip("pharmee-blip", 0.5f); EditorUtility.SetDirty(narration); }   // typewriter talking blip
+        if (narration != null) { narration.SetVoiceBlip("pharmee-blip", 0.3f, 6); EditorUtility.SetDirty(narration); }   // soft, sparse fallback tick
 
         var gk = robot.GetComponentInChildren<PharmeeGatekeeper>(true);
         if (gk != null)
@@ -170,7 +181,7 @@ public static class LabNpcPolishBuilder
             var exam = jim.GetComponent<ExaminerNPC>();
             if (exam == null) exam = jim.AddComponent<ExaminerNPC>();
             var jimNarration = BuildJimenezBubble(jim);   // overhead subtitle so his lines are visible
-            if (jimNarration != null) { jimNarration.SetVoiceBlip("jimenez-blip", 0.5f); EditorUtility.SetDirty(jimNarration); }
+            if (jimNarration != null) { jimNarration.SetVoiceBlip("jimenez-blip", 0.3f, 6); EditorUtility.SetDirty(jimNarration); }
             exam.Bind(runner, animator, jimNarration);
             EnsureTalkParam(animator);
             Debug.Log("[NpcPolish] Jimenez examiner voice wired (narration=" + (jimNarration != null) + ")");

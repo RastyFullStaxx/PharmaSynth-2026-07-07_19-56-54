@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ReactionRule
   inputChemicalA: {fileID: 11400000, guid: 7524c30f8b5c0f7498a9abd5cf573a1c, type: 2}
   inputChemicalB: {fileID: 11400000, guid: b4ffe5e1b40c7944fb638a72d0adb098, type: 2}
-  resultLiquid: {fileID: 0}
+  resultLiquid: {fileID: 11400000, guid: 5e2c1d7a9b3f4e8ab1c2d3e4f5a6b7c8, type: 2}
   resultPrecipitate: {fileID: 0}
   hasPrecipitate: 0
   minTemperatureC: 0

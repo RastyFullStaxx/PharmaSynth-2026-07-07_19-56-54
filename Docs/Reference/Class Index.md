@@ -2847,10 +2847,34 @@ void Bind(FloatBob b, Transform bodyXform, Transform p)
 static Vector3 SideStep(Vector3 pharmeePos, Vector3 playerPos, Vector3 playerForward,
 ```
 
+### `PharmeeGlowMath` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/NPC/PharmeeGlow.cs`</sub>
+
+Pure rules for Pharmee's body glow (suite-pinned).
+
+```csharp
+const float DefaultIntensity
+static Color Emission(Color hue, float intensity)
+static bool IsGlowPart(string rendererName)
+```
+
+### `PharmeeGlow` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/NPC/PharmeeGlow.cs`</sub>
+
+Dims the light Pharmee gives off (user 2026-09-05: "too flashy when she speaks"). The robot's FBX ships one embedded material, `Blue_Light`, with an HDR emission of (0.46, 2.75, 8.0) — eight times white — on the body's light panels and all four hover rings. Only the eyes and mouth were ever overridden (PharmeeFace); the rest bloomed into a white ball that wobbled with every talk nod. This writes a readable emission through a MaterialPropertyBlock, the same pattern PharmeeFace uses: no material is instanced, the FBX and its importer stay untouched, and `intensity` is tunable live in the inspector. Thin over PharmeeGlowMath; Bind() seam because AddComponent fires no Awake in edit mode.
+
+```csharp
+Renderer[] Renderers
+float Intensity
+Color Hue
+void BindRenderers(params Renderer[] rs)
+void Apply()
+```
+
 ### `PharmeeLines` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/NPC/PharmeeLines.cs`</sub>
 
-Rich dialogue pools for the NPCs (user 2026-07-10: "populate more messages and interactions for Pharmee and Dr. for a rich gameplay"). Pure static data + a deterministic picker so the self-tests can pin variety without RNG. Pharmee rotates through these instead of repeating one canned line; Dr. Jimenez draws his stern examiner remarks from the exam pools. Client-reviewable copy (the §5 dialogue sign-off still applies).
+interactions for Pharmee and Dr. for a rich gameplay"). Pure static data + a deterministic picker so the self-tests can pin variety without RNG. Pharmee rotates through these instead of repeating one canned line; Dr. Jimenez draws his stern examiner remarks from the exam pools. Client-reviewable copy (the §5 dialogue sign-off still applies).
 
 ```csharp
 static readonly string[] Greetings
@@ -2866,7 +2890,7 @@ static readonly string[] ExamGreeting
 static readonly string[] ExamRemarks
 const string TutorialOrientation
 const string TutorialPreview
-static readonly string[] TestsDoneLines
+const string PracticeComplete
 ```
 
 ### `PharmeeMood` <sub>class</sub>
@@ -4428,6 +4452,10 @@ static void Launch(string mode)
 <sub>`Assets/PharmaSynth/Scripts/Editor/PlaytestAutopilot.cs`</sub>
 
 A step that has been PERFORMED and is now finishing on real frames.
+
+```csharp
+static bool IsCompletionNoise(string bug)
+```
 
 ### `QuizNavButtonsBuilder` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Editor/QuizNavButtonsBuilder.cs`</sub>

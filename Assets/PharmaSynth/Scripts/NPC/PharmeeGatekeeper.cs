@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -586,8 +586,7 @@ public class PharmeeGatekeeper : MonoBehaviour
     /// Pharmee's spawn/entrance greeting (scene load + after a HUD reset).
     public void SpeakWelcome()
     {
-        Say(lines.welcome);
-        AudioService.TryPlay("pharmee-greet");
+        Say(lines.welcome);   // the greeting is voiced — no buzzer under it (2026-09-05)
 
         // Tutorial Mode drops the player into the SAME lab with no sign anything is
         // different — glowing bottles and a floating arrow read as a bug until someone

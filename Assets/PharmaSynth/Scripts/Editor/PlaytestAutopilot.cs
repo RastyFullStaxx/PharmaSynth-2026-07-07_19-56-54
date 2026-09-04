@@ -179,6 +179,7 @@ public static class PlaytestAutopilot
         // Set AFTER the domain reload that entering Play mode causes — a static assigned
         // before it would be wiped on the way in.
         SimulatedRun.NeverForce = s_visual;
+        LiquidPhysics.DrainProbeName = s_visual ? "DistillingFlask" : null;   // W5.46 diagnostic
         if (s_visual) VisualSweep.BeginRun();
         s_findings.Clear(); s_errors.Clear(); s_errorBeat.Clear(); s_trace.Clear();
         s_grabChecked.Clear(); s_shots.Clear();
@@ -729,7 +730,18 @@ public static class PlaytestAutopilot
         public ExperimentTask task; public string kind; public LiquidPhysics vessel;
         public List<ReactionRule> rules = new List<ReactionRule>(); public float targetC;
         public int waits; public bool retried;
+        /// Bugs the handlers logged while serving. Promoted to findings when the step
+        /// lands — except completion complaints from a serve the game then finished on its
+        /// own frames, which were the harness's single-tick impatience, not the game.
+        public List<string> bugs = new List<string>();
     }
+
+    /// Pure (suite-pinned): is this handler bug only "it had not completed yet"? Such a line
+    /// is noise once the step DOES complete on real frames; anything else (a broken heat
+    /// gate, a missing precipitate, a dry bottle) stays a finding whatever happens next.
+    public static bool IsCompletionNoise(string bug)
+        => bug != null && (bug.Contains("never completed") || bug.Contains("did not complete")
+                           || bug.Contains("never filled the receiver") || bug.Contains("not ready after"));
     static InFlight s_flight;
     static bool s_moduleStopped;
 
@@ -806,10 +818,9 @@ public static class PlaytestAutopilot
         {
             s_sessionRes.bugs.Add("the honest verbs THREW: " + e.GetType().Name + ": " + e.Message);
         }
-        for (int i = bugsBefore; i < s_sessionRes.bugs.Count; i++)
-            Finding(CurrentModule + " / " + next.taskId + ": " + s_sessionRes.bugs[i]);
-
         if (s_flight == null) s_flight = new InFlight();
+        for (int i = bugsBefore; i < s_sessionRes.bugs.Count; i++)
+            s_flight.bugs.Add(s_sessionRes.bugs[i]);      // judged when the step lands
         s_flight.task = next;
         if (!string.IsNullOrEmpty(SimulatedRun.LastKind)) s_flight.kind = SimulatedRun.LastKind;
         if (SimulatedRun.LastVessel != null) s_flight.vessel = SimulatedRun.LastVessel;
@@ -908,6 +919,11 @@ public static class PlaytestAutopilot
     {
         var f = s_flight; s_flight = null;
         if (f == null) return;
+        foreach (var b in f.bugs)
+        {
+            if (honest && IsCompletionNoise(b)) { Trace("(self-resolved on real frames) " + f.task.taskId + ": " + b); continue; }
+            Finding(CurrentModule + " / " + f.task.taskId + ": " + b);
+        }
         if (honest) s_honest++;
         s_tasksCompleted++; s_moduleTasks++;
         s_pending = new Pending
@@ -926,11 +942,15 @@ public static class PlaytestAutopilot
         foreach (var t in TaskTargetRegistry.Targets(taskId))
         {
             if (t.transform == null || !s_handled.Add(t.transform)) continue;
+            // Only what the player POURS FROM needs a pourer: the source bottle or vessel of a
+            // step. A destination — the mortar, the methane tube — is filled, never tipped,
+            // and flagging it was the sweep's last false positive (2026-09-05).
+            if (t.role != TargetRole.Source) continue;
             var lp = t.transform.GetComponent<LiquidPhysics>();
             if (lp == null) continue;
             if (t.transform.GetComponent<XRGrab>() == null) continue;   // fixed apparatus pours nothing
             if (t.transform.GetComponent<LiquidPourer>() == null)
-                Finding(CurrentModule + " / " + taskId + ": " + t.transform.name + " holds liquid and can "
+                Finding(CurrentModule + " / " + taskId + ": " + t.transform.name + " is poured from and can "
                         + "be picked up, but has NO LiquidPourer — tipping it spills nothing");
         }
     }

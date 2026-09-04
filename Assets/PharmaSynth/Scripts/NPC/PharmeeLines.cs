@@ -1,4 +1,4 @@
-/// Rich dialogue pools for the NPCs (user 2026-07-10: "populate more messages and
+﻿/// Rich dialogue pools for the NPCs (user 2026-07-10: "populate more messages and
 /// interactions for Pharmee and Dr. for a rich gameplay"). Pure static data +
 /// a deterministic picker so the self-tests can pin variety without RNG. Pharmee
 /// rotates through these instead of repeating one canned line; Dr. Jimenez draws
@@ -158,6 +158,11 @@ public static class PharmeeLines
     /// above: it explains a control, and an explanation should not vary.
     public const string TutorialPreview =
         "Here is the whole procedure before we start. Read it through, then walk in when you are ready — and poke me any time if you get stuck.";
+
+    /// The VOICED stem under the practice summary. The summary text itself carries the
+    /// step and correction counts (TutorialCoach.SummaryText) and so can never have a
+    /// clip of its own; the voice says this and the bubble shows the numbers.
+    public const string PracticeComplete = "Practice complete.";
 
     // ---- Post-experiment review flow (user 2026-07-11: congrats → Jimenez quiz
     // briefing → score remarks → entrance debrief). Finite pools, numbers stay on

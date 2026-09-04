@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// Tutorial Mode's voice: the stuck-escalation ladder and the end-of-run summary.
 /// Both are "what practice mode says to a struggling player", and both read the same
@@ -87,7 +87,10 @@ public class TutorialCoach : MonoBehaviour
     public void ShowSummary()
     {
         if (!TutorialSession.Active) return;
-        Announce(SummaryText(_stepsDone, _corrections));
+        // The subtitle carries the numbers; the VOICE says the fixed stem. A line assembled
+        // at runtime can never match a clip (clips are keyed by the hash of the whole text),
+        // so this summary had ended every practice run in fallback blips (2026-09-05).
+        Announce(SummaryText(_stepsDone, _corrections), PharmeeLines.PracticeComplete);
     }
 
     private void Update()
@@ -176,11 +179,14 @@ public class TutorialCoach : MonoBehaviour
         FloatingText.Show(msg, pos, new Color(0.7f, 1f, 0.8f), 1.3f);
     }
 
-    private void Announce(string msg)
+    private void Announce(string msg, string voicedStem = null)
     {
         if (string.IsNullOrEmpty(msg)) return;
         ShowText(msg);
         var narr = FindAnyObjectByType<NPCNarrationController>();
-        if (narr != null) narr.Say(msg, 3.5f);
+        if (narr == null) return;
+        // Dynamic text rides a fixed voiced line: Say() accepts the clip explicitly.
+        var clip = !string.IsNullOrEmpty(voicedStem) ? narr.ResolveVoice(voicedStem) : null;
+        narr.Say(msg, 3.5f, clip);
     }
 }

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 /// Every code-authored NPC line, with its speaker — the voice-over corpus
 /// (user 2026-07-10: both NPCs must speak). The manifest exporter adds the
@@ -43,6 +43,7 @@ public static class VoiceCorpus
         // Tutorial Mode's one-off orientation (2026-08-07). A single line, not a pool.
         lines.Add(new Line(VoiceSpeaker.Pharmee, PharmeeLines.TutorialOrientation, "Tour"));
         lines.Add(new Line(VoiceSpeaker.Pharmee, PharmeeLines.TutorialPreview, "Tour"));
+        lines.Add(new Line(VoiceSpeaker.Pharmee, PharmeeLines.PracticeComplete, "Tour"));
 
         // Dr. Jimenez pools (exam voice + review verdicts).
         AddPool(lines, VoiceSpeaker.Jimenez, PharmeeLines.ExamGreeting, "Exam");
@@ -55,6 +56,10 @@ public static class VoiceCorpus
         lines.Add(new Line(VoiceSpeaker.Pharmee, PharmeeLines.DebriefRemark(98f), "Review"));
         lines.Add(new Line(VoiceSpeaker.Pharmee, PharmeeLines.DebriefRemark(94f), "Review"));
         lines.Add(new Line(VoiceSpeaker.Pharmee, PharmeeLines.DebriefRemark(90f), "Review"));
+        // ⛔ BOTH overloads. The campaign-complete flavour (W5.9) was never enumerated, so
+        // the very last thing Pharmee says in the whole campaign played as blips (2026-09-05).
+        lines.Add(new Line(VoiceSpeaker.Pharmee, PharmeeLines.DebriefRemark(98f, true), "Celebrate"));
+        lines.Add(new Line(VoiceSpeaker.Pharmee, PharmeeLines.DebriefRemark(90f, true), "Celebrate"));
 
         // Door-gate lines (the scene uses the code defaults — verified 2026-07-27:
         // the RobotNPC instance carries no overrides, so what is voiced is what
