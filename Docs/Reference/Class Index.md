@@ -4853,6 +4853,7 @@ const float VoiceSpatialBlend
 const float VoiceMinDistance
 const float VoiceMaxDistance
 const float MusicDuckTo
+static AudioSource EnsureVoiceChannel(NPCNarrationController n, out bool added)
 static void Apply()
 ```
 
@@ -4862,6 +4863,7 @@ static void Apply()
 Imports the generated voice clips and wires the bank into the scene: 1. Quest-friendly import settings on Audio/Voice/** (mono, Vorbis). 2. Rebuilds VoiceBank.asset from Audio/Voice/<Speaker>/<id>.mp3|wav. 3. Points every NPCNarrationController in the open scene at the bank — controllers under Dr. Jimenez speak as Jimenez, everything else as Pharmee. Missing clips keep today's blip+typewriter. Idempotent.
 
 ```csharp
+const string BankPath
 static void ImportAndWire()
 ```
 

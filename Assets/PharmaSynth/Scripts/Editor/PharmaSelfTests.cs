@@ -1420,8 +1420,16 @@ public static class PharmaSelfTests
             && VoiceAudioBuilder.VoiceMinDistance < VoiceAudioBuilder.VoiceMaxDistance);
 
         // Both NPCs must be able to SPEAK at all, and never at the same time.
+        //
+        // ⛔ An AudioSource is only ONE of the three things a channel needs, and pinning
+        // just that is what let Dr. Jimenez go silent unnoticed (2026-09-05). `Wire NPC Polish`
+        // destroys and recreates his subtitle object, and a fresh NPCNarrationController
+        // defaults to `speaker = Pharmee` with a NULL `voiceBank` — so he had a working
+        // speaker cone, an animator that mouthed the words and a visible subtitle bubble,
+        // while every line resolved to no clip. Pin all three, or the next builder run is
+        // silent again and nothing says so.
         {
-            int mute = 0, channels = 0;
+            int mute = 0, bankless = 0, misattributed = 0, channels = 0;
             foreach (var n in UnityEngine.Object.FindObjectsByType<NPCNarrationController>(
                          FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
@@ -1429,9 +1437,22 @@ public static class PharmaSelfTests
                 channels++;
                 var nso = new SerializedObject(n);
                 if (nso.FindProperty("narratorAudioSource")?.objectReferenceValue == null) mute++;
+                if (nso.FindProperty("voiceBank")?.objectReferenceValue == null) bankless++;
+
+                // The speaker is inferred the same way the voice importer infers it: whose
+                // hierarchy is this channel in?
+                var expected = VoiceSpeaker.Pharmee;
+                for (var t = n.transform; t != null; t = t.parent)
+                    if (t.name.ToLowerInvariant().Contains("jimenez")) { expected = VoiceSpeaker.Jimenez; break; }
+                var spk = nso.FindProperty("speaker");
+                if (spk != null && spk.enumValueIndex != (int)expected) misattributed++;
             }
             A("voice: every narration channel has an AudioSource (" + mute + " of " + channels + " mute)",
               channels == 0 || mute == 0);
+            A("voice: every narration channel has a VoiceBank (" + bankless + " of " + channels + " unvoiced)",
+              channels == 0 || bankless == 0);
+            A("voice: every narration channel speaks as its OWN NPC (" + misattributed + " misattributed)",
+              channels == 0 || misattributed == 0);
         }
 
         // Voice budget order: Jimenez's rows are generated first (user 2026-07-27).

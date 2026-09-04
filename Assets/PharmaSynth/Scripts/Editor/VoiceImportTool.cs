@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -13,7 +13,7 @@ using UnityEngine;
 public static class VoiceImportTool
 {
     const string VoiceDir = "Assets/PharmaSynth/Audio/Voice";
-    const string BankPath = "Assets/PharmaSynth/ScriptableObjects/VoiceBank.asset";
+    public const string BankPath = "Assets/PharmaSynth/ScriptableObjects/VoiceBank.asset";
 
     [MenuItem("Tools/PharmaSynth/Voice/Import & Wire Voice Clips")]
     public static void ImportAndWire()

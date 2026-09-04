@@ -829,3 +829,40 @@ re-homing.
 > the model carries a 90 deg axis fix. A camera placed with `fwd.y = 0; fwd.Normalize()`
 > gets a ZERO vector, lands exactly on the target, and photographs the inside of her head.
 > Frame from an explicit world offset, not from a character's forward.
+
+## A silent NPC that looks perfectly fine
+
+> [!danger] A narration channel needs THREE things, and only one of them was pinned
+> Dr. Jimenez stopped speaking, and nothing looked wrong: his subtitle bubble appeared, the
+> typewriter ran, his animator mouthed the words, and his AudioSource was present, unmuted,
+> at volume 1. He was mute because `NPCNarrationController` needs **all three** of
+> `narratorAudioSource`, `voiceBank` and `speaker`, and he had only the first.
+>
+> **How it broke.** `Wire NPC Polish` → `BuildJimenezBubble` opens with
+> `DestroyImmediate(existing)` and rebuilds the whole `JimenezSubtitles` object. A fresh
+> `NPCNarrationController` defaults to `speaker = VoiceSpeaker.Pharmee` with a NULL
+> `voiceBank`, so every line resolved to no clip. `Import & Wire Voice Clips` is what
+> normally assigns those two, inferring the speaker from a "jimenez" ancestor name — so
+> the wiring only survives until the next builder run. W5.46 and W5.47 both ran that builder
+> to bind Pharmee's glow, and he was silent from then on.
+>
+> ⛔ **The documented repair could not fix it.** The standing advice was
+> `Voice ▸ Fix Voice Audibility + Music Ducking`, which restores the AudioSource and its
+> spatial tuning — the SPEAKER, never the CLIPS. Following it exactly left him just as mute,
+> which is why the AudioSource was present and correct while he still said nothing.
+>
+> **The fix is ownership**: the builder that DESTROYS a channel now rebuilds it completely
+> (bank + speaker + audio source, via the extracted `VoiceAudioBuilder.EnsureVoiceChannel`),
+> instead of leaving two of three fields to a menu somebody has to remember.
+>
+> 🔎 **The pin that missed it** asserted only `narratorAudioSource != null`. A partial pin on
+> a multi-field contract reads as coverage and is worse than none, because it makes the next
+> silent-NPC bug look impossible. All three fields are pinned now, including that a channel
+> under a "jimenez" ancestor speaks AS Jimenez.
+>
+> ⚠ While hunting this, one suite run false-failed
+> `narration: nobody holds the floor when nothing is speaking`. That is edit-mode residue,
+> not a product bug: `StartCoroutine` runs synchronously up to its first `yield`, so a `Say()`
+> triggered in edit mode sets `IsSpeaking`/`IsRevealing`, claims the static floor, and never
+> resumes. `IsSpeaking` and `IsRevealing` are runtime auto-properties, so Play mode resets
+> them; the suite's `ClearFloor()` clears it on the next run.

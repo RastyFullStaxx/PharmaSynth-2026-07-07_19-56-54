@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -33,6 +33,43 @@ public static class VoiceAudioBuilder
     /// (user 2026-07-27: "fades out... and fades in once clear").
     public const float MusicDuckTo = 0.06f;
 
+    /// Give a narration channel a working, room-audible AudioSource, and return it.
+    ///
+    /// Public so the builder that CREATES a channel can leave it complete. `Wire NPC Polish`
+    /// destroys and recreates Jimenez's whole subtitle object, which used to hand the repair
+    /// job to this menu — and a channel stays mute until someone remembers to run it.
+    public static AudioSource EnsureVoiceChannel(NPCNarrationController n, out bool added)
+    {
+        added = false;
+        if (n == null) return null;
+
+        var so = new SerializedObject(n);
+        var prop = so.FindProperty("narratorAudioSource");
+        var src = prop != null ? prop.objectReferenceValue as AudioSource : null;
+
+        // 1. A channel with no source can never speak. Give it one.
+        if (src == null)
+        {
+            src = n.GetComponent<AudioSource>();
+            if (src == null) src = n.gameObject.AddComponent<AudioSource>();
+            if (prop != null) { prop.objectReferenceValue = src; so.ApplyModifiedPropertiesWithoutUndo(); }
+            added = true;
+        }
+
+        // 2. Heard across the room, louder close up.
+        src.playOnAwake = false;
+        src.loop = false;
+        src.spatialBlend = VoiceSpatialBlend;
+        src.rolloffMode = AudioRolloffMode.Linear;
+        src.minDistance = VoiceMinDistance;
+        src.maxDistance = VoiceMaxDistance;
+        src.dopplerLevel = 0f;               // speech must never pitch-bend as you move
+        src.priority = 0;                    // dialogue outranks every other sound
+        src.volume = 1f;
+        EditorUtility.SetDirty(n.gameObject);
+        return src;
+    }
+
     [MenuItem("Tools/PharmaSynth/Voice/Fix Voice Audibility + Music Ducking")]
     public static void Apply()
     {
@@ -47,30 +84,8 @@ public static class VoiceAudioBuilder
             if (n == null) continue;
             Undo.RegisterFullObjectHierarchyUndo(n.gameObject, "Voice audibility");
 
-            var so = new SerializedObject(n);
-            var prop = so.FindProperty("narratorAudioSource");
-            var src = prop != null ? prop.objectReferenceValue as AudioSource : null;
-
-            // 1. A channel with no source can never speak. Give it one.
-            if (src == null)
-            {
-                src = n.GetComponent<AudioSource>();
-                if (src == null) src = n.gameObject.AddComponent<AudioSource>();
-                if (prop != null) { prop.objectReferenceValue = src; so.ApplyModifiedPropertiesWithoutUndo(); }
+            if (EnsureVoiceChannel(n, out bool added) != null && added)
                 notes.Add("ADDED the missing narratorAudioSource on '" + n.name + "' (it was mute)");
-            }
-
-            // 2. Heard across the room, louder close up.
-            src.playOnAwake = false;
-            src.loop = false;
-            src.spatialBlend = VoiceSpatialBlend;
-            src.rolloffMode = AudioRolloffMode.Linear;
-            src.minDistance = VoiceMinDistance;
-            src.maxDistance = VoiceMaxDistance;
-            src.dopplerLevel = 0f;               // speech must never pitch-bend as you move
-            src.priority = 0;                    // dialogue outranks every other sound
-            src.volume = 1f;
-            EditorUtility.SetDirty(n.gameObject);
             channels++;
         }
 

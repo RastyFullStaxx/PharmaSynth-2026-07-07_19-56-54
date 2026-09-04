@@ -319,7 +319,20 @@ public static class LabNpcPolishBuilder
         so.FindProperty("subtitleText").objectReferenceValue = tmp;
         so.FindProperty("panelRoot").objectReferenceValue = panel;
         so.FindProperty("playOnStart").boolValue = false;
+
+        // ⛔ This method DESTROYS the previous JimenezSubtitles object, so it destroys his
+        // voice wiring with it — and a fresh NPCNarrationController defaults to
+        // `speaker = Pharmee` with a NULL `voiceBank`. That is why Dr. Jimenez went silent
+        // after W5.46/W5.47 ran this builder to bind Pharmee's glow (found 2026-09-05): his
+        // subtitle bubble still appeared, but every line resolved to no clip. The documented
+        // repair, `Fix Voice Audibility + Music Ducking`, restores the SPEAKER and never the
+        // CLIPS, so following it exactly still left him mute. Wire it here instead, so one
+        // builder run leaves a complete channel and no menu has to be remembered.
+        so.FindProperty("voiceBank").objectReferenceValue =
+            AssetDatabase.LoadAssetAtPath<VoiceBank>(VoiceImportTool.BankPath);
+        so.FindProperty("speaker").enumValueIndex = (int)VoiceSpeaker.Jimenez;
         so.ApplyModifiedProperties();
+        VoiceAudioBuilder.EnsureVoiceChannel(narr, out _);
         panel.SetActive(false);                            // silent until he speaks
         return narr;
     }
