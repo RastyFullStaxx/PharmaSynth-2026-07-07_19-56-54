@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// One-shot procedural particle bursts (VFX-set completion, user 2026-07-10),
 /// the event twin of StationVfx's looping station effects. All built at runtime
@@ -13,7 +13,7 @@ public static class EffectVfx
     private static Texture2D _dot;
     private static Material _mat;
 
-    public enum Kind { Shatter, Confetti, FlamePop, ColdAir, Smoke, FireBurst, Spatter, ColorFlash }
+    public enum Kind { Shatter, Confetti, FlamePop, ColdAir, Smoke, FireBurst, Spatter, ColorFlash, Fizz }
 
     /// Glass-shatter burst: pale shards spray out and fall.
     public static void Shatter(Vector3 pos, Color tint) => Play(Kind.Shatter, pos, tint);
@@ -44,6 +44,11 @@ public static class EffectVfx
 
     /// Bright expanding flash — generic unknown-mix fizz feedback.
     public static void ColorFlash(Vector3 pos, Color tint) => Play(Kind.ColorFlash, pos, tint);
+
+    /// Effervescence: small bright bubbles breaking the surface and popping. The visual
+    /// half of every gas-evolving reaction — CO2 off a fermentation, ammonia off the
+    /// benzamide boil, nitrogen off the nitrous test (W5.45: these had none).
+    public static void Fizz(Vector3 pos) => Play(Kind.Fizz, pos, new Color(0.92f, 0.97f, 1f, 0.85f));
 
     /// Shared soft-dot particle material (reused by AtmosphereVfx so vapour matches).
     public static Material ParticleMaterial() => SharedMaterial();
@@ -142,6 +147,19 @@ public static class EffectVfx
                 main.gravityModifier = 2.2f;                         // droplets arc and fall
                 shape.shapeType = ParticleSystemShapeType.Cone; shape.angle = 42f; shape.radius = 0.02f;
                 col.color = Fade(tint, tint.a);
+                break;
+
+            case Kind.Fizz:
+                life = 2.2f; burst = 30;
+                main.startLifetime = new ParticleSystem.MinMaxCurve(0.7f, 1.6f);
+                main.startSpeed = new ParticleSystem.MinMaxCurve(0.12f, 0.32f);
+                main.startSize = new ParticleSystem.MinMaxCurve(0.006f, 0.017f);
+                main.startColor = tint;
+                main.gravityModifier = -0.22f;                       // bubbles rise
+                shape.shapeType = ParticleSystemShapeType.Cone; shape.angle = 12f; shape.radius = 0.018f;
+                col.color = Fade(tint, tint.a);
+                var bsz = ps.sizeOverLifetime; bsz.enabled = true;   // swell, then pop
+                bsz.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 0.55f, 1f, 1.35f));
                 break;
 
             case Kind.ColorFlash:

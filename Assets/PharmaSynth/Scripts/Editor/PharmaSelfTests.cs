@@ -6250,6 +6250,58 @@ public static class PharmaSelfTests
         A("visual: gas with no live emitter FAILS", VisualSweep.Judge(VisualSweep.Expect.Gas, o, null, 0f, 100f).Fail);
         var gas = o; gas.particles = 1; gas.particleNames = "EffectVfx_Smoke(20)";
         A("visual: gas with a live emitter passes", !VisualSweep.Judge(VisualSweep.Expect.Gas, gas, null, 0f, 100f).Fail);
+        // ---- W5.45b: the visual gaps the sweep found, pinned so they cannot come back ----
+        // A couple of millilitres in a big flask must still DRAW as something (Exp 5 puts
+        // 2 ml of aniline in a 250 ml Florence flask = 0.8% of its height).
+        A("fill: a small volume is floored to a readable column",
+            Near(LiquidPhysics.DisplayFill01(2f, 250f), LiquidPhysics.MinVisibleFill01));
+        A("fill: a full vessel is drawn at its real level",
+            Near(LiquidPhysics.DisplayFill01(125f, 250f), 0.5f));
+        A("fill: an empty vessel draws nothing",
+            Near(LiquidPhysics.DisplayFill01(0f, 250f), 0f));
+        // A 1 ml precipitate is what every rule actually deposits — it must be visible.
+        A("ppt: one millilitre of precipitate is above the draw threshold",
+            1f > LiquidPhysics.ShowFromMl);
+        // Dry powder draws a mound; once anything is poured on it, it is a mixture.
+        A("powder: a dry solid draws as a mound",
+            LiquidPhysics.ShowsAsDryPowder(PhysicalState.Solid, false));
+        A("powder: a wetted solid draws as liquid",
+            !LiquidPhysics.ShowsAsDryPowder(PhysicalState.Solid, true));
+        A("powder: a liquid is never a mound",
+            !LiquidPhysics.ShowsAsDryPowder(PhysicalState.Liquid, false));
+        // A vessel must never draw NOTHING while it holds something: the mound only
+        // replaces the column where a mound actually exists (a product decanted onto a
+        // watch glass has none).
+        A("powder: a dry solid with a mound draws no column",
+            !LiquidPhysics.DrawsLiquidColumn(5f, true, true));
+        A("powder: a dry solid with NO mound still draws its column",
+            LiquidPhysics.DrawsLiquidColumn(5f, true, false));
+        A("powder: a wet mixture always draws its column",
+            LiquidPhysics.DrawsLiquidColumn(5f, false, true));
+        A("powder: an empty vessel draws nothing either way",
+            !LiquidPhysics.DrawsLiquidColumn(0f, false, false));
+        // Gas needs a visual, whichever way the rule spells it.
+        var gasRule = ScriptableObject.CreateInstance<ReactionRule>();
+        try
+        {
+            gasRule.outcome = ReactionOutcome.Fizzing;
+            A("gas: a fizzing rule evolves gas", LiquidPhysics.EvolvesGas(gasRule));
+            gasRule.outcome = ReactionOutcome.GasEvolved;
+            A("gas: a gas-evolved rule evolves gas", LiquidPhysics.EvolvesGas(gasRule));
+            gasRule.outcome = ReactionOutcome.ColorChange; gasRule.evolvesGas = true;
+            A("gas: the explicit flag counts too", LiquidPhysics.EvolvesGas(gasRule));
+            gasRule.evolvesGas = false;
+            A("gas: a plain colour change does not", !LiquidPhysics.EvolvesGas(gasRule));
+        }
+        finally { UnityEngine.Object.DestroyImmediate(gasRule); }
+        // The silver mirror is the headline observation of Exp 2's aldehyde test, so the
+        // rule must actually deposit something (it declared Precipitate and had none).
+        var tollens = AssetDatabase.LoadAssetAtPath<ReactionRule>(
+            "Assets/PharmaSynth/ScriptableObjects/Reactions/Test_TollensAldehyde.asset");
+        A("content: the Tollens test deposits a visible silver mirror",
+            tollens != null && tollens.hasPrecipitate && tollens.resultPrecipitate != null
+            && tollens.resultPrecipitate.chemicalName == "Silver Mirror");
+
         var ppt = o; ppt.pptOn = true; ppt.pptMl = 2f;
         A("visual: a precipitate needs visible ppt volume",
             VisualSweep.Judge(VisualSweep.Expect.Precipitate, o, null, 0f, 100f).Fail

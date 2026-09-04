@@ -209,6 +209,11 @@ public static class SimulatedRun
     public static string LastKind = "";
     public static float LastTargetC;
     public static readonly List<ReactionRule> LastReactions = new List<ReactionRule>();
+    /// The vessel the last reaction actually fired IN. A rack step serves five tubes and
+    /// the observation belongs to whichever one reacted, not to whichever the handler
+    /// happened to note last — judging the wrong tube reported the permanganate as
+    /// unchanged when the reaction had fired one tube over (W5.45).
+    public static LiquidPhysics LastReactionVessel;
     /// Mid-verb hook: photograph a verb IN FLIGHT — the loaded scoop over the jar, the
     /// dish at the flame, the vessel on the balance. Null outside the visual sweep.
     public static System.Action<GameObject, string> MidVerb;
@@ -297,6 +302,7 @@ public static class SimulatedRun
                 {
                     if (rule == null) return;
                     LastReactions.Add(rule);
+                    LastReactionVessel = cap;
                     if (!rule.TemperatureSatisfied(cap.currentTempC))
                         res.bugs.Add(cap.name + ": " + rule.name + " fired at " + cap.currentTempC.ToString("0")
                                      + " C but needs " + rule.minTemperatureC.ToString("0") + " C — the heat gate is broken");
@@ -348,7 +354,8 @@ public static class SimulatedRun
             var runner = Runner; var res = Res; var log = Log;   // the handlers' names
             string id = t.taskId;
             int bugsBefore = res.bugs.Count;
-            LastVessel = null; LastKind = ""; LastTargetC = 0f; LastReactions.Clear();
+            LastVessel = null; LastKind = ""; LastTargetC = 0f;
+            LastReactions.Clear(); LastReactionVessel = null;
             log.AppendLine("\n» " + id + " — \"" + t.label + "\"");
 
             bool handled;

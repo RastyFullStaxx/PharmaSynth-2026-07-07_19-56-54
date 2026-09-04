@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using XRGrab = UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable;
@@ -944,11 +944,12 @@ public class ExperimentSceneBuilder : MonoBehaviour
         // the lower part of the jar instead of the translucent liquid shader.
         var chem = lp.currentChemical;
         if (chem != null && (chem.state == PhysicalState.Solid || chem.state == PhysicalState.Powder))
-        {
             EnsurePowderVisual(inst, chem);
-            return;   // mainRenderer stays whatever it was; the Start guard in
-                      // LiquidPhysics keeps it off the opaque vessel mesh.
-        }
+        // ⛔ NO early return. A vessel that happens to hold a SOLID when the stage is built
+        // still needs its liquid surface, because the procedure pours onto that powder a
+        // step later (Exp 2 boils scooped aspirin in acid). The old code returned here, the
+        // surface was never built, and the resulting 13.5 ml drew nothing at all. Which of
+        // the two is visible is decided per frame by LiquidPhysics.DryPowder, not here.
 
         bool authoredFill = lp.mainRenderer != null && lp.mainRenderer.sharedMaterial != null
             && lp.mainRenderer.sharedMaterial.HasProperty("_Fill");   // authored setup (e.g. _WithLiquid twin)
@@ -1105,17 +1106,19 @@ public class ExperimentSceneBuilder : MonoBehaviour
         foreach (var r in inst.GetComponentsInChildren<Renderer>(true))
         {
             if (r.name == "Powder") heap = r;
-            else if (r.name == "Liquid")   // an earlier liquid-fill twin — drop it
+            else if (r.name == "Liquid")
             {
-                // ⛔ Null any LiquidPhysics.mainRenderer that points at this child BEFORE
-                // destroying it. Otherwise UpdateFillPhysics reads `.enabled` on a
-                // destroyed renderer every frame — 5106 MissingReferenceExceptions in one
-                // run when a solid is scooped into a vessel that was set up for liquid
-                // (W5.45 visual sweep caught this; the old autopilot never scooped so it
-                // never fired). Same for the precipitate layer, defensively.
-                if (owner != null && owner.mainRenderer == r) owner.mainRenderer = null;
-                if (owner != null && owner.precipitateRenderer == r) owner.precipitateRenderer = null;
-                if (Application.isPlaying) Destroy(r.gameObject); else DestroyImmediate(r.gameObject);
+                // ⛔ The liquid surface is KEPT, not destroyed. Destroying it left
+                // LiquidPhysics.mainRenderer dangling (5106 MissingReferenceExceptions in
+                // one run) and meant a vessel scooped full of powder could never draw
+                // liquid again, however much was later poured on it. Hiding it is enough:
+                // LiquidPhysics.DryPowder decides every frame which layer shows, so a dry
+                // jar still reads as a jar of powder (user 2026-07-13) and a wetted mixture
+                // reads as liquid.
+                if (owner != null && owner.mainRenderer == null
+                    && r.sharedMaterial != null && r.sharedMaterial.HasProperty("_Fill"))
+                    owner.mainRenderer = r;
+                r.enabled = false;
             }
         }
 

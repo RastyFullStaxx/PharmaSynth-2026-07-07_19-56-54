@@ -197,6 +197,34 @@ frame has no particles yet) and billboards turned (a popup spawned this frame st
    on the ROOT, so any prefab whose authored up is not +Y pours forever; only these two were
    affected (scan: 2 of every vessel in the scene).
 
+⭐ **The 14 visual gaps it found are now CLOSED (W5.45b) — 58 OK, 0 FAIL, 5 SKIP.** Each
+was the game showing less than the manuscript promises, and each fix is in the shared
+rendering path rather than per experiment:
+- **Precipitates draw from 0.05 ml, not 1 ml.** Every rule deposits exactly the incoming
+  pour — one dropper squeeze, so 1.0 ml — and the gate was `> 1f`, so six headline
+  observations (milky limewater, both iodoform yellows, acetanilide plates, its hydrolysis
+  crystals, the benzamide solid) were authored, fired, announced in text and never drawn.
+- **Gas has a visual at last.** `EffectVfx.Fizz` rises from the liquid surface whenever
+  `LiquidPhysics.EvolvesGas(rule)` is true, on the same dedupe as the reaction sting.
+  `evolvesGas` and the Fizzing / GasEvolved outcomes previously had **zero** consumers.
+- **A readable minimum fill.** `LiquidPhysics.DisplayFill01` floors a non-empty column at
+  6% of the vessel, because the manuscript asks for 2 ml of aniline in a 250 ml Florence
+  flask. Only the DRAWN column is floored; every number the player reads or is graded on
+  stays exact.
+- **Solids no longer hide the liquid.** `EnsurePowderVisual` keeps the liquid surface
+  (hidden) instead of destroying it, `EnsureLiquidVisual` always builds one, and
+  `DrawsLiquidColumn(ml, dryPowder, hasMound)` decides per frame which layer shows. A dry
+  jar reads as powder; the moment anything is poured on it (`_wetted`) it reads as a
+  mixture, which is what Exp 2's aspirin-in-acid boil needed.
+- **The Tollens silver mirror exists.** The rule declared outcome `Precipitate` with
+  `hasPrecipitate: 0` and no precipitate chemical, so Exp 2's headline aldehyde test
+  deposited nothing. New `Chem_SilverMirror`, wired in, suite-pinned.
+
+⚠ **A vessel must never draw NOTHING while it holds something.** The first cut of the
+dry-powder rule suppressed the liquid column for any solid, which blanked five finished
+products decanted onto a watch glass — they are solids, and nothing builds a mound there.
+The mound only replaces the column where a mound actually exists.
+
 ⚠ **Read the verdicts, not just the count.** FAIL = the manuscript promised something the
 vessel does not show (a precipitate under the 1 ml visibility cutoff, a colour rule whose product
 is authored the same colour as its reactant, a fill under 4 %). FORCED = the honest verbs could

@@ -639,3 +639,51 @@ re-homing.
 >
 > The first no-force run went from "10 steps forced, everything green" to two genuinely
 > unplayable experiments — both of which turned out to be real game bugs.
+
+## An observation that fires, announces itself, and is never drawn
+
+> [!danger] Every precipitate rule deposits exactly 1 ml, and the gate was `> 1f`
+> `ApplyReaction` adds the INCOMING pour to the precipitate column, and a dropper squeeze
+> is 1 ml — so `currentPptVolume` lands on exactly 1.0 and `1.0 > 1.0` is false. Six of the
+> manuscript's headline observations were authored correctly, fired correctly, announced in
+> text and **never rendered**: the milky limewater, both iodoform yellows, the acetanilide
+> plates, its hydrolysis crystals and the benzamide solid.
+>
+> Nothing caught it because every check asked "did the reaction fire", never "could the
+> player SEE it". The threshold is now `ShowFromMl` (0.05).
+>
+> **When a gate compares against a quantity the code itself produces, check the exact
+> equality case.** Ship a pin for the value the game actually generates, not a round number.
+
+## Data a rule declares but never carries
+
+> [!warning] `outcome: Precipitate` with `hasPrecipitate: 0` and no precipitate chemical
+> `Test_TollensAldehyde` — the silver mirror, the whole point of Exp 2's aldehyde test —
+> declared the Precipitate outcome and had neither `hasPrecipitate` nor a
+> `resultPrecipitate`. It therefore deposited nothing, forever.
+>
+> The simulator's own watchdog only fires when `hasPrecipitate` is TRUE and the volume is
+> zero, so a rule that never claims the precipitate slips past it. **Audit the outcome
+> against the payload**, not just the payload against itself. Now `Chem_SilverMirror` +
+> a suite pin.
+
+## A visual rule that can make a vessel draw nothing
+
+> [!danger] "Solids show a mound, so hide the liquid" blanked five finished products
+> Suppressing the liquid column whenever the contents are a solid is only safe where a
+> mound actually exists. A dry solid arrives by POUR as well as by scoop — the filter and
+> drying steps decant the product onto a watch glass, and nothing builds a mound there — so
+> the vessel drew neither layer and the finished product was invisible in its own glass.
+>
+> `DrawsLiquidColumn(ml, dryPowder, hasMound)` now requires a real mound before the column
+> is suppressed, pinned with the no-mound case. **Any either/or visual rule needs the
+> neither branch checked**: the failure is silent and looks like an empty vessel.
+
+## Millilitres the manuscript asks for can be invisible
+
+> [!tip] 2 ml of aniline in a 250 ml Florence flask is 0.8% of its height
+> The quantity is correct, the vessel is correct (the manuscript names the Florence flask),
+> and the player still sees an empty flask at arm's length. `DisplayFill01` floors a
+> non-empty column at `MinVisibleFill01` (6%) so "there is something in here" reads, while
+> every number the player is shown or graded on stays exact. Floor the DRAWING, never the
+> data.

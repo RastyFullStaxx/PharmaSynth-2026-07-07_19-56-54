@@ -813,6 +813,9 @@ public static class PlaytestAutopilot
         s_flight.task = next;
         if (!string.IsNullOrEmpty(SimulatedRun.LastKind)) s_flight.kind = SimulatedRun.LastKind;
         if (SimulatedRun.LastVessel != null) s_flight.vessel = SimulatedRun.LastVessel;
+        // The glass that REACTED outranks the one the handler noted: on a rack step the
+        // observation belongs to the tube that changed, not to the last one served.
+        if (SimulatedRun.LastReactionVessel != null) s_flight.vessel = SimulatedRun.LastReactionVessel;
         if (s_flight.vessel == null) s_flight.vessel = DestinationOf(next.taskId);
         if (SimulatedRun.LastTargetC > 0f) s_flight.targetC = SimulatedRun.LastTargetC;
         foreach (var r in SimulatedRun.LastReactions) if (!s_flight.rules.Contains(r)) s_flight.rules.Add(r);

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 using System.Collections;
 
@@ -99,6 +99,7 @@ public class LiquidPhysics : MonoBehaviour
         _pendingRule = null; _pendingAmount = 0f;   // a reset vessel holds no half-done recipe
         currentTempC = 25f;
         _mixPH = chem != null ? chem.pH : 7f;
+        _wetted = chem != null && chem.state != PhysicalState.Solid && chem.state != PhysicalState.Powder;
         Ledger.Clear();
         if (chem != null && currentLiquidVolume > 0f)
             Ledger.Add(chem.chemicalName, currentLiquidVolume,
@@ -257,10 +258,69 @@ public class LiquidPhysics : MonoBehaviour
         lastRot = currentRot;
     }
 
+    /// The smallest fraction of a vessel a non-empty column is allowed to READ as.
+    ///
+    /// The manuscript regularly asks for a couple of millilitres in a big flask — Exp 5
+    /// puts 2 ml of aniline in a 250 ml Florence flask — which is 0.8% of its height and
+    /// simply invisible at arm's length in VR. The quantity stays honest everywhere it is
+    /// judged (VesselStatus, the watch panel, every binding); only the DRAWN column is
+    /// floored, so "there is something in this flask" is legible (W5.45).
+    public const float MinVisibleFill01 = 0.06f;
+
+    /// Volume below which a column counts as nothing at all.
+    public const float ShowFromMl = 0.05f;
+
+    /// Pure (suite-pinned): the fraction the shader should draw for `ml` in this vessel.
+    public static float DisplayFill01(float ml, float maxVolume)
+    {
+        if (maxVolume <= 0f || ml <= ShowFromMl) return 0f;
+        return Mathf.Max(ml / maxVolume, MinVisibleFill01);
+    }
+
+    /// Has any LIQUID gone into this vessel since it was last emptied? A jar of dry powder
+    /// shows a mound and no liquid column; the moment something is poured on it — water,
+    /// acid — it is a wet mixture and must draw as one, whatever the resulting chemical's
+    /// authored state says. Exp 2 boils aspirin in acid and the product, Salicylic Acid, is
+    /// authored Solid: the tube held 13.5 ml and drew nothing at all (W5.45).
+    private bool _wetted;
+
+    /// Pure (suite-pinned): are these contents a DRY solid rather than a wet mixture?
+    public static bool ShowsAsDryPowder(PhysicalState state, bool wetted)
+        => !wetted && (state == PhysicalState.Solid || state == PhysicalState.Powder);
+
+    public bool DryPowder => currentChemical != null
+                             && ShowsAsDryPowder(currentChemical.state, _wetted);
+
+    /// Pure (suite-pinned): should the liquid column be drawn at all?
+    ///
+    /// ⛔ The mound only REPLACES the column when a mound actually exists. A dry solid can
+    /// arrive by pour as well as by scoop — the filter and drying steps decant the product
+    /// onto a watch glass, and nothing builds a mound there — so suppressing the column on
+    /// "this is a solid" alone made five finished products invisible in their own glass.
+    /// A vessel must never end up drawing nothing while it holds something.
+    public static bool DrawsLiquidColumn(float ml, bool dryPowder, bool hasMound)
+        => ml > ShowFromMl && !(dryPowder && hasMound);
+
+    private Renderer _mound;
+
+    /// Is a powder mound actually being drawn in this vessel right now?
+    private bool HasMound
+    {
+        get
+        {
+            if (_mound == null)
+            {
+                var t = transform.Find("Powder");
+                _mound = t != null ? t.GetComponent<Renderer>() : null;
+            }
+            return _mound != null && _mound.enabled && _mound.gameObject.activeInHierarchy;
+        }
+    }
+
     void UpdateFillPhysics()
     {
-        float liquidFill = currentLiquidVolume / maxVolume;
-        float pptFill = currentPptVolume / maxVolume;
+        float liquidFill = DisplayFill01(currentLiquidVolume, maxVolume);
+        float pptFill = DisplayFill01(currentPptVolume, maxVolume);
 
         // Tilt Correction
         float tilt = Mathf.Abs(Vector3.Dot(transform.up, Vector3.up));
@@ -270,16 +330,22 @@ public class LiquidPhysics : MonoBehaviour
         if (mainRenderer) mainRenderer.material.SetFloat(FillID, liquidFill * correction);
         if (precipitateRenderer) precipitateRenderer.material.SetFloat(FillID, pptFill * correction);
 
-        // Cutoff Logic (Hide if empty)
+        // Cutoff Logic (Hide if empty). A DRY powder draws its mound instead of a liquid
+        // surface; once anything has been poured on it, it is a mixture and draws like one.
         if (mainRenderer)
         {
-            bool hasLiquid = currentLiquidVolume > 1f;
+            bool hasLiquid = DrawsLiquidColumn(currentLiquidVolume, DryPowder, HasMound);
             if (mainRenderer.enabled != hasLiquid) mainRenderer.enabled = hasLiquid;
         }
 
         if (precipitateRenderer)
         {
-            bool hasPpt = currentPptVolume > 1f;
+            // ⛔ Was `> 1f`. Every precipitate rule deposits exactly the incoming pour — one
+            // dropper squeeze, so 1.0 ml — and 1.0 is not greater than 1.0, so the milky
+            // limewater, both iodoform yellows, the acetanilide plates and the benzamide
+            // solid were authored, fired, announced in text and NEVER DRAWN: six of the
+            // manuscript's headline observations, invisible on one comparison (W5.45).
+            bool hasPpt = currentPptVolume > ShowFromMl;
             if (precipitateRenderer.enabled != hasPpt) precipitateRenderer.enabled = hasPpt;
         }
 
@@ -375,6 +441,7 @@ public class LiquidPhysics : MonoBehaviour
         // makes `FindReaction(null, x)` miss forever: no reaction, no colour, no product.
         // The W5.45 visual sweep caught it as two unplayable experiments — Exp 7 carried
         // 5 ml of residue into its flask, so the chloroform reaction could never fire.
+        if (!solid) _wetted = true;     // anything poured onto a powder makes it a mixture
         if (currentChemical == null || (currentLiquidVolume <= 0.1f && currentPptVolume <= 0.1f))
         {
             Ledger.Clear();
@@ -449,10 +516,31 @@ public class LiquidPhysics : MonoBehaviour
         // The same rule re-firing within a burst (each of 5 acid squeezes) plays
         // ONE sting, not five — mirrors MixFeedback's observation dedupe.
         string cue = Mishandling.SfxForOutcome(rule.outcome);
-        if (cue.Length > 0 && (rule != _lastCueRule || Time.time - _lastCueAt >= 4f))
+        bool freshCue = rule != _lastCueRule || Time.time - _lastCueAt >= 4f;
+        if (cue.Length > 0 && freshCue)
             AudioService.TryPlay(cue);
+        // Gas had NO visual consumer at all: `evolvesGas` and the Fizzing / GasEvolved
+        // outcomes drove a sound and a line of text and nothing else, so brisk
+        // effervescence, the CO2 of both fermentations and the ammonia boil were all
+        // invisible (W5.45). Same dedupe as the sting, so a burst of squeezes fizzes once.
+        if (freshCue && EvolvesGas(rule)) EffectVfx.Fizz(GasVentPos());
         _lastCueRule = rule; _lastCueAt = Time.time;
         ReactionOccurred?.Invoke(rule);
+    }
+
+    /// Pure (suite-pinned): does this reaction put gas into the room? Either the rule says
+    /// so outright, or its outcome IS the gas.
+    public static bool EvolvesGas(ReactionRule rule)
+        => rule != null && (rule.evolvesGas
+                            || rule.outcome == ReactionOutcome.Fizzing
+                            || rule.outcome == ReactionOutcome.GasEvolved);
+
+    /// Where bubbles leave the liquid: the top of the vessel's own body.
+    private Vector3 GasVentPos()
+    {
+        var r = mainRenderer != null ? mainRenderer : GetComponent<Renderer>();
+        return r != null ? new Vector3(r.bounds.center.x, r.bounds.max.y, r.bounds.center.z)
+                         : transform.position + Vector3.up * 0.05f;
     }
 
     public void UpdateAllVisuals()

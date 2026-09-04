@@ -15,8 +15,8 @@ MonoBehaviour:
   inputChemicalA: {fileID: 11400000, guid: 51a79c21eff22404abb5d9a2562016c0, type: 2}
   inputChemicalB: {fileID: 11400000, guid: cedd081fc1f93d042a8f862e7e56db0b, type: 2}
   resultLiquid: {fileID: 0}
-  resultPrecipitate: {fileID: 0}
-  hasPrecipitate: 0
+  resultPrecipitate: {fileID: 11400000, guid: a7f34b91c2e05d94ab6178c390f4e5d2, type: 2}
+  hasPrecipitate: 1
   minTemperatureC: 50
   outcome: 3
   evolvesGas: 0

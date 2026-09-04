@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -128,8 +128,12 @@ public static class VisualSweep
                 return o.powderOn || o.particles > 0 ? Ok("ground heap " + (o.powderOn ? "shown" : "absent") + ", dust " + o.particles)
                                                      : Fail("no ground heap and no dust after grinding");
             case Expect.Precipitate:
-                return o.pptOn && o.pptMl > 1f ? Ok("precipitate " + o.pptMl.ToString("0.#") + " ml shown")
-                                               : Fail("rule promises a precipitate; ppt " + o.pptMl.ToString("0.#") + " ml, renderer " + (o.pptOn ? "on" : "OFF"));
+                // Judged against the same threshold the game draws at, not a separate one:
+                // a rule deposits exactly the incoming pour, so 1 ml is a normal, real,
+                // visible precipitate.
+                return o.pptOn && o.pptMl > LiquidPhysics.ShowFromMl
+                    ? Ok("precipitate " + o.pptMl.ToString("0.#") + " ml shown")
+                    : Fail("rule promises a precipitate; ppt " + o.pptMl.ToString("0.#") + " ml, renderer " + (o.pptOn ? "on" : "OFF"));
             case Expect.Gas:
                 return o.particles > 0 ? Ok("gas: " + o.particles + " live emitter(s) " + (o.particleNames ?? "").Trim())
                                        : Fail("gas evolved but NOTHING visible — 0 live particle systems within " + NearM + " m");
@@ -170,7 +174,9 @@ public static class VisualSweep
         var o = new Obs { found = lp != null, particleNames = "", popups = "", chem = "" };
         if (lp == null) return o;
         o.ml = lp.currentLiquidVolume; o.pptMl = lp.currentPptVolume;
-        o.fill01 = lp.maxVolume > 0f ? (o.ml + o.pptMl) / lp.maxVolume : 0f;
+        // Judge what the player SEES: the drawn column, which carries the readability
+        // floor for the manuscript's small volumes.
+        o.fill01 = LiquidPhysics.DisplayFill01(o.ml + o.pptMl, lp.maxVolume);
         o.tempC = lp.currentTempC; o.boil = lp.BoilAmount();
         o.chem = lp.currentChemical != null ? lp.currentChemical.chemicalName : "(empty)";
         var mr = lp.mainRenderer;
