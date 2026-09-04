@@ -6364,6 +6364,48 @@ public static class PharmaSelfTests
         A("glow: the scene intensity stays under 2x — no white ball",
             glow != null && PharmeeGlowMath.Emission(glow.Hue, glow.Intensity).maxColorComponent < 2f);
 
+        // ⛔ A vessel whose RESTING pose already reads as "tipped" pours itself forever:
+        // LiquidPourer.Update fires on Vector3.Angle(Vector3.up, transform.up) > pourThreshold,
+        // so it empties every drop put into it AND runs its looping pour AudioSource under
+        // everything else. Both Distilling Flasks sat at 90 deg, which drained Exp 7's
+        // redistillation and put a continuous spilling noise under Pharmee's dialogue
+        // (user 2026-09-05: "sounds broken for every dialog"). Measured in WORLD space,
+        // exactly as LiquidPourer measures it — an earlier fix set the LOCAL rotation,
+        // verified the local value, and the bug survived.
+        {
+            int selfPouring = 0; string worst = "";
+            foreach (var pr in UnityEngine.Object.FindObjectsByType<LiquidPourer>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (pr == null) continue;
+                float tilt = Vector3.Angle(Vector3.up, pr.transform.up);
+                if (tilt > pr.pourThreshold)
+                { selfPouring++; if (worst.Length == 0) worst = pr.name + " at " + tilt.ToString("0") + " deg"; }
+            }
+            A("pour: no vessel rests beyond its own pour threshold (" + selfPouring
+              + (worst.Length > 0 ? ", e.g. " + worst : "") + ")", selfPouring == 0);
+        }
+
+        // A vessel's BAKED HOME must be upright too, or DropRespawn.ResetAllHome puts the
+        // tilt straight back at the start of every run — which is why straightening the
+        // transform alone did not stick.
+        {
+            int tiltedHome = 0; string worstHome = "";
+            foreach (var dr in UnityEngine.Object.FindObjectsByType<DropRespawn>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (dr == null || dr.GetComponent<LiquidPourer>() == null) continue;
+                var so = new SerializedObject(dr);
+                var rot = so.FindProperty("_homeRot");
+                if (rot == null) continue;
+                float tilt = Vector3.Angle(Vector3.up, rot.quaternionValue * Vector3.up);
+                if (tilt > dr.GetComponent<LiquidPourer>().pourThreshold)
+                { tiltedHome++; if (worstHome.Length == 0) worstHome = dr.name + " at " + tilt.ToString("0") + " deg"; }
+            }
+            A("pour: no pourable vessel's baked HOME is tipped (" + tiltedHome
+              + (worstHome.Length > 0 ? ", e.g. " + worstHome : "") + ")", tiltedHome == 0);
+        }
+
         // The visual sweep buffers a handler's "not complete yet" complaint until the step
         // lands on real frames; a chemistry bug is never buffered away.
         A("noise: a completion complaint is noise once the step lands",

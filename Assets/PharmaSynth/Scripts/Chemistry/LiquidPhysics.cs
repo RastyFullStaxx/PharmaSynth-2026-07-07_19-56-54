@@ -615,10 +615,17 @@ public class LiquidPhysics : MonoBehaviour
     /// sees the caller (W5.46, the chloroform redistillation).
     public static string DrainProbeName;
 
+    private bool _probed;
+
     [System.Diagnostics.Conditional("UNITY_EDITOR")]
     private void ProbeDrain(string how)
     {
         if (string.IsNullOrEmpty(DrainProbeName) || name == null || !name.StartsWith(DrainProbeName)) return;
+        // ONCE per vessel. A self-pouring vessel clears itself every frame, and
+        // Environment.StackTrace is expensive enough that logging each one turns the
+        // diagnostic into the performance problem it is meant to find.
+        if (_probed) return;
+        _probed = true;
         Debug.LogWarning("[DrainProbe] " + name + " cleared via " + how + "\n" + System.Environment.StackTrace);
     }
 

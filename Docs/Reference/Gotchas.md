@@ -735,33 +735,38 @@ re-homing.
 > **Fixed** and pinned: `voice: every corpus line has a clip (N unvoiced)` walks all of
 > `CodeLines()`. It caught 3 the moment it was written.
 
-## The distillate stream drains a flask the player has not started distilling yet
+## A vessel resting TIPPED pours itself forever — and sounds like it
 
-> [!danger] `midterm-chloroform / dry-redistil` cannot be played by the sweep (OPEN, 2026-09-05)
-> `VaporCollectController.Update` fires as soon as its task is AVAILABLE, the source is at
-> temperature, and any bound receiver sits within 0.5 m. In Exp 7 the DistillingFlask is
-> heated to 65 C by `dry-cacl2` and is still ~70 C the instant that step completes — which
-> is the instant `dry-redistil` becomes available. The flask empties before the player (or
-> the sweep) has begun the redistillation, and `dry-redistil` then has nothing to distil:
+> [!danger] Both Distilling Flasks sat at 90 deg, which broke Exp 7 *and* the audio
+> `LiquidPourer.Update` decides you are pouring from
+> `Vector3.Angle(Vector3.up, transform.up) > pourThreshold` (45 deg). A vessel whose RESTING
+> pose is beyond that threshold therefore pours every drop put into it, every frame, forever.
+> Two symptoms that looked completely unrelated:
+> - **Exp 7 was unplayable.** `dry-cacl2` filled the DistillingFlask, the flask emptied
+>   itself, and `dry-redistil` had nothing to distil. Caught by the drain probe:
+>   `ClearContents ← PourOut ← LiquidPourer.PourTick ← LiquidPourer.Update`.
+> - **"Pharmee sounds broken for every dialog"** (user, 2026-09-05). `LiquidPourer` keeps a
+>   LOOPING pour AudioSource alive while it thinks it is pouring, so a continuous spilling
+>   noise played under every line. Intermittent, because it only sounds while the flask
+>   still has something to lose.
 >
-> ```
-> » dry-cacl2      → DistillingFlask holds Chloroform 12 ml at 25 C   ✓ held in the bath to 65 C
-> » dry-redistil   → source DistillingFlask holds NOTHING 0 ml at 70 C [empty ledger]
->                    receiver Kit_TestTube_14 holds NOTHING 0 ml [empty ledger]
-> ```
+> ⛔ **Two traps here, and the first fix fell into both.**
+> 1. **LOCAL vs WORLD.** The first attempt set `transform.localRotation = identity` and
+>    verified the LOCAL value. `LiquidPourer` reads `transform.up`, which is WORLD. Measure
+>    what the consumer measures.
+> 2. **The BAKED HOME.** `DropRespawn._homeRot` still held the 90 deg pose, so
+>    `ResetAllHome()` put the tilt straight back at the start of every run — the scene file
+>    read 90 deg again a few hours later and it looked like the fix had been reverted by
+>    hand. Straightening a prop means `SetHome(pos, rot)` too.
 >
-> ⚠ **The cleared LEDGER is the tell** — `PourOut` shrinks a ledger, `SetContents` clears
-> it — so the emptying is not (only) the vapor stream moving liquid to the receiver, which
-> is itself empty. Both ends lost it. Not yet root-caused.
+> Both are now pinned, measured exactly as `LiquidPourer` measures them:
+> `pour: no vessel rests beyond its own pour threshold` and
+> `pour: no pourable vessel's baked HOME is tipped`.
 >
-> This is a **game** question, not only a harness one: the same auto-fire would strip a real
-> player's product between steps. The edit-mode `SimulatedRun` completes Exp 7 13/13 because
-> nothing runs between its synchronous steps, which is exactly why only a play-mode sweep
-> could see it. The module stops honestly (nothing is forced) and the sweep reports it.
->
-> ⛔ **Do not "explain" it as an editor hitch.** It was first blamed on writing voice mp3s
-> into `Assets/` during the run; a clean re-run with nothing touching the project reproduced
-> it identically. It is deterministic.
+> 🔎 **The tool that found it:** `LiquidPhysics.DrainProbeName` — set it to a name prefix
+> and any matching vessel logs a stack trace (once) the first time its contents are cleared.
+> The autopilot arms it for `DistillingFlask` as a standing tripwire. "Who emptied this
+> vessel?" is otherwise undebuggable: every reader sees the aftermath, none sees the caller.
 
 ## Let a play-mode sweep finish before touching the project
 
