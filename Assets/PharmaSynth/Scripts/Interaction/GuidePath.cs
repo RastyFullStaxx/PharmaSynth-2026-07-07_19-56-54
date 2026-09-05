@@ -85,7 +85,9 @@ public class GuidePath : MonoBehaviour
 
         string id = null;
         foreach (var t in runner.Graph.AvailableTasks()) { id = t.taskId; break; }
-        var target = TaskTargetRegistry.PickTarget(id);
+        // Position-aware (W5.53): a pool of interchangeable tubes resolves to the one in
+        // the player's hand, else the nearest — the arrow follows the tube they picked up.
+        var target = TaskTargetRegistry.PickTarget(id, _cam.position);
         if (target == null) { HideAll(); return; }
 
         // Bounds CENTRE, never transform.position: a shelf bottle's origin sits at its base,

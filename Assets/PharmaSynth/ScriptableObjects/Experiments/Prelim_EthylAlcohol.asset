@@ -62,7 +62,7 @@ MonoBehaviour:
     skill: 3
     rubricCategory: 0
     required: 1
-    hint: "Yeast digests sugar to ethanol + CO2; the CO2 clouds limewater (CaCO3) \u2014 proof it works.\n\u2192 Pour 10 ml of limewater into Test Tube 5, then lead the delivery tube from the flask into it and watch it turn milky."
+    hint: "Yeast digests sugar to ethanol + CO2; the CO2 clouds limewater (CaCO3) \u2014 proof it works.\n\u2192 Pour 10 ml of limewater into a clean test tube, then lead the delivery tube from the flask into it and watch it turn milky."
     autoCompleteWhenOthersDone: 0
     longProcess: 1
     longProcessMessage: "One week later \u2014 the mixture has fermented. Time to
@@ -115,7 +115,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Ethanol gives a pale-YELLOW iodoform precipitate with KI + hypochlorite.\n\u2192 Test Tube 6: 1 squeeze of your distillate, 10 squeezes of potassium iodide 10%, 5 squeezes of sodium hypochlorite - then warm it at the water bath to 60 C."
+    hint: "Ethanol gives a pale-YELLOW iodoform precipitate with KI + hypochlorite.\n\u2192 In a clean test tube: 1 squeeze of your distillate, 10 squeezes of potassium iodide 10%, 5 squeezes of sodium hypochlorite - then warm it at the water bath to 60 C."
     autoCompleteWhenOthersDone: 0
     longProcess: 0
     longProcessMessage: 
@@ -128,7 +128,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Ethanol + acetic acid + sulfuric acid make a sweet, fruity ESTER smell.\n\u2192 Test Tube 7: 10 squeezes of your distillate, 4 squeezes of diluted acetic acid, 1 squeeze of sulfuric acid - then warm it at the water bath."
+    hint: "Ethanol + acetic acid + sulfuric acid make a sweet, fruity ESTER smell.\n\u2192 In a clean test tube: 10 squeezes of your distillate, 4 squeezes of diluted acetic acid, 1 squeeze of sulfuric acid - then warm it at the water bath."
     autoCompleteWhenOthersDone: 0
     longProcess: 0
     longProcessMessage: 

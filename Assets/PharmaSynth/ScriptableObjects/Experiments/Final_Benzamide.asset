@@ -106,7 +106,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Boiling with 10% NaOH hydrolyses the amide \u2014 the ammonia vapour turns RED litmus BLUE.\n\u2192 Test Tube 15: 5 spatula dips of your benzamide + 2 squeezes of sodium hydroxide 10%, warm it at the water bath, then touch a litmus strip to the tube."
+    hint: "Boiling with 10% NaOH hydrolyses the amide \u2014 the ammonia vapour turns RED litmus BLUE.\n\u2192 In a clean test tube: 5 spatula dips of your benzamide + 2 squeezes of sodium hydroxide 10%, warm it at the water bath, then touch a litmus strip to the tube."
   - taskId: test-acid
     label: "Acid hydrolysis \u2014 the tube reads ACID"
     phase: 2
@@ -116,7 +116,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Boiling with dilute HCl hydrolyses it the other way \u2014 benzoic acid crystals separate and blue litmus turns RED.\n\u2192 Test Tube 16: 5 spatula dips of your benzamide + 2 squeezes of diluted hydrochloric acid, warm it at the bath, then touch a litmus strip."
+    hint: "Boiling with dilute HCl hydrolyses it the other way \u2014 benzoic acid crystals separate and blue litmus turns RED.\n\u2192 In a clean test tube: 5 spatula dips of your benzamide + 2 squeezes of diluted hydrochloric acid, warm it at the bath, then touch a litmus strip."
   - taskId: test-nitrous
     label: "Nitrous-acid test \u2014 brisk N2 effervescence"
     phase: 2
@@ -126,7 +126,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Nitrous acid forms IN the tube from dilute HCl + sodium nitrite and deaminates the amide \u2014 brisk nitrogen effervescence. (The manual's 'nitrate' is a typo: NITRITE.)\n\u2192 Test Tube 17: 5 spatula dips of your benzamide + 2 squeezes of diluted HCl, then 3 squeezes of sodium nitrite \u2014 watch it fizz."
+    hint: "Nitrous acid forms IN the tube from dilute HCl + sodium nitrite and deaminates the amide \u2014 brisk nitrogen effervescence. (The manual's 'nitrate' is a typo: NITRITE.)\n\u2192 In a clean test tube: 5 spatula dips of your benzamide + 2 squeezes of diluted HCl, then 3 squeezes of sodium nitrite \u2014 watch it fizz."
   - taskId: record-yield
     label: "Record your observations"
     phase: 3

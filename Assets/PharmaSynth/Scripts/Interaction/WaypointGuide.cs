@@ -152,7 +152,9 @@ public class WaypointGuide : MonoBehaviour
         // arrows would just ask the player which one to follow. The rule now lives in
         // TaskTargetRegistry.PickTarget so the floor path picks the SAME object (W5.44);
         // two navigation cues disagreeing is worse than either alone.
-        Transform station = TaskTargetRegistry.PickTarget(id);
+        var camNow = Camera.main;
+        Transform station = TaskTargetRegistry.PickTarget(id,
+            camNow != null ? camNow.transform.position : Vector3.zero);   // pool → held-or-nearest (W5.53)
 
         // ⭐ Stand down while the ground path is showing. The path routes around the
         // benches and owns the far case; the beacon reads through a cabinet door and owns

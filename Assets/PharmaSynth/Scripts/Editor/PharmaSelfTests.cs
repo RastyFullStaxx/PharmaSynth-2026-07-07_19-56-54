@@ -1,6 +1,8 @@
 ﻿#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
@@ -11,6 +13,8 @@ using UnityEngine;
 /// the runtime assembly; a formal EditMode asmdef migration can layer on later.)
 public static class PharmaSelfTests
 {
+    /// XRI Starter Assets "XR Device Simulator" prefab — see the playmode pin.
+    const string SimulatorPrefabGuid = "18ddb545287c546e19cc77dc9fbb2189";
     static int _fail, _total;
     static readonly List<string> _log = new List<string>();
 
@@ -1453,6 +1457,185 @@ public static class PharmaSelfTests
               channels == 0 || bankless == 0);
             A("voice: every narration channel speaks as its OWN NPC (" + misattributed + " misattributed)",
               channels == 0 || misattributed == 0);
+        }
+
+        // ⛔ Every scene in Build Settings must AGREE about the XR Device Simulator.
+        //
+        // `Play Mode ▸ Headset Mode` used to fix only the OPEN scenes, so running it with just
+        // SampleScene open disabled that simulator and left MainMenu's ACTIVE — and Play always
+        // boots MainMenu. The simulator then hijacked the HMD: the head pose froze at local
+        // (0,0,0) while the real Quest controllers kept reporting true poses, so the controllers
+        // floated ABOVE the view (user 2026-09-05, in the headset). Reading the scene FILES keeps
+        // this cheap and non-destructive — the suite must never open scenes to answer it.
+        {
+            var simStates = new List<string>();
+            foreach (var entry in EditorBuildSettings.scenes)
+            {
+                if (!entry.enabled || string.IsNullOrEmpty(entry.path) || !File.Exists(entry.path)) continue;
+                string text = File.ReadAllText(entry.path);
+                string state = "absent";
+                foreach (var block in text.Split(new[] { "--- !u!1001 " }, StringSplitOptions.None))
+                {
+                    if (block.IndexOf(SimulatorPrefabGuid, StringComparison.Ordinal) < 0) continue;
+                    var m = Regex.Match(block, @"propertyPath: m_IsActive\s*
+?
+\s*value: (\d)");
+                    state = m.Success ? (m.Groups[1].Value == "1" ? "ON" : "OFF") : "default";
+                    break;
+                }
+                simStates.Add(Path.GetFileNameWithoutExtension(entry.path) + "=" + state);
+            }
+            bool agree = simStates.Count == 0
+                         || simStates.TrueForAll(x => x.Substring(x.IndexOf('=') + 1)
+                                                       == simStates[0].Substring(simStates[0].IndexOf('=') + 1));
+            A("playmode: every build scene agrees about the XR Device Simulator ("
+              + string.Join(", ", simStates) + ")", agree);
+        }
+
+        // ---- Rack tubes claim their own role (W5.52) ----
+        //
+        // The real Exp 2 shapes: the enol group separates on pour ONE (five different
+        // alcohols), the alkaline-oxidation group shares its first TWO reagents and only
+        // separates on the third. Both must work, which is why claiming is deferred.
+        {
+            var enol = new List<IReadOnlyList<string>>
+            {
+                new List<string> { "Ethanol", "Water", "FeCl3" },
+                new List<string> { "n-Butyl", "Water", "FeCl3" },
+                new List<string> { "Benzyl",  "Water", "FeCl3" },
+            };
+            var oxalk = new List<IReadOnlyList<string>>
+            {
+                new List<string> { "KMnO4", "NaOH", "n-Butyl" },
+                new List<string> { "KMnO4", "NaOH", "sec-Butyl" },
+                new List<string> { "KMnO4", "NaOH", "tert-Butyl" },
+            };
+
+            A("role: an empty tube can still be anything in its group",
+                VesselRoleMatch.Candidates(enol, new List<string>()).Count == 3);
+
+            var afterEthanol = VesselRoleMatch.Candidates(enol, new List<string> { "Ethanol" });
+            A("role: a distinguishing first pour claims the role at once",
+                afterEthanol.Count == 1 && VesselRoleMatch.ClaimedRole(afterEthanol) == 0);
+
+            // ⛔ The reason claiming is deferred: eager assignment here would pick one of the
+            // three arbitrarily and then grade the correct third pour a mistake.
+            var shared = VesselRoleMatch.Candidates(oxalk, new List<string> { "KMnO4", "NaOH" });
+            A("role: a shared prefix stays AMBIGUOUS rather than guessing",
+                shared.Count == 3 && VesselRoleMatch.ClaimedRole(shared) == -1
+                && !VesselRoleMatch.IsImpossible(shared));
+
+            var settled = VesselRoleMatch.Candidates(oxalk,
+                new List<string> { "KMnO4", "NaOH", "sec-Butyl" });
+            A("role: the disambiguating pour claims the right role",
+                VesselRoleMatch.ClaimedRole(settled) == 1);
+
+            A("role: a reagent no role wants is the wrong-reagent case",
+                VesselRoleMatch.IsImpossible(
+                    VesselRoleMatch.Candidates(oxalk, new List<string> { "Ethanol" })));
+
+            // Exclusivity: without this, two tubes claim the same role and the rack
+            // completes on one of them while the other is still empty.
+            var taken = new HashSet<int> { 0 };
+            A("role: a role claimed by a sibling is off the table",
+                VesselRoleMatch.Candidates(enol, new List<string>(), taken).Count == 2
+                && !VesselRoleMatch.Candidates(enol, new List<string>(), taken).Contains(0));
+
+            A("role: WouldAccept grades a pour before it is recorded",
+                VesselRoleMatch.WouldAccept(oxalk, new List<string> { "KMnO4" }, "NaOH")
+                && !VesselRoleMatch.WouldAccept(oxalk, new List<string> { "KMnO4" }, "Ethanol"));
+
+            // Over-pouring a named reagent is an over-pour of the RIGHT thing; the binding
+            // already tolerates it, so the matcher must not start rejecting it.
+            A("role: repeating a named reagent does not break the match",
+                VesselRoleMatch.Candidates(oxalk,
+                    new List<string> { "KMnO4", "KMnO4", "NaOH" }).Count == 3);
+        }
+
+        // ---- Any tube will do (W5.53): pools per family, guidance follows the tube in hand ----
+        // ⛔ All 23 bench tubes share ONE itemId (kit-testtube), hard-glass included, so the
+        // name prefix is the only family signal. A soft tube must never claim the naked-flame
+        // role: Exp 6's dry distillation is the whole point of the hard-glass tube.
+        A("role: hard-glass never pools with soft glass",
+            VesselRoleMatch.FamilyOf("Kit_Hard-GlassTestTube_2") == VesselRoleMatch.HardGlassFamily
+            && VesselRoleMatch.FamilyOf("Kit_TestTube_7") == VesselRoleMatch.RegularFamily
+            && VesselRoleMatch.FamilyOf("Kit_Hard-GlassTestTube_2") != VesselRoleMatch.FamilyOf("Kit_TestTube_7")
+            && VesselRoleMatch.FamilyOf("Eq_Beaker_100mL") == ""
+            && VesselRoleMatch.FamilyOf("") == "");
+
+        // The pool collapses to ONE cue: the tube in the player's hand beats a nearer one, the
+        // nearest wins otherwise, and a step with no pool targets is left exactly as it was.
+        {
+            var near = new GameObject("pool_near"); near.transform.position = new Vector3(0f, 0f, 1f);
+            var far = new GameObject("pool_far");   far.transform.position = new Vector3(0f, 0f, 5f);
+            var fixedT = new GameObject("fixed_dest");
+            try
+            {
+                var targets = new List<TaskTarget>
+                {
+                    new TaskTarget { transform = far.transform,  role = TargetRole.Destination, pool = true },
+                    new TaskTarget { transform = near.transform, role = TargetRole.Destination, pool = true },
+                };
+                A("target: the nearest free pool tube is the cue when nothing is held",
+                    TaskTargetRegistry.ChoosePoolMember(targets, t => false, Vector3.zero) == near.transform);
+                A("target: a held pool tube beats a nearer free one",
+                    TaskTargetRegistry.ChoosePoolMember(targets, t => t == far.transform, Vector3.zero) == far.transform);
+                var fixedOnly = new List<TaskTarget> { new TaskTarget { transform = fixedT.transform, role = TargetRole.Destination } };
+                A("target: a step with no pool targets is untouched",
+                    TaskTargetRegistry.ChoosePoolMember(fixedOnly, t => false, Vector3.zero) == null);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(near); UnityEngine.Object.DestroyImmediate(far);
+                UnityEngine.Object.DestroyImmediate(fixedT);
+            }
+        }
+
+        // \u26d4 Pharmee SPEAKS the text after the arrow in every hint, so a hint that says
+        // "Test Tube 15" is a voice line insisting on a tube the player is not holding. With
+        // tubes claiming their own role (W5.53) that is not merely unhelpful, it is wrong.
+        // "the second rack" is deliberately allowed: a rack is a real, distinct object.
+        {
+            var numbered = new List<string>();
+            int hints = 0;
+            foreach (var file in Directory.GetFiles("Assets/PharmaSynth/ScriptableObjects/Experiments", "*.asset"))
+                foreach (var line in File.ReadAllLines(file))
+                {
+                    if (!line.TrimStart().StartsWith("hint:")) continue;
+                    hints++;
+                    if (Regex.IsMatch(line, @"Test Tube \d+|\bTube \d+\b"))
+                        numbered.Add(Path.GetFileNameWithoutExtension(file) + ": " + line.Trim().Substring(0, Math.Min(60, line.Trim().Length)));
+                }
+            A("hint: no action line names a numbered tube (" + hints + " hints"
+              + (numbered.Count > 0 ? ", offenders: " + string.Join(" | ", numbered) : "") + ")",
+              hints > 0 && numbered.Count == 0);
+        }
+
+        // A custom shader with no stereo-instancing macros renders to eye index 0 ONLY.
+        //
+        // The project runs Single Pass Instanced: both eyes go into one texture array and the
+        // shader picks its slice from the instance id. PharmaGuide and PharmaGlow shipped
+        // without the macros, so the tutorial arrows and the highlight glow were visible in
+        // the LEFT EYE ONLY and the user played with one eye shut (2026-09-05, headset).
+        // Nothing in the editor shows this - the Game view renders a single eye and looks
+        // perfect - so a text pin is the only cheap guard. Surface shaders (Glass) get the
+        // handling generated for them, which is why the check is on the MACROS and not on
+        // "#pragma multi_compile_instancing".
+        {
+            var oneEyed = new List<string>();
+            int shaders = 0;
+            foreach (var file in Directory.GetFiles("Assets/PharmaSynth", "*.shader",
+                                                    SearchOption.AllDirectories))
+            {
+                string text = File.ReadAllText(file);
+                shaders++;
+                if (text.IndexOf("UNITY_VERTEX_OUTPUT_STEREO", StringComparison.Ordinal) < 0
+                    || text.IndexOf("UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO", StringComparison.Ordinal) < 0)
+                    oneEyed.Add(Path.GetFileName(file));
+            }
+            A("xr: every custom shader declares the stereo macros (" + shaders + " checked"
+              + (oneEyed.Count > 0 ? ", ONE-EYED: " + string.Join(", ", oneEyed) : "") + ")",
+              shaders > 0 && oneEyed.Count == 0);
         }
 
         // ---- the manuscript is the AUTHORITY, so check the numbers against it (W5.49) ----

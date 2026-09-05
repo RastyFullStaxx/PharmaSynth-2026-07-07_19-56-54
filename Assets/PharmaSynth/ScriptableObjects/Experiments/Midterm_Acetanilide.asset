@@ -96,7 +96,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Boiling in acid splits the amide; on cooling and dilution the crystals reappear.\n\u2192 Into Test Tube 11: 1 scoopula of your crystals + 3 squeezes of concentrated HCl, then boil it at the water bath."
+    hint: "Boiling in acid splits the amide; on cooling and dilution the crystals reappear.\n\u2192 Into a clean test tube: 1 scoopula of your crystals + 3 squeezes of concentrated HCl, then boil it at the water bath."
   - taskId: test-bromination
     label: "Bromination \u2014 acetanilide vs free aniline"
     phase: 2
@@ -106,7 +106,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "The COMPARISON is the lesson: the free amine takes bromine far faster than the amide.\n\u2192 Tube 12: 1 scoopula of crystals + 5 water + 1 of 0.1N HCl + 5 bromine water. Tube 13: 2 aniline (fume hood!) + 5 water + 1 of 0.1N HCl + 2 bromine water."
+    hint: "The COMPARISON is the lesson: the free amine takes bromine far faster than the amide.\n\u2192 One clean tube: 1 scoopula of crystals + 5 water + 1 of 0.1N HCl + 5 bromine water. A second clean tube: 2 aniline (fume hood!) + 5 water + 1 of 0.1N HCl + 2 bromine water."
   - taskId: record-yield
     label: "Record your observations"
     phase: 3

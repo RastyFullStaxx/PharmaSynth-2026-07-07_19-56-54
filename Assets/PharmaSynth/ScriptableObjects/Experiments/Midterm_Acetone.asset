@@ -65,7 +65,7 @@ MonoBehaviour:
     skill: 4
     rubricCategory: 0
     required: 1
-    hint: "Acetone boils at 56 \u00B0C \u2014 the vapour condenses in a cool receiver.\n\u2192 Keep Test Tube 14 close to the hot tube's mouth; the distillate collects there while the tube stays hot."
+    hint: "Acetone boils at 56 \u00B0C \u2014 the vapour condenses in a cool receiver.\n\u2192 Keep a clean test tube close to the hot tube's mouth; the distillate collects there while the tube stays hot."
   - taskId: test-tollens
     label: "Tollen's test \u2014 NO silver mirror (ketone)"
     phase: 2
@@ -75,7 +75,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Ketones resist mild oxidation: Tollen's (ammoniacal silver nitrate) gives NO mirror \u2014 the negative IS the result.\n\u2192 Test Tube 15: 2 of your acetone + 5 water + 2 squeezes of silver nitrate."
+    hint: "Ketones resist mild oxidation: Tollen's (ammoniacal silver nitrate) gives NO mirror \u2014 the negative IS the result.\n\u2192 In a clean test tube: 2 of your acetone + 5 water + 2 squeezes of silver nitrate."
   - taskId: test-schiff
     label: "Schiff's reagent \u2014 no magenta (ketone)"
     phase: 2
@@ -85,7 +85,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Schiff's reagent stays colourless with ketones \u2014 another deliberate negative.\n\u2192 Test Tube 16: 5 squeezes of Schiff's reagent + 2 of your acetone; let it stand."
+    hint: "Schiff's reagent stays colourless with ketones \u2014 another deliberate negative.\n\u2192 In a clean test tube: 5 squeezes of Schiff's reagent + 2 of your acetone; let it stand."
   - taskId: test-iodoform
     label: "Iodoform test \u2014 yellow precipitate"
     phase: 2
@@ -95,7 +95,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "A methyl ketone gives the yellow iodoform precipitate with KI + hypochlorite, warmed.\n\u2192 Test Tube 17: 10 of KI + 2 of your acetone + 10 of hypochlorite, then warm it at the water bath."
+    hint: "A methyl ketone gives the yellow iodoform precipitate with KI + hypochlorite, warmed.\n\u2192 In a clean test tube: 10 of KI + 2 of your acetone + 10 of hypochlorite, then warm it at the water bath."
   - taskId: test-bisulfite
     label: "Bisulfite addition product \u2014 in the freezing mixture"
     phase: 2
@@ -105,7 +105,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Methyl ketones form a white crystalline adduct with saturated bisulfite, clearest when chilled.\n\u2192 Test Tube 18: 1 of ethanol + 2 of sodium bisulfite + 1 of your acetone, then set it in the ice bucket."
+    hint: "Methyl ketones form a white crystalline adduct with saturated bisulfite, clearest when chilled.\n\u2192 In a clean test tube: 1 of ethanol + 2 of sodium bisulfite + 1 of your acetone, then set it in the ice bucket."
   - taskId: record-yield
     label: "Record your observations"
     phase: 3

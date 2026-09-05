@@ -406,19 +406,19 @@ Bridges a vessel's LiquidPhysics chemistry events to the experiment logic in a c
 
 ```csharp
 IReadOnlyList<ReagentStep> ExpectedSteps
+bool RoleAmbiguous
+int ClaimedRole
+event System.Action<int> RoleClaimed
+bool IsPoolMember
+void MarkPoolMember()
+List<string> CandidateTasks()
+void SetRoles(List<List<ReagentStep>> roles, int authoredRole, RackRoles shared)
 bool IsListening
 void SetFumeHood(FumeHoodZone hood)
 bool InFumeHood()
 void Detach()
 void HandleReagent(ChemicalData chem)
 void HandleReagent(ChemicalData chem, float amountMl)
-static bool MetThreshold(float have, float required)
-bool ReadyFor(string taskId)
-float AccumulatedFor(string taskId)
-float AccumulatedFor(string taskId, ChemicalData reagent)
-int StepsRemaining(string taskId)
-ReagentStep StepForReagent(ChemicalData chem)
-string TaskForReagent(ChemicalData chem)
 ```
 
 ### `OverheatEffects` <sub>class</sub>
@@ -451,6 +451,16 @@ Transform spout
 ParticleSystem powderStreamParticles
 float pourThreshold
 float maxFlowRate
+```
+
+### `RackRoles` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Chemistry/RackRoles.cs`</sub>
+
+Who has claimed which role inside ONE rack group (W5.52). A rack group's tubes are interchangeable, so a role belongs to whichever tube the player actually poured it into. This is the shared ledger that keeps that exclusive: without it two tubes both narrow to the same role, the RackTaskGroup counts that role twice, and the step completes while a tube still sits empty. Plain C# rather than a MonoBehaviour: it holds no transform, needs no update, and is created by ExperimentSceneBuilder alongside the group's RackTaskGroups.
+
+```csharp
+void Claim(LiquidTaskBinding who, int role)
+ICollection<int> TakenByOthers(LiquidTaskBinding me)
 ```
 
 ### `RackMath` <sub>class</sub>
@@ -608,6 +618,21 @@ void React(string resultName)
 void Clear()
 void Scale(float frac)
 string Summary(int max
+```
+
+### `VesselRoleMatch` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Chemistry/VesselRoleMatch.cs`</sub>
+
+nearest, so "pour the ethanol into tube 0" is guidance they cannot act on: pouring the right reagent into the wrong-numbered tube was graded a wrong-reagent mistake even though the chemistry was correct. A rack group's members are interchangeable glassware, so the role should follow the pour, not the other way round. ⛔ CLAIMING MUST BE DEFERRED, not decided on the first pour. The four alkaline tubes all take KMnO₄ then NaOH and differ only at the THIRD reagent (n-butyl / sec-butyl / tert-butyl). Claiming eagerly would assign a role arbitrarily on pour one and then punish a perfectly correct third pour. So a tube holds a CANDIDATE SET that each pour narrows; it is claimed only once one candidate survives, and a pour is wrong only when the set empties. The enol group happens to disambiguate on pour one (five different alcohols) — that falls out of the same rule rather than needing a specia
+
+```csharp
+static List<int> Candidates(IReadOnlyList<IReadOnlyList<string>> roles,
+static int ClaimedRole(IReadOnlyList<int> candidates)
+static bool IsImpossible(IReadOnlyList<int> candidates)
+const string RegularFamily
+const string HardGlassFamily
+static string FamilyOf(string benchName)
+static bool WouldAccept(IReadOnlyList<IReadOnlyList<string>> roles,
 ```
 
 ---
@@ -1828,6 +1853,7 @@ Transform transform
 TargetRole role
 bool stayLitWhenHeld
 VerbKind verb
+bool pool
 ```
 
 ### `TaskTargetRegistry` <sub>class</sub>
@@ -1837,6 +1863,8 @@ taskId → the scene objects that step involves. Formerly ExperimentStationRegis
 
 ```csharp
 static void Register(string taskId, Transform t, TargetRole role, bool stayLitWhenHeld,
+static Transform ChoosePoolMember(IReadOnlyList<TaskTarget> targets,
+static Transform PickTarget(string taskId, Vector3 from)
 static IReadOnlyList<TaskTarget> Targets(string taskId)
 static Transform PickTarget(string taskId)
 static int TaskCount
@@ -1960,6 +1988,7 @@ void Stop()
 Live contents readout on a vessel's existing ProximityLabel (W5.8: "track the contents — texts that show when we hover or get near"). Throttled and change-gated so the TMP mesh only rebuilds when the state actually moves.
 
 ```csharp
+void SetRoleSuffix(string suffix)
 void Bind(LiquidPhysics lp, ProximityLabel label, string displayName, float showDist
 void Refresh()
 ```

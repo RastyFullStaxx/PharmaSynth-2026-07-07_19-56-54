@@ -114,7 +114,7 @@ MonoBehaviour:
     skill: 4
     rubricCategory: 0
     required: 1
-    hint: "Redistilling off the drying agent leaves water-clear chloroform \u2014 no droplets on the glass.\n\u2192 Keep the Distilling Flask hot; hold Test Tube 14 at its mouth until 6 ml run over clear."
+    hint: "Redistilling off the drying agent leaves water-clear chloroform \u2014 no droplets on the glass.\n\u2192 Keep the Distilling Flask hot; hold a clean test tube at its mouth until 6 ml run over clear."
   - taskId: weigh-product
     label: "Weigh your chloroform distillate"
     phase: 1
@@ -124,7 +124,7 @@ MonoBehaviour:
     skill: 0
     rubricCategory: 0
     required: 1
-    hint: "The data sheet needs your distillate's mass.\n\u2192 Set Test Tube 14 on the balance and let the reading settle."
+    hint: "The data sheet needs your distillate's mass.\n\u2192 Set the tube holding your distillate on the balance and let the reading settle."
   - taskId: test-flammability
     label: "Non-flammability test (lit match)"
     phase: 2
@@ -144,7 +144,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Hot dichromate + concentrated sulfuric acid oxidise chloroform \u2014 the pungent phosgene-like odour is the tell. Toxic: work IN the fume hood.\n\u2192 Test Tube 15 in the hood: 2 tilt-pours of your chloroform, 4 spatula dips of potassium dichromate, 2 squeezes of sulfuric acid \u2014 then warm it at the water bath."
+    hint: "Hot dichromate + concentrated sulfuric acid oxidise chloroform \u2014 the pungent phosgene-like odour is the tell. Toxic: work IN the fume hood.\n\u2192 A clean test tube in the hood: 2 tilt-pours of your chloroform, 4 spatula dips of potassium dichromate, 2 squeezes of sulfuric acid \u2014 then warm it at the water bath."
   - taskId: test-agno3
     label: "Alcoholic AgNO3 \u2014 nothing cold, white AgCl warm"
     phase: 2
@@ -154,7 +154,7 @@ MonoBehaviour:
     skill: 5
     rubricCategory: 1
     required: 1
-    hint: "Alcoholic silver nitrate shows NOTHING in the cold \u2014 only on warming does white silver chloride separate.\n\u2192 Test Tube 16: 1 squeeze of alcoholic silver nitrate FIRST, then 2 tilt-pours of your chloroform. Warm it at the water bath and watch for the white precipitate."
+    hint: "Alcoholic silver nitrate shows NOTHING in the cold \u2014 only on warming does white silver chloride separate.\n\u2192 In a clean test tube: 1 squeeze of alcoholic silver nitrate FIRST, then 2 tilt-pours of your chloroform. Warm it at the water bath and watch for the white precipitate."
   - taskId: record-yield
     label: "Record your observations"
     phase: 3

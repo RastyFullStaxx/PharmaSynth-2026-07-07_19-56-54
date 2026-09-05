@@ -54,10 +54,17 @@ Shader "PharmaSynth/GuideGlow"
         // up frozen. Written by ComfortApplier from the "reduce flashing" setting.
         float _GuideSteady;
 
+        // ⛔ STEREO INSTANCING IS MANDATORY (2026-09-05, found in the headset). The project
+        // runs Single Pass Instanced: both eyes render into one texture array and the shader
+        // picks its slice from the instance id. Omit these macros and the shader silently
+        // draws to eye index 0 only — the guidance glow appeared in the LEFT EYE ONLY and the
+        // user had to close one eye to play. The Game view renders a single eye, so nothing
+        // in the editor reveals it. Both passes need the pragma; the frags need the setup.
         struct Attributes
         {
             float4 positionOS : POSITION;
             float3 normalOS   : NORMAL;
+            UNITY_VERTEX_INPUT_INSTANCE_ID
         };
 
         struct Varyings
@@ -65,6 +72,8 @@ Shader "PharmaSynth/GuideGlow"
             float4 positionHCS : SV_POSITION;
             float3 normalWS    : TEXCOORD0;
             float3 viewWS      : TEXCOORD1;
+            UNITY_VERTEX_INPUT_INSTANCE_ID
+            UNITY_VERTEX_OUTPUT_STEREO
         };
 
         // 0..1, never fully dark: a glow that blinks out entirely reads as a fault.
@@ -82,6 +91,9 @@ Shader "PharmaSynth/GuideGlow"
         Varyings Vert (Attributes IN)
         {
             Varyings OUT;
+            UNITY_SETUP_INSTANCE_ID(IN);
+            UNITY_TRANSFER_INSTANCE_ID(IN, OUT);
+            UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
             float3 positionWS = TransformObjectToWorld(IN.positionOS.xyz);
             float3 normalWS = TransformObjectToWorldNormal(IN.normalOS);
             // Breathe OUTWARD along the normal as well as brightening, so the pulse is
@@ -109,9 +121,12 @@ Shader "PharmaSynth/GuideGlow"
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment FragRim
+            #pragma multi_compile_instancing
 
             half4 FragRim (Varyings IN) : SV_Target
             {
+                UNITY_SETUP_INSTANCE_ID(IN);
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(IN);
                 float3 N = normalize(IN.normalWS);
                 float3 V = normalize(IN.viewWS);
                 float rim = pow(saturate(1.0 - saturate(dot(N, V))), _RimPower);
@@ -137,9 +152,12 @@ Shader "PharmaSynth/GuideGlow"
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment FragOccluded
+            #pragma multi_compile_instancing
 
             half4 FragOccluded (Varyings IN) : SV_Target
             {
+                UNITY_SETUP_INSTANCE_ID(IN);
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(IN);
                 return half4(_BaseColor.rgb, _BaseColor.a * _Occluded * Pulse());
             }
             ENDHLSL

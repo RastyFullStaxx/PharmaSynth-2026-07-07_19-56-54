@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 /// What role an object plays in a step — drives the guidance tint and whether
@@ -20,6 +20,11 @@ public struct TaskTarget
     /// the component that registered the target, so it cannot disagree with the
     /// binding for the same reason the target itself cannot.
     public VerbKind verb;
+    /// One of several interchangeable tubes that could ALL take this step (W5.53). Pool
+    /// targets are collapsed to ONE at read time — the tube in the player's hand, else
+    /// the nearest — so the arrow, the beacon and the glow never disagree, and the whole
+    /// rack does not light up.
+    public bool pool;
 }
 
 /// taskId → the scene objects that step involves.
@@ -37,7 +42,7 @@ public static class TaskTargetRegistry
         new Dictionary<string, List<TaskTarget>>();
 
     public static void Register(string taskId, Transform t, TargetRole role, bool stayLitWhenHeld,
-                                VerbKind verb = VerbKind.Place)
+                                VerbKind verb = VerbKind.Place, bool pool = false)
     {
         if (string.IsNullOrEmpty(taskId) || t == null) return;
         if (!_map.TryGetValue(taskId, out var list))
@@ -47,7 +52,45 @@ public static class TaskTargetRegistry
         }
         for (int i = 0; i < list.Count; i++)
             if (list[i].transform == t) return;              // idempotent: sweeps may overlap
-        list.Add(new TaskTarget { transform = t, role = role, stayLitWhenHeld = stayLitWhenHeld, verb = verb });
+        list.Add(new TaskTarget { transform = t, role = role, stayLitWhenHeld = stayLitWhenHeld, verb = verb, pool = pool });
+    }
+
+    /// The ONE pool member a cue should use right now (W5.53): the member the player is
+    /// HOLDING if any is, else the nearest to `from`. Pure over the target list so the
+    /// suite can pin the preference order without a scene. Returns null when no target is
+    /// pool-flagged, so non-pool steps are untouched.
+    public static Transform ChoosePoolMember(IReadOnlyList<TaskTarget> targets,
+                                             System.Func<Transform, bool> isHeld, Vector3 from)
+    {
+        if (targets == null) return null;
+        Transform nearest = null; float best = float.MaxValue; bool anyPool = false;
+        for (int i = 0; i < targets.Count; i++)
+        {
+            var t = targets[i];
+            if (!t.pool || t.transform == null) continue;
+            anyPool = true;
+            if (isHeld != null && isHeld(t.transform)) return t.transform;   // in hand wins outright
+            float d = (t.transform.position - from).sqrMagnitude;
+            if (d < best) { best = d; nearest = t.transform; }
+        }
+        return anyPool ? nearest : null;
+    }
+
+    /// Position-aware pick: the same Source-first order as before, but a pool of
+    /// interchangeable tubes collapses to the held-or-nearest member instead of whichever
+    /// was registered first — which is what "the guide follows the tube I picked up" means.
+    public static Transform PickTarget(string taskId, Vector3 from)
+    {
+        var targets = Targets(taskId);
+        for (int i = 0; i < targets.Count; i++)
+            if (targets[i].role == TargetRole.Source && targets[i].transform != null
+                && !TutorialHighlighter.IsHeld(targets[i].transform))
+                return targets[i].transform;
+        var member = ChoosePoolMember(targets, TutorialHighlighter.IsHeld, from);
+        if (member != null) return member;
+        for (int i = 0; i < targets.Count; i++)
+            if (targets[i].transform != null && !targets[i].pool) return targets[i].transform;
+        return null;
     }
 
     /// Live targets for a step. Null transforms are filtered on every READ, not just
@@ -68,14 +111,8 @@ public static class TaskTargetRegistry
     /// go is worse than either one alone.
     public static Transform PickTarget(string taskId)
     {
-        var targets = Targets(taskId);
-        for (int i = 0; i < targets.Count; i++)
-            if (targets[i].role == TargetRole.Source && targets[i].transform != null
-                && !TutorialHighlighter.IsHeld(targets[i].transform))
-                return targets[i].transform;
-        for (int i = 0; i < targets.Count; i++)
-            if (targets[i].transform != null) return targets[i].transform;
-        return null;
+        var cam = Camera.main;
+        return PickTarget(taskId, cam != null ? cam.transform.position : Vector3.zero);
     }
 
     public static int TaskCount => _map.Count;
@@ -111,6 +148,14 @@ public static class TutorialTargets
                      FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             if (b == null) continue;
+
+            // A POOL member that has not committed to a role is a valid destination for
+            // every task any of its surviving roles could serve (W5.53). Registered with
+            // pool=true so the consumers collapse the set to held-or-nearest.
+            if (b.IsPoolMember)
+                foreach (var task in b.CandidateTasks())
+                    TaskTargetRegistry.Register(task, b.transform, TargetRole.Destination, true, VerbKind.Pour, pool: true);
+
             var steps = b.ExpectedSteps;
             if (steps == null) continue;
             for (int i = 0; i < steps.Count; i++)

@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEditor.XR.Management;
@@ -43,29 +43,68 @@ public static class PlayModeSwitch
         if (s != null) { s.InitManagerOnStart = headset; EditorUtility.SetDirty(s); AssetDatabase.SaveAssets(); }
         else Debug.LogWarning("[PlayMode] no Standalone XR settings (assign OpenXR under XR Plug-in Management ▸ Desktop).");
 
-        // 2. XR Device Simulator active state in every open scene (ON for PC, OFF for headset).
-        int touched = 0;
+        // 2. XR Device Simulator active state in EVERY SCENE IN BUILD SETTINGS.
+        //
+        // ⛔ Not just the open ones. This switch used to walk `SceneManager` — the loaded
+        // scenes — so running Headset Mode with only SampleScene open disabled ITS simulator
+        // and left MainMenu's ACTIVE. Play always boots MainMenu (`PlayFromMenuBootstrap`), so
+        // the simulator hijacked the HMD there: the head pose froze at local (0,0,0), and with
+        // no head height to cancel, `SeatedHeightBoost` fell back to its no-device offset while
+        // the real Quest controllers kept reporting true poses — which is why they floated
+        // ABOVE the view (user 2026-09-05, headset). Half-applied is worse than not applied,
+        // because the half that is wrong is the scene the game starts in.
+        var open = new System.Collections.Generic.Dictionary<string, Scene>();
         for (int i = 0; i < SceneManager.sceneCount; i++)
         {
-            var scene = SceneManager.GetSceneAt(i);
-            if (!scene.isLoaded) continue;
+            var sc = SceneManager.GetSceneAt(i);
+            if (sc.isLoaded && !string.IsNullOrEmpty(sc.path)) open[sc.path] = sc;
+        }
+
+        int touched = 0;
+        bool savedOpen = false;
+        var report = new System.Text.StringBuilder();
+        foreach (var entry in EditorBuildSettings.scenes)
+        {
+            if (!entry.enabled || string.IsNullOrEmpty(entry.path)) continue;
+
+            // An OPEN scene is edited in place; a closed one is opened additively, fixed,
+            // saved and closed again, so the switch never depends on what happens to be open.
+            bool wasOpen = open.TryGetValue(entry.path, out var scene);
+            if (!wasOpen) scene = EditorSceneManager.OpenScene(entry.path, OpenSceneMode.Additive);
+
+            bool found = false, changed = false;
             foreach (var root in scene.GetRootGameObjects())
             {
                 var sim = FindDeep(root.transform, SimName);
                 if (sim == null) continue;
+                found = true;
                 if (sim.gameObject.activeSelf != !headset)
                 {
                     sim.gameObject.SetActive(!headset);
                     EditorSceneManager.MarkSceneDirty(scene);
-                    touched++;
+                    changed = true; touched++;
                 }
             }
+
+            report.AppendLine("    " + System.IO.Path.GetFileNameWithoutExtension(entry.path)
+                              + ": simulator " + (!found ? "NOT PRESENT" : (headset ? "OFF" : "ON"))
+                              + (changed ? "  (changed)" : ""));
+
+            if (wasOpen) { if (changed) savedOpen = true; }
+            else
+            {
+                if (changed) EditorSceneManager.SaveScene(scene);
+                EditorSceneManager.CloseScene(scene, true);
+            }
         }
-        if (touched > 0) EditorSceneManager.SaveOpenScenes();
+        if (savedOpen) EditorSceneManager.SaveOpenScenes();
 
         Debug.Log(headset
-            ? "<color=#4CD07D>[PlayMode] HEADSET MODE — OpenXR on Play, simulator off. Connect the Quest (Quest Link / Air Link), then press Play.</color>"
-            : "<color=#4CD07D>[PlayMode] PC DEV MODE — simulator on, OpenXR off. Press Play; move with W/A/S/D, hold Right-Mouse to look (Q/E = down/up).</color>");
+            ? "<color=#4CD07D>[PlayMode] HEADSET MODE - OpenXR on Play, simulator off. Connect the Quest (Quest Link / Air Link), then press Play.</color>"
+            : "<color=#4CD07D>[PlayMode] PC DEV MODE - simulator on, OpenXR off. Press Play; move with W/A/S/D, hold Right-Mouse to look (Q/E = down/up).</color>");
+        // Per-scene, so a half-applied switch is visible instead of silent.
+        Debug.Log("[PlayMode] every scene in Build Settings, changed " + touched + ":");
+        Debug.Log(report.ToString().TrimEnd());
     }
 
     static Transform FindDeep(Transform root, string name)

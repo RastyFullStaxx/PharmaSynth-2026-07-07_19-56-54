@@ -996,3 +996,142 @@ re-homing.
 > the edit-mode fallback (kept so the `simrun:` pins do not move) mirrors what `Deposit`
 > would have drawn. Before blaming the game for a sweep FAIL, confirm the harness reached the
 > vessel the way a hand would.
+
+## A half-applied play-mode switch is worse than none
+
+> [!danger] Headset Mode fixed only the OPEN scenes, and the game boots into the other one
+> In the headset the controllers floated ABOVE the player's head. The instinct is to raise the
+> POV — and that cannot work: the camera and both controllers are children of the same
+> **Camera Offset**, so lifting it moves them together and the gap is unchanged.
+>
+> `[HeightDebug] scene=MainMenu root=0.00 offset=1.45 head=0.00 eyeWorld=1.45 calibrated=False`
+>
+> **`head=0.00` is the whole story.** The HMD pose never reached the camera, so
+> `SeatedHeightBoost` computed `FixedOffset(target 1.45, head 0.00) = 1.45` and planted a
+> STATIC eye, while the real Quest controllers kept reporting true tracked poses — hence
+> controllers a metre above a frozen viewpoint.
+>
+> The cause: `Play Mode ▸ Headset Mode` walked `SceneManager`, i.e. the **open** scenes only.
+> Run with just SampleScene open, it disabled that simulator and left **MainMenu's ACTIVE** —
+> and `PlayFromMenuBootstrap` makes Play always boot MainMenu. The scene files proved it:
+> SampleScene `m_IsActive: 0`, MainMenu `m_IsActive: 1`. The switch now walks every scene in
+> **Build Settings**, opening closed ones additively, and reports its state per scene.
+>
+> ⛔ Any editor switch that configures "the scene" must define WHICH scenes, or it silently
+> half-applies — and the half left wrong is the one the game starts in. Pinned by
+> `playmode: every build scene agrees about the XR Device Simulator`, which reads the scene
+> FILES as text so the suite never has to open a scene to answer it.
+>
+> ⚠ Related: `SeatedHeightBoost` DISCARDS the player's real height by design ("everyone has
+> the same view") and re-plants the eye on the scene's authored `targetEyeHeight`. Both scenes
+> authored **1.45 m** — the eye line of a ~1.55 m person, which reads as a too-tall world when
+> standing. Raised to 1.65 m (user 2026-09-05).
+
+## A custom shader with no stereo macros is invisible in one eye
+
+> [!danger] Nothing in the editor shows it — the Game view renders a single eye
+> The tutorial arrows and the highlight glow appeared in the LEFT EYE ONLY, and the user
+> played with one eye shut until it made them dizzy. The project runs **Single Pass
+> Instanced** (`OpenXR Package Settings … m_renderMode: 1`): both eyes render into one
+> texture array and the shader picks its slice from the instance id. A shader that omits the
+> macros silently draws to eye index 0.
+>
+> `PharmaGuide.shader` and `PharmaGlow.shader` had **zero** of them; `PharmaLiquid` had six
+> and `Glass` is a surface shader (Unity generates the handling), which is exactly why the
+> glassware and liquids looked perfect and only the guidance was broken.
+>
+> Needed in every hand-written pass: `UNITY_VERTEX_INPUT_INSTANCE_ID` in the vertex INPUT and
+> the OUTPUT struct, `UNITY_VERTEX_OUTPUT_STEREO` in the output,
+> `UNITY_SETUP_INSTANCE_ID` + `UNITY_TRANSFER_INSTANCE_ID` +
+> `UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO` in the vertex stage,
+> `UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX` in the fragment stage, and
+> `#pragma multi_compile_instancing` in EACH pass (a shared HLSLINCLUDE cannot carry a pragma).
+>
+> ⛔ This is invisible to every check the project has except a headset — the suite, the
+> simulators and DevCapture all render one eye. Pinned as
+> `xr: every custom shader declares the stereo macros`, which reads the `.shader` files as
+> text. Surface shaders are exempt by construction, so the pin checks the MACROS and not the
+> pragma.
+
+## A fixed role on a bench object is guidance a VR player cannot follow
+
+> [!danger] "Pour the ethanol into tube 0" assumes the player uses tube 0
+> Exp 2 authors five enol tubes, four alkaline-oxidation tubes and four acidic ones, each
+> pinned to a SPECIFIC bench tube. In VR the player grabs whichever tube is nearest, so
+> pouring the correct reagent into the wrong-NUMBERED tube was graded a wrong-reagent
+> mistake even though the chemistry was right. The player is not wrong; the binding is.
+>
+> Rack members are interchangeable glassware, so the role now follows the pour
+> (`VesselRoleMatch` + `RackRoles`). Three things make it work:
+>
+> 1. **Claiming is DEFERRED.** The four alkaline tubes all take KMnO₄ then NaOH and differ
+>    only at the third reagent. Claiming on pour one would assign a role arbitrarily and then
+>    punish a perfectly correct third pour. A tube holds a CANDIDATE SET that each pour
+>    narrows; ambiguity is a normal state, not an error.
+> 2. **Wrong = the set EMPTIES.** That is the only wrong-reagent case, and it still fires:
+>    ethanol into an oxidation tube is still graded.
+> 3. **Roles are claimed EXCLUSIVELY** through a shared `RackRoles` ledger, or two tubes
+>    narrow to the same role and the rack completes with one still empty.
+>
+> ⛔ **Do not advertise the union of the survivors.** The first cut exposed every surviving
+> role through `ExpectedSteps`, so each enol tube advertised all five alcohols — and
+> everything that reads that list to decide WHERE a reagent goes believed it. The player-path
+> simulator poured all five alcohols into all five tubes and logged **144 mistakes on a
+> perfect run**. Acceptance must be permissive; the ADVERTISED step must stay one
+> deterministic answer (the claimed role, else the authored one).
+
+## A vessel label that answers a question the player did not ask
+
+> [!warning] `AvailableTasks()` is every unlocked task, not the one being guided
+> `VesselStatus.NeedLineNow()` walked the whole `AvailableTasks()` list, so with Exp 2's prep
+> steps running in parallel the alkaline tubes advertised "Potassium Permanganate 0 / 2 ml"
+> while the player was still on the ethanol step — and a requirement printed on a tube reads
+> as an instruction. That is what sent the player to the wrong tube in the headset.
+>
+> Its own doc comment already claimed it showed the step only "when it is the vessel currently
+> being asked for"; the code did something else. `GuidePath` had already settled the
+> convention — the FIRST entry of `AvailableTasks()` is the guided one — so the fix was to
+> reuse it rather than invent a second notion of "the current step".
+
+## An anchor on the wrong tube is worse than a scold
+
+> [!danger] Pooling the pour bindings alone would ACCEPT the pour and then strand the step
+> Twelve of the 24 standalone tubes carry a non-pour anchor bolted to the bench object at build
+> time — `heatToC`, `litmusTaskId`, `chillToC`, `weighTaskId`, `vaporTaskId`. Let any tube take
+> the role but leave the anchor on the authored tube, and the player's pour is accepted, the
+> label says "claimed", and the litmus strip or the water bath then completes nothing, because
+> `VesselLitmusTask` lives on a tube they never touched. That is a stuck player with no
+> mistake logged — worse than the scold it replaced.
+>
+> The anchor must follow the claim. `LiquidTaskBinding.RoleClaimed` fires exactly once, after
+> the active steps are rebuilt, and the builder's extracted `AttachAnchors` attaches the
+> claimed role's anchors to the tube in hand. Safe because every anchor gates on
+> `binding.ReadyFor(taskId)`: one attached to a tube that never claims that role is inert, and
+> `ClearBenchBindings` strips all of them on the next build.
+>
+> ⛔ **The first pour into a free tube was scolded** even though the candidate set accepted
+> it: an ambiguous pool extra advertises NO steps (so the simulator never targets it), and the
+> legacy step lookup after acceptance found nothing and recorded "unexpected reagent". Found on
+> the real Exp 6 / Exp 8 stages. Fix: count the accepted pour against the first surviving
+> candidate's step, and carry volume across the narrowing **by reagent**, never by task id —
+> Exp 6 names the same acetone `test-tollens` in one role and `test-schiff` in another.
+
+## Hard glass is a naming convention, and every hint is a voice clip
+
+> [!warning] Two facts that constrain any tube or wording change
+> **All 23 bench tubes share ONE LabItem `itemId` (`kit-testtube`), hard-glass included.** The
+> only family signal is the scene-name prefix (`Kit_Hard-GlassTestTube_*` vs `Kit_TestTube_*`),
+> so `VesselRoleMatch.FamilyOf` is a naming convention and is pinned. A soft tube must never
+> claim Exp 6's naked-flame role — the hard glass IS the point of that step.
+>
+> **`PharmeeBrain.InstructionFor` speaks the text after "→" in every hint, and
+> `VoiceManifestExporter` exports exactly that**, so every rewritten action line invalidates a
+> clip. Twenty-one hints named a tube number ("Test Tube 15: 5 spatula dips…") — with tubes
+> claiming their own role that is a voice line insisting on a tube the player is not holding.
+> Rewritten to name the family ("In a clean test tube: …"); 21 clips regenerated at
+> `eleven_flash_v2_5` = **0.5 credits/char, 1,328 credits** (the first estimate assumed 1/char).
+> The generator is incremental (`Test-Path` before every API call) — but its `-WhatIf` lists
+> the whole selection WITHOUT that check, so a dry run quoting 10,944 credits is not the spend.
+> Pinned: `hint: no action line names a numbered tube` ("the second rack" is allowed: a rack is
+> a real, distinct object). 48 orphaned clips (27 from earlier copy edits) were moved to the
+> off-repo backup, not deleted; the bank is 326 = the manifest.

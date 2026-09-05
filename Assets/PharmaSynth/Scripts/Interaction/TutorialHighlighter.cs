@@ -178,16 +178,23 @@ public class TutorialHighlighter : MonoBehaviour
         CheckWrongGrab(current);
 
         _wanted.Clear();
+        var cam = Camera.main;
+        Vector3 from = cam != null ? cam.transform.position : Vector3.zero;
         foreach (var task in runner.Graph.AvailableTasks())
         {
             // EVERY available task, not just the first: the graph can open parallel
             // branches, and hiding one would teach the player a stricter order than
             // the experiment actually has. (The waypoint still shows a single arrow.)
             var targets = TaskTargetRegistry.Targets(task.taskId);
+            // A POOL of interchangeable tubes collapses to ONE glow — the tube in hand,
+            // else the nearest (user 2026-09-06: never the whole rack). Same chooser as
+            // PickTarget, so the glow and the arrow cannot point at different tubes.
+            var chosen = TaskTargetRegistry.ChoosePoolMember(targets, IsHeld, from);
             for (int i = 0; i < targets.Count; i++)
             {
                 var t = targets[i];
                 if (t.transform == null) continue;
+                if (t.pool && t.transform != chosen) continue;
                 bool held = IsHeld(t.transform);
                 if (held) { _droppedAt.Remove(t.transform); }
                 else if (!_lit.ContainsKey(t.transform)

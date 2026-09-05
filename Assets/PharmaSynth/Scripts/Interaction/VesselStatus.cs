@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// Live contents readout on a vessel's existing ProximityLabel (W5.8: "track
 /// the contents — texts that show when we hover or get near"). Throttled and
@@ -8,6 +8,12 @@ public class VesselStatus : MonoBehaviour
     private LiquidPhysics _lp;
     private ProximityLabel _label;
     private string _displayName;
+
+    /// " — Tollen's test" once a pooled tube has claimed a role (W5.53), so the tube the
+    /// player chose says what it has become. Derived from the claimed role's task LABEL —
+    /// never the layout's internal role name, which the 2026-07-17 rule keeps off the bench.
+    private string _roleSuffix = "";
+    public void SetRoleSuffix(string suffix) => _roleSuffix = string.IsNullOrEmpty(suffix) ? "" : " — " + suffix;
     private float _showDist = 1.6f;
     private float _nextAt;
     private string _last;
@@ -49,7 +55,7 @@ public class VesselStatus : MonoBehaviour
     {
         if (_lp == null || _label == null) return;
         if (_clean == null) _clean = GetComponent<CleanableVessel>();
-        string name = (_clean != null ? _clean.NamePrefix() : "") + _displayName;
+        string name = (_clean != null ? _clean.NamePrefix() : "") + _displayName + _roleSuffix;
         // A vessel holding a MIX names every element and its amount (the ledger
         // story) — "Ethanol 1 ml + Distilled Water 10 ml"; a single chemical
         // keeps the short form (user 2026-07-17).
@@ -97,15 +103,25 @@ public class VesselStatus : MonoBehaviour
         var runner = FindAnyObjectByType<ExperimentRunner>();
         if (runner == null || runner.Graph == null || !runner.IsRunning) return "";
 
-        foreach (var task in runner.Graph.AvailableTasks())
-            foreach (var step in binding.ExpectedSteps)
-            {
-                if (step == null || step.reagent == null || step.taskId != task.taskId) continue;
-                if (step.requiredMl <= 0f) continue;
-                return VesselStatusMath.NeedLine(step.reagent.chemicalName,
-                    binding.AccumulatedFor(step.taskId, step.reagent), step.requiredMl,
-                    step.reagent.state == PhysicalState.Solid);
-            }
+        // ⛔ The GUIDED task only - not every AVAILABLE one. This used to walk the whole
+        // AvailableTasks() list, so with Exp 2's prep steps running in parallel the four
+        // alkaline tubes advertised "Potassium Permanganate 0 / 2 ml" while the player was
+        // still on the ethanol step, and one of them read as the tube being asked for. That
+        // is what sent the player to the wrong tube in the headset (2026-09-05). GuidePath
+        // already treats the FIRST available task as the guided one; reuse that rather than
+        // inventing a second notion of "the current step".
+        string guided = null;
+        foreach (var t in runner.Graph.AvailableTasks()) { guided = t.taskId; break; }
+        if (string.IsNullOrEmpty(guided)) return "";
+
+        foreach (var step in binding.ExpectedSteps)
+        {
+            if (step == null || step.reagent == null || step.taskId != guided) continue;
+            if (step.requiredMl <= 0f) continue;
+            return VesselStatusMath.NeedLine(step.reagent.chemicalName,
+                binding.AccumulatedFor(step.taskId, step.reagent), step.requiredMl,
+                step.reagent.state == PhysicalState.Solid);
+        }
         return "";
     }
 }

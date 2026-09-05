@@ -58,7 +58,7 @@ MonoBehaviour:
     skill: 4
     rubricCategory: 0
     required: 1
-    hint: "Fermenting wine gives off CO2; leading that gas through limewater proves it is alive - the limewater turns milky (CaCO3).\n\u2192 Pour 10 ml of limewater into Test Tube 5 and hold it at the jar's mouth until it clouds - then the week-long ferment passes."
+    hint: "Fermenting wine gives off CO2; leading that gas through limewater proves it is alive - the limewater turns milky (CaCO3).\n\u2192 Pour 10 ml of limewater into a clean test tube and hold it at the jar's mouth until it clouds - then the week-long ferment passes."
     longProcess: 1
     longProcessMessage: "Seven days and seven nights later - fermentation is complete and the wine has cleared over its lees."
   - taskId: rack

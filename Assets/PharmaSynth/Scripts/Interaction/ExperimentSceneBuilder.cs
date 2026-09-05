@@ -33,7 +33,11 @@ public class ExperimentSceneBuilder : MonoBehaviour
     }
 
     /// Hook for ExperimentLauncher.onModuleLoaded.
-    public void OnModuleLoaded(ExperimentModuleDefinition m) { if (m != null) Build(m.moduleId); }
+    public void OnModuleLoaded(ExperimentModuleDefinition m) { _module = m; if (m != null) Build(m.moduleId); }
+
+    /// The definition behind the current build, when one was handed over (null for the
+    /// simulators' id-only Build calls) — read for a claimed role's task LABEL.
+    private ExperimentModuleDefinition _module;
 
     /// The stage root. ADOPTS an existing "DynamicStage" child before making one:
     /// `_stage` is a plain field, so it is null after every domain reload — and this
@@ -625,6 +629,17 @@ public class ExperimentSceneBuilder : MonoBehaviour
     {
         foreach (var kv in _rackBindings)
         {
+            // DYNAMIC ROLES (W5.52): every member is handed the WHOLE group's roles, so a
+            // tube plays whichever one the player pours into it. Captured from each
+            // binding's authored steps before any of them is rewritten, and shared through
+            // one RackRoles ledger so two tubes can never claim the same role. Standalone
+            // vessels never reach here and keep the original fixed behaviour.
+            var roles = new List<List<LiquidTaskBinding.ReagentStep>>();
+            foreach (var member in kv.Value)
+                roles.Add(new List<LiquidTaskBinding.ReagentStep>(member.ExpectedSteps));
+            var shared = new RackRoles();
+            for (int r = 0; r < kv.Value.Count; r++) kv.Value[r].SetRoles(roles, r, shared);
+
             // Tasks these tubes share, in authoring order.
             var tasks = new List<string>();
             foreach (var v in layout.vessels)
@@ -653,6 +668,104 @@ public class ExperimentSceneBuilder : MonoBehaviour
                 go.AddComponent<RackTaskGroup>().Bind(runner, taskId, members);
             }
         }
+
+        WireTubePools(layout);
+    }
+
+    /// ANY TUBE WILL DO (W5.53, user 2026-09-06: "these misguided fixed text guides").
+    ///
+    /// A module's STANDALONE test tubes used to be pinned one role each to one bench tube,
+    /// so pouring the right reagent into the wrong-numbered tube was graded a mistake. In VR
+    /// the player grabs whichever tube is nearest, so a role on a bench object is guidance
+    /// they cannot follow. Every free bench tube of the same FAMILY now carries the module's
+    /// standalone roles as candidates — the W5.52 rack machinery, unchanged — and the role's
+    /// non-pour anchors are attached to whichever tube claims it.
+    ///
+    /// ⛔ Families never mix: a hard-glass tube pools only with hard-glass
+    /// (VesselRoleMatch.FamilyOf). Unique apparatus (one Florence flask, one 500 ml beaker)
+    /// is not pooled — there is only one such object, so a fixed role is correct there.
+    private void WireTubePools(ExperimentLayout layout)
+    {
+        // The roles: this layout's standalone TestTube vessels, grouped by family.
+        var rolesByFamily = new Dictionary<string, List<ExperimentLayout.Vessel>>();
+        foreach (var v in layout.vessels)
+        {
+            if (v == null || !string.IsNullOrEmpty(v.rackGroup)) continue;
+            if (string.IsNullOrEmpty(v.prefabName) || !v.prefabName.Contains("TestTube")) continue;
+            string fam = VesselRoleMatch.FamilyOf(v.benchItem);
+            if (fam == "") continue;
+            if (!rolesByFamily.TryGetValue(fam, out var list)) rolesByFamily[fam] = list = new List<ExperimentLayout.Vessel>();
+            list.Add(v);
+        }
+
+        foreach (var kv in rolesByFamily)
+        {
+            var roleVessels = kv.Value;
+            var roles = new List<List<LiquidTaskBinding.ReagentStep>>();
+            var members = new List<LiquidTaskBinding>();
+            var authoredIndex = new Dictionary<LiquidTaskBinding, int>();
+
+            // Authored tubes: BuildVessel already wired them; their steps ARE the roles.
+            for (int r = 0; r < roleVessels.Count; r++)
+            {
+                var go = FindBenchItem(roleVessels[r].benchItem);
+                var bind = go != null ? go.GetComponent<LiquidTaskBinding>() : null;
+                roles.Add(bind != null ? new List<LiquidTaskBinding.ReagentStep>(bind.ExpectedSteps)
+                                       : new List<LiquidTaskBinding.ReagentStep>());
+                if (bind != null) { members.Add(bind); authoredIndex[bind] = r; }
+            }
+            if (roles.Count == 0) continue;
+
+            // Extras: every OTHER free bench tube of the family gets a binding with no
+            // authored role — it advertises nothing until it claims.
+            foreach (var li in FindObjectsByType<LabItem>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (li == null || VesselRoleMatch.FamilyOf(li.name) != kv.Key) continue;
+                var go = li.gameObject;
+                if (go.GetComponent<LiquidTaskBinding>() != null) continue;   // authored here, or a rack member
+                var lp = go.GetComponent<LiquidPhysics>() ?? go.AddComponent<LiquidPhysics>();
+                lp.registry = registry;
+                lp.maxVolume = BenchMaxVolumeFor("TestTube", lp.maxVolume);
+                lp.SetContents(null, 0f);
+                EnsureLiquidVisual(go, lp);
+                var bind = go.AddComponent<LiquidTaskBinding>();
+                bind.SetVesselAndRunner(lp, runner);
+                bind.SetFumeHood(FindAnyObjectByType<FumeHoodZone>(FindObjectsInactive.Include));
+                WireVesselServices(go, lp, BenchDisplayNameFor(li.name));
+                members.Add(bind);
+            }
+
+            var shared = new RackRoles();
+            foreach (var member in members)
+            {
+                var m = member;
+                m.MarkPoolMember();
+                m.SetRoles(roles, authoredIndex.TryGetValue(m, out int idx) ? idx : -1, shared);
+                var inst = m.gameObject;
+                var lp = inst.GetComponent<LiquidPhysics>();
+                m.RoleClaimed += claimed =>
+                {
+                    if (claimed < 0 || claimed >= roleVessels.Count || m == null) return;
+                    AttachAnchors(inst, roleVessels[claimed], m, lp);
+                    var status = inst.GetComponent<VesselStatus>();
+                    if (status != null) status.SetRoleSuffix(LabelForRole(roleVessels[claimed]));
+                };
+            }
+        }
+    }
+
+    /// A player-facing name for a claimed role: the LABEL of the first task its steps
+    /// serve ("Tollen's test"). Empty when no definition was handed over.
+    private string LabelForRole(ExperimentLayout.Vessel role)
+    {
+        if (_module == null || role == null) return "";
+        foreach (var b in role.bindings)
+        {
+            if (b == null || string.IsNullOrEmpty(b.taskId)) continue;
+            foreach (var t in _module.graphTasks)
+                if (t != null && t.taskId == b.taskId && !string.IsNullOrEmpty(t.label)) return t.label;
+        }
+        return "";
     }
 
     private void BuildVessel(Transform stage, ExperimentLayout.Vessel v)
@@ -714,6 +827,20 @@ public class ExperimentSceneBuilder : MonoBehaviour
                 _rackBindings[v.rackGroup] = list = new List<LiquidTaskBinding>();
             list.Add(bind);
         }
+        AttachAnchors(inst, v, bind, lp);
+        WireVesselServices(inst, lp, !string.IsNullOrEmpty(v.benchItem) ? BenchDisplayNameFor(v.benchItem) : v.displayName);
+    }
+
+    /// Every NON-POUR anchor a role needs (heat, weigh, vapor, chill, litmus, flame, stir,
+    /// ferment), attached to `inst` for the role `v` describes.
+    ///
+    /// Extracted from BuildVessel (W5.53) so it can be called for a role the object was NOT
+    /// authored for: a pooled tube attaches these the moment it CLAIMS a role, so the litmus
+    /// strip or the water bath completes the step on the tube the player actually used.
+    /// Every anchor gates on the binding's readiness for its task, so one attached to a tube
+    /// that never claims that role stays inert; the clear path strips it on the next build.
+    private void AttachAnchors(GameObject inst, ExperimentLayout.Vessel v, LiquidTaskBinding bind, LiquidPhysics lp)
+    {
         // ZONE-FREE heat step (2026-07-17): the vessel's deferred task completes
         // when it is served AND heated to heatToC — wherever the player does it.
         // Replaces the fixed Heat station (pad/label/teleport anchor all gone).
@@ -793,6 +920,13 @@ public class ExperimentSceneBuilder : MonoBehaviour
             (inst.GetComponent<FermentationController>() ?? inst.AddComponent<FermentationController>())
                 .Bind(runner, lp, v.fermentTaskId, co2, lime);
         }
+    }
+
+    /// The per-vessel services every task vessel gets: hazard reactor, neutral label,
+    /// live status, mix feedback and the ability to pour OUT. Shared by BuildVessel and
+    /// the tube pools (W5.53), so a pooled extra is indistinguishable from an authored tube.
+    private void WireVesselServices(GameObject inst, LiquidPhysics lp, string labelName)
+    {
         // GetComponent-or-Add: a SPAWNED vessel is fresh, but a BENCH item survives
         // every rebuild — blind AddComponent would stack a new copy of each of these
         // on it per module load.
@@ -801,8 +935,6 @@ public class ExperimentSceneBuilder : MonoBehaviour
         // ("Test Tube 3"), never the layout's internal role name ("TollensTube_1") —
         // that read as "this tube is only for Tollens" and would go stale the moment
         // another module adopts the same tube (user 2026-07-17).
-        string labelName = !string.IsNullOrEmpty(v.benchItem)
-            ? BenchDisplayNameFor(v.benchItem) : v.displayName;
         var pl = inst.GetComponent<ProximityLabel>() ?? inst.AddComponent<ProximityLabel>();
         pl.SetLabel(labelName, 1.6f);
         (inst.GetComponent<VesselStatus>() ?? inst.AddComponent<VesselStatus>()).Bind(lp, pl, labelName, 1.6f);
