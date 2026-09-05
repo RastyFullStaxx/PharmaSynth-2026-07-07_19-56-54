@@ -866,3 +866,133 @@ re-homing.
 > triggered in edit mode sets `IsSpeaking`/`IsRevealing`, claims the static floor, and never
 > resumes. `IsSpeaking` and `IsRevealing` are runtime auto-properties, so Play mode resets
 > them; the suite's `ClearFloor()` clears it on the next run.
+
+## Re-weighting a coat that shares a surface with the sleeve makes it WORSE
+
+> [!danger] Measure the tearing, not the drag — they move in opposite directions
+> Dr. Jimenez's coat follows his arm. The obvious fix, moving coat vertices off the arm
+> bones onto the spine, was built, measured, shipped and then REVERTED, because the metric
+> used to accept it only looked at half the problem.
+>
+> "Coat-body vertices dragged by the arm" went **745 → 0**, which read as a complete success.
+> What that number cannot see is what happens at the BOUNDARY. Moving 100% of a vertex's
+> weight while its neighbour keeps 100% makes two adjacent vertices follow different bones,
+> and the edge between them rips:
+>
+> | | worst edge stretch | edges over 2x |
+> |---|---|---|
+> | untouched auto-rig | x4.2 | 32 |
+> | hard re-weight | **x14.9** | **174** |
+> | smooth falloff across a band | x4.2 | 44 |
+>
+> The smooth version removes the tearing — and then barely moves the coat either
+> (1625 → 1557 dragged). That is the real finding: on this asset the coat and the sleeve are
+> ONE CONTINUOUS SURFACE with no seam to cut along, so any weight change big enough to free
+> the coat is big enough to rip it. The limit is the geometry, not the weighting. Fixing it
+> properly means separating the coat as its own mesh in a DCC tool.
+>
+> ⚠ **An auto-rigger's weights are crude but CONTINUOUS.** Any correction has to stay
+> continuous, so a per-vertex hard reassignment is almost always wrong.
+>
+> 🔎 **The metric to use is edge stretch**: bake the skin at rest and posed, and compare each
+> triangle edge's length. A tear IS an over-stretched edge, and unlike "how far did the coat
+> move" it cannot be gamed by making the deformation worse in a different way.
+
+## Damping a humanoid clip: the knobs are muscles, and the reference is the mean
+
+> [!warning] Two traps, one after the other
+> Jimenez's clips are HUMANOID, so a scan for `m_LocalRotation` curves on bone paths finds
+> **zero** arm curves. The animated values are muscle curves named in plain English
+> ("Left Arm Down-Up", "LeftHandT.x"), normalised to -1..1 across each joint's range.
+>
+> Then: damping toward `keys[0]` does nothing if the clip OPENS at its widest reach, which
+> this one does. The log dutifully reported "widest swing 1.04 → 0.57" while the rendered
+> frame was pixel-for-pixel identical, because the frame being rendered was the reference
+> being damped toward. Pull toward the curve's MEAN — the centre the gesture swings about —
+> and the peak actually moves (hand height 1.372 → 1.318 m).
+
+## A harness that samples once reports the default, not the truth
+
+> [!warning] "dist 0.0 on all 9 modules" looked like a total regression and was a stale field
+> `PlaytestAutopilot` sampled the tutorial ground path ONCE, on the first tick of each run.
+> `GuidePath.Update` early-returns through `HideAll()` in six different cases (no camera yet,
+> no target yet, still time-skipping, ...) and **`HideAll()` does not reset `LastDistance`** —
+> so on a frame where Update had not yet reached the distance line, the report printed the
+> field's default `0.0` and the harness dutifully explained it as "within the 2 m beacon
+> handover". Nine modules, all reading 0.0, looked exactly like a catastrophic regression.
+>
+> Watching every tick instead showed the opposite: **9/9 modules draw, 11-16 chevrons over
+> 7.0-8.7 m routes**. Nothing had ever been broken.
+>
+> ⛔ A single sample of a field that is only *sometimes* written measures the default. Either
+> observe across the whole run, or reset the field when you stop writing it — preferably both.
+> This harness has now made the same class of mistake twice (W5.44b: a stale route made a
+> 6.1 m target read as "inside the handover").
+
+## A verification contract written from a stale doc verifies the doc, not the game
+
+> [!danger] The sweep's only FAIL in W5.50 was my own contract, and no player could ever see it
+> `experiments-reference.md` said methane's `setup-apparatus` step was "Clamp the tube, fit the
+> cork + delivery tube into the water trough". So the new visual contract counted
+> `ApparatusSnap` attachments and failed the step: "the rig is not assembled — 0 snapped
+> parts". The LIVE asset says "Scoop the ground mixture from the mortar into the Hard-glass
+> tube" — a solid delivery — and `MethaneApparatusRig` never uses `ApparatusSnap` at all. The
+> count was 0 forever, by construction.
+>
+> The vault's task table had been generated once at W5.11 and hand-patched since; the
+> "clamp"/"splint" hints it still carried were removed from the asset in July. A cold session
+> trusts the vault and does not re-verify — which is exactly what I did.
+>
+> ⛔ **Read the asset, not the note about the asset, before writing anything that judges it.**
+> The contract is now `Expect.Powder` (what the step DOES), and the tables regenerate from the
+> live assets so this class of drift cannot recur.
+
+## A generator must VERIFY hand-curated tables, never overwrite them
+
+> [!warning] Six of the nine module tables were not the table I thought they were
+> Regenerating `experiments-reference.md` matched only 3 of 9 task tables. The other six use
+> hand-curated variants — `| # | task | phase | label | prereq | how it completes |` and
+> `... | manual ref | apparatus the step needs |` — whose columns hold knowledge the assets do
+> not (how a step completes, which apparatus it needs). Overwriting them with the generic
+> hint table would have destroyed that.
+>
+> Tables are therefore located by their HEADER-ROW SIGNATURE, never by the heading above
+> them (the headings vary, one module had a duplicate, one had none). Canonical tables are
+> regenerated; curated ones are read back and their `task` column compared to the live
+> asset's taskIds in order — drift is REPORTED ("N curated table(s) adrift"), never repaired.
+> Result on first run: 3 regenerated, 9 quizzes regenerated, 0 curated tables adrift.
+
+## Transient evidence sampled once at capture measures its default (third time)
+
+> [!danger] The flame contract failed a step the game had just judged correctly
+> `chloroform:test-flammability` completed — the popup read "Won't ignite — NON-FLAMMABLE ✓",
+> which `VesselFlameTask` can only produce with a lit match within 0.2 m. The new visual
+> contract then reported "flammability test with NO lit flame anywhere in the scene". Both
+> were true: the contract sampled `IsLit` at the FINAL capture, after the step had completed
+> and `DropRespawn` had extinguished the match. The evidence was real and gone.
+>
+> This harness has now made the same mistake three times: a stale route (W5.44b), a
+> once-sampled `LastDistance` (W5.49), a once-sampled flame (W5.50). The shape is always
+> identical — **a fact that is only sometimes true, read at a moment it happens to be false.**
+>
+> ⛔ Latch transient evidence at the moment it is provably present and carry the latch to the
+> verdict. `VisualSweep.MidVerb("flame")` fires while the match is at the sample, so it now
+> calls `NoteFlame(AnyFlameLit())`; `SceneCues` folds the latch into the observation; `Record`
+> clears it after judging so one step's flame never vouches for the next.
+
+## A simulator branch that skips the real verb can only prove the shortcut
+
+> [!warning] The methane tube "drew nothing" — because the harness never scooped
+> Once `methane:setup-apparatus` had a real contract (solid delivered → mound visible), the
+> sweep failed it: 4 g of Sodium Acetate in `Prop_glass-tube`, no mound, no column, nothing.
+> It looked like the invisible-solid class of bug W5.45b fixed. It was not. A player scoops
+> the ground mixture in by hand — `ScoopController.Dip` → `Deposit` → `EnsurePowderVisual` —
+> and always gets the mound. `SimulatedRun`'s methane branch predated W5.45's "solids go
+> through the real scoopula" rule and moved the volume with a bare `PourOut`/`AddLiquid`,
+> which builds no visual. The harness was the one skipping the verb.
+>
+> ⛔ **A sim path that bypasses the player's verb cannot verify what the player sees**, and
+> its FAIL is about the harness. Every solid step now goes through the scoopula in Play mode;
+> the edit-mode fallback (kept so the `simrun:` pins do not move) mirrors what `Deposit`
+> would have drawn. Before blaming the game for a sweep FAIL, confirm the harness reached the
+> vessel the way a hand would.

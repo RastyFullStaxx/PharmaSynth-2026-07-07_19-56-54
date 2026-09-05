@@ -1,0 +1,49 @@
+# Manuscript quantity authority — curated by hand from Appendix C.
+#
+# WHY THIS FILE EXISTS: the manuscript is the chemistry authority (CLAUDE.md), but until
+# W5.49 nothing checked the authored game data against it. The suite's `content:` pins
+# verify that a module loads, has N tasks and is solvable — never that "5 drops" is
+# authored as 5. This table closes that hole for every quantity the player actually pours.
+#
+# THE VERB CONTRACT (CLAUDE.md): the number in the manuscript instruction IS the action
+# count, whatever its unit. A dropper delivers DropperController.MlPerSqueeze = 1 ml per
+# squeeze, so "5 drops" is authored as requiredMl 5. Bulk millilitres stay millilitres, and
+# a gram figure becomes spatula dips. expectedMl below is therefore the AUTHORED value the
+# contract implies, not the literal laboratory volume.
+#
+# Curated, never auto-parsed: the manuscript's prose is not regular enough to trust a
+# parser, and a wrong authority file is worse than none.
+#
+# accepted = a deliberate, documented deviation. The suite reports these separately rather
+# than failing on them, so a decision never reads as a defect.
+#
+# Regenerate the raw candidate list with:  python Tools/extract-manuscript-quantities.py
+#
+# moduleId	taskId	reagent	expectedMl	accepted	manuscript
+prelim-chemical-compounding	prep-enol-tubes	Ethanol	1	no	"Place 1 ml of ethanol ... in separate test tubes" (line 2164)
+prelim-chemical-compounding	prep-enol-tubes	Phenol	1	no	"Place 1 ml of ... phenol ..." (line 2164)
+prelim-chemical-compounding	prep-enol-tubes	Glycerol	1	no	"Place 1 ml of ... glycerol" (line 2165)
+prelim-chemical-compounding	test-tollens	Acetone	2	no	"Place 2 drops of acetone" -> 2 squeezes (line 2182)
+prelim-chemical-compounding	test-tollens	Acetaldehyde	2	no	"Place 2 drops of ... acetaldehyde" -> 2 squeezes (line 2182)
+prelim-chemical-compounding	test-ester-acetate	Ethanol	10	no	"Place 10 drops of ethanol" -> 10 squeezes (line 2190)
+prelim-chemical-compounding	test-ester-salicylate	Methanol	10	no	"Repeat the procedure using methyl alcohol" -> same 10 drops (line 2193)
+prelim-chemical-compounding	prep-hydrolysis	Aspirin	0.5	no	"Place 0.5 grams of acetylsalicylic acid in a test tube" (line 2201)
+prelim-chemical-compounding	test-hydrolysis-control	Aspirin	0.5	no	control tube mirrors the 0.5 g hydrolysis charge (line 2201)
+midterm-acetanilide	prep-aniline	Aniline	2	no	"place 2 ml of aniline in a Florence flask" (line 2935)
+midterm-acetanilide	test-hydrolysis	Acetanilide	2	review	manuscript says "1 gram of acetanilide" + 3 ml conc HCl (line 2950); game pours 2
+midterm-acetanilide	test-bromination	Acetanilide	2	review	manuscript says "1 gram of acetanilide" + 5 ml water (line 2954); game pours 2
+midterm-acetanilide	test-bromination	Aniline	2	no	"Repeat the procedure using aniline as sample. Compare the volume of bromine" (lines 2956-2957) — an earlier draft of this table wrongly called this a deviation
+midterm-acetone	test-bisulfite	Ethanol	1	review	manuscript says "0.5 ml of ethyl alcohol" (line 3192); game pours 1
+midterm-acetone	test-bisulfite	Acetone	1	review	manuscript says "add 0.5 ml of acetone" (line 3194); game pours 1
+midterm-chloroform	test-agno3	Chloroform	1	no	"Add 1-2 drops of chloroform to 1 ml of alcoholic silver nitrate" (line 3422)
+final-benzamide	test-alkali	Benzamide	0.5	no	"to 0.5 grams of benzamide placed in a test tube" (line 3630)
+final-benzamide	test-acid	Benzamide	0.5	no	"to a 0.5 grams" of benzamide (line 3634)
+final-benzamide	test-nitrous	Benzamide	0.5	no	"to 0.5 grams of benzamide placed in a test tube" (line 3637)
+# --- temperatures (Vessel.heatToC / chillToC) ---
+prelim-ethyl-alcohol	HEAT	-	70	no	"collecting the fraction that boils between 70-80 C" (line 2450)
+prelim-ethyl-alcohol	HEAT	-	60	no	"Warm the mixture for 5 minutes in a water bath at 60 C" (line 2463)
+midterm-acetanilide	CHILL	-	8	no	"Cool for 5 minutes" then "add 20 ml of ice-cold water" (lines 2939-2940)
+# --- accepted deviations, recorded so a decision never reads as a defect ---
+midterm-benzoic-acid	ALL	-	-	accepted	Appendix C's Experiment 4 procedure is a VERBATIM COPY of Experiment 3's fermentation (lines 2688-2726 mirror 2421-2467) — a manuscript errata. The game implements benzaldehyde + KMnO4 instead. See experiments-reference header table.
+final-winemaking	ALL	-	-	accepted	"Grapes will be excluded" (line 3830); the game ferments Mixed Fruit Juice. Volume is a student choice of 250-500 mL, not a fixed authored charge.
+tutorial-methane	ALL	-	-	accepted	Game-authored tutorial, not a manuscript bench lab (CLAUDE.md).

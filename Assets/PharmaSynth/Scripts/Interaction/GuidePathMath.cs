@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 /// Pure geometry for Tutorial Mode's ground path (W5.44): given the corners of a walkable
@@ -109,6 +109,96 @@ public static class GuidePathMath
             });
         }
         return result;
+    }
+
+
+    // ---- the mark itself -----------------------------------------------------------
+    //
+    // ⛔ Everything here has been CALLED a chevron since W5.44, but the mark drawn on the
+    // floor was a `PrimitiveType.Quad` — a plain square. A row of sliding squares cannot
+    // read as direction, however correct the flow maths is, which is why the path looked
+    // static to the player ("make it arrow shape", 2026-09-05).
+
+    /// Span across the route, in metres. Wider than it is deep: a chevron reads as an
+    /// arrowhead because of the angle of its arms, and a narrow one just looks like a tick.
+    public const float ChevronWidth = 0.30f;
+    /// Front-to-back extent of the V, in metres.
+    public const float ChevronDepth = 0.18f;
+    /// Arm thickness, measured PERPENDICULAR to the arm (user 2026-09-05: "thicken the arrow
+    /// for it to be more noticeable" — in the headset they read as thin outlines).
+    public const float ChevronThickness = 0.075f;
+
+    /// The open "V", flat in the XZ plane with its apex forward (+Z) and its face up (+Y).
+    ///
+    /// Returned as raw geometry rather than a Mesh so the suite can pin the SHAPE without a
+    /// scene: that the apex really is the most-forward point, that the arms are symmetric,
+    /// and above all that every triangle winds to face +Y.
+    ///
+    /// ⛔ The winding is load-bearing. `PharmaSynth/GuideOverlay` is `Cull Back`, so a flat
+    /// mesh wound the wrong way is INVISIBLE FROM ABOVE — the path would silently draw
+    /// nothing while every count, position and log line stayed correct.
+    ///
+    /// ⚠ Authored FLAT, unlike the quad it replaces. The old code rotated its upright quad
+    /// by Euler(90,0,0) to lay it down; applying that to this mesh would stand the chevrons
+    /// on edge across the route.
+    public static void ChevronGeometry(out Vector3[] verts, out int[] tris,
+                                       float width = ChevronWidth, float depth = ChevronDepth,
+                                       float thickness = ChevronThickness)
+    {
+        float halfW = Mathf.Max(0.001f, width) * 0.5f;
+        float halfD = Mathf.Max(0.001f, depth) * 0.5f;
+        float t = Mathf.Max(0.001f, thickness);
+
+        // The V as a polyline (left tail → apex → right tail), offset inward by `t`.
+        //
+        // ⛔ PERPENDICULAR to each arm, not straight back along Z. Extruding along Z makes
+        // the visible arm thickness t·cos(arm angle) — about 64% of the number at these
+        // proportions — so the parameter lied, and it also deepened the whole glyph as it
+        // thickened. Offsetting along the arm's own normal makes `thickness` mean thickness.
+        Vector3 apex = new Vector3(0f, 0f, halfD);
+        Vector3 left = new Vector3(-halfW, 0f, -halfD);
+        Vector3 right = new Vector3(halfW, 0f, -halfD);
+
+        float armLen = Mathf.Sqrt(halfW * halfW + depth * depth);
+        // Inward normal of the LEFT arm, in the XZ plane; the right arm mirrors it.
+        Vector3 n = new Vector3(depth / armLen, 0f, -halfW / armLen);
+        // The apex slides down its own bisector far enough for both offset arms to meet it.
+        float apexDrop = t * armLen / Mathf.Max(1e-4f, halfW);
+
+        Vector3 apexIn = apex + new Vector3(0f, 0f, -apexDrop);
+        Vector3 leftIn = left + n * t;
+        Vector3 rightIn = right + new Vector3(-n.x, 0f, n.z) * t;
+
+        verts = new[] { apex, apexIn, left, leftIn, right, rightIn };
+        //                0      1      2     3       4      5
+        tris = new[]
+        {
+            0, 1, 2,   1, 3, 2,     // left arm
+            0, 4, 1,   1, 4, 5,     // right arm
+        };
+    }
+
+    /// Face normal of one triangle — the pinned property is that this is +Y for all four.
+    public static Vector3 FaceNormal(Vector3 a, Vector3 b, Vector3 c)
+        => Vector3.Cross(b - a, c - a).normalized;
+
+    /// How far into the route the flow ramps up and back down, as a fraction of the whole.
+    public const float FadeEdge = 0.12f;
+
+    /// Per-mark opacity, 0 at both ends of the route and 1 through the middle.
+    ///
+    /// This is what makes the trail read as FLOW rather than as a marching row: a chevron is
+    /// born at the player's feet and dies at the destination, and without a ramp each one
+    /// POPS in and out at full strength every time the phase wraps. `along01` was computed
+    /// and documented for exactly this in W5.44 and then never read by the driver, so the
+    /// pops shipped.
+    public static float FadeAt(float along01, float edge = FadeEdge)
+    {
+        float p = Mathf.Clamp01(along01);
+        edge = Mathf.Clamp(edge, 0.001f, 0.5f);
+        float rampIn = Mathf.Clamp01(p / edge);
+        float rampOut = Mathf.Clamp01((1f - p) / edge);
+        return Mathf.SmoothStep(0f, 1f, Mathf.Min(rampIn, rampOut));
     }
 
     /// Which navigation cue answers "where is it" right now.

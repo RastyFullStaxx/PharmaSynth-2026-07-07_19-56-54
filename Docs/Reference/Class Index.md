@@ -1161,7 +1161,7 @@ Vector3 LastGoal
 bool StartOnMesh
 bool GoalOnMesh
 void Bind(ExperimentRunner r, Material chevron)
-void SetTuning(float spacingM, float flow, float size)
+void SetTuning(float spacingM, float flow, float scale)
 ```
 
 ### `GuidePathMath` <sub>class</sub>
@@ -1182,6 +1182,13 @@ const int MaxChevrons
 static float Length(IReadOnlyList<Vector3> corners)
 static bool Sample(IReadOnlyList<Vector3> corners, float distance,
 static List<Chevron> Build(IReadOnlyList<Vector3> corners, float time,
+const float ChevronWidth
+const float ChevronDepth
+const float ChevronThickness
+static void ChevronGeometry(out Vector3[] verts, out int[] tris,
+static Vector3 FaceNormal(Vector3 a, Vector3 b, Vector3 c)
+const float FadeEdge
+static float FadeAt(float along01, float edge
 const float NearDistance
 static bool ShowPath(float distanceToTarget, bool hasRoute)
 static bool ShowBeacon(float distanceToTarget, bool hasRoute)
@@ -2657,10 +2664,13 @@ static bool IsTwistBone(string boneName)
 static bool IsBetterSegmentEnd(float candidateDistance, float bestSoFar)
 static bool IsTorsoBone(string boneName)
 static bool IsBleed(float distanceToBone, float sleeveRadius)
+static bool IsSleeve(float distanceToArm, float distanceToSpine, float sleeveRadius)
+const float BlendFraction
+static float BlendBandFor(float meshHeight)
+static float TransferFraction(float distanceToArm, float sleeveRadius, float blendBand)
 static float DistanceToSegment(Vector3 p, Vector3 a, Vector3 b)
 static float Redistribute(ref BoneWeight w, int fromBone, int toBone)
-static void Normalise(ref BoneWeight w)
-static float Sum(BoneWeight w)
+static float Redistribute(ref BoneWeight w, int fromBone, int toBone, float fraction)
 ```
 
 ### `LabTourGuide` <sub>class</sub>
@@ -2769,6 +2779,7 @@ Concrete face for Pharmee: tints the screen-face renderer(s) per expression. Imp
 ```csharp
 PharmeeFaceExpression Current
 void BindRenderers(params Renderer[] rs)
+void SetPalette(Color n, Color h, Color w)
 void ResetToDefault()
 void SetExpression(PharmeeFaceExpression e)
 ```
@@ -2874,6 +2885,8 @@ Pure rules for how bright Pharmee reads (suite-pinned).
 ```csharp
 const float DefaultIntensity
 const float DefaultShellAlbedo
+const float FaceCeiling
+static Color CapBrightness(Color c, float ceiling)
 static Color Emission(Color hue, float intensity)
 static bool Blooms(Color emission, float bloomThreshold
 static bool IsGlowPart(string rendererName)
@@ -3890,6 +3903,7 @@ Voice-over clip lookup (user 2026-07-10: Pharmee + Dr. Jimenez must SPEAK their 
 List<Entry> entries
 AudioClip Get(VoiceSpeaker speaker, string id)
 void Rebuild()
+int BrokenEntries()
 ```
 
 ### `VoiceLineId` <sub>class</sub>
@@ -3911,6 +3925,7 @@ Every code-authored NPC line, with its speaker — the voice-over corpus (user 2
 <sub>`Assets/PharmaSynth/Scripts/Audio/VoiceCorpus.cs`</sub>
 
 ```csharp
+static List<Line> DataLines(ExperimentLibrary library)
 static List<Line> CodeLines()
 static readonly string[] ModuleIds
 ```
@@ -4144,6 +4159,18 @@ Injects each experiment's ILO beats into its Intro cutscene (user 2026-07-10: Ph
 static readonly (string moduleId, string prefix)[] Modules
 static void Inject()
 static int InjectInto(CutsceneData data, string moduleId)
+```
+
+### `JimenezArmDamper` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/JimenezArmDamper.cs`</sub>
+
+⛔ WHY THIS EXISTS AND THE RE-WEIGHT DOES NOT. The obvious fix — move the coat's vertex weights off the arm bones — was built, measured and REVERTED. On this asset the coat and the sleeve are one continuous surface with no seam to cut along, so any weight change big enough to free the coat is big enough to rip it: against the untouched mesh, worst edge stretch went 4.2x → 14.9x and torn edges 32 → 174. Smoothing the transfer across a band removed the tearing but then barely moved the coat either (1625 → 1557 dragged vertices). The geometry, not the weighting, is the limit. See JimenezRigMath.TransferFraction. So this attacks the OTHER side of the equation: the coat only drags as far as the arm swings. His clips are HUMANOID, so the knobs are muscle curves (-1..1 across each joint's range), not bone rotations — a bone-name scan finds nothing here. ⛔ Never compounds: the first run copies ea
+
+```csharp
+const float DefaultFactor
+static bool IsArmMuscle(string propertyName)
+static void Run()
+static void Run(float factor)
 ```
 
 ### `JimenezCoatRig` <sub>class</sub>
@@ -4831,16 +4858,16 @@ static Expect ExpectFor(string kind, ReactionRule rule)
 static float ColourDistance(Color a, Color b)
 const float FillFloor
 static Verdict Judge(Expect e, Obs o, ReactionRule rule, float targetC, float boilingPointC)
+static bool FlameLatched
+static void NoteFlame(bool litNow)
+static void ClearFlameLatch()
+static bool AnyFlameLit()
 static Obs Probe(LiquidPhysics lp)
 static string LastFrame
 static string Snap(GameObject target, string file, bool fastForwardFx)
 static int Ok, Fails, Skips, Photographed
 static void BeginRun()
 static void BeginStep(int moduleIndex, string module, int step, string taskId)
-static void MidVerb(GameObject go, string tag)
-static Verdict Record(string module, ExperimentTask task, string kind, LiquidPhysics vessel,
-static string Summary(string module)
-static void WriteReport(string headline)
 ```
 
 ### `VoiceAudioBuilder` <sub>class</sub>

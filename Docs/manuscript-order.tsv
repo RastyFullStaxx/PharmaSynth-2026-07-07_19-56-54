@@ -1,0 +1,86 @@
+# Manuscript step-order authority — curated by hand from Appendix C.
+#
+# WHY THIS FILE EXISTS: the suite proves the task-graph MECHANISM ("out-of-order = wrong step")
+# and the module CHAIN ("prereq chain valid + ordered") — but nothing ever checked that a
+# module's authored prerequisites follow Appendix C's own step sequence. A module whose steps
+# were reordered would pass every pin. This table gives each authored task its manuscript step,
+# and the `manuscript: … order` pin asserts that no prerequisite edge runs BACKWARDS through
+# the manuscript: for every "P must precede T", ordinal(P) <= ordinal(T).
+#
+# ORDINAL ENCODING: section hundreds + sub-section tens + step letter units, so it sorts the
+# way the manual reads. A.a = 101, A.j = 110, B.a = 201. Exp 2's roman sub-sections use the
+# tens digit: A.I.a = 111, A.II.a = 121, B.I.a = 211, C.I.a = 311, C.II.a = 321.
+#
+# RULE: a `record-*` task is the DATA SHEET (the results page filled at the end), never the
+# manuscript's mid-procedure "calculate the percentage yield" line. It is ordinal 999.
+# Two authored tasks may share one manuscript step (the game splits a compound instruction);
+# equal ordinals never violate the rule.
+#
+# accepted = no manuscript procedure exists to order against (errata copy-paste, a group
+# rubric, or a game-authored tutorial). Counted, never asserted.
+#
+# moduleId	taskId	manuscriptStep	ordinal	accepted	note
+midterm-acetanilide	prep-aniline	A.a	101	no	"place 2 ml of aniline in a Florence flask"
+midterm-acetanilide	add-acetic	A.b	102	no	"Add 2 ml of glacial acetic acid"
+midterm-acetanilide	acylate	A.c	103	no	"add 2 ml of acetyl chloride" (+ A.d heat)
+midterm-acetanilide	ice-crystallise	A.e	105	no	"Cool for 5 minutes" / A.f ice-cold water
+midterm-acetanilide	filter-wash	A.g	107	no	"Filter off the crystals" / A.h wash thrice
+midterm-acetanilide	test-hydrolysis	B.a	201	no	"Hydrolysis of acetanilide"
+midterm-acetanilide	test-bromination	B.b	202	no	"Bromination ... Repeat the procedure using aniline"
+midterm-acetanilide	record-yield	SHEET	999	no	data sheet
+final-benzamide	measure-ammonia	A.a	101	no	"Place 5 ml of concentrated ammonia solution"
+final-benzamide	ice-bath	A.b	102	no	"Cool in an ice bath"
+final-benzamide	add-benzoyl	A.c	103	no	"Add 1 ml of benzoyl chloride drop by drop"
+final-benzamide	stir-stand	A.d	104	no	"Shake the flask frequently" (A.c) / "Allow to stand" (A.d)
+final-benzamide	filter-dry	A.e	105	no	"Filter off the precipitate" / A.f wash / A.g dry
+final-benzamide	weigh-product	A.h	108	no	"Calculate for percentage yield" (weigh)
+final-benzamide	test-alkali	B.a	201	no	"Hydrolysis using an alkali"
+final-benzamide	test-acid	B.b	202	no	"Acid hydrolysis"
+final-benzamide	test-nitrous	B.c	203	no	"Action of nitrous acid"
+final-benzamide	record-yield	SHEET	999	no	data sheet
+midterm-acetone	weigh-acetates	A.a	101	no	"Weight 7 grams of Calcium acetate and 7 grams of anhydrous Sodium"
+midterm-acetone	heat-glow	A.d	104	no	"Heat until the acetates glow" (A.b/A.c are apparatus set-up)
+midterm-acetone	collect-56	A.e	105	no	"Distill and collect the distillate at 56 C"
+midterm-acetone	test-tollens	B.a	201	no	"Acetone and Tollen's Test"
+midterm-acetone	test-schiff	B.b	202	no	"Acetone and Schiff's Reagent"
+midterm-acetone	test-iodoform	B.c	203	no	"Acetone with Sodium hypochlorite" (the iodoform test)
+midterm-acetone	test-bisulfite	B.d	204	no	"Bisulfite addition products"
+midterm-acetone	record-yield	SHEET	999	no	data sheet (A.f "weigh the distillate and calculate")
+midterm-chloroform	prep-bleach	A.a	101	no	"Place 150 grams of fresh bleaching powder and 400 ml of water"
+midterm-chloroform	prep-acetone-mix	A.d	104	no	"Mix 12 grams of acetone and 50 ml of water in a separatory funnel"
+midterm-chloroform	add-dropwise	A.e	105	no	"Add the acetone-water mixture, drop by drop"
+midterm-chloroform	distil	A.f	106	no	"Arrange the flask for distillation setup"
+midterm-chloroform	collect-crude	A.f	106	no	the first distillate, before the wash (same step)
+midterm-chloroform	decant-wash	A.g	107	no	"wash the chloroform via decantation"
+midterm-chloroform	dry-cacl2	A.h	108	no	"place the chloroform in a small distilling flask that contains" CaCl2
+midterm-chloroform	dry-redistil	A.i	109	no	"Continue the distillation until the liquid is clear"
+midterm-chloroform	weigh-product	A.j	110	no	"Collect the distillate and weigh afterwards"
+midterm-chloroform	test-flammability	B.a	201	no	"Inflammability of chloroform"
+midterm-chloroform	test-oxidation	B.b	202	no	"Oxidation of chloroform"
+midterm-chloroform	test-agno3	B.c	203	no	"Reaction with alcoholic silver nitrate"
+midterm-chloroform	record-yield	SHEET	999	no	data sheet (A.k "Calculate the percentage yield")
+prelim-ethyl-alcohol	prepare-must	A.a	101	no	A.a-A.f: sugar solution, yeast paste, ammonium phosphate, bent tube
+prelim-ethyl-alcohol	ferment	A.i	109	no	"Allow the mixture to stand for one full week"
+prelim-ethyl-alcohol	adjust-ph	A.k	111	no	"Adjust the pH of the filtrate slightly alkaline to litmus paper"
+prelim-ethyl-alcohol	distill	A.l	112	no	"Pour the filtrate into the distilling flask. Distill" (+ A.n fractional)
+prelim-ethyl-alcohol	test-combustion	B.a	201	no	"Combustion Test" (folds in A.m's watch-glass flammability check)
+prelim-ethyl-alcohol	test-iodoform	B.b	202	no	"Iodoform Test"
+prelim-ethyl-alcohol	test-ester	B.c	203	no	"Ester Formation"
+prelim-ethyl-alcohol	record-yield	SHEET	999	no	data sheet
+prelim-chemical-compounding	prep-enol-tubes	A.I.a	111	no	"Place 1 ml of ethanol ... phenol and glycerol in separate test tubes"
+prelim-chemical-compounding	test-enol-fecl3	A.I.b	112	no	"To each test tube, add 5 drops of 10% Ferric chloride"
+prelim-chemical-compounding	prep-oxidation-tubes	A.II.a	121	no	"Place 2 ml of 0.1% Potassium permanganate solution and 2 drops of" NaOH
+prelim-chemical-compounding	test-oxidation-alkaline	A.II.b	122	no	"Add 5 drops of each of the following samples"
+prelim-chemical-compounding	test-oxidation-acidic	A.II.d	124	no	"Repeat the procedure using ... 6N Sulfuric acid"
+prelim-chemical-compounding	test-tollens	B.I.a	211	no	"Place 2 drops of acetone and 2 drops of acetaldehyde"
+prelim-chemical-compounding	test-ester-acetate	C.I.a	311	no	"Place 10 drops of ethanol, 4 drops of Diluted acetic acid"
+prelim-chemical-compounding	test-ester-salicylate	C.I.c	313	no	"Repeat the procedure using methyl alcohol, 0.1 grams salicylic"
+prelim-chemical-compounding	prep-hydrolysis	C.II.a	321	no	"Place 0.5 grams of acetylsalicylic acid in a test tube"
+prelim-chemical-compounding	filter-hydrolysate	C.II.c	323	no	"Filter off any undissolved crystals"
+prelim-chemical-compounding	test-hydrolysis-fecl3	C.II.d	324	no	"To the filtrate, add 2 drops of 10% Ferric chloride"
+prelim-chemical-compounding	test-hydrolysis-control	C.II.e	325	no	"Repeat the procedure using unhydrolyzed aspirin and compare"
+prelim-chemical-compounding	record-observations	SHEET	999	no	data sheet
+# --- no manuscript procedure to order against ---
+midterm-benzoic-acid	ALL	-	-	accepted	Appendix C's Experiment 4 procedure is a verbatim copy of Exp 3 (errata); the game's benzaldehyde + KMnO4 route has no manuscript sequence
+final-winemaking	ALL	-	-	accepted	Experiment 9 is a group-activity rubric (roles, video, label), not a lettered bench procedure
+tutorial-methane	ALL	-	-	accepted	game-authored tutorial, not in Appendix C

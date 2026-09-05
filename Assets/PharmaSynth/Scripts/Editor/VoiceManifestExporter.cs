@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -50,6 +50,14 @@ public static class VoiceManifestExporter
         }
 
         foreach (var l in VoiceCorpus.CodeLines()) Add(l.speaker, l.text, l.group);
+        // ⛔ DATA-authored lines too. Task time-skip narration ("One week later...") lives
+        // in the module assets, so exporting CodeLines() alone left six of Jimenez's lines
+        // out of every manifest, unbought and speaking in blips — the "broken machine"
+        // sound the user reported (2026-09-05).
+        foreach (var l in VoiceCorpus.DataLines(
+                     AssetDatabase.LoadAssetAtPath<ExperimentLibrary>(
+                         "Assets/PharmaSynth/ScriptableObjects/ExperimentLibrary.asset")))
+            Add(l.speaker, l.text, l.group);
 
         // Cutscene beats (Pharmee narrates all four cutscenes per module).
         int beats = 0;

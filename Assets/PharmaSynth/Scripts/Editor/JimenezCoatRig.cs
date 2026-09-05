@@ -92,6 +92,7 @@ public static class JimenezCoatRig
         // classification survive a re-export at a different scale.
         float meshHeight = source.bounds.size.y;
         if (sleeveRadius <= 0f) sleeveRadius = JimenezRigMath.SleeveRadiusFor(meshHeight);
+        float blendBand = JimenezRigMath.BlendBandFor(meshHeight);
 
         var verts = source.vertices;
         var weights = source.boneWeights;
@@ -114,9 +115,14 @@ public static class JimenezCoatRig
                 if (!JimenezRigMath.IsArmBone(bones[b].name)) continue;
 
                 float dist = JimenezRigMath.DistanceToSegment(verts[v], segStart[b], segEnd[b]);
-                if (!JimenezRigMath.IsBleed(dist, sleeveRadius)) { keptSleeve++; continue; }
+                // ⛔ A FRACTION, ramped across a band — never an all-or-nothing hand-over.
+                // Moving 100% of the weight on one side of the radius and 0% on the other
+                // makes neighbouring vertices follow different bones, and the edge between
+                // them rips. See JimenezRigMath.TransferFraction.
+                float share = JimenezRigMath.TransferFraction(dist, sleeveRadius, blendBand);
+                if (share <= 0f) { keptSleeve++; continue; }
 
-                float moved = JimenezRigMath.Redistribute(ref w, b, spine);
+                float moved = JimenezRigMath.Redistribute(ref w, b, spine, share);
                 if (moved > 0f)
                 {
                     movedWeight += moved; changed = true;

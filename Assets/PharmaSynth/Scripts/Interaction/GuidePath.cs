@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -41,11 +41,19 @@ public class GuidePath : MonoBehaviour
     [SerializeField] private Material chevronMaterial;
     [SerializeField] private float spacing = GuidePathMath.Spacing;
     [SerializeField] private float flowSpeed = GuidePathMath.FlowSpeed;
-    [SerializeField] private float chevronSize = 0.22f;
+    // The mark is a real chevron mesh authored in METRES (GuidePathMath.ChevronGeometry),
+    // so this is an overall multiplier and 1 means "the authored size".
+    [SerializeField] private float chevronScale = 1f;
+    [SerializeField] private float chevronWidth = GuidePathMath.ChevronWidth;
+    [SerializeField] private float chevronDepth = GuidePathMath.ChevronDepth;
+    [SerializeField] private float chevronThickness = GuidePathMath.ChevronThickness;
     [SerializeField] private float floorLift = 0.02f;      // above the floor, or it z-fights
     [SerializeField] private float repathSeconds = 0.25f;  // route recompute, not redraw
 
     private readonly List<Transform> _pool = new List<Transform>();
+    private readonly List<MeshRenderer> _renderers = new List<MeshRenderer>();
+    private MaterialPropertyBlock _mpb;
+    private Mesh _chevron;
     private readonly List<Vector3> _corners = new List<Vector3>();
     private NavMeshPath _path;
     private float _nextRepath;
@@ -53,8 +61,8 @@ public class GuidePath : MonoBehaviour
 
     /// Edit-mode / builder seam — AddComponent fires no Awake in edit mode (house rule).
     public void Bind(ExperimentRunner r, Material chevron) { runner = r; chevronMaterial = chevron; }
-    public void SetTuning(float spacingM, float flow, float size)
-    { spacing = spacingM; flowSpeed = flow; chevronSize = size; }
+    public void SetTuning(float spacingM, float flow, float scale)
+    { spacing = spacingM; flowSpeed = flow; chevronScale = scale; }
 
     private void Awake()
     {
@@ -132,30 +140,68 @@ public class GuidePath : MonoBehaviour
 
     private void Draw(List<GuidePathMath.Chevron> marks)
     {
+        if (_mpb == null) _mpb = new MaterialPropertyBlock();
+        Color baseColour = chevronMaterial.HasProperty(BaseColourId)
+            ? chevronMaterial.GetColor(BaseColourId) : Color.white;
+
         for (int i = 0; i < marks.Count; i++)
         {
             var q = At(i);
-            // Quads face +Z; rotate them flat so the arrow lies ON the floor pointing along
-            // the route rather than standing upright across it.
-            q.SetPositionAndRotation(marks[i].position,
-                marks[i].rotation * Quaternion.Euler(90f, 0f, 0f));
-            q.localScale = Vector3.one * chevronSize;
+            // ⚠ NO Euler(90,0,0) here. The old mark was an upright quad that had to be laid
+            // down; the chevron mesh is authored FLAT already, so re-applying that rotation
+            // would stand every arrow on edge across the route.
+            q.SetPositionAndRotation(marks[i].position, marks[i].rotation);
+            q.localScale = Vector3.one * chevronScale;
             if (!q.gameObject.activeSelf) q.gameObject.SetActive(true);
+
+            // Ramp the ends so a chevron does not POP into existence at the player's feet
+            // and vanish at full strength on arrival. This is what reads as flow.
+            var mr = _renderers[i];
+            if (mr != null)
+            {
+                var c = baseColour;
+                c.a *= GuidePathMath.FadeAt(marks[i].along01);
+                _mpb.SetColor(BaseColourId, c);
+                mr.SetPropertyBlock(_mpb);
+            }
         }
         for (int i = marks.Count; i < _pool.Count; i++)
             if (_pool[i] != null && _pool[i].gameObject.activeSelf) _pool[i].gameObject.SetActive(false);
+    }
+
+    static readonly int BaseColourId = Shader.PropertyToID("_BaseColor");
+
+    /// One shared chevron mesh for the whole pool — the shape never changes at runtime.
+    private Mesh Chevron()
+    {
+        if (_chevron != null) return _chevron;
+        GuidePathMath.ChevronGeometry(out var verts, out var tris,
+                                      chevronWidth, chevronDepth, chevronThickness);
+        _chevron = new Mesh { name = "GuideChevron", hideFlags = HideFlags.DontSave };
+        _chevron.SetVertices(new List<Vector3>(verts));
+        _chevron.SetTriangles(tris, 0);
+        _chevron.RecalculateNormals();
+        _chevron.RecalculateBounds();
+        return _chevron;
+    }
+
+    private void OnDestroy()
+    {
+        if (_chevron == null) return;
+        if (Application.isPlaying) Destroy(_chevron); else DestroyImmediate(_chevron);
+        _chevron = null;
     }
 
     private Transform At(int i)
     {
         while (_pool.Count <= i)
         {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            go.name = "GuideChevron";
-            go.hideFlags = HideFlags.DontSave;
-            // A guidance mark must never be something the player can bump into.
-            var col = go.GetComponent<Collider>();
-            if (col != null) { if (Application.isPlaying) Destroy(col); else DestroyImmediate(col); }
+            // Built from parts rather than CreatePrimitive: a primitive brings a collider
+            // (a guidance mark must never be something the player can bump into) and a quad
+            // mesh we would only throw away.
+            var go = new GameObject("GuideChevron", typeof(MeshFilter), typeof(MeshRenderer))
+            { hideFlags = HideFlags.DontSave };
+            go.GetComponent<MeshFilter>().sharedMesh = Chevron();
             var mr = go.GetComponent<MeshRenderer>();
             mr.sharedMaterial = chevronMaterial;          // sharedMaterial: .material instances in edit mode
             mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -163,6 +209,7 @@ public class GuidePath : MonoBehaviour
             mr.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
             go.transform.SetParent(transform, false);
             _pool.Add(go.transform);
+            _renderers.Add(mr);
         }
         return _pool[i];
     }

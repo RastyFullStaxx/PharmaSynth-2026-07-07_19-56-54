@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// Concrete face for Pharmee: tints the screen-face renderer(s) per expression.
 /// Implements IPharmeeFace so PharmeeBrain/PharmeeGatekeeper drive it. Point
@@ -12,9 +12,14 @@ public class PharmeeFace : MonoBehaviour, IPharmeeFace
     [SerializeField] private Renderer[] faceRenderers;   // eyes + mouth meshes
     [SerializeField] private string colorProperty = "_EmissionColor";
     [SerializeField] private PharmeeFaceExpression defaultExpression = PharmeeFaceExpression.Happy;
-    [ColorUsage(true, true)] [SerializeField] private Color neutral = new Color(0.2f, 0.9f, 1f);
-    [ColorUsage(true, true)] [SerializeField] private Color happy = new Color(0.3f, 1f, 0.5f);
-    [ColorUsage(true, true)] [SerializeField] private Color warning = new Color(1f, 0.6f, 0.15f);
+    // ⛔ These peaked at exactly 1.0, the bloom threshold, on EVERY expression — and
+    // PharmeeMood swaps expression per LINE, so the face flashed whenever she spoke. W5.47
+    // dimmed her body panels and hull and left the face alone, which is why she still
+    // flashed while talking (user, 2026-09-05). Authored under PharmeeGlowMath.FaceCeiling
+    // and enforced by Wire NPC Polish.
+    [ColorUsage(true, true)] [SerializeField] private Color neutral = new Color(0.11f, 0.50f, 0.55f);
+    [ColorUsage(true, true)] [SerializeField] private Color happy = new Color(0.17f, 0.55f, 0.28f);
+    [ColorUsage(true, true)] [SerializeField] private Color warning = new Color(0.55f, 0.33f, 0.08f);
 
     private MaterialPropertyBlock _mpb;
 
@@ -22,6 +27,9 @@ public class PharmeeFace : MonoBehaviour, IPharmeeFace
 
     /// Editor-builder seam: point the face at the screen meshes.
     public void BindRenderers(params Renderer[] rs) { faceRenderers = rs; }
+
+    /// Builder seam: cap the palette so no expression clears the bloom threshold.
+    public void SetPalette(Color n, Color h, Color w) { neutral = n; happy = h; warning = w; }
 
     private void Start() => ResetToDefault();
 

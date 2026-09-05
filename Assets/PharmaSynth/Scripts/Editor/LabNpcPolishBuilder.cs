@@ -43,6 +43,13 @@ public static class LabNpcPolishBuilder
             if (n.StartsWith("eyes") || n.StartsWith("mouth")) faceParts.Add(r);
         }
         if (faceParts.Count > 0) face.BindRenderers(faceParts.ToArray());
+        // The face is the only thing that CHANGES when she speaks, so it is the only thing
+        // that can flash. Cap every expression under the bloom threshold.
+        face.SetPalette(
+            PharmeeGlowMath.CapBrightness(new Color(0.2f, 0.9f, 1f), PharmeeGlowMath.FaceCeiling),
+            PharmeeGlowMath.CapBrightness(new Color(0.3f, 1f, 0.5f), PharmeeGlowMath.FaceCeiling),
+            PharmeeGlowMath.CapBrightness(new Color(1f, 0.6f, 0.15f), PharmeeGlowMath.FaceCeiling));
+        EditorUtility.SetDirty(face);
         Debug.Log("[NpcPolish] face renderers: " + faceParts.Count + " (" + string.Join(", ", faceParts.ConvertAll(r => r.name)) + ")");
 
         // ---- 1b. Body glow (2026-09-05): the FBX's Blue_Light material blazes at 8x on the

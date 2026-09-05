@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System.Collections.Generic;
 using TMPro;
 using UnityEditor;
@@ -332,7 +332,8 @@ public static class TutorialModeBuilder
                                               UnityEngine.Rendering.CompareFunction.Always, 4000));
         // ⚠ Values pushed explicitly: changing a [SerializeField] default does NOTHING to a
         // scene that already saved it — the trap that silently un-applied the waypoint fix.
-        path.SetTuning(GuidePathMath.Spacing, GuidePathMath.FlowSpeed, 0.22f);
+        // 1 = the authored chevron size; the mesh now carries real metres (was a 0.22 m square).
+        path.SetTuning(GuidePathMath.Spacing, GuidePathMath.FlowSpeed, 1f);
         EditorUtility.SetDirty(path);
 
         int beacons = 0;

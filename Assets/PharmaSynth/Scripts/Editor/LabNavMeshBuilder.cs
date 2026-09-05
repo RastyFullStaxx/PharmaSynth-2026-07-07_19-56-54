@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using Unity.AI.Navigation;
 using UnityEngine.AI;
 using UnityEditor;
@@ -17,6 +17,11 @@ using UnityEngine;
 /// session, or the arrows will confidently route through a bench that has since moved.
 public static class LabNavMeshBuilder
 {
+    /// The walkable band, in world Y. Low enough to exclude a ~0.9 m bench top and the
+    /// ceiling; tall enough to keep the floor and the lower body of every obstacle.
+    const float FloorBandCentreY = 0.225f;
+    const float FloorBandHeight = 1.05f;   // -0.3 m .. +0.75 m
+
     const string HostName = "LabNavMesh";
     const string AssetDir = "Assets/Scenes";
     const string AssetPath = AssetDir + "/LabNavMesh.asset";
@@ -36,11 +41,25 @@ public static class LabNavMeshBuilder
         var surface = host.GetComponent<NavMeshSurface>();
         if (surface == null) surface = host.AddComponent<NavMeshSurface>();
 
-        // Whole scene, RENDER geometry — the latter is already NavMeshSurface's default, so
-        // it is left alone rather than restated. Render meshes (not colliders) because the
-        // lab's floor and furniture are ordinary meshes, and collecting by collider would
-        // pull in the trigger volumes we must not walk on.
-        surface.collectObjects = CollectObjects.All;
+        // RENDER geometry, inside a FLOOR-HEIGHT VOLUME. Render meshes (not colliders)
+        // because the lab's floor and furniture are ordinary meshes, and collecting by
+        // collider would pull in the trigger volumes we must not walk on.
+        //
+        // ⛔ The volume is the whole point, and CollectObjects.All is what broke
+        // midterm-acetone (found 2026-09-05). Baking the entire scene makes every upward
+        // face walkable — bench tops AND the ceiling panels. The mesh ran from y=0.10 to
+        // y=3.10, so `NavMesh.SamplePosition` for a beaker sitting at y=1.26 found the
+        // CEILING 1.6 m ABOVE it before the floor 1.2 m below, and GuidePath dutifully drew
+        // its chevrons across the ceiling. The module logged a route and a chevron count the
+        // whole time, which is why this read as "draws no path" rather than as a bad bake.
+        //
+        // Everything the player can walk on is within a knee-height band of the floor.
+        // Furniture still BLOCKS, because its lower body is inside the band and carves.
+        Bounds room = SceneRenderBounds();
+        surface.collectObjects = CollectObjects.Volume;
+        surface.center = host.transform.InverseTransformPoint(
+            new Vector3(room.center.x, FloorBandCentreY, room.center.z));
+        surface.size = new Vector3(room.size.x + 2f, FloorBandHeight, room.size.z + 2f);
         surface.layerMask = ~0;
 
         // A player-sized agent. The radius matters most: too small and the path hugs bench
@@ -84,9 +103,30 @@ public static class LabNavMeshBuilder
         EditorUtility.SetDirty(surface);
         EditorSceneManager.MarkAllScenesDirty();
         EditorSceneManager.SaveOpenScenes();
+        // Report the vertical extent: a mesh reaching ceiling height means the volume is
+        // wrong again, and that failure is otherwise completely silent.
+        var tri = NavMesh.CalculateTriangulation();
+        float lo = float.MaxValue, hi = float.MinValue;
+        foreach (var v in tri.vertices) { if (v.y < lo) lo = v.y; if (v.y > hi) hi = v.y; }
         Debug.Log("<color=#4CD07D>[LabNavMesh] baked</color> — bounds "
-                  + data.sourceBounds.size.ToString("0.0") + ", data at " + AssetPath
+                  + data.sourceBounds.size.ToString("0.0") + ", walkable y "
+                  + lo.ToString("0.00") + " to " + hi.ToString("0.00")
+                  + " over " + tri.vertices.Length + " verts, data at " + AssetPath
                   + ". ⚠ Re-run this after moving furniture, alongside the lighting bake.");
+    }
+
+    /// Extent of everything the player can see, used to size the bake volume.
+    static Bounds SceneRenderBounds()
+    {
+        var b = new Bounds();
+        bool first = true;
+        foreach (var r in Object.FindObjectsByType<MeshRenderer>(
+                     FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+        {
+            if (first) { b = r.bounds; first = false; } else b.Encapsulate(r.bounds);
+        }
+        if (first) b = new Bounds(Vector3.zero, new Vector3(20f, 4f, 20f));
+        return b;
     }
 }
 #endif

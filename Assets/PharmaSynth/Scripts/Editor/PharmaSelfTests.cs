@@ -1455,6 +1455,178 @@ public static class PharmaSelfTests
               channels == 0 || misattributed == 0);
         }
 
+        // ---- the manuscript is the AUTHORITY, so check the numbers against it (W5.49) ----
+        //
+        // \u26d4 Until now nothing did. The `content:` pins prove a module LOADS, has N tasks,
+        // is solvable and builds its scoring spine \u2014 never that "5 drops" is authored as 5.
+        // Every quantity in the game was hand-transcribed from Appendix C and hand-checked
+        // exactly once, at authoring time.
+        //
+        // The VERB CONTRACT (CLAUDE.md) is what makes this checkable: the number in the
+        // instruction IS the action count, whatever its unit, and a dropper delivers
+        // DropperController.MlPerSqueeze per squeeze \u2014 so "2 drops" is authored as 2.
+        //
+        // The table is CURATED (Docs/manuscript-quantities.tsv); see the header there for why
+        // it is not parsed out of the PDF. Rows marked `accepted` are documented deviations
+        // and are counted, not asserted, so a decision never reads as a defect.
+        {
+            string tsv = System.IO.Path.Combine(Application.dataPath, "..", "Docs/manuscript-quantities.tsv");
+            A("manuscript: the quantity authority file is present", System.IO.File.Exists(tsv));
+            if (System.IO.File.Exists(tsv))
+            {
+                var layouts = new Dictionary<string, ExperimentLayout>();
+                foreach (var guid in AssetDatabase.FindAssets("t:ExperimentLayout",
+                             new[] { "Assets/PharmaSynth/ScriptableObjects/Layouts" }))
+                {
+                    var l = AssetDatabase.LoadAssetAtPath<ExperimentLayout>(AssetDatabase.GUIDToAssetPath(guid));
+                    if (l != null && !string.IsNullOrEmpty(l.moduleId)) layouts[l.moduleId] = l;
+                }
+
+                int checkedRows = 0, acceptedRows = 0, disagree = 0;
+                var wrong = new List<string>();
+                foreach (var raw in System.IO.File.ReadAllLines(tsv))
+                {
+                    if (string.IsNullOrWhiteSpace(raw) || raw.StartsWith("#")) continue;
+                    var f = raw.Split('\t');
+                    if (f.Length < 6) continue;
+                    string moduleId = f[0].Trim(), taskId = f[1].Trim(), reagent = f[2].Trim();
+                    string expectedText = f[3].Trim(), accepted = f[4].Trim();
+                    if (accepted == "accepted") { acceptedRows++; continue; }
+                    if (!float.TryParse(expectedText, System.Globalization.NumberStyles.Float,
+                                        System.Globalization.CultureInfo.InvariantCulture, out float expected)) continue;
+                    if (!layouts.TryGetValue(moduleId, out var layout))
+                    { wrong.Add(moduleId + ": no layout"); continue; }
+
+                    checkedRows++;
+                    if (accepted == "review") disagree++;
+
+                    if (taskId == "HEAT" || taskId == "CHILL")
+                    {
+                        bool found = false;
+                        foreach (var v in layout.vessels)
+                        {
+                            float t = taskId == "HEAT" ? v.heatToC : v.chillToC;
+                            if (t > 0f && Mathf.Abs(t - expected) < 0.01f) { found = true; break; }
+                        }
+                        if (!found) wrong.Add(moduleId + " " + taskId + " " + expected + " C not authored");
+                        continue;
+                    }
+
+                    float? authored = null;
+                    foreach (var v in layout.vessels)
+                        foreach (var b in v.bindings)
+                            if (b.taskId == taskId && b.reagentChemical == reagent) authored = b.requiredMl;
+                    if (authored == null) wrong.Add(moduleId + "/" + taskId + "/" + reagent + ": no binding");
+                    else if (Mathf.Abs(authored.Value - expected) > 0.001f)
+                        wrong.Add(moduleId + "/" + taskId + "/" + reagent + ": authored "
+                                  + authored.Value + ", manuscript implies " + expected);
+                }
+
+                foreach (var w in wrong) _log.Add("manuscript drift: " + w);
+                A("manuscript: every checked quantity matches Appendix C ("
+                  + checkedRows + " checked, " + wrong.Count + " adrift, "
+                  + acceptedRows + " accepted deviations)", wrong.Count == 0);
+                A("manuscript: the authority table actually covers the game", checkedRows >= 20);
+                // Not a failure \u2014 a standing reminder that these await a client decision.
+                A("manuscript: " + disagree + " quantities knowingly differ and are recorded as such",
+                  disagree >= 0);
+            }
+        }
+
+        // ---- the manuscript's STEP ORDER, not just its numbers (W5.50) ----
+        //
+        // ⛔ "runner: out-of-order = wrong step" proves the MECHANISM and "catalog: prereq
+        // chain valid + ordered" proves the module CHAIN. Neither ever checked that a module's
+        // authored prerequisites follow Appendix C's own a-b-c sequence: a module whose steps
+        // were quietly reordered would pass every pin. Docs/manuscript-order.tsv gives every
+        // task its manuscript step as a sortable ordinal (A.a = 101 ... B.a = 201; the data
+        // sheet is 999), and this asserts no prerequisite edge runs BACKWARDS through the
+        // manual: for every "P must precede T", ordinal(P) <= ordinal(T).
+        {
+            string tsv = System.IO.Path.Combine(Application.dataPath, "..", "Docs/manuscript-order.tsv");
+            A("manuscript: the step-order authority file is present", System.IO.File.Exists(tsv));
+            if (System.IO.File.Exists(tsv))
+            {
+                var ordinal = new Dictionary<string, int>();
+                var acceptedModules = new HashSet<string>();
+                foreach (var raw in System.IO.File.ReadAllLines(tsv))
+                {
+                    if (string.IsNullOrWhiteSpace(raw) || raw.StartsWith("#")) continue;
+                    var f = raw.Split('	');
+                    if (f.Length < 6) continue;
+                    if (f[4].Trim() == "accepted") { acceptedModules.Add(f[0].Trim()); continue; }
+                    if (int.TryParse(f[3].Trim(), out int ord)) ordinal[f[0].Trim() + "/" + f[1].Trim()] = ord;
+                }
+
+                int edges = 0, backwards = 0, unmapped = 0, modulesChecked = 0;
+                var lib = AssetDatabase.LoadAssetAtPath<ExperimentLibrary>(
+                    "Assets/PharmaSynth/ScriptableObjects/ExperimentLibrary.asset");
+                if (lib != null)
+                    foreach (var m in lib.modules)
+                    {
+                        if (m == null || acceptedModules.Contains(m.moduleId)) continue;
+                        modulesChecked++;
+                        foreach (var t in m.graphTasks)
+                        {
+                            if (t == null) continue;
+                            if (!ordinal.TryGetValue(m.moduleId + "/" + t.taskId, out int mine))
+                            { unmapped++; _log.Add("manuscript order: no step for " + m.moduleId + "/" + t.taskId); continue; }
+                            foreach (var p in t.prerequisites)
+                            {
+                                if (!ordinal.TryGetValue(m.moduleId + "/" + p, out int theirs)) { unmapped++; continue; }
+                                edges++;
+                                if (theirs > mine)
+                                {
+                                    backwards++;
+                                    _log.Add("manuscript order: " + m.moduleId + " makes " + p + " (" + theirs
+                                             + ") precede " + t.taskId + " (" + mine + ") — BACKWARDS through Appendix C");
+                                }
+                            }
+                        }
+                    }
+                A("manuscript: every authored task has a manuscript step (" + unmapped + " unmapped across "
+                  + modulesChecked + " modules)", lib != null && unmapped == 0 && modulesChecked >= 6);
+                A("manuscript: no prerequisite runs backwards through Appendix C (" + backwards + " of "
+                  + edges + " edges)", edges >= 60 && backwards == 0);
+            }
+        }
+
+        // ---- the manuscript's OBSERVATION WORDS, not just its numbers and order (W5.50) ----
+        //
+        // ⛔ The VISUAL sweep judges what the student SEES against the fired rule; nothing
+        // judged the WORDS the student reads (`expectedObservation`) against what the manual
+        // says they should observe. Two phrases ("fruity", "wintergreen") were pinned by hand;
+        // the other rules were not, so a rewrite that dropped "silver mirror" or "ammonia" would
+        // pass. Docs/manuscript-observations.tsv carries the manual's own result word per rule.
+        {
+            string tsv = System.IO.Path.Combine(Application.dataPath, "..", "Docs/manuscript-observations.tsv");
+            A("manuscript: the observation authority file is present", System.IO.File.Exists(tsv));
+            if (System.IO.File.Exists(tsv))
+            {
+                int checkedRules = 0, acceptedRules = 0, missingAssets = 0;
+                var misses = new List<string>();
+                foreach (var raw in System.IO.File.ReadAllLines(tsv))
+                {
+                    if (string.IsNullOrWhiteSpace(raw) || raw.StartsWith("#")) continue;
+                    var f = raw.Split('	');
+                    if (f.Length < 4) continue;
+                    string asset = f[0].Trim(), key = f[1].Trim(), accepted = f[2].Trim();
+                    if (accepted == "accepted") { acceptedRules++; continue; }
+                    var rule = AssetDatabase.LoadAssetAtPath<ReactionRule>(
+                        "Assets/PharmaSynth/ScriptableObjects/Reactions/" + asset + ".asset");
+                    if (rule == null) { missingAssets++; misses.Add(asset + ": no such rule asset"); continue; }
+                    checkedRules++;
+                    string have = (rule.expectedObservation ?? "").ToLowerInvariant();
+                    if (!have.Contains(key.ToLowerInvariant()))
+                        misses.Add(asset + ": the manual's \"" + key + "\" is missing from the popup text");
+                }
+                foreach (var m in misses) _log.Add("manuscript observation: " + m);
+                A("manuscript: every rule's popup carries the manual's result word ("
+                  + checkedRules + " checked, " + misses.Count + " missing, " + acceptedRules + " accepted)",
+                    missingAssets == 0 && misses.Count == 0 && checkedRules >= 20);
+            }
+        }
+
         // Voice budget order: Jimenez's rows are generated first (user 2026-07-27).
         A("voice: Jimenez sorts before Pharmee",
             VoiceManifestExporter.SpeakerPriority("Jimenez") < VoiceManifestExporter.SpeakerPriority("Pharmee"));
@@ -3827,6 +3999,48 @@ public static class PharmaSelfTests
                     !GuidePathMath.ShowPath(1f, true) && GuidePathMath.ShowBeacon(1f, true));
                 A("path: with no route the beacon always takes over",
                     !GuidePathMath.ShowPath(5f, false) && GuidePathMath.ShowBeacon(5f, false));
+
+                // THE MARK ITSELF (W5.49). It was a PrimitiveType.Quad — a plain square —
+                // for the whole of W5.44, despite everything calling it a chevron; a row of
+                // sliding squares cannot read as direction however correct the flow is.
+                {
+                    GuidePathMath.ChevronGeometry(out var cv, out var ct);
+                    A("chevron: the mark is a V, not a square", cv.Length == 6 && ct.Length == 12);
+
+                    float maxZ = float.MinValue; int apex = -1;
+                    for (int i = 0; i < cv.Length; i++) if (cv[i].z > maxZ) { maxZ = cv[i].z; apex = i; }
+                    A("chevron: the apex points along the route",
+                        apex >= 0 && Mathf.Approximately(cv[apex].x, 0f));
+
+                    // Symmetric about the centre line, or the arrow leans to one side.
+                    float spanL = 0f, spanR = 0f;
+                    foreach (var v in cv) { if (v.x < spanL) spanL = v.x; if (v.x > spanR) spanR = v.x; }
+                    A("chevron: the arms are symmetric", Mathf.Abs(spanL + spanR) < 1e-5f);
+
+                    // ⛔ The one that actually bites: PharmaSynth/GuideOverlay is Cull Back,
+                    // so a flat mesh wound the wrong way is INVISIBLE FROM ABOVE while every
+                    // count, position and log line stays perfectly correct.
+                    int up = 0;
+                    for (int t = 0; t < ct.Length; t += 3)
+                        if (GuidePathMath.FaceNormal(cv[ct[t]], cv[ct[t + 1]], cv[ct[t + 2]]).y > 0.99f) up++;
+                    A("chevron: every triangle faces UP (Cull Back hides a mis-wound mark)",
+                        up == ct.Length / 3);
+
+                    // A flat mesh authored in XZ must NOT be laid down again by the driver.
+                    bool chevFlat = true;
+                    foreach (var v in cv) if (Mathf.Abs(v.y) > 1e-6f) chevFlat = false;
+                    A("chevron: authored flat, so the driver must not re-rotate it", chevFlat);
+                }
+
+                // The ends ramp, or every chevron pops in at the player's feet and vanishes
+                // at full strength on arrival. `along01` was computed for this in W5.44 and
+                // then never read by the driver.
+                A("path: the flow fades in at the start and out at the end",
+                    GuidePathMath.FadeAt(0f) < 0.01f && GuidePathMath.FadeAt(1f) < 0.01f
+                    && GuidePathMath.FadeAt(0.5f) > 0.99f);
+                A("path: the fade ramps monotonically",
+                    GuidePathMath.FadeAt(0.02f) < GuidePathMath.FadeAt(0.06f)
+                    && GuidePathMath.FadeAt(0.06f) < GuidePathMath.FadeAt(0.12f));
 
                 // The pour readout goes QUIET once satisfied — a label reading "40 / 40"
                 // invites an overpour rather than stopping one.
@@ -6272,6 +6486,40 @@ public static class PharmaSelfTests
         A("visual: gas with no live emitter FAILS", VisualSweep.Judge(VisualSweep.Expect.Gas, o, null, 0f, 100f).Fail);
         var gas = o; gas.particles = 1; gas.particleNames = "EffectVfx_Smoke(20)";
         A("visual: gas with a live emitter passes", !VisualSweep.Judge(VisualSweep.Expect.Gas, gas, null, 0f, 100f).Fail);
+
+        // ⛔ Four of the 63 swept steps used to report SKIP "the photo is the evidence"
+        // — photographed and judged against NOTHING, which reads as coverage on the
+        // report line while proving nothing at all. Their evidence is not inside a vessel:
+        // a flame, a gas column, an assembled rig.
+        A("visual: the methane rig and the flame test now have contracts",
+            VisualSweep.ExpectFor("flame", null) == VisualSweep.Expect.Flame
+            && VisualSweep.ExpectFor("methane:setup-apparatus", null) == VisualSweep.Expect.Powder   // a solid delivery, not a rig
+            && VisualSweep.ExpectFor("methane:heat-mixture", null) == VisualSweep.Expect.Heat
+            && VisualSweep.ExpectFor("methane:collect-gas", null) == VisualSweep.Expect.GasFill);
+        {
+            // These are judged BEFORE the "no vessel to look at" guard, so `found` stays false.
+            var none = new VisualSweep.Obs();
+            var lit = new VisualSweep.Obs { flameLit = true };
+            A("visual: a flammability test with no flame FAILS",
+                VisualSweep.Judge(VisualSweep.Expect.Flame, none, null, 0f, 100f).Fail
+                && !VisualSweep.Judge(VisualSweep.Expect.Flame, lit, null, 0f, 100f).Fail);
+
+            // ⛔ The flame is transient: by the final capture the match is out. The first run
+            // of the flame contract failed a step the game had judged correctly for exactly
+            // that reason. The latch carries the mid-verb sighting to the verdict, then clears.
+            VisualSweep.ClearFlameLatch();
+            VisualSweep.NoteFlame(false);
+            A("visual: an unlit moment does not latch a flame", !VisualSweep.FlameLatched);
+            VisualSweep.NoteFlame(true);
+            A("visual: a flame seen mid-verb is remembered for the verdict", VisualSweep.FlameLatched);
+            VisualSweep.ClearFlameLatch();
+            A("visual: the flame latch is one step's evidence, cleared after judging", !VisualSweep.FlameLatched);
+
+            var full = new VisualSweep.Obs { gasFill01 = 0.5f };
+            A("visual: collecting gas into an EMPTY tube FAILS",
+                VisualSweep.Judge(VisualSweep.Expect.GasFill, none, null, 0f, 100f).Fail
+                && !VisualSweep.Judge(VisualSweep.Expect.GasFill, full, null, 0f, 100f).Fail);
+        }
         // ---- W5.45b: the visual gaps the sweep found, pinned so they cannot come back ----
         // A couple of millilitres in a big flask must still DRAW as something (Exp 5 puts
         // 2 ml of aniline in a 250 ml Florence flask = 0.8% of its height).
@@ -6363,7 +6611,10 @@ public static class PharmaSelfTests
         finally { UnityEngine.Object.DestroyImmediate(rule); }
         A("visual: no rule — a heat step expects temperature", VisualSweep.ExpectFor("heat", null) == VisualSweep.Expect.Heat);
         A("visual: no rule — a solid delivery expects a mound", VisualSweep.ExpectFor("solid", null) == VisualSweep.Expect.Powder);
-        A("visual: no rule — a flame confirm has only its picture", VisualSweep.ExpectFor("flame", null) == VisualSweep.Expect.None);
+        // Superseded in W5.49: a flame confirm used to be judged against NOTHING ("the photo
+        // is the evidence"), which is a picture nobody looks at rather than a check.
+        A("visual: no rule — a flame confirm checks for an actual flame",
+            VisualSweep.ExpectFor("flame", null) == VisualSweep.Expect.Flame);
     }
 
     // W5.46: Pharmee's light and voice (user 2026-09-05: "like a broken machine", "too flashy").
@@ -6488,6 +6739,25 @@ public static class PharmaSelfTests
                 && Near(JimenezRigMath.SleeveRadiusFor(1.0f), 2f * r));
             A("rig: weight far from the arm is bleed, weight on the sleeve is not",
                 JimenezRigMath.IsBleed(0.09f, r) && !JimenezRigMath.IsBleed(0.02f, r));
+            // ⛔ Distance alone kept the coat's lower front panel on the arm: in an A-pose
+            // bind the forearm hangs beside the hip, so panel and cuff are equally close to
+            // it. The panel is near the SPINE and the cuff is not — that is the difference.
+            // The coat could not be re-weighted without tearing, so the remaining lever is how
+        // far the arm travels at all.
+        A("rig: damping pulls a swing back toward rest without moving rest itself",
+            Near(JimenezRigMath.Damp(1f, 0f, 0.5f), 0.5f)
+            && Near(JimenezRigMath.Damp(0.4f, 0.4f, 0.2f), 0.4f)
+            && Near(JimenezRigMath.Damp(1f, 0f, 1f), 1f));
+        A("rig: only the ARM muscles are damped, never the spine or legs",
+            JimenezArmDamper.IsArmMuscle("Left Arm Down-Up")
+            && JimenezArmDamper.IsArmMuscle("Right Shoulder Front-Back")
+            && JimenezArmDamper.IsArmMuscle("LeftHandT.x")
+            && !JimenezArmDamper.IsArmMuscle("Spine Front-Back")
+            && !JimenezArmDamper.IsArmMuscle("Left Upper Leg Front-Back"));
+        A("rig: a cuff is closer to the arm than to the spine; a coat panel is not",
+                JimenezRigMath.IsSleeve(0.02f, 0.09f, r)          // cuff: hugs the arm
+                && !JimenezRigMath.IsSleeve(0.02f, 0.01f, r)      // panel: hugs the torso
+                && !JimenezRigMath.IsSleeve(0.09f, 0.20f, r));    // far from both = coat body
         }
         A("rig: distance is to the whole BONE, not just its joint",
             Near(JimenezRigMath.DistanceToSegment(new Vector3(0.5f, 0f, 0f), Vector3.zero, new Vector3(1f, 0f, 0f)), 0f)
@@ -6564,6 +6834,43 @@ public static class PharmaSelfTests
                 if (bank.Get(l.speaker, VoiceLineId.For(l.text)) == null) { unvoiced++; if (first.Length == 0) first = l.text; }
         A("voice: every corpus line has a clip (" + unvoiced + " unvoiced" + (first.Length > 0 ? ", e.g. \"" + first + "\"" : "") + ")",
             bank != null && unvoiced == 0);
+
+        // ⛔ That pin ran over CodeLines() ALONE and was green while Dr. Jimenez spoke six
+        // lines in blips — the "broken machine" sound the user reported. Task time-skip
+        // narration ("One week later...") is authored in the MODULE ASSETS, so the corpus
+        // could not see it, the manifest never exported it, and no clip was ever bought.
+        // A corpus that only knows about code lines is not a corpus.
+        {
+            var lib = AssetDatabase.LoadAssetAtPath<ExperimentLibrary>(
+                "Assets/PharmaSynth/ScriptableObjects/ExperimentLibrary.asset");
+            var dataLines = VoiceCorpus.DataLines(lib);
+            int authored = 0;
+            if (lib != null)
+                foreach (var m in lib.modules)
+                {
+                    if (m == null) continue;
+                    foreach (var t in m.graphTasks)
+                        if (t != null && !string.IsNullOrWhiteSpace(t.longProcessMessage)) authored++;
+                }
+            A("voice: the corpus enumerates DATA-authored lines too, not just code ("
+              + dataLines.Count + " of " + authored + " time-skip lines)",
+                lib != null && authored > 0 && dataLines.Count == authored);
+
+            int dataUnvoiced = 0; string firstData = "";
+            if (bank != null)
+                foreach (var l in dataLines)
+                    if (bank.Get(l.speaker, VoiceLineId.For(l.text)) == null)
+                    { dataUnvoiced++; if (firstData.Length == 0) firstData = l.text; }
+            A("voice: every time-skip line has a clip (" + dataUnvoiced + " unvoiced"
+              + (firstData.Length > 0 ? ", e.g. \"" + firstData + "\"" : "") + ")",
+                dataUnvoiced == 0);
+            // ⛔ An entry whose clip Unity never imported reads as a healthy bank and
+            // speaks in blips. The import tool wrote 6 such rows because the generator had
+            // just created the mp3s OUTSIDE Unity and nothing refreshed the AssetDatabase.
+            A("voice: no bank entry points at a clip that was never imported ("
+              + (bank != null ? bank.BrokenEntries() : -1) + " broken)",
+                bank != null && bank.BrokenEntries() == 0);
+        }
 
         // Exp 2's two ferric-chloride tests promise violet; the rules used to have no product,
         // so nothing in the tube ever changed colour.

@@ -1030,8 +1030,38 @@ public static class SimulatedRun
                     res.bugs.Add(id + ": the hard-glass tube has no LiquidPhysics — nothing can be loaded into it");
                 else
                 {
-                    var chem = src != null ? src.PourOut(4f) : null;
-                    lp.AddLiquid(chem != null ? chem : lp.currentChemical, 4f);
+                    // ⛔ Through the REAL scoopula in Play mode, exactly like every other solid
+                    // step (W5.45): Dip builds the heap on the blade, Deposit builds the mound in
+                    // the tube via EnsurePowderVisual. This branch predated that rule and moved
+                    // the volume with a bare AddLiquid, so the tube held 4 g of solid and drew
+                    // NOTHING — the VISUAL sweep's only FAIL once setup-apparatus had a real
+                    // contract (2026-09-05). A player scooping by hand always got the mound; the
+                    // harness was the one skipping the verb. Edit mode keeps the direct path so
+                    // the simrun pins do not move, but mirrors what Deposit would have drawn.
+                    ScoopController scoop = Application.isPlaying && src != null
+                                            && src.currentChemical != null
+                                            && ScoopMath.CanPickUp(false, src.currentChemical.state, src.currentLiquidVolume)
+                        ? FindScoopTool(2f) : null;
+                    if (scoop != null)
+                    {
+                        for (int k = 0; k < 2; k++)                 // 4 g = two 2 g dips
+                        {
+                            HoldBladeAt(scoop, src);
+                            if (!scoop.Dip(src)) break;
+                            if (k == 0) MidVerb?.Invoke(scoop.gameObject, "scoop");
+                            HoldBladeAt(scoop, lp);
+                            scoop.Deposit(lp);                      // AddLiquid + the mound, the real path
+                        }
+                    }
+                    else
+                    {
+                        var chem = src != null ? src.PourOut(4f) : null;
+                        var loaded = chem != null ? chem : lp.currentChemical;
+                        lp.AddLiquid(loaded, 4f);
+                        if (loaded != null)
+                            ExperimentSceneBuilder.EnsurePowderVisual(lp.gameObject, loaded,
+                                ScoopController.MoundFill(lp.currentLiquidVolume));
+                    }
                 }
                 runner.Graph.Tick();
             }

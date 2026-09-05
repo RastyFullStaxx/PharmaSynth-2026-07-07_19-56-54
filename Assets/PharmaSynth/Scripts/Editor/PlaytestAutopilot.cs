@@ -160,6 +160,16 @@ public static class PlaytestAutopilot
     /// chain — the autopilot's job is coverage of what each module does when played, and
     /// the unlock chain itself is already proven 8/8 by the edit-mode campaign sim.
     static readonly List<string> s_pathLog = new List<string>();
+    // ⛔ The path is sampled EVERY tick, not once at run start. A single sample on the
+    // first DriveRun tick reported "dist 0.0" for all 9 modules, which reads as "the path
+    // never drew" — but GuidePath.Update early-returns (no camera yet, no target yet, still
+    // time-skipping) WITHOUT resetting LastDistance, so 0.0 only ever meant "Update had not
+    // reached the distance line yet on that one frame". Watching the whole run tells the two
+    // apart, and it is the difference between a real regression and a measurement artefact.
+    static int s_pathBestChevrons, s_pathObservations, s_pathTicksShown;
+    static float s_pathMaxDist;
+    static bool s_pathEverShown, s_pathSeenComponent;
+    static string s_pathLastTarget = "-";
     static readonly List<string> s_queue = new List<string>();
     static readonly List<string> s_moduleLog = new List<string>();
     static int s_moduleIndex;
@@ -254,12 +264,16 @@ public static class PlaytestAutopilot
         s_moduleTasks = 0; s_moduleGrabsOk = 0; s_moduleGrabsTested = 0;
         s_moduleFindingsAt = s_findings.Count;
         s_uiCheckedThisRun = false;
+        s_pathBestChevrons = 0; s_pathObservations = 0; s_pathTicksShown = 0;
+        s_pathMaxDist = 0f; s_pathEverShown = false; s_pathSeenComponent = false;
+        s_pathLastTarget = "-";
         s_grabChecked.Clear();          // a rebuilt stage means new transforms
         Trace("=== module " + (s_moduleIndex + 1) + "/" + s_queue.Count + ": " + CurrentModule + " ===");
     }
 
     static void EndModule()
     {
+        SamplePath();                    // the whole run's path evidence, not one frame
         if (s_pending != null) CaptureStep();
         if (s_session != null)
         {
@@ -532,9 +546,9 @@ public static class PlaytestAutopilot
         {
             Shot("05-run-start");
             CheckUiRaycasts();
-            SamplePath();
             s_uiCheckedThisRun = true;
         }
+        ObservePath();          // every tick — see s_pathBestChevrons for why
 
         if (s_moduleStopped)
         {
@@ -586,29 +600,52 @@ public static class PlaytestAutopilot
     /// A screenshot of a floor path is weak evidence: the chevrons are small, the autopilot
     /// never walks, and the camera may be pointed at a wall. Whether the path DREW, how
     /// many marks it laid and how far the target was are facts a picture cannot settle.
+    /// One tick's worth of evidence, accumulated across the whole run.
+    static void ObservePath()
+    {
+        var gp = GuidePath.Instance;
+        if (gp == null) return;
+        s_pathSeenComponent = true;
+        s_pathObservations++;
+        if (gp.LastDistance > s_pathMaxDist) s_pathMaxDist = gp.LastDistance;
+        if (!string.IsNullOrEmpty(gp.LastTargetName) && gp.LastTargetName != "-")
+            s_pathLastTarget = gp.LastTargetName;
+        if (gp.PathShown)
+        {
+            s_pathEverShown = true;
+            s_pathTicksShown++;
+            if (gp.ActiveChevrons > s_pathBestChevrons) s_pathBestChevrons = gp.ActiveChevrons;
+        }
+    }
+
+    /// What the whole run showed, written once per module.
     static void SamplePath()
     {
         var gp = GuidePath.Instance;
-        if (gp == null)
+        if (!s_pathSeenComponent && gp == null)
         {
             s_pathLog.Add("  " + (CurrentModule ?? "?").PadRight(30) + "NO GuidePath in the scene");
             Finding((CurrentModule ?? "?") + ": no GuidePath component — the ground path cannot draw "
                     + "at all (run Build Tutorial Scene Wiring)");
             return;
         }
-        // Report the REASON from the distance itself, not by inferring it from leftover
-        // state — the first version guessed "inside the 2 m handover" for a target 6.1 m
-        // away, which is the sort of confidently-wrong line this harness keeps producing
-        // when it reads one field to explain another.
-        string verdict = gp.PathShown
-            ? "path DRAWN, " + gp.ActiveChevrons + " chevrons over " + gp.RouteCorners + " corners"
-            : gp.LastDistance <= GuidePathMath.NearDistance
-                ? "beacon (within the " + GuidePathMath.NearDistance + " m handover)"
-                : "NO PATH at " + gp.LastDistance.ToString("0.0") + " m [target '"
-                  + gp.LastTargetName + "' at " + gp.LastGoal.ToString("0.0")
-                  + ", startOnMesh=" + gp.StartOnMesh + ", goalOnMesh=" + gp.GoalOnMesh + "]";
+        if (s_pathEverShown)
+        {
+            s_pathLog.Add("  " + (CurrentModule ?? "?").PadRight(30)
+                          + "DREW on " + s_pathTicksShown + "/" + s_pathObservations + " ticks, up to "
+                          + s_pathBestChevrons + " chevrons, farthest target "
+                          + s_pathMaxDist.ToString("0.0") + " m");
+            return;
+        }
         s_pathLog.Add("  " + (CurrentModule ?? "?").PadRight(30)
-                      + "dist " + gp.LastDistance.ToString("0.0").PadRight(7) + verdict);
+                      + "never drew in " + s_pathObservations + " ticks — farthest target "
+                      + s_pathMaxDist.ToString("0.0") + " m ('" + s_pathLastTarget + "')"
+                      + (s_pathMaxDist <= GuidePathMath.NearDistance
+                         ? ", all within the " + GuidePathMath.NearDistance + " m beacon handover"
+                         : ", WHICH IS BEYOND THE HANDOVER"));
+        if (s_pathMaxDist > GuidePathMath.NearDistance)
+            Finding((CurrentModule ?? "?") + ": the ground path never drew despite a target "
+                    + s_pathMaxDist.ToString("0.0") + " m away");
     }
 
     /// Force a REAL XRI grab on every object this step needs.

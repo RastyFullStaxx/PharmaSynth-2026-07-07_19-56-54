@@ -351,6 +351,48 @@
             "group": "Objectives"
         },
         {
+            "id": "c2517c67fd35f841",
+            "speaker": "Jimenez",
+            "text": "One week later — the mixture has fermented. Time to distil.",
+            "chars": 59,
+            "group": "TimeSkip"
+        },
+        {
+            "id": "f10d8f5efa59caf0",
+            "speaker": "Jimenez",
+            "text": "The flask chilled in the ice — the crystals grew, were recrystallised from hot water and dried.",
+            "chars": 95,
+            "group": "TimeSkip"
+        },
+        {
+            "id": "d69b07ba61a16b7a",
+            "speaker": "Jimenez",
+            "text": "Filtered, washed three times with water and dried — white acetanilide plates, ready to weigh for the data sheet.",
+            "chars": 112,
+            "group": "TimeSkip"
+        },
+        {
+            "id": "e70746f27f6d3cd7",
+            "speaker": "Jimenez",
+            "text": "Fifteen minutes later — the beaker is packed with white benzamide crystals.",
+            "chars": 75,
+            "group": "TimeSkip"
+        },
+        {
+            "id": "490ea9702c5965af",
+            "speaker": "Jimenez",
+            "text": "Filtered, washed with cold water and oven-dried — your benzamide is a dry white powder.",
+            "chars": 87,
+            "group": "TimeSkip"
+        },
+        {
+            "id": "4aed7e3938aac598",
+            "speaker": "Jimenez",
+            "text": "Seven days and seven nights later - fermentation is complete and the wine has cleared over its lees.",
+            "chars": 100,
+            "group": "TimeSkip"
+        },
+        {
             "id": "7084ac8853fac6c0",
             "speaker": "Pharmee",
             "text": "Welcome back to the lab! I'm Pharmee — follow your wrist checklist and I'll be right here.",

@@ -74,3 +74,22 @@ Pharmee and Dr. Jimenez now speak their lines via pre-generated ElevenLabs TTS c
 - **Chemical Compounding module scope** — the game's test battery diverges from manuscript Exp 2 (see `manuscript-reconciliation.md` §7). Decide: keep the simplified single-substrate battery, or restore the manuscript's multi-substrate identification tests (FeCl3 enol / rate-of-oxidation / Tollen's / ester / aspirin hydrolysis)?
 - **Safety-skill mastery coupling** — safety mistakes currently dent the grade but not BKT mastery unless a module tracks the Safety skill. Coupling them everywhere raises difficulty; confirm preference.
 - **Per-attempt history** — only aggregate best-grade/attempt-count is persisted (no per-attempt log). Confirm the analytics descope still stands.
+
+## W5.50 additions (2026-09-05) — four quantities that differ from Appendix C
+
+An automated cross-check now compares every quantity the player pours against the manuscript
+(`Docs/manuscript-quantities.tsv`, 22 rows). Twenty-two match; these four do not. Each is a
+deliberate simplification of the VR action count, recorded here rather than silently changed.
+Tick one per row.
+
+| Module / step | Manuscript says (Appendix C line) | Game does | Decision |
+|---|---|---|---|
+| Acetanilide — hydrolysis test | "Place **1 gram** of acetanilide in a test tube and add 3 ml of concentrated hydrochloric acid" (2950) | Player pours **2** of their own acetanilide | ☐ keep 2 · ☐ change to 1 |
+| Acetanilide — bromination test | "Place **1 gram** of acetanilide in a test tube and add 5 ml of water" (2954) | Player pours **2** of their own acetanilide | ☐ keep 2 · ☐ change to 1 |
+| Acetone — bisulfite test (ethanol) | "Place **0.5 ml** of ethyl alcohol in a test tube" (3192) | Player pours **1** (one dropper squeeze is the smallest VR action) | ☐ keep 1 · ☐ author a half-squeeze |
+| Acetone — bisulfite test (acetone) | "add **0.5 ml** of acetone" (3194) | Player pours **1** | ☐ keep 1 · ☐ author a half-squeeze |
+
+Note: the VR verb contract makes one dropper squeeze = 1 ml, so "0.5 ml" has no single-action
+equivalent today; "keep 1" costs nothing, "half-squeeze" is new mechanics. The step ORDER of all
+six manuscript-backed modules and the observation wording of all 23 checkable reactions were
+verified in the same pass and need no decision.

@@ -192,6 +192,11 @@ Builds the equipment-shelf platforms on the center-table overhead gantry. W5.10 
 
 One procedures display (user 2026-07-10): the entrance LabTablet duplicated the wrist holo board, and the wrist mini-panel duplicated the holo header — three surfaces fighting over the same content, with the tablet's fixed rect overflowing into its reaction footer. This menu retires the LabTablet (deactivated, not deleted) and the MiniPanel, and upgrades the holo board to the single panel: status header (ex mini-panel) + focused checklist + the balanced-reaction footer (ex tablet). Idempotent.
 
+### `Tools/PharmaSynth/Damp Jimenez Arm Swing`
+<sub>`Assets/PharmaSynth/Scripts/Editor/JimenezArmDamper.cs`</sub>
+
+⛔ WHY THIS EXISTS AND THE RE-WEIGHT DOES NOT. The obvious fix — move the coat's vertex weights off the arm bones — was built, measured and REVERTED. On this asset the coat and the sleeve are one continuous surface with no seam to cut along, so any weight change big enough to free the coat is big enough to rip it: against the untouched mesh, worst edge stretch went 4.2x → 14.9x and torn edges 32 → 174. Smoothing the transfer across a band removed the tearing but then barely moved the coat either 
+
 ### `Tools/PharmaSynth/Demo/Build Demo HUD`
 <sub>`Assets/PharmaSynth/Scripts/Editor/DemoModeBuilder.cs`</sub>
 

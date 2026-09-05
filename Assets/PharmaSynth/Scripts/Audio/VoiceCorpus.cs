@@ -19,6 +19,30 @@ public static class VoiceCorpus
         public Line(VoiceSpeaker s, string t, string g = "Misc") { speaker = s; text = t; group = g; }
     }
 
+    /// Lines authored in DATA rather than in code: each task's `longProcessMessage`, the
+    /// narration over a time skip ("One week later...").
+    ///
+    /// ⛔ CodeLines() cannot see these, so they were never exported to the voice manifest
+    /// and never got clips — Dr. Jimenez spoke all six of them in BLIPS, which is the
+    /// "broken machine" sound the user reported hearing instead of dialogue (2026-09-05).
+    /// The existing `voice: every corpus line has a clip` pin ran over CodeLines() alone, so
+    /// it was green throughout. A corpus that only knows about code lines is not a corpus.
+    public static List<Line> DataLines(ExperimentLibrary library)
+    {
+        var lines = new List<Line>();
+        if (library == null) return lines;
+        foreach (var m in library.modules)
+        {
+            if (m == null) continue;
+            foreach (var t in m.graphTasks)
+            {
+                if (t == null || string.IsNullOrWhiteSpace(t.longProcessMessage)) continue;
+                lines.Add(new Line(VoiceSpeaker.Jimenez, t.longProcessMessage.Trim(), "TimeSkip"));
+            }
+        }
+        return lines;
+    }
+
     public static List<Line> CodeLines()
     {
         var lines = new List<Line>();

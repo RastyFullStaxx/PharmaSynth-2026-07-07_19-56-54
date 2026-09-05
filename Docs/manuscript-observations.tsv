@@ -1,0 +1,53 @@
+# Manuscript observation authority — curated by hand from Appendix C's results wording.
+#
+# WHY THIS FILE EXISTS: the VISUAL sweep judges what the student SEES (colour, precipitate,
+# gas) against the fired rule. Nothing judged the WORDS the student reads — the
+# `expectedObservation` popup — against what the manual says they should observe. Two
+# hand-picked phrases ("fruity", "wintergreen") were pinned; the other 32 rules were not.
+#
+# RULE: the rule's expectedObservation must CONTAIN keyPhrase, case-insensitively. The phrase
+# is the manual's own result word (silver mirror, yellow, violet, milky, ammonia ...), so a
+# rewrite that drops the observation the manual asks for fails here.
+#
+# accepted = no results-sheet line to check against: a product-formation description the
+# game authors (the manual describes the PROCESS, not what the beaker looks like), a draft
+# rule not in any module's set, or a module with no manuscript procedure (Exp 4 errata,
+# Exp 9 rubric). Counted, never asserted.
+#
+# ruleAsset	keyPhrase	accepted	manuscript
+Test_EnolPhenolFeCl3	violet	no	Exp 2 A.I.c "Note the color produced" — phenol + FeCl3 is the violet enol complex
+Test_OxidationPrimaryKMnO4	decolorisation	no	Exp 2 A.II.e "Note the time of decolorization for each test tube"
+Test_OxidationSecondaryKMnO4	fades	no	Exp 2 A.II.c "observe for any color change"; slower than the primary
+Test_TollensAldehyde	silver mirror	no	Exp 2 B.I.d "Observe for a change in color" — the aldehyde plates silver
+Test_EsterEthylAcetate	odour	no	Exp 2 C.I.b "Warm the solution using a water bath. Note the odor"
+Test_EsterMethylSalicylate	wintergreen	no	Exp 2 C.I.d "Note the odor of the resulting solution" — methyl salicylate
+Test_HydrolysateFeCl3	violet	no	Exp 2 C.II.d "add 2 drops of 10% Ferric chloride" to the hydrolysed filtrate
+Test_HydrolysateFeCl3	control	no	Exp 2 C.II.e "Repeat the procedure using unhydrolyzed aspirin and compare"
+Iodoform	yellow	no	Exp 3 B.b "Iodoform Test" — iodoform is the yellow precipitate
+Limewater_CO2	milky	no	Exp 3 A.g the bent tube leads into limewater; CO2 turns it milky
+Test_AcetanilideHydrolysis	crystals	no	Exp 5 B.a "Note the appearance of crystals"
+Test_AcetanilideBromination	yellow	no	Exp 5 B.b "until solution assumes a distinctly yellow color"
+Test_AnilineBromination	compare	no	Exp 5 B.b "Repeat the procedure using aniline ... Compare the volume of bromine"
+Test_AcetoneTollens	no silver mirror	no	Exp 6 B.a "Acetone and Tollen's Test" — a ketone gives no mirror
+Test_AcetoneSchiff	negative	no	Exp 6 B.b "Acetone and Schiff's Reagent" — a ketone does not restore the magenta
+Test_AcetoneIodoform	yellow	no	Exp 6 B.c "Acetone with Sodium hypochlorite" — the haloform (iodoform) test
+Test_AcetoneBisulfite	addition product	no	Exp 6 B.d "Bisulfite addition products"
+Chloroform	non-flammable	no	Exp 7 B.a "Inflammability of chloroform. Try to ignite the chloroform"
+Test_ChloroformOxidation	odour	no	Exp 7 B.b "Oxidation of chloroform" — the phosgene-like smell is the result
+Test_ChloroformAgNO3	white	no	Exp 7 B.c "If there is no precipitate formed after 5 minutes, heat" — a white AgCl precipitate on warming
+Test_BenzamideAlkali	ammonia	no	Exp 8 B.a "Hydrolysis using an alkali" — ammonia is evolved
+Test_BenzamideAcid	benzoic acid	no	Exp 8 B.b "Acid hydrolysis" — benzoic acid crystals separate
+Test_BenzamideNitrous	effervescence	no	Exp 8 B.c "Action of nitrous acid" — nitrogen evolves briskly
+# --- no results line to check against ---
+Acetanilide	-	accepted	product description; Exp 5 A.g-A.i describe filtering and drying, not appearance
+Benzamide	-	accepted	product description; Exp 8 A.e-A.g
+Acidify_BenzoicPpt	-	accepted	Exp 4 errata — no manuscript procedure for the benzaldehyde route
+BenzoicOxidation	-	accepted	Exp 4 errata — no manuscript procedure for the benzaldehyde route
+Test_BenzoateEster	-	accepted	Exp 4 errata — no manuscript procedure for the benzaldehyde route
+Draft_BenzoateFeCl3	-	accepted	draft rule, not in any module's reaction set
+Draft_EthanolOxidation	-	accepted	draft rule, not in any module's reaction set
+EsterFormation	-	accepted	generic ester rule; the manual's "note the odor" is pinned on the two specific ester rules above
+FeCl3_Salicylate	-	accepted	generic FeCl3 rule; the manual's violet is pinned on Test_HydrolysateFeCl3 / Test_EnolPhenolFeCl3
+Ferment	-	accepted	process description (Exp 3 A.i "allow the mixture to stand"); the manual names no observation
+Test_AspirinHydrolysis	-	accepted	process description; the observable result is the FeCl3 step pinned above
+WineFermentation	-	accepted	Exp 9 is a group-activity rubric, not a lettered procedure

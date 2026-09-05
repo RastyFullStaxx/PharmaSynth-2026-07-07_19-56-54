@@ -76,6 +76,45 @@ public static class JimenezRigMath
     public static bool IsBleed(float distanceToBone, float sleeveRadius)
         => distanceToBone > sleeveRadius;
 
+    /// The same question, but able to tell a SLEEVE from a COAT PANEL HANGING BESIDE THE ARM.
+    ///
+    /// ⛔ Distance alone cannot. In this model's A-pose bind, the forearm hangs beside the
+    /// hip, so the coat's lower front panel sits just as close to the forearm bone as the
+    /// actual cuff does — both well inside the 12 cm sleeve radius. The first pass therefore
+    /// kept that panel on the arm, and it still tore visibly when he raised his hands
+    /// (user screenshot, 2026-09-05): the coat body no longer swung, but a jagged flap
+    /// remained at the left hip.
+    ///
+    /// A cuff wraps the limb and is far from the body's centre line; a coat panel hangs off
+    /// the torso and is near it. So "closer to the arm than to the spine" separates them,
+    /// and it needs no new tuning knob.
+    public static bool IsSleeve(float distanceToArm, float distanceToSpine, float sleeveRadius)
+        => distanceToArm <= sleeveRadius && distanceToArm < distanceToSpine;
+
+    /// Width of the blend band beyond the sleeve, as a fraction of the model's height.
+    public const float BlendFraction = 0.06f;
+
+    public static float BlendBandFor(float meshHeight)
+        => Mathf.Max(1e-4f, meshHeight) * BlendFraction;
+
+    /// HOW MUCH of a vertex's arm weight moves to the spine: 0 on the sleeve, ramping
+    /// smoothly to 1 across a band, so neighbouring vertices are never handed to different
+    /// bones outright.
+    ///
+    /// ⛔ This is the whole correction, and skipping it is what made the first attempt
+    /// WORSE than the auto-rig it was fixing. A hard cut moved 100% of the weight on one
+    /// side of the radius and 0% on the other, so two adjacent vertices followed completely
+    /// different bones and the edge between them ripped: measured against the untouched
+    /// mesh, worst edge stretch went from x4.2 to x14.9 and torn edges from 32 to 174, which
+    /// is the jagged flap the user photographed (2026-09-05). An auto-rigger's weights are
+    /// crude but CONTINUOUS; any correction has to stay continuous too.
+    public static float TransferFraction(float distanceToArm, float sleeveRadius, float blendBand)
+    {
+        if (distanceToArm <= sleeveRadius) return 0f;
+        if (blendBand <= 1e-5f) return 1f;
+        return Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((distanceToArm - sleeveRadius) / blendBand));
+    }
+
     /// Distance from a point to a bone SEGMENT (bone head to its child), not just to the
     /// joint — an upper arm is a long limb and measuring to the shoulder joint alone would
     /// call the whole forearm "far away".
@@ -95,12 +134,20 @@ public static class JimenezRigMath
     /// matters: a re-weighted vertex is still normalised, or the mesh deforms at the wrong
     /// scale and every fix looks like a modelling error.
     public static float Redistribute(ref BoneWeight w, int fromBone, int toBone)
+        => Redistribute(ref w, fromBone, toBone, 1f);
+
+    /// Move `fraction` of the weight sitting on `fromBone` onto `toBone`. A fraction below 1
+    /// leaves the rest on the arm, which is what keeps the surface continuous across the
+    /// sleeve boundary — see TransferFraction.
+    public static float Redistribute(ref BoneWeight w, int fromBone, int toBone, float fraction)
     {
+        fraction = Mathf.Clamp01(fraction);
+        if (fraction <= 0f) return 0f;
         float moved = 0f;
-        if (w.boneIndex0 == fromBone) { moved += w.weight0; w.weight0 = 0f; }
-        if (w.boneIndex1 == fromBone) { moved += w.weight1; w.weight1 = 0f; }
-        if (w.boneIndex2 == fromBone) { moved += w.weight2; w.weight2 = 0f; }
-        if (w.boneIndex3 == fromBone) { moved += w.weight3; w.weight3 = 0f; }
+        if (w.boneIndex0 == fromBone) { float t = w.weight0 * fraction; moved += t; w.weight0 -= t; }
+        if (w.boneIndex1 == fromBone) { float t = w.weight1 * fraction; moved += t; w.weight1 -= t; }
+        if (w.boneIndex2 == fromBone) { float t = w.weight2 * fraction; moved += t; w.weight2 -= t; }
+        if (w.boneIndex3 == fromBone) { float t = w.weight3 * fraction; moved += t; w.weight3 -= t; }
         if (moved <= 0f) return 0f;
 
         // Add to the target if it is already an influence; otherwise take the emptiest slot.
@@ -128,4 +175,13 @@ public static class JimenezRigMath
     }
 
     public static float Sum(BoneWeight w) => w.weight0 + w.weight1 + w.weight2 + w.weight3;
+
+    /// Pull an animated value back toward its rest pose. `factor` 1 leaves it untouched, 0
+    /// freezes it at rest.
+    ///
+    /// Used to soften how far Jimenez throws his arms, which is the only lever left on the
+    /// coat: the mesh cannot be re-weighted without tearing (see TransferFraction), but the
+    /// coat can only drag as far as the arm actually travels.
+    public static float Damp(float value, float rest, float factor)
+        => rest + (value - rest) * factor;
 }

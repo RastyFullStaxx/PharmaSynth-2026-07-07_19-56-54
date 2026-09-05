@@ -24,12 +24,16 @@ public static class VisualSweep
     public const float NearM = 0.6f;
     const int W = 960, H = 720;
 
-    public enum Expect { None, Fill, ColorChange, Precipitate, Gas, Odor, Heat, Chill, Powder, Grind, Scoop }
+    public enum Expect { None, Fill, ColorChange, Precipitate, Gas, Odor, Heat, Chill, Powder, Grind, Scoop,
+                         Flame, GasFill }
 
     /// What the probe saw. Plain data so the judge is pure and pinnable.
     public struct Obs
     {
         public bool found, rendererOn, pptOn, powderOn, heapOn;
+        /// Scene-wide cues, for the steps whose evidence is NOT inside a vessel.
+        public bool flameLit;
+        public float gasFill01;
         public float ml, pptMl, fill01, boil, tempC;
         public Color colour;
         public int particles;
@@ -91,7 +95,24 @@ public static class VisualSweep
             case "pour": case "stir": case "vapor": case "weigh": case "litmus": case "ferment": case "rack":
                 return Expect.Fill;
         }
-        return Expect.None;   // flame confirm, the methane rig: the mid-verb shot is the evidence
+        // \u26d4 These four used to fall through to Expect.None, so the sweep photographed
+        // them and judged NOTHING: 4 of 63 steps reported SKIP "the photo is the evidence",
+        // which is a picture nobody looks at rather than a check. Their evidence simply is
+        // not inside a vessel \u2014 it is a flame, a gas column and an assembled rig.
+        switch (kind)
+        {
+            case "flame": return Expect.Flame;
+            // — NOT an apparatus-assembly contract. The first cut counted ApparatusSnap
+            // attachments because the VAULT said this step was "Clamp the tube, fit the cork +
+            // delivery tube" — a hint the asset stopped carrying in July. The live asset says
+            // "Scoop the ground mixture from the mortar into the Hard-glass tube": a SOLID
+            // DELIVERY. MethaneApparatusRig never uses ApparatusSnap, so the count was 0 forever
+            // and the sweep reported a FAIL no player could see. Judge what the step DOES.
+            case "methane:setup-apparatus": return Expect.Powder;
+            case "methane:heat-mixture": return Expect.Heat;
+            case "methane:collect-gas": return Expect.GasFill;
+        }
+        return Expect.None;
     }
 
     public static float ColourDistance(Color a, Color b)
@@ -108,6 +129,20 @@ public static class VisualSweep
         Verdict Skip(string r) => new Verdict { status = "SKIP", reason = r };
 
         if (e == Expect.None) return Skip("no visual contract for this step (the photo is the evidence)");
+
+        // These two are judged BEFORE the vessel guard on purpose: their evidence is a
+        // flame or a gas column, neither of which lives in a LiquidPhysics.
+        switch (e)
+        {
+            case Expect.Flame:
+                return o.flameLit ? Ok("a live flame is at the sample")
+                                  : Fail("flammability test with NO lit flame anywhere in the scene");
+            case Expect.GasFill:
+                return o.gasFill01 > 0.01f
+                    ? Ok("gas collected, tube " + (o.gasFill01 * 100f).ToString("0") + "% full")
+                    : Fail("collection step finished with an EMPTY tube (GasCollection.FillFraction 0)");
+        }
+
         if (!o.found) return Fail("no vessel to look at");
         string fill = "fill " + (o.fill01 * 100f).ToString("0.#") + "% (" + (o.ml + o.pptMl).ToString("0.#") + " ml)";
         switch (e)
@@ -169,9 +204,45 @@ public static class VisualSweep
 
     // ---- scene ----------------------------------------------------------------
 
+    /// The evidence that is NOT inside a vessel: a lit flame, a filling gas tube and an
+    /// assembled apparatus. Scanned scene-wide because that is what these steps promise \u2014
+    /// the methane rig's whole point is that the parts are joined and the gas goes somewhere.
+    // ⛔ A flame is TRANSIENT evidence. The flame contract's first run sampled it once, at the
+    // final capture — after the step had completed and DropRespawn had extinguished the match
+    // — and reported "NO lit flame anywhere in the scene" on a step the game had just judged
+    // correctly ("Won't ignite — NON-FLAMMABLE"). Same mistake as the ground-path telemetry:
+    // one sample of a sometimes-true fact measures its default. So the flame is LATCHED at the
+    // mid-verb moment, when the match is provably at the sample, and the latch clears once the
+    // step has been judged.
+    static bool s_flameLatched;
+    public static bool FlameLatched => s_flameLatched;
+    public static void NoteFlame(bool litNow) { if (litNow) s_flameLatched = true; }
+    public static void ClearFlameLatch() => s_flameLatched = false;
+
+    /// Is any flame lit in the scene right now?
+    public static bool AnyFlameLit()
+    {
+        foreach (var b in Object.FindObjectsByType<BurnerController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (b != null && b.IsLit) return true;
+        foreach (var m in Object.FindObjectsByType<Matchstick>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (m != null && m.IsLit) return true;
+        return false;
+    }
+
+    static void SceneCues(ref Obs o)
+    {
+        if (s_flameLatched) o.flameLit = true;
+        if (AnyFlameLit()) o.flameLit = true;
+
+        foreach (var g in Object.FindObjectsByType<GasCollection>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (g != null && g.FillFraction > o.gasFill01) o.gasFill01 = g.FillFraction;
+
+    }
+
     public static Obs Probe(LiquidPhysics lp)
     {
         var o = new Obs { found = lp != null, particleNames = "", popups = "", chem = "" };
+        SceneCues(ref o);
         if (lp == null) return o;
         o.ml = lp.currentLiquidVolume; o.pptMl = lp.currentPptVolume;
         // Judge what the player SEES: the drawn column, which carries the readability
@@ -352,6 +423,7 @@ public static class VisualSweep
     /// SimulatedRun.MidVerb target: the verb in flight, photographed synchronously.
     public static void MidVerb(GameObject go, string tag)
     {
+        if (tag == "flame") NoteFlame(AnyFlameLit());   // the match is at the sample NOW
         if (go == null || s_stepDir == null) return;
         try { s_lastMid = Snap(go, Path.Combine(s_stepDir, s_stepStem + "-mid-" + tag + ".png"), true); }
         catch (System.Exception e) { Debug.LogWarning("[VisualSweep] mid-verb shot failed: " + e.Message); }
@@ -371,6 +443,7 @@ public static class VisualSweep
         var o = Probe(vessel);
         float bp = vessel != null && vessel.currentChemical != null ? vessel.currentChemical.boilingPointC : 100f;
         var v = Judge(e, o, rule, targetC, bp);
+        ClearFlameLatch();                                   // one step's evidence, not the next's
 
         if (!s_perModule.TryGetValue(module, out var tally)) s_perModule[module] = tally = new int[4];
         if (v.status == "OK") { Ok++; tally[0]++; } else if (v.Fail) { Fails++; tally[1]++; } else { Skips++; tally[2]++; }

@@ -18,6 +18,14 @@ public static class VoiceImportTool
     [MenuItem("Tools/PharmaSynth/Voice/Import & Wire Voice Clips")]
     public static void ImportAndWire()
     {
+        // ⛔ REFRESH FIRST. The generation script writes the mp3s from PowerShell, OUTSIDE
+        // Unity, so until the AssetDatabase has imported them LoadAssetAtPath returns null
+        // and this tool silently skips them — it then reports a healthy clip count and the
+        // new lines still speak in blips. That is exactly what happened on the six time-skip
+        // lines (2026-09-05): 6 mp3s on disk with matching ids, 0 of them in the bank, and a
+        // cheerful "347 clips in the bank" in the log.
+        AssetDatabase.Refresh();
+
         var bank = AssetDatabase.LoadAssetAtPath<VoiceBank>(BankPath);
         if (bank == null)
         {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -23,11 +23,18 @@ public class VoiceBank : ScriptableObject
     public List<Entry> entries = new List<Entry>();
 
     private Dictionary<string, AudioClip> _map;
+    /// How many entries the map was built from — NOT how many it contains.
+    ///
+    /// ⛔ The staleness check used to be `_map.Count != entries.Count`, but Rebuild skips
+    /// entries with a null clip or a blank id, so those two numbers differ permanently as
+    /// soon as ONE entry is incomplete — and every single Get() then rebuilt the whole
+    /// dictionary, on every spoken character of every line.
+    private int _builtFrom = -1;
 
     public AudioClip Get(VoiceSpeaker speaker, string id)
     {
         if (string.IsNullOrEmpty(id)) return null;
-        if (_map == null || _map.Count != entries.Count) Rebuild();
+        if (_map == null || _builtFrom != entries.Count) Rebuild();
         _map.TryGetValue(Key(speaker, id), out var clip);
         return clip;
     }
@@ -38,6 +45,17 @@ public class VoiceBank : ScriptableObject
         foreach (var e in entries)
             if (e != null && !string.IsNullOrEmpty(e.id) && e.clip != null)
                 _map[Key(e.speaker, e.id)] = e.clip;
+        _builtFrom = entries.Count;
+    }
+
+    /// Entries that name a clip Unity never imported. A non-zero count means the bank looks
+    /// full and speaks in blips — the failure mode that cost the six time-skip lines.
+    public int BrokenEntries()
+    {
+        int broken = 0;
+        foreach (var e in entries)
+            if (e == null || string.IsNullOrEmpty(e.id) || e.clip == null) broken++;
+        return broken;
     }
 
     private static string Key(VoiceSpeaker s, string id) => (int)s + ":" + id;
