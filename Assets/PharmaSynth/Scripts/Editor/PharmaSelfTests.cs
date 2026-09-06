@@ -1611,6 +1611,91 @@ public static class PharmaSelfTests
               hints > 0 && numbered.Count == 0);
         }
 
+        // ---- Any GLASSWARE will do (W5.54) ----
+        // Tubes pool by name family (hard glass shares their itemId); everything else by its
+        // LabItem itemId, because the spares are named Eq_WatchGlass / Kit_WatchGlass_1_11 /
+        // WatchGlass_2 and no prefix rule survives that. A kind with one instance never pools.
+        A("pool: glassware pools by itemId, tubes by family, singletons never",
+            VesselRoleMatch.PoolKey("Kit_TestTube_4", "kit-testtube") == VesselRoleMatch.RegularFamily
+            && VesselRoleMatch.PoolKey("Kit_Hard-GlassTestTube_1", "kit-testtube") == VesselRoleMatch.HardGlassFamily
+            && VesselRoleMatch.PoolKey("WatchGlass_2", "kit-watchglass") == "kit-watchglass"
+            && VesselRoleMatch.PoolKey("Kit_WatchGlass_1_11", "kit-watchglass") == VesselRoleMatch.PoolKey("Eq_WatchGlass", "kit-watchglass")
+            && VesselRoleMatch.PoolKey("Eq_Beaker_100mL", "kit-beaker_100ml") != VesselRoleMatch.PoolKey("Eq_Beaker_500mL", "kit-beaker_500ml")
+            && VesselRoleMatch.PoolKey("Anything", "") == "");
+
+        // The ghost demo must mime at the SAME pool member the glow and the arrow use: with
+        // pool targets registered, Endpoints took whichever extra was listed first.
+        {
+            var a = new GameObject("pool_a"); var b = new GameObject("pool_b"); var fx = new GameObject("fixed_src");
+            try
+            {
+                var targets = new List<TaskTarget>
+                {
+                    new TaskTarget { transform = fx.transform, role = TargetRole.Source },
+                    new TaskTarget { transform = a.transform, role = TargetRole.Destination, pool = true },
+                    new TaskTarget { transform = b.transform, role = TargetRole.Destination, pool = true },
+                };
+                var kept = VerbDemoPlayer.CollapsePool(targets, b.transform);
+                bool ok = kept.Count == 2 && kept[0].transform == fx.transform && kept[1].transform == b.transform;
+                A("demo: the ghost mimes at the chosen pool member", ok
+                    && VerbDemoPlayer.Endpoints(kept, out var mover, out var dest, out _)
+                    && mover == fx.transform && dest == b.transform);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(a); UnityEngine.Object.DestroyImmediate(b); UnityEngine.Object.DestroyImmediate(fx); }
+        }
+
+        // ⛔ A role is claimed by a POUR or by a delivery controller — never by construction.
+        // In a family with ONE role (Exp 9's limewater tube) every member used to claim it as it
+        // was wired: the authored member won the ledger, every extra started with an EMPTY
+        // candidate set, and any pour into it was scolded before the player did anything.
+        {
+            var authoredGo = GameObject.CreatePrimitive(PrimitiveType.Cube);   // LiquidPhysics requires a Renderer
+            var extraGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var lime = ScriptableObject.CreateInstance<ChemicalData>(); lime.chemicalName = "Limewater";
+            try
+            {
+                authoredGo.AddComponent<LiquidPhysics>(); extraGo.AddComponent<LiquidPhysics>();
+                var authored = authoredGo.AddComponent<LiquidTaskBinding>();
+                var extra = extraGo.AddComponent<LiquidTaskBinding>();
+                var role = new List<LiquidTaskBinding.ReagentStep>
+                {
+                    new LiquidTaskBinding.ReagentStep { reagent = lime, taskId = "confirm-ferment", requiredMl = 10f }
+                };
+                var roles = new List<List<LiquidTaskBinding.ReagentStep>> { role };
+                var shared = new RackRoles();
+                authored.MarkPoolMember(); extra.MarkPoolMember();
+                authored.SetRoles(roles, 0, shared);
+                extra.SetRoles(roles, -1, shared);
+
+                A("role: a single-role family is not claimed at wiring — the extra can still take it",
+                    authored.ClaimedRole == -1 && extra.ClaimedRole == -1 && extra.RoleAmbiguous
+                    && extra.CandidateTasks().Contains("confirm-ferment")
+                    && authored.ExpectedSteps.Count == 1 && extra.ExpectedSteps.Count == 0);
+
+                // A delivery controller IS the disambiguator: the first drop claims, exclusively —
+                // and the authored twin, which can now accept nothing, advertises NOTHING (the
+                // visual sweep ran Exp 7's distillate into a twin that scolded every drop).
+                bool took = extra.ClaimForTask("confirm-ferment");
+                A("role: a delivery claim takes the role for the receiver in hand, exclusively — the twin advertises nothing",
+                    took && extra.ClaimedRole == 0 && !extra.RoleAmbiguous && extra.ExpectedSteps.Count == 1
+                    && authored.CandidateTasks().Count == 0 && authored.ExpectedSteps.Count == 0);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(authoredGo); UnityEngine.Object.DestroyImmediate(extraGo);
+                UnityEngine.Object.DestroyImmediate(lime);
+            }
+        }
+
+        // ⛔ The stream takes a candidate only from the HAND, and the hand beats a nearer bench
+        // spare: a beaker resting near the bath claimed Exp 7's collect role by proximity before
+        // the player had picked anything up (W5.54 visual sweep).
+        A("collect: a resting spare never receives by proximity — an advertised receiver, or a candidate in the hand",
+            VaporMath.MayReceive(true, false, false) && VaporMath.MayReceive(false, true, true)
+            && !VaporMath.MayReceive(false, true, false) && !VaporMath.MayReceive(false, false, true)
+            && VaporMath.Prefer(true, 0.45f, false, 0.2f) && !VaporMath.Prefer(false, 0.2f, true, 0.45f)
+            && VaporMath.Prefer(false, 0.2f, false, 0.3f) && !VaporMath.Prefer(true, 0.4f, true, 0.3f));
+
         // A custom shader with no stereo-instancing macros renders to eye index 0 ONLY.
         //
         // The project runs Single Pass Instanced: both eyes go into one texture array and the

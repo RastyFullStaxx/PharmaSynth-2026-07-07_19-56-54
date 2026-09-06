@@ -72,6 +72,31 @@ public class LiquidTaskBinding : MonoBehaviour
     /// Every task any SURVIVING candidate role could still serve — empty once claimed or for
     /// a fixed vessel. The tutorial sweep registers these so a free tube can be pointed at
     /// and highlighted as a valid destination before it has committed to anything.
+    /// A role a DELIVERY controller has decided this tube plays (W5.54). -1 = none.
+    private int _forcedRole = -1;
+
+    /// Claim the candidate role that serves `taskId`, for a controller that IS the
+    /// disambiguator: a vapor stream condensing into a held tube is, by definition, filling
+    /// the collect-step receiver, and nothing is poured into a receiver first — so without
+    /// this, "hold a clean test tube at its mouth" only ever worked with the authored tube.
+    /// Returns true when the tube now plays a role that serves the task.
+    public bool ClaimForTask(string taskId)
+    {
+        if (_roles == null || string.IsNullOrEmpty(taskId)) return false;
+        if (_claimedRole >= 0) return RoleServes(_claimedRole, taskId);
+        var candidates = VesselRoleMatch.Candidates(_roleKeys, _poured, TakenByOthers());
+        foreach (int c in candidates)
+            if (RoleServes(c, taskId)) { _forcedRole = c; RebuildActiveSteps(); return _claimedRole == c; }
+        return false;
+    }
+
+    private bool RoleServes(int role, string taskId)
+    {
+        if (_roles == null || role < 0 || role >= _roles.Count) return false;
+        foreach (var st in _roles[role]) if (st != null && st.taskId == taskId) return true;
+        return false;
+    }
+
     /// The step an ACCEPTED pour is counted against while this pool tube is still
     /// ambiguous: the first surviving candidate role's step for that reagent. Any candidate
     /// will do — the narrowing later carries the volume, by reagent, to the claimed role.
@@ -102,6 +127,7 @@ public class LiquidTaskBinding : MonoBehaviour
     public void SetRoles(List<List<ReagentStep>> roles, int authoredRole, RackRoles shared)
     {
         _roles = roles; _rackRoles = shared; _authoredRole = authoredRole;
+        shared?.Join(this);
         _roleKeys = new List<IReadOnlyList<string>>();
         for (int i = 0; i < roles.Count; i++)
         {
@@ -117,6 +143,10 @@ public class LiquidTaskBinding : MonoBehaviour
     private ICollection<int> TakenByOthers()
         => _rackRoles != null ? _rackRoles.TakenByOthers(this) : null;
 
+    /// Ledger seam (W5.54): another member just claimed a role, so what this one may still
+    /// become — and advertise — has changed. Idempotent; may claim by elimination.
+    public void RefreshRoles() => RebuildActiveSteps();
+
     /// Recompute which steps this tube is currently working to.
     ///
     /// Claimed -> exactly that role's steps, i.e. identical to the old fixed behaviour.
@@ -126,7 +156,17 @@ public class LiquidTaskBinding : MonoBehaviour
     {
         if (_roles == null) return;
         var candidates = VesselRoleMatch.Candidates(_roleKeys, _poured, TakenByOthers());
-        int claimed = VesselRoleMatch.ClaimedRole(candidates);
+        // ⛔ A role is claimed by a POUR, or by a delivery controller that is the disambiguator
+        // by definition (ClaimForTask) — never by construction. In a family with ONE role
+        // (Exp 9's limewater tube, Acetanilide's hydrolysis tube, Exp 6's hard-glass acetate
+        // tube) every member used to "claim" that role the moment SetRoles ran: the authored
+        // member won the ledger and every extra started life with an EMPTY candidate set, so
+        // any pour into it was scolded before the player had done anything (W5.54, found by
+        // tracing the vapor path — the W5.53 "acetone into hard glass" test passed for the
+        // wrong reason).
+        int claimed = _forcedRole >= 0 && candidates.Contains(_forcedRole)
+            ? _forcedRole
+            : (_poured.Count > 0 ? VesselRoleMatch.ClaimedRole(candidates) : -1);
         bool firstClaim = claimed >= 0 && _claimedRole < 0;
         if (claimed >= 0 && _claimedRole != claimed)
         {
@@ -142,7 +182,15 @@ public class LiquidTaskBinding : MonoBehaviour
         // logged 144 mistakes on a PERFECT run. Acceptance stays permissive - that is the
         // whole point of dynamic roles - but the ADVERTISED step must stay a single
         // deterministic answer.
-        int show = claimed >= 0 ? claimed : _authoredRole;
+        //
+        // ⛔ ...and a twin whose authored role ANOTHER member has claimed advertises NOTHING
+        // (W5.54). Its candidate set is empty, so it can accept nothing, and an advertised step
+        // there is a lie the sim, the label and the vapor stream all believed: Exp 7's crude
+        // distillate ran into the authored beaker after a spare had claimed the role, every
+        // drop was scolded, the flask drained and the step never completed (visual sweep).
+        var taken = TakenByOthers();
+        int show = claimed >= 0 ? claimed
+                 : (_authoredRole >= 0 && (taken == null || !taken.Contains(_authoredRole)) ? _authoredRole : -1);
         var next = new List<ReagentStep>();
         if (show >= 0 && show < _roles.Count) next.AddRange(_roles[show]);
 

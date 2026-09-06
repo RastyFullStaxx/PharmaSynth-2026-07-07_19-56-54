@@ -95,6 +95,17 @@ public static class VesselRoleMatch
         return "";
     }
 
+    /// Which POOL any bench glassware belongs to (W5.54): tubes by name family (hard glass
+    /// shares their itemId), everything else by its LabItem itemId — the spares are named
+    /// `Eq_WatchGlass`, `Kit_WatchGlass_1_11`, `WatchGlass_2`, so no name rule survives them.
+    /// "" when the object is not poolable at all.
+    public static string PoolKey(string benchName, string itemId)
+    {
+        string fam = FamilyOf(benchName);
+        if (fam != "") return fam;
+        return string.IsNullOrEmpty(itemId) ? "" : itemId;
+    }
+
     /// Would adding `reagent` leave any role standing? Asked BEFORE the pour is recorded,
     /// so the binding can grade it without having to roll the tube's history back.
     public static bool WouldAccept(IReadOnlyList<IReadOnlyList<string>> roles,

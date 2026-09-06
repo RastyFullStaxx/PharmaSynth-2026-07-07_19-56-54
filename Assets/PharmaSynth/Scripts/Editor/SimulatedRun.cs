@@ -1200,7 +1200,18 @@ public static class SimulatedRun
             if (v != null && v.VaporTaskId == id) { vapor = v; break; }
         if (vapor == null) return false;
 
-        LiquidTaskBinding recvBind = steps.Count > 0 ? steps[0].b : null;
+        // The step map was built when the session began; a pool member may have claimed the
+        // receiver role since (W5.54), and the authored twin then advertises nothing. Condense
+        // into a vessel that STILL advertises the step, never into a stale first entry — the
+        // visual sweep ran 32 ml into a twin that scolded every drop.
+        LiquidTaskBinding recvBind = null;
+        foreach (var (b, _) in steps)
+        {
+            if (b == null || b.ExpectedSteps == null || recvBind != null) continue;
+            foreach (var st in b.ExpectedSteps)
+                if (st != null && st.taskId == id) { recvBind = b; break; }
+        }
+        if (recvBind == null && steps.Count > 0) recvBind = steps[0].b;
         var receiver = recvBind != null ? recvBind.GetComponent<LiquidPhysics>() : null;
         if (receiver == null)
         {

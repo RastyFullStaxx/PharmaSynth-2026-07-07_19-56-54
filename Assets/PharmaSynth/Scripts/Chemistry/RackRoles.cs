@@ -13,11 +13,26 @@ public class RackRoles
 {
     private readonly Dictionary<LiquidTaskBinding, int> _claims
         = new Dictionary<LiquidTaskBinding, int>();
+    private readonly List<LiquidTaskBinding> _members = new List<LiquidTaskBinding>();
+
+    /// Every member registers as it is wired (SetRoles), so a claim can reach the others.
+    public void Join(LiquidTaskBinding who)
+    {
+        if (who != null && !_members.Contains(who)) _members.Add(who);
+    }
 
     public void Claim(LiquidTaskBinding who, int role)
     {
         if (who == null) return;
         _claims[who] = role;
+        // ⛔ A claim changes what every OTHER member may still become — and what it may
+        // ADVERTISE (W5.54). A member only recomputed its steps when something happened to
+        // IT, so a twin whose authored role had just been taken kept advertising it, and the
+        // vapor stream, the sim and the label all believed the stale promise (Exp 7's crude
+        // distillate: 32 ml scolded into a beaker that could no longer take it). Refresh the
+        // others now; a snapshot, because a refresh may itself claim by elimination.
+        foreach (var m in _members.ToArray())
+            if (m != null && m != who) m.RefreshRoles();
     }
 
     /// Roles claimed by every OTHER member — what this tube may no longer become.

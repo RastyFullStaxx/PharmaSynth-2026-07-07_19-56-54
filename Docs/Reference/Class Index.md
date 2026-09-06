@@ -411,14 +411,14 @@ int ClaimedRole
 event System.Action<int> RoleClaimed
 bool IsPoolMember
 void MarkPoolMember()
+bool ClaimForTask(string taskId)
 List<string> CandidateTasks()
 void SetRoles(List<List<ReagentStep>> roles, int authoredRole, RackRoles shared)
+void RefreshRoles()
 bool IsListening
 void SetFumeHood(FumeHoodZone hood)
 bool InFumeHood()
 void Detach()
-void HandleReagent(ChemicalData chem)
-void HandleReagent(ChemicalData chem, float amountMl)
 ```
 
 ### `OverheatEffects` <sub>class</sub>
@@ -459,6 +459,7 @@ float maxFlowRate
 Who has claimed which role inside ONE rack group (W5.52). A rack group's tubes are interchangeable, so a role belongs to whichever tube the player actually poured it into. This is the shared ledger that keeps that exclusive: without it two tubes both narrow to the same role, the RackTaskGroup counts that role twice, and the step completes while a tube still sits empty. Plain C# rather than a MonoBehaviour: it holds no transform, needs no update, and is created by ExperimentSceneBuilder alongside the group's RackTaskGroups.
 
 ```csharp
+void Join(LiquidTaskBinding who)
 void Claim(LiquidTaskBinding who, int role)
 ICollection<int> TakenByOthers(LiquidTaskBinding me)
 ```
@@ -632,6 +633,7 @@ static bool IsImpossible(IReadOnlyList<int> candidates)
 const string RegularFamily
 const string HardGlassFamily
 static string FamilyOf(string benchName)
+static string PoolKey(string benchName, string itemId)
 static bool WouldAccept(IReadOnlyList<IReadOnlyList<string>> roles,
 ```
 
@@ -901,6 +903,8 @@ Pure rules for VAPOR COLLECTION (Exp 6: distill the acetone off the glowing acet
 const float DeliveryRadius
 const float MlPerTick
 static bool Fires(float sourceTempC, float requiredC, float sourceMl)
+static bool MayReceive(bool advertises, bool candidate, bool held)
+static bool Prefer(bool held, float d, bool bestHeld, float best)
 ```
 
 ### `VaporCollectController` <sub>class</sub>
@@ -914,7 +918,8 @@ LiquidPhysics Source
 float RequiredC
 void Bind(ExperimentRunner runner, LiquidPhysics source, string taskId,
 void Detach()
-bool ExpectsForThisStep(LiquidTaskBinding b)
+bool Advertises(LiquidTaskBinding b)
+bool IsCandidate(LiquidTaskBinding b)
 bool EmitTick(LiquidPhysics receiver)
 ```
 
@@ -1976,6 +1981,7 @@ Tutorial Mode's verb demonstration (W5.39): a translucent ghost of the object th
 void Bind(ExperimentRunner r, Material ghost)
 void SetGhostMaterial(Material m)
 bool IsPlaying
+static List<TaskTarget> CollapsePool(IReadOnlyList<TaskTarget> targets, Transform chosen)
 static bool Endpoints(IReadOnlyList<TaskTarget> targets,
 void Show(string taskId)
 void ShowCurrent()

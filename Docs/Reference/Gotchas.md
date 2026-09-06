@@ -1135,3 +1135,50 @@ re-homing.
 > Pinned: `hint: no action line names a numbered tube` ("the second rack" is allowed: a rack is
 > a real, distinct object). 48 orphaned clips (27 from earlier copy edits) were moved to the
 > off-repo backup, not deleted; the bank is 326 = the manifest.
+
+## A role claimed by construction is a role nobody can take
+
+> [!danger] `SetRoles` used to claim whenever exactly one candidate survived — including at build
+> The W5.52/W5.53 rule "claim when one candidate is left" is right after a POUR. Applied at
+> `SetRoles`, with nothing poured, a family with ONE role (Exp 9's limewater tube, Acetanilide's
+> hydrolysis tube, Exp 6's hard-glass acetate tube) claimed it on every member as they were
+> wired: the authored member won the shared ledger, every extra then saw the role as taken,
+> its candidate set was EMPTY from birth, and any pour into it was scolded before the player
+> had done anything. The W5.53 "acetone into hard glass is scolded" test passed — for the
+> wrong reason: not because families do not mix, but because the only hard-glass role was
+> already spoken for.
+>
+> A role is claimed by a pour, or by a delivery controller that is the disambiguator by
+> definition (`ClaimForTask`). Never by construction. Found by tracing the vapor path, not by
+> a test — the pin that should have caught it (single-role family, extra accepts the first
+> pour) exists now.
+
+## A derived map built once goes stale the moment the truth moves — and "expects" must include "could claim"
+
+> [!warning] Two ways a guide kept pointing at the authored object after the player chose another
+> **The target map.** `TutorialTargets.Build()` sweeps the live components once per run. An
+> anchor attached on a claim is therefore never registered, and the authored object — still
+> carrying its inert twin — stays the heat/litmus/weigh step's target. Rebuild the derived map
+> when the truth changes (`RoleClaimed` → `Clear` + `Build`), and remove the twin
+> (`DetachAnchors`) so it cannot register at all. A derived map is cheap; a stale one is a lie.
+>
+> **The receiver.** `VaporCollectController` delivered only to vessels whose binding ADVERTISES
+> the product. An unclaimed pool extra advertises nothing, and nothing is poured into a
+> receiver first, so "hold a clean test tube at its mouth" — the W5.53 hint rewrite — promised
+> what the mechanic did not deliver: only the authored tube ever collected. "Expects" now
+> includes "could still claim the role that serves this step", and the delivery itself claims it.
+>
+> **And then the sweep found the mirror image.** With candidates accepted by PROXIMITY, a spare
+> beaker resting near the bath claimed Exp 7's collect role during the distil-to-collect
+> transition, before the player had picked anything up — and the authored twin, whose role was
+> now taken, still ADVERTISED it ("claimed role, else authored"), so the sim's receiver and the
+> stream both believed it: 32 ml ran into the twin, every drop was scolded as an unexpected
+> reagent, the flask drained and the step never completed (module stopped at 5/13). A candidate
+> counts only in the HAND (`VaporMath.MayReceive`), the hand beats a nearer bench spare, and a
+> twin whose role another member holds advertises NOTHING. Under both halves: an advertised step
+> is a promise the whole system acts on — never advertise what the vessel can no longer accept.
+>
+> Also from this batch: the ghost demo (`VerbDemoPlayer.Endpoints`) took the FIRST destination
+> in the list, so with pool targets registered it mimed at whichever extra was listed first
+> while the glow lit the held-or-nearest one — the W5.44 "two cues must never disagree" rule,
+> broken by W5.53's own registration. One chooser for every cue now.

@@ -41,6 +41,17 @@ public class VerbDemoPlayer : MonoBehaviour
     /// (or TOOL) is what moves; when a step has no source — a verb performed on a vessel
     /// that is already in place, like stir or heat — the station is both mover and
     /// destination and the curve degenerates to a motion in place, which is right.
+    /// Pool targets other than the chosen member are dropped; everything else passes
+    /// through untouched. Pure so the suite can pin that the ghost and the glow agree.
+    public static List<TaskTarget> CollapsePool(IReadOnlyList<TaskTarget> targets, Transform chosen)
+    {
+        var kept = new List<TaskTarget>();
+        if (targets == null) return kept;
+        for (int i = 0; i < targets.Count; i++)
+            if (!targets[i].pool || targets[i].transform == chosen) kept.Add(targets[i]);
+        return kept;
+    }
+
     public static bool Endpoints(IReadOnlyList<TaskTarget> targets,
                                  out Transform mover, out Transform dest, out VerbKind kind)
     {
@@ -70,7 +81,15 @@ public class VerbDemoPlayer : MonoBehaviour
         if (ghostMaterial == null || IsPlaying || string.IsNullOrEmpty(taskId)) return;
 
         if (TaskTargetRegistry.TaskCount == 0) TutorialTargets.Build();
-        if (!Endpoints(TaskTargetRegistry.Targets(taskId), out var mover, out var dest, out var kind))
+        // A pool of interchangeable glassware collapses to the SAME member the glow and the
+        // arrow use (W5.54) — Endpoints takes the first destination it sees, and with pool
+        // targets registered that was whichever extra happened to be listed first, so the
+        // ghost mimed at one tube while the glow lit another. One chooser for every cue.
+        var all = TaskTargetRegistry.Targets(taskId);
+        var cam = Camera.main;
+        var chosen = TaskTargetRegistry.ChoosePoolMember(all, TutorialHighlighter.IsHeld,
+            cam != null ? cam.transform.position : Vector3.zero);
+        if (!Endpoints(CollapsePool(all, chosen), out var mover, out var dest, out var kind))
             return;
 
         // Bounds CENTRE, never transform.position: a shelf bottle's origin sits at its

@@ -672,60 +672,74 @@ public class ExperimentSceneBuilder : MonoBehaviour
         WireTubePools(layout);
     }
 
-    /// ANY TUBE WILL DO (W5.53, user 2026-09-06: "these misguided fixed text guides").
+    /// ANY GLASSWARE WILL DO (W5.53 tubes, W5.54 every spared kind; user 2026-09-06: "these
+    /// misguided fixed text guides" / "what else dynamic guides or effects in all tools").
     ///
-    /// A module's STANDALONE test tubes used to be pinned one role each to one bench tube,
-    /// so pouring the right reagent into the wrong-numbered tube was graded a mistake. In VR
-    /// the player grabs whichever tube is nearest, so a role on a bench object is guidance
-    /// they cannot follow. Every free bench tube of the same FAMILY now carries the module's
-    /// standalone roles as candidates — the W5.52 rack machinery, unchanged — and the role's
-    /// non-pour anchors are attached to whichever tube claims it.
-    ///
-    /// ⛔ Families never mix: a hard-glass tube pools only with hard-glass
-    /// (VesselRoleMatch.FamilyOf). Unique apparatus (one Florence flask, one 500 ml beaker)
-    /// is not pooled — there is only one such object, so a fixed role is correct there.
+    /// A module's standalone vessels used to be pinned one role each to one bench object, so
+    /// pouring the right reagent into the OTHER watch glass or the second 100 ml beaker was
+    /// graded a mistake. In VR the player grabs whichever one is nearest, so a role on a bench
+    /// object is guidance they cannot follow. Every free bench object of the same POOL
+    /// (VesselRoleMatch.PoolKey: tubes by name family because hard glass shares their itemId,
+    /// everything else by LabItem itemId) carries the module's roles as candidates — the W5.52
+    /// rack machinery, unchanged — and a role's non-pour anchors move to whichever object
+    /// claims it. A kind with a single instance on the bench is never pooled: there is only one
+    /// Florence flask, and a fixed role is correct there.
     private void WireTubePools(ExperimentLayout layout)
     {
-        // The roles: this layout's standalone TestTube vessels, grouped by family.
-        var rolesByFamily = new Dictionary<string, List<ExperimentLayout.Vessel>>();
+        // The roles: this layout's standalone bench-bound vessels, grouped by pool key.
+        var rolesByKey = new Dictionary<string, List<ExperimentLayout.Vessel>>();
         foreach (var v in layout.vessels)
         {
-            if (v == null || !string.IsNullOrEmpty(v.rackGroup)) continue;
-            if (string.IsNullOrEmpty(v.prefabName) || !v.prefabName.Contains("TestTube")) continue;
-            string fam = VesselRoleMatch.FamilyOf(v.benchItem);
-            if (fam == "") continue;
-            if (!rolesByFamily.TryGetValue(fam, out var list)) rolesByFamily[fam] = list = new List<ExperimentLayout.Vessel>();
+            if (v == null || !string.IsNullOrEmpty(v.rackGroup) || string.IsNullOrEmpty(v.benchItem)) continue;
+            var go = FindBenchItem(v.benchItem);
+            var li = go != null ? go.GetComponent<LabItem>() : null;
+            string key = VesselRoleMatch.PoolKey(v.benchItem, li != null ? li.itemId : "");
+            if (key == "") continue;
+            if (!rolesByKey.TryGetValue(key, out var list)) rolesByKey[key] = list = new List<ExperimentLayout.Vessel>();
             list.Add(v);
         }
 
-        foreach (var kv in rolesByFamily)
+        var allItems = FindObjectsByType<LabItem>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        foreach (var kv in rolesByKey)
         {
             var roleVessels = kv.Value;
+
+            // Only a kind with SPARES is pooled. One flask on the bench = one fixed role, and
+            // pooling it would only add a binding that can never be used.
+            int onBench = 0;
+            foreach (var li in allItems)
+                if (li != null && VesselRoleMatch.PoolKey(li.name, li.itemId) == kv.Key) onBench++;
+            if (onBench < 2) continue;
+
             var roles = new List<List<LiquidTaskBinding.ReagentStep>>();
             var members = new List<LiquidTaskBinding>();
             var authoredIndex = new Dictionary<LiquidTaskBinding, int>();
+            var authoredObject = new Dictionary<int, GameObject>();
 
-            // Authored tubes: BuildVessel already wired them; their steps ARE the roles.
+            // Authored objects: BuildVessel already wired them; their steps ARE the roles.
             for (int r = 0; r < roleVessels.Count; r++)
             {
                 var go = FindBenchItem(roleVessels[r].benchItem);
                 var bind = go != null ? go.GetComponent<LiquidTaskBinding>() : null;
                 roles.Add(bind != null ? new List<LiquidTaskBinding.ReagentStep>(bind.ExpectedSteps)
                                        : new List<LiquidTaskBinding.ReagentStep>());
-                if (bind != null) { members.Add(bind); authoredIndex[bind] = r; }
+                if (bind != null) { members.Add(bind); authoredIndex[bind] = r; authoredObject[r] = go; }
             }
             if (roles.Count == 0) continue;
 
-            // Extras: every OTHER free bench tube of the family gets a binding with no
-            // authored role — it advertises nothing until it claims.
-            foreach (var li in FindObjectsByType<LabItem>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            // Extras: every OTHER free bench object of the pool gets a binding with no
+            // authored role — it advertises nothing until it claims. Capacity follows the
+            // authored vessel's kind: a 500 ml beaker extra must not become a 25 ml tube.
+            string prefabKind = roleVessels[0].prefabName;
+            foreach (var li in allItems)
             {
-                if (li == null || VesselRoleMatch.FamilyOf(li.name) != kv.Key) continue;
+                if (li == null || VesselRoleMatch.PoolKey(li.name, li.itemId) != kv.Key) continue;
                 var go = li.gameObject;
                 if (go.GetComponent<LiquidTaskBinding>() != null) continue;   // authored here, or a rack member
                 var lp = go.GetComponent<LiquidPhysics>() ?? go.AddComponent<LiquidPhysics>();
                 lp.registry = registry;
-                lp.maxVolume = BenchMaxVolumeFor("TestTube", lp.maxVolume);
+                lp.maxVolume = BenchMaxVolumeFor(prefabKind, lp.maxVolume);
                 lp.SetContents(null, 0f);
                 EnsureLiquidVisual(go, lp);
                 var bind = go.AddComponent<LiquidTaskBinding>();
@@ -746,12 +760,41 @@ public class ExperimentSceneBuilder : MonoBehaviour
                 m.RoleClaimed += claimed =>
                 {
                     if (claimed < 0 || claimed >= roleVessels.Count || m == null) return;
-                    AttachAnchors(inst, roleVessels[claimed], m, lp);
+                    var role = roleVessels[claimed];
+                    AttachAnchors(inst, role, m, lp);
+                    // A claimed role lives in ONE place (W5.54): the authored object's now
+                    // orphaned anchors for this role are removed, so the inert twin can neither
+                    // register as a guidance target nor complete anything.
+                    if (authoredObject.TryGetValue(claimed, out var authored) && authored != null && authored != inst)
+                        DetachAnchors(authored, role);
                     var status = inst.GetComponent<VesselStatus>();
-                    if (status != null) status.SetRoleSuffix(LabelForRole(roleVessels[claimed]));
+                    if (status != null) status.SetRoleSuffix(LabelForRole(role));
+                    // The target map is DERIVED from the live components and built once per
+                    // run; the truth just moved, so rebuild it — the heat / litmus / weigh
+                    // step's glow and arrow now point at the object that will complete it.
+                    if (Application.isPlaying) { TaskTargetRegistry.Clear(); TutorialTargets.Build(); }
                 };
             }
         }
+    }
+
+    /// Remove the anchors `role` would have bolted onto `go` (the mirror of AttachAnchors),
+    /// matched by TASK so anchors for other roles on the same object are untouched.
+    private static void DetachAnchors(GameObject go, ExperimentLayout.Vessel role)
+    {
+        if (go == null || role == null) return;
+        string heatTask = role.heatTaskId;
+        if (string.IsNullOrEmpty(heatTask))
+            foreach (var b in role.bindings)
+                if (!b.completesTask && !string.IsNullOrEmpty(b.taskId)) { heatTask = b.taskId; break; }
+        foreach (var c in go.GetComponents<VesselHeatTask>())        if (c != null && c.TaskId == heatTask && role.heatToC > 0f) { c.Detach(); Kill(c); }
+        foreach (var c in go.GetComponents<VesselWeighTask>())       if (c != null && c.TaskId == role.weighTaskId) { c.Detach(); Kill(c); }
+        foreach (var c in go.GetComponents<VaporCollectController>()) if (c != null && c.VaporTaskId == role.vaporTaskId) { c.Detach(); Kill(c); }
+        foreach (var c in go.GetComponents<VesselChillTask>())       if (c != null && c.TaskId == role.chillTaskId) { c.Detach(); Kill(c); }
+        foreach (var c in go.GetComponents<VesselLitmusTask>())      if (c != null && c.TaskId == role.litmusTaskId) { c.Detach(); Kill(c); }
+        foreach (var c in go.GetComponents<VesselFlameTask>())       if (c != null && c.TaskId == role.flameTaskId) { c.Detach(); Kill(c); }
+        foreach (var c in go.GetComponents<StirController>())        if (c != null && c.TaskId == role.stirTaskId) { c.Detach(); Kill(c); }
+        foreach (var c in go.GetComponents<FermentationController>()) if (c != null && c.FermentTaskId == role.fermentTaskId) { c.Detach(); Kill(c); }
     }
 
     /// A player-facing name for a claimed role: the LABEL of the first task its steps

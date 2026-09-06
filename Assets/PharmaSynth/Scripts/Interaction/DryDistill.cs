@@ -71,6 +71,19 @@ public static class VaporMath
     /// charge left to decompose.
     public static bool Fires(float sourceTempC, float requiredC, float sourceMl)
         => sourceTempC >= requiredC && sourceMl > 0.5f;
+
+    /// A vessel may receive the stream when its binding ADVERTISES the step, or when it is an
+    /// unclaimed pool candidate for the step AND in the player's hand (W5.54). ⛔ A spare
+    /// resting on the bench near the bath must never claim a role by proximity: Exp 7's crude
+    /// distillate ran into a bench beaker before the player had picked anything up, and the
+    /// beaker they then held was scolded on every drop (found by the visual sweep).
+    public static bool MayReceive(bool advertises, bool candidate, bool held)
+        => advertises || (candidate && held);
+
+    /// Among eligible receivers in range, the one in the HAND beats a nearer one on the bench;
+    /// otherwise nearest wins.
+    public static bool Prefer(bool held, float d, bool bestHeld, float best)
+        => held != bestHeld ? held : d < best;
 }
 
 /// The dry-distillation product stream, zone-free (the fermentation pattern):
@@ -109,13 +122,16 @@ public class VaporCollectController : MonoBehaviour
         if (_source == null || _product == null) return;
         if (!VaporMath.Fires(_source.currentTempC, _requiredC, _source.currentLiquidVolume)) return;
 
-        LiquidPhysics receiver = null; float best = float.MaxValue;
+        LiquidPhysics receiver = null; float best = float.MaxValue; bool bestHeld = false;
         foreach (var b in FindObjectsByType<LiquidTaskBinding>(FindObjectsSortMode.None))
         {
             var lp = b.GetComponent<LiquidPhysics>();
-            if (lp == null || lp == _source || !ExpectsForThisStep(b)) continue;
+            if (lp == null || lp == _source) continue;
+            bool held = TutorialHighlighter.IsHeld(b.transform);
+            if (!VaporMath.MayReceive(Advertises(b), IsCandidate(b), held)) continue;
             float d = Vector3.Distance(lp.transform.position, _source.transform.position);
-            if (d <= VaporMath.DeliveryRadius && d < best) { best = d; receiver = lp; }
+            if (d > VaporMath.DeliveryRadius) continue;
+            if (receiver == null || VaporMath.Prefer(held, d, bestHeld, best)) { best = d; receiver = lp; bestHeld = held; }
         }
         if (receiver != null) EmitTick(receiver);
     }
@@ -127,7 +143,7 @@ public class VaporCollectController : MonoBehaviour
     /// (found by the W5.45 visual sweep; the class doc already promised the stream was
     /// "targeted, so it can never pollute a bystander tube" — this makes that true across
     /// TASKS, not just within one).
-    public bool ExpectsForThisStep(LiquidTaskBinding b)
+    public bool Advertises(LiquidTaskBinding b)
     {
         if (b == null) return false;
         foreach (var s in b.ExpectedSteps)
@@ -135,12 +151,26 @@ public class VaporCollectController : MonoBehaviour
         return false;
     }
 
+    /// A free POOL member that COULD still become this step's receiver (W5.54). An unclaimed
+    /// extra advertises nothing, and nothing is ever poured into a receiver first, so without
+    /// this "hold a clean test tube at its mouth" only ever worked with the authored tube —
+    /// the hint promised what the mechanic did not deliver. The claim itself happens on
+    /// delivery (EmitTick → ClaimForTask): condensing into a HELD tube is the disambiguating
+    /// act — held, never merely nearby (VaporMath.MayReceive).
+    public bool IsCandidate(LiquidTaskBinding b)
+        => b != null && b.IsPoolMember && b.RoleAmbiguous && b.CandidateTasks().Contains(_taskId);
+
     /// One condensation tick into a receiver (public: the sim's stand-in for
     /// the delivery-tube run). Consumes the source charge, delivers product.
     public bool EmitTick(LiquidPhysics receiver)
     {
         if (receiver == null || _source == null || _product == null) return false;
         if (!VaporMath.Fires(_source.currentTempC, _requiredC, _source.currentLiquidVolume)) return false;
+        // The receiver in the player's hand becomes THE receiver (W5.54): a pooled tube claims
+        // the collect role on the first condensed drop, so its binding advertises the step and
+        // the accumulated distillate can complete it.
+        var rb = receiver.GetComponent<LiquidTaskBinding>();
+        if (rb != null && rb.IsPoolMember && rb.RoleAmbiguous) rb.ClaimForTask(_taskId);
         if (_source.PourOut(VaporMath.MlPerTick) == null) return false;
         receiver.AddLiquid(_product, VaporMath.MlPerTick);
         return true;
