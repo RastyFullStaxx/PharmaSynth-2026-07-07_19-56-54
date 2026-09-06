@@ -160,6 +160,10 @@ public static class ReagentCabinetBuilder
         EditorSceneManager.SaveOpenScenes();
         Debug.Log($"[ReagentCabinets] built {groups.Length} units at x={ux:F2} (base y={RootY}): {stocked} materials stocked, " +
                   $"{skipped} already on the ReagentShelf, name labels re-mounted. Run Re-Home Scene Items next.");
+        // A rebuilt solid jar shows a heap, not a liquid column (W5.59 — six jars were
+        // drawn as brown liquid because the PowderJar prefab only carries a Liquid surface).
+        SolidJarFitter.FitAll(out _);
+
     }
 
     /// The copier ('Environment/Printe') sat inside the old unit-1 footprint. Move
@@ -349,16 +353,39 @@ public static class ReagentCabinetBuilder
         {
             var b = CombinedBounds(rends);
             if (b.size.y > 0.001f) inst.transform.localScale *= targetH / b.size.y;
+            // ⛔ Put the MESH on the pivot, never the pivot wherever the model's baked offset
+            // leaves it (W5.57). A Tripo export can carry its geometry metres from its own
+            // origin: the matchstick's stick sat 1.9 m from the root this loader positioned,
+            // and every runtime rule reads transform.position — the match was "held" 1.9 m
+            // from the hand and no burner could be lit in VR. The root lands at `pos`, and the
+            // children shift so the mesh's bottom-centre sits on it (base on the pivot, like
+            // every hand-modelled beaker), 5 mm proud of the shelf.
             inst.transform.position = pos;
             b = CombinedBounds(inst.GetComponentsInChildren<Renderer>(true));
-            inst.transform.position = new Vector3(pos.x, pos.y + (pos.y - b.min.y) + 0.005f, pos.z);
+            Vector3 shift = pos - new Vector3(b.center.x, b.min.y, b.center.z);
+            foreach (Transform child in inst.transform) child.position += shift;
+            inst.transform.position = new Vector3(pos.x, pos.y + 0.005f, pos.z);
         }
         else inst.transform.position = pos;
         if (inst.GetComponentInChildren<Collider>() == null)
         {
+            // Size the grab box from the mesh it now wraps. The old fixed targetH box gave the
+            // matchstick a 1 mm collider and left the ice bucket's box 1.9 m from the bucket.
             var col = inst.AddComponent<BoxCollider>();
-            col.size = new Vector3(targetH * 1.6f, targetH, targetH * 1.2f);
-            col.center = new Vector3(0f, targetH * 0.4f, 0f);
+            var bb = CombinedBounds(inst.GetComponentsInChildren<Renderer>(true));
+            var ls = inst.transform.lossyScale;
+            if (bb.size.sqrMagnitude > 0f)
+            {
+                col.center = inst.transform.InverseTransformPoint(bb.center);
+                col.size = new Vector3(bb.size.x / Mathf.Max(1e-4f, Mathf.Abs(ls.x)),
+                                       bb.size.y / Mathf.Max(1e-4f, Mathf.Abs(ls.y)),
+                                       bb.size.z / Mathf.Max(1e-4f, Mathf.Abs(ls.z)));
+            }
+            else
+            {
+                col.size = new Vector3(targetH * 1.6f, targetH, targetH * 1.2f);
+                col.center = new Vector3(0f, targetH * 0.4f, 0f);
+            }
         }
         return inst;
     }

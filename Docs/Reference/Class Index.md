@@ -4930,11 +4930,12 @@ static void BuildSceneWiring()
 ### `UprightPourables` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Editor/UprightPourables.cs`</sub>
 
-Stands tipped glassware back up, and re-bakes its respawn home (W5.55). ⛔ A vessel whose RESTING pose reads as tipped pours itself forever: `LiquidPourer.Update` fires on `Vector3.Angle(Vector3.up, transform.up) > pourThreshold`, so it empties every drop put into it and runs its looping pour audio under everything else. W5.45 found both distilling flasks at 90 degrees; the suite has pinned it since, and it came back the moment a `Re-Home Scene Items (Adopt Current)` pass ran while a flask happened to be lying down — adoption bakes whatever pose it finds, tipped or not. Straightening the transform alone never sticks: `DropRespawn.ResetAllHome` puts the baked rotation back at the start of every run, so the HOME has to be rewritten too. Both pins live in the suite (`pour: no vessel rests beyond its own pour threshold` and `pour: no pourable vessel's baked HOME is tipped`). Idempotent: an al
+lying down — adoption bakes whatever pose it finds, tipped or not. ⛔ An item whose visible mesh is not on its own PIVOT cannot be placed by anyone and is held nowhere near the player's hand (W5.57). Four Tripo/USD imports carried their geometry 0.7–1.9 m from their origin: both distilling flasks, the ice bucket and the matchstick. Dragging the object in the Scene view moves the pivot; the mesh keeps its offset and hangs in the air wherever it is put. Worse, the runtime reads `transform.position` — `Matchstick` measures its strike distance from it, `VaporCollectController` its receiver radius, `DropRespawn` its home — so a grabbed match was "held" 1.9 m from the hand and no burner could be lit in VR. The simulators never noticed: they drive the APIs directly. Straightening or re-pivoting the transform alone never sticks: `DropRespawn.ResetAllHome` puts the baked pose back at the start of 
 
 ```csharp
 const float Tolerance
 const float MeshOffsetLimit
+static void RunLegacy()
 static void Run()
 ```
 

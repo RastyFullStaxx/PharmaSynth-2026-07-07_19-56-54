@@ -3465,8 +3465,98 @@ public static class PharmaSelfTests
             && CleanupMath.AfterSwipe(15f) == 0f);
         A("clean: wash-bottle rinse also cleans", CleanupMath.AfterRinse(100f, 90f) == 0f
             && Near(CleanupMath.AfterRinse(100f, 10f), 88f));
-        A("clean: label prefix follows the state", CleanupMath.NamePrefix(60f, true) == "Dirty "
-            && CleanupMath.NamePrefix(0f, true) == "Clean " && CleanupMath.NamePrefix(0f, false) == "");
+        // W5.59: residue never reaches the label. The prefix was the only thing cleaning ever did,
+        // and to a player a vessel that says Dirty is a vessel they must clean.
+        {
+            var labelGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var testChem = ScriptableObject.CreateInstance<ChemicalData>(); testChem.chemicalName = "Ethanol";
+            try
+            {
+                var lpL = labelGo.AddComponent<LiquidPhysics>();
+                var cvL = labelGo.AddComponent<CleanableVessel>(); cvL.Bind(lpL);
+                cvL.Soil();
+                var tag = labelGo.AddComponent<ProximityLabel>();
+                var vs = labelGo.AddComponent<VesselStatus>();
+                vs.Bind(lpL, tag, "Beaker");
+                vs.Refresh();
+                A("clean: the label never carries a residue prefix",
+                    tag.CurrentText != null && !tag.CurrentText.StartsWith("Dirty") && !tag.CurrentText.StartsWith("Clean"));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(labelGo); UnityEngine.Object.DestroyImmediate(testChem); }
+        }
+
+        // W5.59: a SOLID never pours — solids are scooped. A tilted jar of sugar used to stream
+        // a brown liquid column because the pourer never looked at the state.
+        {
+            var liq = ScriptableObject.CreateInstance<ChemicalData>(); liq.state = PhysicalState.Liquid;
+            var sol = ScriptableObject.CreateInstance<ChemicalData>(); sol.state = PhysicalState.Solid;
+            var pow = ScriptableObject.CreateInstance<ChemicalData>(); pow.state = PhysicalState.Powder;
+            try
+            {
+                A("pour: a solid never pours", PourMath.CanPour(liq) && !PourMath.CanPour(sol)
+                    && !PourMath.CanPour(pow) && !PourMath.CanPour(null));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(liq); UnityEngine.Object.DestroyImmediate(sol); UnityEngine.Object.DestroyImmediate(pow); }
+        }
+
+        // W5.59: ONE lab reset restores the apparatus — empty, cool, unclaimed, unlabelled — and
+        // refills the reagents WITHOUT refilling the glassware it just emptied (the supply
+        // monitor used to restock any binding-less vessel from its last chemical).
+        {
+            var app = GameObject.CreatePrimitive(PrimitiveType.Cube); app.name = "Eq_ResetProbe";
+            var jar = GameObject.CreatePrimitive(PrimitiveType.Cube); jar.name = "Raw_ResetProbe";
+            var chem = ScriptableObject.CreateInstance<ChemicalData>(); chem.chemicalName = "Probe Acid";
+            try
+            {
+                var lpA = app.AddComponent<LiquidPhysics>(); lpA.maxVolume = 100f; lpA.SetContents(chem, 30f);
+                var cvA = app.AddComponent<CleanableVessel>(); cvA.Bind(lpA); cvA.Soil();
+                var vsA = app.AddComponent<VesselStatus>(); vsA.SetRoleSuffix("Tollen's test");
+                var bindA = app.AddComponent<LiquidTaskBinding>(); bindA.SetVesselAndRunner(lpA, null);
+                var role = new List<LiquidTaskBinding.ReagentStep>
+                    { new LiquidTaskBinding.ReagentStep { reagent = chem, taskId = "probe-task", requiredMl = 10f } };
+                bindA.MarkPoolMember();
+                bindA.SetRoles(new List<List<LiquidTaskBinding.ReagentStep>> { role }, -1, new RackRoles());
+                bool claimed = bindA.ClaimForTask("probe-task") && bindA.ClaimedRole == 0;
+
+                var lpJ = jar.AddComponent<LiquidPhysics>(); lpJ.maxVolume = 150f; lpJ.SetContents(chem, 40f);
+
+                int touched = LabReset.ResetApparatus();
+
+                A("reset: a lab reset empties, cools, un-claims and un-labels every apparatus and refills every reagent",
+                    claimed && touched >= 1
+                    && lpA.currentLiquidVolume <= 0.01f                      // emptied, and NOT restocked
+                    && cvA.Dirtiness <= 0f && !cvA.EverDirty                 // residue gone
+                    && bindA.ClaimedRole == -1                               // role released through Emptied
+                    && Near(lpJ.currentLiquidVolume, 150f));                 // the reagent refilled
+                A("reset: apparatus and reagents are told apart by name",
+                    LabReset.IsReagent("Raw_Ethanol") && LabReset.IsReagent("Reagent_Acetone")
+                    && !LabReset.IsReagent("Eq_Beaker_100mL") && !LabReset.IsReagent("Kit_TestTube_3") && !LabReset.IsReagent(null));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(app); UnityEngine.Object.DestroyImmediate(jar);
+                UnityEngine.Object.DestroyImmediate(chem);
+            }
+        }
+
+        // W5.59: every solid jar on the shelf shows a heap, never a liquid column. Six jars did
+        // not — the PowderJar prefab carries only a Liquid surface — and the scoop, which keys
+        // on the chemical's state, worked on "liquid" sugar regardless.
+        {
+            int solidJars = 0, noHeap = 0; string worstJar = "";
+            foreach (var lp in UnityEngine.Object.FindObjectsByType<LiquidPhysics>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (lp == null || !LabReset.IsReagent(lp.name) || !SolidJarFitter.IsHeap(lp.currentChemical)) continue;
+                solidJars++;
+                var heap = lp.transform.Find("Powder");
+                var heapR = heap != null ? heap.GetComponent<Renderer>() : null;
+                bool ok = heapR != null && heapR.enabled
+                          && !LiquidPhysics.DrawsLiquidColumn(lp.currentLiquidVolume, lp.DryPowder, true);
+                if (!ok) { noHeap++; if (worstJar.Length == 0) worstJar = lp.name; }
+            }
+            A("jar: every solid shelf jar draws a heap, not a liquid column (" + solidJars + " jars, " + noHeap
+              + " without" + (worstJar.Length > 0 ? ", e.g. " + worstJar : "") + ")", solidJars > 0 && noHeap == 0);
+        }
         A("weigh: open mode any settled load", WeighMath.Satisfied(true, "", null, 0f, 0f, "", null));
         A("weigh: unsettled never", !WeighMath.Satisfied(false, "", null, 0f, 0f, "", null));
 
@@ -7278,6 +7368,42 @@ public static class PharmaSelfTests
                                                           : " by " + (gap * 100f).ToString("0") + " cm");
                 }
             }
+        // ⛔ The pivot has to be ON the mesh, not just the collider (W5.57). The runtime reads
+        // transform.position — Matchstick's strike distance, VaporCollectController's receiver
+        // radius, DropRespawn — so an item whose glass sits 1.9 m from its pivot is "held" 1.9 m
+        // from the player's hand. Four Tripo/USD imports were: the matchstick (no burner could
+        // be lit in VR), the ice bucket, both distilling flasks. Found by measuring, never by a
+        // simulator, which all drive the APIs directly. Slack of 10 cm: a tall vessel's pivot
+        // may sit at its base or its centre, both fine; a metre is not.
+        {
+            int offPivot = 0, offCollider = 0; string worstPivot = "", worstCol = "";
+            foreach (var li in UnityEngine.Object.FindObjectsByType<LabItem>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (li == null || !li.gameObject.activeInHierarchy) continue;
+                Bounds mesh = ExperimentSceneBuilder.SolidWorldBounds(li.gameObject);
+                if (mesh.size == Vector3.zero) continue;
+                var slack = mesh; slack.Expand(0.20f);
+                if (!slack.Contains(li.transform.position))
+                {
+                    offPivot++;
+                    if (worstPivot.Length == 0)
+                        worstPivot = li.name + " " + (Vector3.Distance(li.transform.position, mesh.center) * 100f).ToString("0") + " cm";
+                }
+                var col = li.GetComponentInChildren<Collider>();
+                if (col != null && li.GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable>() != null
+                    && !col.bounds.Intersects(mesh))
+                {
+                    offCollider++;
+                    if (worstCol.Length == 0) worstCol = li.name;
+                }
+            }
+            A("grab: every item's pivot sits on its own mesh (" + offPivot
+              + (worstPivot.Length > 0 ? ", e.g. " + worstPivot : "") + ")", offPivot == 0);
+            A("grab: every grabbable's collider overlaps its own mesh (" + offCollider
+              + (worstCol.Length > 0 ? ", e.g. " + worstCol : "") + ")", offCollider == 0);
+        }
+
         // Furniture is scenery: a stool the player can pick up and carry off is a toy, and
         // nothing in any experiment asks them to move one. The Environment prefab shipped all
         // six with a grab, so a re-import would put them back — hence a scene pin, not just

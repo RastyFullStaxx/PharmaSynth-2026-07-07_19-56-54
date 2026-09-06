@@ -1256,17 +1256,54 @@ re-homing.
 > is not a placement mistake — it was unplaceable. It also means the player reaches for the
 > glass in VR and grabs nothing, because the collider is half a metre away.
 >
-> ⛔ **Move the COLLIDER onto the glass — never the glass onto the pivot.** Two repairs failed
-> before that: dragging the visual assembly onto the pivot "aligned" it and teleported both
-> flasks off the worktop the user had just chosen, and re-pivoting (root to the glass,
-> children compensated) was correct but did not survive — it rewrites FOUR child transforms
-> on a prefab instance, and a single Ctrl+Z in the Scene view puts the offset straight back.
-> Wrapping the BoxCollider around the glass is ONE serialized value on the root: the glass
-> never moves, grabbing works because the collider is finally where the glass is, and the
-> pivot stays wherever the import put it, which nothing else cares about because every
-> system that matters already measures with `SolidWorldBounds`.
+> ⛔ **The PIVOT has to be on the mesh, not just the collider** (corrected W5.57). Wrapping
+> the collider fixed grabbing, but the runtime reads `transform.position`: `Matchstick`
+> measures its strike distance from it, `VaporCollectController` its 0.5 m receiver radius,
+> `DropRespawn` its home. A grabbed match whose pivot sat 1.9 m from the stick was "held"
+> 1.9 m from the hand and could light nothing in VR. The repair is RE-PIVOT: root to the
+> solid-mesh centre, every direct child shifted the opposite way, so the mesh, liquid,
+> spout, flame anchor, chill zone and label never move in world space; then the BoxCollider
+> is wrapped around the mesh and the home re-baked. Never drag the mesh onto the pivot — the
+> first attempt did, and teleported both flasks off the worktop the user had just chosen.
+>
+> A Ctrl+Z undoes it like any edit, which is how it was lost once. The `grab:` suite pins are
+> what make it stick: drift is a red line, and one run of `Fit Glassware (upright · pivot ·
+> seat)` restores it. The sweep that found all four (`pivot outside its own SolidWorldBounds`
+> over every `LabItem`) is now that pin. `TryTripo` no longer bakes the offset in: it centres
+> the model's mesh on the root and sizes the grab box from the mesh, so a cabinet rebuild
+> cannot recreate the 1 mm matchstick collider.
 >
 > Measure it with `ExperimentSceneBuilder.SolidWorldBounds` against the collider bounds. Every
 > other vessel in the lab measures under 3.5 cm; `Stand Tipped Glassware Up` repairs anything
 > past 5 cm, then seats the base on the surface below and re-bakes the home. Pinned by
 > `pour: no pourable vessel floats above the surface under it`.
+
+## `GameObjectUtility.SetStaticEditorFlags` does not survive a reload on a prefab instance
+
+> [!danger] The door fix was applied, logged success, saved — and was gone the next session
+> `Fix Lab Door` cleared the leaf's Batching Static flag with
+> `GameObjectUtility.SetStaticEditorFlags(go, 0)`. That changes the LIVE object, so every
+> readback in the same session agreed, and the menu logged "87 → 0". But the leaf is a child
+> of the Environment prefab instance, and that API records no prefab-instance OVERRIDE, so
+> the value reverted to the prefab's 87 on the next load. The door went on being merged into
+> the static batch: its collider swung open while the drawn leaf stayed shut, and the player
+> reported "the door is not opening" a second time, after being told it was fixed.
+>
+> Write serialized values on a prefab instance through `SerializedObject` +
+> `ApplyModifiedProperties`, then `PrefabUtility.RecordPrefabInstancePropertyModifications`.
+> Verify by reading back `PrefabUtility.GetPropertyModifications` and finding the property in
+> the list — not by re-reading the live object, which will happily agree either way.
+>
+> Same family as the flask children a Ctrl+Z reverted: **a scene edit that leaves no recorded
+> override is not saved, however convincingly it reads back.**
+
+## A face that changes colour on every line reads as flashing, however dim it is
+
+> [!warning] Two batches capped the BRIGHTNESS; the flashing was the CHANGE
+> W5.47 dimmed Pharmee's panels and hull, W5.49 capped the face palette under the bloom
+> threshold, and the user still reported flashing while she spoke. The cause was not
+> intensity: the gate sets `Neutral` as each line starts and `PharmeeMood` resets to the
+> default `Happy` as it ends, so a teal-to-blue STEP ran on every sentence. Making the two
+> colours identical removes it with no logic change at all — `SetExpression`, `PharmeeMood`
+> and `ExpressionForGate` are untouched, and `Warning` keeps its amber because it fires only
+> on a real mistake and is meant to be noticed.

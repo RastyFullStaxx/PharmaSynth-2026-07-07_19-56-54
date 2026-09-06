@@ -87,9 +87,12 @@ public static class LabNpcPolishBuilder
         // expression was the only green thing on a robot whose every emissive material is
         // called Blue_Light, so it read as a different character mid-sentence. Warning stays
         // amber: that one has to contrast, and amber against blue is the clearest pair.
-        face.SetPalette(
-            PharmeeGlowMath.CapBrightness(new Color(0.2f, 0.9f, 1f), PharmeeGlowMath.FaceCeiling),
-            PharmeeGlowMath.CapBrightness(new Color(0.3f, 0.72f, 1f), PharmeeGlowMath.FaceCeiling),
+        // ⛔ Neutral and Happy are ONE colour (W5.58). The gate sets Neutral as each line
+        // starts and PharmeeMood resets to Happy as it ends, so any difference between the two
+        // becomes a step change on every sentence — which is what the user saw as flashing.
+        // Warning stays amber: it fires only on a real mistake and is meant to be noticed.
+        var faceBlue = PharmeeGlowMath.CapBrightness(new Color(0.3f, 0.72f, 1f), PharmeeGlowMath.FaceCeiling);
+        face.SetPalette(faceBlue, faceBlue,
             PharmeeGlowMath.CapBrightness(new Color(1f, 0.6f, 0.15f), PharmeeGlowMath.FaceCeiling));
         int retinted = GreenToBlue(robot);
         if (retinted > 0) Debug.Log("[NpcPolish] retinted " + retinted + " green material(s) to blue");

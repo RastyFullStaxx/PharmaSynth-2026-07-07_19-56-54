@@ -227,6 +227,11 @@ Demo Mode scene wiring (user 2026-07-10). Three menus: • Build Demo Menu Butto
 
 Dev-only capture bridge: renders a one-off camera to a PNG on disk so out-of-editor tooling can see the scene (the MCP scene-preview capture is broken on this machine). Pose/output come from Temp/dev-capture-request.json when present; defaults to the player spawn head pose.
 
+### `Tools/PharmaSynth/Fit Glassware (upright · pivot · seat)`
+<sub>`Assets/PharmaSynth/Scripts/Editor/UprightPourables.cs`</sub>
+
+lying down — adoption bakes whatever pose it finds, tipped or not. ⛔ An item whose visible mesh is not on its own PIVOT cannot be placed by anyone and is held nowhere near the player's hand (W5.57). Four Tripo/USD imports carried their geometry 0.7–1.9 m from their origin: both distilling flasks, the ice bucket and the matchstick. Dragging the object in the Scene view moves the pivot; the mesh keeps its offset and hangs in the air wherever it is put. Worse, the runtime reads `transform.position`
+
 ### `Tools/PharmaSynth/Fix Cube Room Menu Layout`
 <sub>`Assets/PharmaSynth/Scripts/Editor/TutorialModeBuilder.cs`</sub>
 
@@ -545,7 +550,7 @@ Walks every module's REAL task graph step by step with Tutorial Mode on, and che
 ### `Tools/PharmaSynth/Stand Tipped Glassware Up`
 <sub>`Assets/PharmaSynth/Scripts/Editor/UprightPourables.cs`</sub>
 
-Stands tipped glassware back up, and re-bakes its respawn home (W5.55). ⛔ A vessel whose RESTING pose reads as tipped pours itself forever: `LiquidPourer.Update` fires on `Vector3.Angle(Vector3.up, transform.up) > pourThreshold`, so it empties every drop put into it and runs its looping pour audio under everything else. W5.45 found both distilling flasks at 90 degrees; the suite has pinned it since, and it came back the moment a `Re-Home Scene Items (Adopt Current)` pass ran while a flask happen
+The old menu path still works — the docs and muscle memory both use it.
 
 ### `Tools/PharmaSynth/Stock End-Product Shelf`
 <sub>`Assets/PharmaSynth/Scripts/Editor/EndProductShelfStocker.cs`</sub>

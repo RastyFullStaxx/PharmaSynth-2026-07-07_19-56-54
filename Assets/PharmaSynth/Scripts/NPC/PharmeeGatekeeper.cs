@@ -471,6 +471,9 @@ public class PharmeeGatekeeper : MonoBehaviour
 
             case GateState.Loading:
                 panel?.Hide();
+                // ⭐ Every run path crosses Loading (first run, Retry, Restart), so this is the one
+                // place the APPARATUS is restored: empty, cool, unlabelled, unclaimed (W5.59).
+                LabReset.ResetApparatus();
                 LoadSelected();
                 // W5.9 watchdog: Loading's only exit is the fade callback firing
                 // Loaded — if a concurrent fade ever swallowed it, force the exit
@@ -828,6 +831,7 @@ public class PharmeeGatekeeper : MonoBehaviour
     {
         string id = runner != null && runner.Module != null ? runner.Module.moduleId : GameFlow.SelectedModuleId;
         TaskTargetRegistry.Clear();
+        LabReset.ResetApparatus();                     // contents, temperature, residue, labels (W5.59)
         launcher?.Launch(id, LaunchMode.StageOnly);
         DropRespawn.ResetAllHome();                    // hand-placed apparatus + reagents back home
         RestorePharmeeHome();                          // off the review spot, back on door duty

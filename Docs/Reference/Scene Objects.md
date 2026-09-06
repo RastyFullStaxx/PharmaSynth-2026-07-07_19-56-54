@@ -27,8 +27,8 @@ Up: [[Home]] - [[The Lab Scene]] - [[Gotchas]]
 | `BeginButton` | 0.990 |
 | `BenchApparatus` | 0.000 |
 | `Directional Light` | 3.000 |
-| `DistillingFlask` | 0.673 |
-| `DistillingFlask_2` | 0.667 |
+| `DistillingFlask` | 1.665 |
+| `DistillingFlask_2` | 1.665 |
 | `DoorApproachTrigger` | 1.200 |
 | `DrJimenez` | 0.000 |
 | `DressingMirror` | 1.350 |
@@ -114,7 +114,7 @@ Up: [[Home]] - [[The Lab Scene]] - [[Gotchas]]
 | `HandVisual_R` | x=0, y=-0.03, z=-0.06 |
 | `JimenezModel` | x=-0.010523621, y=0.88733363, z=-0.0013455013 |
 | `LabCoatDisplay` | x=4.2400007, y=0.584, z=0.7020546 |
-| `Matchstick` | x=4.1963134, y=2.0419998, z=-3.085 |
+| `Matchstick` | x=1.9600025, y=9.800999, z=14.05 |
 | `PlayerAvatar` | x=0, y=0.8539318, z=0 |
 | `Prop_burner` | x=-0.32039988, y=0.92640007, z=-3.6808999 |
 | `Prop_collection-tube` | x=-1.0173998, y=0.92640007, z=-3.7009003 |
@@ -150,7 +150,7 @@ Up: [[Home]] - [[The Lab Scene]] - [[Gotchas]]
 | `Raw_Glycerol` | x=-0.2249999, y=0.30799997, z=-0.3829999 |
 | `Raw_HydrochloricAcid0.1N` | x=-0.30700016, y=-0.08200002, z=-0.34099984 |
 | `Raw_HydrochloricAcid6N` | x=-0.30700016, y=-0.08200002, z=-0.6309998 |
-| `Raw_IceBucket` | x=4.1963134, y=2.045, z=-2.6499999 |
+| `Raw_IceBucket` | x=1.3500006, y=6.595, z=9.700001 |
 | `Raw_Limewater` | x=-0.30700016, y=0.30799997, z=-0.19599998 |
 | `Raw_LitmusPaper` | x=3.9913478, y=0.93678004, z=-4.7554975 |
 | `Raw_Matchsticks` | x=3.9766974, y=0.9409, z=-4.660761 |

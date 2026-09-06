@@ -64,6 +64,23 @@ public class CleanableVessel : MonoBehaviour
         _lastMl = ml;
     }
 
+    /// Back to a fresh vessel (W5.59): the lab reset calls this so residue never carries
+    /// from one attempt into the next. Re-samples the volume so the next Update does not
+    /// mistake the reset for an emptying and stamp the vessel dirty again.
+    /// Test/builder seam: exactly what Update does the moment a used vessel runs empty.
+    public void Soil()
+    {
+        Dirtiness = CleanupMath.DirtyOnEmpty;
+        _everDirty = true;
+    }
+
+    public void ResetResidue()
+    {
+        Dirtiness = 0f;
+        _everDirty = false;
+        _lastMl = CurrentMl();
+    }
+
     /// One brush swipe (BrushController calls this). Returns the new dirtiness.
     public float Scrub()
     {

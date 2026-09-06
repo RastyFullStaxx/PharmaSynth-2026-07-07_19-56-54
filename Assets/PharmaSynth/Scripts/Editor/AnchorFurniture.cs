@@ -21,7 +21,7 @@ public static class AnchorFurniture
 {
     /// Name fragments that identify scenery a player must never pick up. Matched
     /// case-insensitively against the object name, so "Stool (4)" is covered.
-    public static readonly string[] Fragments = { "stool" };
+    public static readonly string[] Fragments = { "stool", "printe" };   // "Printe" is the printer
 
     /// Pure: is this object name one of the furniture pieces that must not be grabbable?
     public static bool IsFurniture(string objectName)

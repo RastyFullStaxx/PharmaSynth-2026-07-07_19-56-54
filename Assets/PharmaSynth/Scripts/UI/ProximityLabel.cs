@@ -8,6 +8,9 @@ using TMPro;
 public class ProximityLabel : MonoBehaviour
 {
     [SerializeField] private string label = "";
+
+    /// What the tag says right now — the suite reads it to pin what a label must NOT carry.
+    public string CurrentText => label;
     [SerializeField] private float showDistance = 1.4f;
     [SerializeField] private float heightOffset = 0.14f;
     [SerializeField] private float fontSize = 5.5f;

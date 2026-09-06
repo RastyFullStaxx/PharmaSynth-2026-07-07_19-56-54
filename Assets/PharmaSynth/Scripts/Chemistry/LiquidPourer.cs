@@ -1,5 +1,17 @@
 using UnityEngine;
 
+/// Pure pour rules (W5.59).
+public static class PourMath
+{
+    /// ⛔ A SOLID never pours. The verb contract is "solids are scooped, liquids poured",
+    /// and the tutorial sweep already registers a Scoop verb for every solid reagent — yet the
+    /// pourer had no idea what state its contents were in, so a tilted jar of brown sugar
+    /// streamed a brown liquid column into the beaker (user, in the headset). Nothing to
+    /// pour is also not pourable.
+    public static bool CanPour(ChemicalData chem)
+        => chem != null && chem.state != PhysicalState.Solid && chem.state != PhysicalState.Powder;
+}
+
 [RequireComponent(typeof(LiquidPhysics))]
 public class LiquidPourer : MonoBehaviour
 {
@@ -73,7 +85,8 @@ public class LiquidPourer : MonoBehaviour
     {
         float tiltAngle = Vector3.Angle(Vector3.up, transform.up);
 
-        if (tiltAngle > pourThreshold && sourceContainer != null && sourceContainer.currentLiquidVolume > 0)
+        if (tiltAngle > pourThreshold && sourceContainer != null && sourceContainer.currentLiquidVolume > 0
+            && PourMath.CanPour(sourceContainer.currentChemical))
         {
             EnsureStreamLine();
             PourTick(Time.deltaTime, tiltAngle);

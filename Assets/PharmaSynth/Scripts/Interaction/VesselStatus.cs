@@ -17,13 +17,11 @@ public class VesselStatus : MonoBehaviour
     private float _showDist = 1.6f;
     private float _nextAt;
     private string _last;
-    private CleanableVessel _clean;   // optional: "Dirty "/"Clean " name prefix (W5.12)
 
     /// Builder seam (Awake doesn't fire on edit-mode AddComponent).
     public void Bind(LiquidPhysics lp, ProximityLabel label, string displayName, float showDist = 1.6f)
     {
         _lp = lp; _label = label; _displayName = displayName; _showDist = showDist;
-        _clean = GetComponent<CleanableVessel>();
         Refresh();
     }
 
@@ -54,8 +52,12 @@ public class VesselStatus : MonoBehaviour
     public void Refresh()
     {
         if (_lp == null || _label == null) return;
-        if (_clean == null) _clean = GetComponent<CleanableVessel>();
-        string name = (_clean != null ? _clean.NamePrefix() : "") + _displayName + _roleSuffix;
+        // ⛔ No "Dirty " / "Clean " prefix (W5.59, user: "remove the requirement of cleaning the
+        // apparatus, it just must become empty"). Residue never gated or graded anything; the
+        // stamp was its ONLY effect, and to a player a label that says Dirty IS a requirement.
+        // Worse, nothing reset it, so it survived every restart. The brush and rinse still
+        // work as a flourish; the label just never asks for them.
+        string name = _displayName + _roleSuffix;
         // A vessel holding a MIX names every element and its amount (the ledger
         // story) — "Ethanol 1 ml + Distilled Water 10 ml"; a single chemical
         // keeps the short form (user 2026-07-17).

@@ -17,11 +17,16 @@ public class PharmeeFace : MonoBehaviour, IPharmeeFace
     // dimmed her body panels and hull and left the face alone, which is why she still
     // flashed while talking (user, 2026-09-05). Authored under PharmeeGlowMath.FaceCeiling
     // and enforced by Wire NPC Polish.
-    [ColorUsage(true, true)] [SerializeField] private Color neutral = new Color(0.11f, 0.50f, 0.55f);
-    // Blue, like every other emissive on this robot (W5.55) — the green default was the one
-    // thing that changed her colour mid-sentence. The builder writes the tuned palette over
-    // this, but a fresh AddComponent must not start green either.
+    // ⛔ NEUTRAL AND HAPPY ARE THE SAME COLOUR (W5.58, user: "remove the flashing lights
+    // for when pharmee is speaking"). Every gate line set Neutral on start and PharmeeMood
+    // reset to the default (Happy) on end, so a teal-to-blue step ran on EVERY sentence —
+    // that back-and-forth was the flashing, not brightness, which W5.47 and W5.49 had already
+    // capped. Identical colours make the swap invisible while leaving the expression logic,
+    // PharmeeMood and the gate mapping completely untouched.
+    [ColorUsage(true, true)] [SerializeField] private Color neutral = new Color(0.12f, 0.30f, 0.42f);
     [ColorUsage(true, true)] [SerializeField] private Color happy = new Color(0.12f, 0.30f, 0.42f);
+    // Warning KEEPS its amber: it fires only when the player actually errs, it is the one
+    // face change that carries information, and a rare deliberate change is not a flash.
     [ColorUsage(true, true)] [SerializeField] private Color warning = new Color(0.55f, 0.33f, 0.08f);
 
     private MaterialPropertyBlock _mpb;
