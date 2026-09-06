@@ -1591,7 +1591,7 @@ public static class PharmaSelfTests
             }
         }
 
-        // \u26d4 Pharmee SPEAKS the text after the arrow in every hint, so a hint that says
+        // ⛔ Pharmee SPEAKS the text after the arrow in every hint, so a hint that says
         // "Test Tube 15" is a voice line insisting on a tube the player is not holding. With
         // tubes claiming their own role (W5.53) that is not merely unhelpful, it is wrong.
         // "the second rack" is deliberately allowed: a rack is a real, distinct object.
@@ -1696,6 +1696,155 @@ public static class PharmaSelfTests
             && VaporMath.Prefer(true, 0.45f, false, 0.2f) && !VaporMath.Prefer(false, 0.2f, true, 0.45f)
             && VaporMath.Prefer(false, 0.2f, false, 0.3f) && !VaporMath.Prefer(true, 0.4f, true, 0.3f));
 
+        // ---- W5.55: any tube, recoverable mistakes, readable guidance ----
+
+        // ⛔ A shared step counts ROLES, not members. Pooling put every bench tube in the
+        // group, so comparing against the member count would have asked for 19 alcohols.
+        A("rack: a shared step completes on its ROLE count, not the pool's size",
+            RackMath.AllReady(5, 5) && !RackMath.AllReady(4, 5) && RackMath.AllReady(19, 5)
+            && !RackMath.AllReady(1, 0)
+            && RackMath.ProgressLabel(3, 5) == "tube 3 of 5");
+
+        // The wrist checklist names the tubes it can name, and counts the ones it cannot:
+        // four identical permanganate tubes have no honest individual name.
+        {
+            var named = new List<string> { "Ethanol", "n-Butyl Alcohol", "Phenol" };
+            var done = new HashSet<string> { "Ethanol" };
+            string line = RackMath.RolesLine(named, done, 1, 3);
+            A("watch: a shared step lists each tube it can name",
+                line.StartsWith("Tubes 1 of 3")
+                && line.Contains("✓ Ethanol") && line.Contains("-  n-Butyl Alcohol")
+                && !line.Contains("✓ Phenol"));
+            A("watch: indistinguishable tubes fall back to the count",
+                RackMath.RolesLine(new List<string> { "", "", "", "" }, null, 2, 4) == "Tubes 2 of 4");
+        }
+
+        // ⛔ A rinsed vessel is a FREE vessel: the role goes back to the ledger and the
+        // extra can take it. Without this one wrong drop pinned a tube for the whole run.
+        {
+            var aGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var bGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var lime = ScriptableObject.CreateInstance<ChemicalData>(); lime.chemicalName = "Limewater";
+            try
+            {
+                var lpA = aGo.AddComponent<LiquidPhysics>(); bGo.AddComponent<LiquidPhysics>();
+                var a = aGo.AddComponent<LiquidTaskBinding>();
+                var b = bGo.AddComponent<LiquidTaskBinding>();
+                var role = new List<LiquidTaskBinding.ReagentStep>
+                {
+                    new LiquidTaskBinding.ReagentStep { reagent = lime, taskId = "confirm-ferment", requiredMl = 10f }
+                };
+                var roles = new List<List<LiquidTaskBinding.ReagentStep>> { role };
+                var shared = new RackRoles();
+                a.MarkPoolMember(); b.MarkPoolMember();
+                a.SetRoles(roles, 0, shared);
+                b.SetRoles(roles, -1, shared);
+                b.ClaimForTask("confirm-ferment");
+                A("role: the claimer holds it and the twin advertises nothing",
+                    b.ClaimedRole == 0 && a.ExpectedSteps.Count == 0);
+                b.ResetRole();
+                A("role: emptying a vessel gives its role back to the pool",
+                    b.ClaimedRole == -1 && b.RoleAmbiguous
+                    && a.ExpectedSteps.Count == 1 && a.CandidateTasks().Contains("confirm-ferment"));
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(aGo); UnityEngine.Object.DestroyImmediate(bGo);
+                UnityEngine.Object.DestroyImmediate(lime);
+            }
+        }
+
+        // ⛔ ONE mistake per bad pour. A tilt-pour raises LiquidAdded every frame, and the
+        // unlatched version logged 1025 mistakes in a headset session — the grade was gone
+        // long before the player understood what was wrong.
+        {
+            var scoldGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var module = ScriptableObject.CreateInstance<ExperimentModuleDefinition>();
+            module.moduleId = "selftest-scold";
+            module.graphTasks = new List<ExperimentTask> {
+                T("add-x", TaskPhase.ReagentPrep, 1, LabSkill.Measuring, RubricCategory.Procedure) };
+            var want = ScriptableObject.CreateInstance<ChemicalData>(); want.chemicalName = "Wanted";
+            var junk = ScriptableObject.CreateInstance<ChemicalData>(); junk.chemicalName = "Junk";
+            try
+            {
+                var lp = scoldGo.AddComponent<LiquidPhysics>();
+                var runner = scoldGo.AddComponent<ExperimentRunner>();
+                runner.SetModule(module);
+                runner.StartExperiment();
+                var bind = scoldGo.AddComponent<LiquidTaskBinding>();
+                bind.SetVesselAndRunner(lp, runner);
+                bind.AddExpected(want, "add-x", 50f);
+                for (int i = 0; i < 20; i++) bind.HandleReagent(junk, 1f);
+                A("mistake: a refused pour is recorded once, not once per tick",
+                    runner.MistakeCount == 1 && bind.RefusedReagent == "Junk");
+                var other = ScriptableObject.CreateInstance<ChemicalData>(); other.chemicalName = "Other";
+                bind.HandleReagent(other, 1f);
+                A("mistake: a DIFFERENT wrong reagent still counts", runner.MistakeCount == 2);
+                UnityEngine.Object.DestroyImmediate(other);
+                bind.HandleReagent(want, 50f);
+                A("mistake: an accepted pour clears the refusal line", bind.RefusedReagent == null);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(scoldGo); UnityEngine.Object.DestroyImmediate(module);
+                UnityEngine.Object.DestroyImmediate(want); UnityEngine.Object.DestroyImmediate(junk);
+            }
+        }
+
+        // Practice is not assessed (user: "scores are not important for tutorial or practice
+        // mode"). Same call, same runner — only the session flag differs.
+        {
+            var practiceGo = new GameObject("selftest-practice");
+            var module = ScriptableObject.CreateInstance<ExperimentModuleDefinition>();
+            module.moduleId = "selftest-practice";
+            module.graphTasks = new List<ExperimentTask> {
+                T("a", TaskPhase.ReagentPrep, 1, LabSkill.Measuring, RubricCategory.Procedure) };
+            bool was = TutorialSession.Active;
+            try
+            {
+                var runner = practiceGo.AddComponent<ExperimentRunner>();
+                runner.SetModule(module);
+                runner.StartExperiment();
+                TutorialSession.Active = true;
+                runner.RecordMistake(LabErrorType.WrongReagent, "practice");
+                A("practice: a tutorial run records no mistakes", runner.MistakeCount == 0);
+                TutorialSession.Active = false;
+                runner.RecordMistake(LabErrorType.WrongReagent, "graded");
+                A("practice: a graded run still counts every mistake", runner.MistakeCount == 1);
+            }
+            finally
+            {
+                TutorialSession.Active = was;
+                UnityEngine.Object.DestroyImmediate(practiceGo); UnityEngine.Object.DestroyImmediate(module);
+            }
+        }
+
+        // Two tags at the same screen height are pushed apart, bottom-up and capped, so a
+        // label never wanders off the object it names.
+        {
+            var y = new List<float> { 100f, 104f, 400f };
+            var half = new List<float> { 10f, 10f, 10f };
+            var mpp = new List<float> { 0.001f, 0.001f, 0.001f };
+            var lifts = LabelDeclutterMath.Lifts(y, half, mpp);
+            A("label: overlapping tags are pushed apart, the lone one is left alone",
+                lifts[0] == 0f && lifts[1] > 0f && lifts[2] == 0f
+                && (104f + lifts[1] / 0.001f) >= (100f + 20f) - 0.01f);
+            var tight = LabelDeclutterMath.Lifts(new List<float> { 0f, 0f },
+                new List<float> { 500f, 500f }, new List<float> { 0.001f, 0.001f });
+            A("label: the lift is capped in METRES, never chased arbitrarily far",
+                tight[1] <= LabelDeclutterMath.MaxLift + 1e-4f);
+            A("label: nothing to solve is not an error", LabelDeclutterMath.Lifts(null, null, null).Length == 0);
+        }
+
+        // The vessel explains itself: what bounced, and that a free tube is free.
+        A("hint: a refused pour and a free vessel both say so",
+            VesselStatusMath.RefusalLine("Sodium Hydroxide").Contains("Sodium Hydroxide")
+            && VesselStatusMath.RefusalLine("") == ""
+            && VesselStatusMath.FreeVesselLine(true, true, true).Length > 0
+            && VesselStatusMath.FreeVesselLine(true, false, true) == ""
+            && VesselStatusMath.FreeVesselLine(false, true, true) == ""
+            && VesselStatusMath.FreeVesselLine(true, true, false) == "");
+
         // A custom shader with no stereo-instancing macros renders to eye index 0 ONLY.
         //
         // The project runs Single Pass Instanced: both eyes go into one texture array and the
@@ -1725,14 +1874,14 @@ public static class PharmaSelfTests
 
         // ---- the manuscript is the AUTHORITY, so check the numbers against it (W5.49) ----
         //
-        // \u26d4 Until now nothing did. The `content:` pins prove a module LOADS, has N tasks,
-        // is solvable and builds its scoring spine \u2014 never that "5 drops" is authored as 5.
+        // ⛔ Until now nothing did. The `content:` pins prove a module LOADS, has N tasks,
+        // is solvable and builds its scoring spine — never that "5 drops" is authored as 5.
         // Every quantity in the game was hand-transcribed from Appendix C and hand-checked
         // exactly once, at authoring time.
         //
         // The VERB CONTRACT (CLAUDE.md) is what makes this checkable: the number in the
         // instruction IS the action count, whatever its unit, and a dropper delivers
-        // DropperController.MlPerSqueeze per squeeze \u2014 so "2 drops" is authored as 2.
+        // DropperController.MlPerSqueeze per squeeze — so "2 drops" is authored as 2.
         //
         // The table is CURATED (Docs/manuscript-quantities.tsv); see the header there for why
         // it is not parsed out of the PDF. Rows marked `accepted` are documented deviations
@@ -1795,7 +1944,7 @@ public static class PharmaSelfTests
                   + checkedRows + " checked, " + wrong.Count + " adrift, "
                   + acceptedRows + " accepted deviations)", wrong.Count == 0);
                 A("manuscript: the authority table actually covers the game", checkedRows >= 20);
-                // Not a failure \u2014 a standing reminder that these await a client decision.
+                // Not a failure — a standing reminder that these await a client decision.
                 A("manuscript: " + disagree + " quantities knowingly differ and are recorded as such",
                   disagree >= 0);
             }
@@ -2527,6 +2676,11 @@ public static class PharmaSelfTests
         A("ledger: accumulates per chemical", led.Summary() == "Ethanol 120 ml + NaOH 50 ml");
         led.Add("Water", 10f);
         A("ledger: caps with a more-tail", led.Summary(2) == "Ethanol 120 ml + NaOH 50 ml + 1 more");
+        // The tube's own label asks for ALL of it (W5.55, user: "show all reagents text in
+        // the test tube, dont hide in + more"); the cap survives for the narrow hover card.
+        A("ledger: All names every reagent",
+            led.Summary(VesselLedger.All).EndsWith("+ Water 10 ml")
+            && !led.Summary(VesselLedger.All).Contains("more"));
         led.React("Ester");
         A("ledger: reaction collapses to the product", led.Summary() == "Ester 180 ml");
         led.Clear();

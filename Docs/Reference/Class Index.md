@@ -365,6 +365,7 @@ event Action<ChemicalData, float> LiquidRejected
 event Action<ReactionRule> ReactionOccurred
 event Action<ChemicalData, ChemicalData> WrongReagentMixed
 event Action<ReactionRule> ReactionPending
+event Action Emptied
 Renderer mainRenderer
 Renderer precipitateRenderer
 float maxVolume
@@ -373,7 +374,6 @@ float currentPptVolume
 float HorizonalFloatAdj
 ChemicalData currentChemical
 ChemicalData currentPptChemical
-ReactionRegistry registry
 ```
 
 ### `LiquidPourer` <sub>class</sub>
@@ -412,13 +412,13 @@ event System.Action<int> RoleClaimed
 bool IsPoolMember
 void MarkPoolMember()
 bool ClaimForTask(string taskId)
+List<string> RoleTagsFor(string taskId)
+string ClaimedRoleTagFor(string taskId)
 List<string> CandidateTasks()
 void SetRoles(List<List<ReagentStep>> roles, int authoredRole, RackRoles shared)
 void RefreshRoles()
+void ResetRole()
 bool IsListening
-void SetFumeHood(FumeHoodZone hood)
-bool InFumeHood()
-void Detach()
 ```
 
 ### `OverheatEffects` <sub>class</sub>
@@ -461,6 +461,8 @@ Who has claimed which role inside ONE rack group (W5.52). A rack group's tubes a
 ```csharp
 void Join(LiquidTaskBinding who)
 void Claim(LiquidTaskBinding who, int role)
+void Release(LiquidTaskBinding who)
+void RefreshOthers(LiquidTaskBinding who)
 ICollection<int> TakenByOthers(LiquidTaskBinding me)
 ```
 
@@ -470,8 +472,9 @@ ICollection<int> TakenByOthers(LiquidTaskBinding me)
 Pure rules for a rack of tubes that share one step (2026-07-16). Manuscript Exp 2 runs the same test across a SET of tubes — five alcohols for the enol test, three butyl alcohols beside a negative control, acetone beside acetaldehyde, hydrolysed beside unhydrolysed aspirin. In every case **the comparison across the tubes IS the lesson**, so the step is only done when every tube that the step names has had its reagent. This exists because LiquidTaskBinding is per-VESSEL: give five tubes a binding for the same task and the first tube to hit its threshold completes it, quietly making the other four optional and throwing the lesson away. The rack members are authored completesTask:false (so their pours are expected and accumulate, but completion is not theirs) and the group calls it in.
 
 ```csharp
-static bool AllReady(int readyTubes, int memberTubes)
-static string ProgressLabel(int readyTubes, int memberTubes)
+static bool AllReady(int readyTubes, int requiredTubes)
+static string ProgressLabel(int readyTubes, int requiredTubes)
+static string RolesLine(IReadOnlyList<string> tags, ICollection<string> served,
 static int CountReady(IReadOnlyList<LiquidTaskBinding> members, string taskId)
 ```
 
@@ -482,8 +485,10 @@ Completes one task when every tube in its rack has had what the step asked of it
 
 ```csharp
 int MemberCount
+int Required
 string TaskId
-void Bind(ExperimentRunner r, string task, List<LiquidTaskBinding> tubes)
+IReadOnlyList<LiquidTaskBinding> Members
+void Bind(ExperimentRunner r, string task, List<LiquidTaskBinding> tubes, int requiredCount
 bool ShouldFire()
 ```
 
@@ -618,6 +623,7 @@ void Add(string chemicalName, float ml, bool solid
 void React(string resultName)
 void Clear()
 void Scale(float frac)
+const int All
 string Summary(int max
 ```
 
@@ -1025,6 +1031,15 @@ void OnModuleLoaded(ExperimentModuleDefinition m)
 int Build(string moduleId)
 ```
 
+### `GlasswarePool` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Interaction/ExperimentSceneBuilder.cs`</sub>
+
+One family's interchangeable glassware: the module's roles for that kind, in role order, and every bench object that may play one of them.
+
+```csharp
+static float BenchMaxVolumeFor(string prefabName, float current)
+```
+
 ### `ExperimentStarter` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Interaction/ExperimentStarter.cs`</sub>
 
@@ -1320,6 +1335,7 @@ Points-at-it inspector (user 2026-07-10): each frame it casts from the pointer (
 
 ```csharp
 void Bind(Transform aim, Transform headT, HoverInfoPanel p, LayerMask m)
+void BindAltAim(Transform alt)
 static LabInfoEntry ResolveFor(Collider col, out Vector3 anchor)
 static LabInfoEntry WithLiveLine(LabInfoEntry e, LiquidPhysics lp)
 static bool IsHeld(Collider col)
@@ -2828,6 +2844,7 @@ Thin scene driver for the GatekeeperModel: applies each state to the world — d
 <sub>`Assets/PharmaSynth/Scripts/NPC/PharmeeGatekeeper.cs`</sub>
 
 ```csharp
+Transform GateGuideTarget
 GateLines Lines
 GatekeeperModel Model
 static readonly ExperimentPeriod[] EpisodeRows
@@ -3352,6 +3369,25 @@ void OnConfirmOption(int index)
 static string RestartConfirmText(bool running)
 ```
 
+### `LabelDeclutterMath` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/UI/LabelDeclutter.cs`</sub>
+
+Pure rules for keeping world-space name tags from sitting on top of each other (W5.55, user: "can you make it so that texts are not overlapping? like make push each other properly relative to the item they are naming? this way, players can read things better"). Every ProximityLabel billboards independently, so a rack of 19 identical tubes, a shelf of bottles or a cluster of glassware produced a stack of tags occupying the same few centimetres of screen. Nothing was wrong with any single tag; the problem only exists between them, which is why it needs a pass that can see them all at once. The separation is computed in SCREEN space (that is where the overlap actually happens — two tubes a hand's width apart overlap from across the room and not from close up) and applied as a small WORLD-space lift, so a tag never leaves the item it names.
+
+```csharp
+const float MaxLift
+static float[] Lifts(IReadOnlyList<float> screenY, IReadOnlyList<float> halfHeight,
+```
+
+### `LabelDeclutter` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/UI/LabelDeclutter.cs`</sub>
+
+Drives LabelDeclutterMath over the live ProximityLabels (W5.55). Thin: it measures, calls the pure solver and hands each label a lift. Polls at the same 5 Hz TutorialHighlighter uses. Tags are read at a human pace, and a per-frame solve over every visible label would cost more than the problem.
+
+```csharp
+void Bind(float poll, float lift)
+```
+
 ### `MainMenuController` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/UI/MainMenuController.cs`</sub>
 
@@ -3424,6 +3460,9 @@ string Compose()
 Shows a small floating name tag above an object only when the player's camera is within range — so apparatus and reagents identify themselves as you approach, without cluttering the lab with permanent labels. Builds its own world-space TMP child on first enable; billboards to the camera.
 
 ```csharp
+GameObject Tag
+void SetDeclutterLift(float metres)
+float ScreenHalfHeight(Camera cam)
 void SetLabel(string text, float dist
 const float TutorialRadiusMultiplier
 static float VisibleRadius(float baseRadius, bool tutorial)
@@ -3579,6 +3618,8 @@ static string HoverLine(string chemName, float ml, string ledgerSummary, int led
 static string HeatLine(string baseLabel, float currentC, float targetC)
 static string TempGoalLine(float currentC, float targetC, bool chill)
 static string NeedLine(string chemName, float have, float required, bool solid
+static string RefusalLine(string reagent)
+static string FreeVesselLine(bool poolMember, bool ambiguous, bool empty)
 static string ProgressLine(string baseLabel, string verb, float frac01)
 ```
 
@@ -4237,6 +4278,15 @@ Builds the lab's hazard-alarm fixture (manuscript: "flashing lights, warning mes
 static void Build()
 ```
 
+### `LabDoorFixBuilder` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/LabDoorFixBuilder.cs`</sub>
+
+1. The leaf inherits the Environment prefab's `m_StaticEditorFlags = 87`, which includes **Batching Static**. A static-batched renderer is merged into a combined mesh at load and then IGNORES its transform, so the leaf's collider swung open while the drawn door stayed shut. The player walks through what looks like a closed door, and no amount of reading DoorOpener explains it. Contribute GI goes with it: a door that moves must not carry a lightmap baked in the closed position. 2. `doorBlocker` was null, so nothing held the player back while the gate was still talking. The blocker is a plain trigger-free box across the doorway that the gatekeeper enables and disables; it is created here so the scene stops depending on someone having hand-placed one. Idempotent: re-running finds the same objects and rewrites the same values. ⚠ The leaf was lightmap- and navmesh-static, so after running thi
+
+```csharp
+static void Build()
+```
+
 ### `LabLightingBake` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Editor/LabLightingBake.cs`</sub>
 
@@ -4863,6 +4913,15 @@ static void BuildMenuButton()
 static void FixMenuLayout()
 static void BuildRoomFx()
 static void BuildSceneWiring()
+```
+
+### `UprightPourables` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/UprightPourables.cs`</sub>
+
+Stands tipped glassware back up, and re-bakes its respawn home (W5.55). ⛔ A vessel whose RESTING pose reads as tipped pours itself forever: `LiquidPourer.Update` fires on `Vector3.Angle(Vector3.up, transform.up) > pourThreshold`, so it empties every drop put into it and runs its looping pour audio under everything else. W5.45 found both distilling flasks at 90 degrees; the suite has pinned it since, and it came back the moment a `Re-Home Scene Items (Adopt Current)` pass ran while a flask happened to be lying down — adoption bakes whatever pose it finds, tipped or not. Straightening the transform alone never sticks: `DropRespawn.ResetAllHome` puts the baked rotation back at the start of every run, so the HOME has to be rewritten too. Both pins live in the suite (`pour: no vessel rests beyond its own pour threshold` and `pour: no pourable vessel's baked HOME is tipped`). Idempotent: an al
+
+```csharp
+static void Run()
 ```
 
 ### `VisualSweep` <sub>class</sub>

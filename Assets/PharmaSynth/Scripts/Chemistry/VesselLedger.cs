@@ -71,9 +71,16 @@ public class VesselLedger
     /// "Ethanol 120 ml + NaOH 50 ml" (insertion order, at most `max` entries,
     /// "+ n more" tail beyond that). Sub-ml amounts keep one decimal; solids
     /// read in grams. Empty ledger -> "".
+    /// Pass All to name every reagent (W5.55, user: "show all reagents text in the test
+    /// tube, dont hide in + more"). The vessel's own label uses it — a tube holding four
+    /// things is exactly when the player needs to read all four. The cap stays for the
+    /// narrow hover card, where a long story would overflow the panel.
+    public const int All = 0;
+
     public string Summary(int max = 3)
     {
         if (_order.Count == 0) return "";
+        if (max <= All) max = int.MaxValue;
         var sb = new StringBuilder();
         int shown = 0;
         foreach (var name in _order)

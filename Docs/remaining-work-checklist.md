@@ -513,3 +513,19 @@ Asked for: "what else dynamic guides or effects in all tools needs updating?"
 - [x] **No hint rewrite, no credits** — the 28 hints naming these kinds already name the family.
 - [x] **Simulate Everything 9/9 CLEAN, campaign COMPLETE. VISUAL sweep 63/63, 0 FAIL, 0 SKIP.**
 - [ ] ⬜ **Headset**: pick the second watch glass or beaker for a step and watch the glow, arrow, ghost and label move to it; hold a fresh tube at the distilling flask and see it collect.
+
+## §35 Any tube, recoverable mistakes, and the guidance the headset asked for (2026-09-06, W5.55) — suite 1648/1648
+Ten items from one headset session, diagnosed by reading the live run rather than guessing.
+- [x] ⭐ **Any tube, across rack groups.** The five-alcohol prep only counted tubes inside the invisible enol group; the player used oxidation-group tubes and every drop was refused. Every bench object of a family now carries the module's whole role set. A shared step completes on its ROLE count, so "3 of 4 with one untouched control" still holds. → [[systems-reference]]
+- [x] ⛔ **Stage-aware acceptance.** Pooling briefly let a much later step's reagent (methanol for the ester tube) be accepted during step one, which stranded the tube. `Blocked()` rules out roles whose tasks are complete or not yet available. Found by the imperfect-play probe. → [[Gotchas]]
+- [x] ⭐ **A wrong pour is recoverable**: emptying a vessel returns its role to the ledger and clears its history, so you can rinse and start that tube again.
+- [x] ⛔ **One mistake per bad pour, not one per frame** — the run that prompted this had 1025 mistakes from about a dozen pours. **Practice mode records no mistakes at all** (user: "scores are not important for tutorial or practice mode").
+- [x] ⭐ **Per-tube progress on the wrist checklist**: named roles tick off one at a time ("✓ Ethanol", "- Benzyl Alcohol"); tubes that cannot be told apart get the honest count. No task split, no new voice lines, no credits.
+- [x] ⭐ **The vessel says what it wants and what bounced**, on the glass held, looked at, or guided. Every reagent is named — no more "+ 2 more".
+- [x] ⭐ **Name tags push each other apart** (`LabelDeclutterMath`, screen-space, capped at 0.12 m).
+- [x] ⭐ **Guidance in every mode + gate arrows**: the locker while Pharmee asks for gear, then the door. The coach stays practice-only.
+- [x] ⭐ **The free hand points**: hover cards no longer blank out because the other hand is holding a tube.
+- [x] ⛔ **The door.** The leaf was BATCHING STATIC, so it swung in physics and never moved on screen, and `doorBlocker` was null so nothing held the player back. New `Fix Lab Door (swing + blocker)` menu; probes, lighting and navmesh re-baked after. → [[Gotchas]]
+- [x] **Two distilling flasks were lying down** — a re-home pass had baked the tipped pose as their home. New `Stand Tipped Glassware Up` menu, suite-pinned as before.
+- [x] **Pharmee is blue**: the happy face palette was the only green thing on a robot whose every emissive material is called Blue_Light; the builder also sweeps any remaining green part.
+- [ ] ⬜ **Headset**: pour the five alcohols into any five tubes and watch the checklist tick them off; rinse a spoiled tube and reuse it; walk to the locker and door on the arrows; check the door swings and blocks; read two adjacent tube labels.

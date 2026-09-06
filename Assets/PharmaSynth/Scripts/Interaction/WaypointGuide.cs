@@ -131,20 +131,18 @@ public class WaypointGuide : MonoBehaviour
     }
 
     public string CurrentTargetTaskId { get; private set; }
+    private PharmeeGatekeeper _gate;
 
     private void Update()
     {
-        // Guidance is a Tutorial Mode affordance. Campaign shows no beacon — finding
-        // the apparatus is part of what it assesses.
-        if (marker == null || runner == null || runner.Graph == null || !runner.IsRunning
-            || !TutorialSession.Active || TimeSkipController.IsSkipping)
-        {
-            Hide();
-            return;
-        }
+        // Guidance runs in EVERY mode (W5.55) — see GuidePath for why the Tutorial-only
+        // rule was dropped. The beacon still stands down whenever the floor path can do the
+        // job; that division of labour is unchanged.
+        if (marker == null || TimeSkipController.IsSkipping) { Hide(); return; }
+        bool running = runner != null && runner.Graph != null && runner.IsRunning;
 
         string id = null;
-        foreach (var t in runner.Graph.AvailableTasks()) { id = t.taskId; break; }
+        if (running) foreach (var t in runner.Graph.AvailableTasks()) { id = t.taskId; break; }
         CurrentTargetTaskId = id;
 
         // ONE arrow, never two — pick the SOURCE first ("go fetch that"), and hop to
@@ -153,8 +151,17 @@ public class WaypointGuide : MonoBehaviour
         // TaskTargetRegistry.PickTarget so the floor path picks the SAME object (W5.44);
         // two navigation cues disagreeing is worse than either alone.
         var camNow = Camera.main;
-        Transform station = TaskTargetRegistry.PickTarget(id,
-            camNow != null ? camNow.transform.position : Vector3.zero);   // pool → held-or-nearest (W5.53)
+        Transform station = running
+            ? TaskTargetRegistry.PickTarget(id,
+                camNow != null ? camNow.transform.position : Vector3.zero)   // pool → held-or-nearest (W5.53)
+            : null;
+        // Gear up, then the door: the gate's own destination before any run exists (W5.55).
+        if (station == null)
+        {
+            if (_gate == null) _gate = FindAnyObjectByType<PharmeeGatekeeper>();
+            if (_gate != null) station = _gate.GateGuideTarget;
+        }
+        if (station == null) { Hide(); return; }
 
         // ⭐ Stand down while the ground path is showing. The path routes around the
         // benches and owns the far case; the beacon reads through a cabinet door and owns

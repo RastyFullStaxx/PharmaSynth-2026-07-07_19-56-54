@@ -13,6 +13,7 @@ public class LiquidPhysics : MonoBehaviour
     public event Action<ReactionRule> ReactionOccurred;            // a registered reaction fired
     public event Action<ChemicalData, ChemicalData> WrongReagentMixed; // (current, incoming) with no rule
     public event Action<ReactionRule> ReactionPending;             // right recipe, not hot enough yet
+    public event Action Emptied;                                   // taken back to truly empty
 
     [Header("Components")]
     public Renderer mainRenderer;
@@ -660,5 +661,8 @@ public class LiquidPhysics : MonoBehaviour
         _pendingRule = null; _pendingAmount = 0f;
         _mixPH = 7f;
         Ledger.Clear();
+        // A rinsed vessel is a free vessel: LiquidTaskBinding listens and gives its claimed
+        // role back, so a wrong pour is recoverable instead of dead for the run (W5.55).
+        Emptied?.Invoke();
     }
 }

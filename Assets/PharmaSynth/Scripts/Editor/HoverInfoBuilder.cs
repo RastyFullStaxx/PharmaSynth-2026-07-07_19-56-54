@@ -44,12 +44,19 @@ public static class HoverInfoBuilder
         if (tfx >= 0) mask &= ~(1 << tfx);
         mask &= ~(1 << avatar);
         inspector.Bind(aim, head, panel, mask);
+        // The OTHER hand points too (W5.55): carrying a tube in one hand is the normal
+        // working posture, and the card used to blank out for both hands the moment either
+        // one held anything.
+        Transform alt = FindOtherRay(aim);
+        inspector.BindAltAim(alt);
         EditorUtility.SetDirty(inspector);
 
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
             UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
         Debug.Log("<color=#4CD07D>[HoverInfo] panel built + inspector on '" + host.name +
-                  "' (aim=" + (aim != null ? aim.name : "gaze") + ", cam=" + (head != null) + ")</color>. "
+                  "' (aim=" + (aim != null ? aim.name : "gaze")
+                  + ", alt=" + (FindOtherRay(aim) != null ? FindOtherRay(aim).name : "none")
+                  + ", cam=" + (head != null) + ")</color>. "
                   + LabInfoDatabase.EquipmentCount + " equipment + " + LabInfoDatabase.ReagentCount + " reagents authored.");
     }
 
@@ -142,6 +149,14 @@ public static class HoverInfoBuilder
             if (best == null) best = nf.transform;
         }
         return best;
+    }
+
+    /// The ray that is NOT `taken` — the second controller, whichever hand it is.
+    static Transform FindOtherRay(Transform taken)
+    {
+        foreach (var nf in Object.FindObjectsByType<NearFar>(FindObjectsInactive.Include))
+            if (nf != null && nf.transform != taken) return nf.transform;
+        return null;
     }
 
     static void Stretch(RectTransform rt)

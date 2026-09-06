@@ -18,7 +18,7 @@ Up: [[Home]] - [[The Lab Scene]] - [[Gotchas]]
 ## SampleScene (the lab)
 <sub>`Assets/Scenes/SampleScene.unity`</sub>
 
-### Root objects (46)
+### Root objects (47)
 
 | Object | local Y |
 |---|---|
@@ -27,8 +27,8 @@ Up: [[Home]] - [[The Lab Scene]] - [[Gotchas]]
 | `BeginButton` | 0.990 |
 | `BenchApparatus` | 0.000 |
 | `Directional Light` | 3.000 |
-| `DistillingFlask` | 1.330 |
-| `DistillingFlask_2` | 1.330 |
+| `DistillingFlask` | 1.310 |
+| `DistillingFlask_2` | 1.298 |
 | `DoorApproachTrigger` | 1.200 |
 | `DrJimenez` | 0.000 |
 | `DressingMirror` | 1.350 |
@@ -46,6 +46,7 @@ Up: [[Home]] - [[The Lab Scene]] - [[Gotchas]]
 | `Global Volume` | 0.000 |
 | `LabAlarmFixture` | 2.720 |
 | `LabConsumables` | 0.000 |
+| `LabDoorBlocker` | 1.188 |
 | `LabDoorController` | 0.000 |
 | `LabLights` | 0.000 |
 | `LabMusicPlayer` | 0.000 |

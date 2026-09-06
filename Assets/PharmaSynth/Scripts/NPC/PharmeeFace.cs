@@ -18,7 +18,10 @@ public class PharmeeFace : MonoBehaviour, IPharmeeFace
     // flashed while talking (user, 2026-09-05). Authored under PharmeeGlowMath.FaceCeiling
     // and enforced by Wire NPC Polish.
     [ColorUsage(true, true)] [SerializeField] private Color neutral = new Color(0.11f, 0.50f, 0.55f);
-    [ColorUsage(true, true)] [SerializeField] private Color happy = new Color(0.17f, 0.55f, 0.28f);
+    // Blue, like every other emissive on this robot (W5.55) — the green default was the one
+    // thing that changed her colour mid-sentence. The builder writes the tuned palette over
+    // this, but a fresh AddComponent must not start green either.
+    [ColorUsage(true, true)] [SerializeField] private Color happy = new Color(0.12f, 0.30f, 0.42f);
     [ColorUsage(true, true)] [SerializeField] private Color warning = new Color(0.55f, 0.33f, 0.08f);
 
     private MaterialPropertyBlock _mpb;

@@ -60,7 +60,7 @@ public class VesselStatus : MonoBehaviour
         // story) — "Ethanol 1 ml + Distilled Water 10 ml"; a single chemical
         // keeps the short form (user 2026-07-17).
         string s = _lp.Ledger.Count > 1 && !_lp.IsEmpty
-            ? VesselStatusMath.ComposeMixed(name, _lp.Ledger.Summary(3))
+            ? VesselStatusMath.ComposeMixed(name, _lp.Ledger.Summary(VesselLedger.All))
             : VesselStatusMath.Compose(name,
                 _lp.currentChemical != null ? _lp.currentChemical.chemicalName : null,
                 _lp.currentLiquidVolume + _lp.currentPptVolume);
@@ -76,14 +76,24 @@ public class VesselStatus : MonoBehaviour
                     : chill != null && chill.Relevant
                         ? VesselStatusMath.TempGoalLine(_lp.currentTempC, chill.RequiredC, true) : "";
         if (goal.Length > 0) s += "\n" + goal;
-        // Tutorial Mode only: how much of what this step still wants (W5.44). Queried
-        // fresh each refresh for the same reason the heat/chill goals are — the builder's
-        // teardown strips the binding between modules. Campaign is untouched: working out
-        // the quantity is part of what it assesses.
-        if (TutorialSession.Active)
+        // What this vessel still wants, and why a pour bounced (W5.44, widened W5.55 on the
+        // user's ask: "give a hint to what is still needed or what is wrong ... dynamically
+        // to any apparatus as players can use anything"). Queried fresh each refresh for the
+        // same reason the heat/chill goals are — the builder's teardown strips the binding
+        // between modules. Shown only on the glass actually in use (DetailWanted), or the
+        // bench becomes a wall of numbers at arm's length.
+        if (DetailWanted())
         {
             string need = NeedLineNow();
             if (need.Length > 0) s += NewLine + need;
+            var b = GetComponent<LiquidTaskBinding>();
+            if (b != null)
+            {
+                string refused = VesselStatusMath.RefusalLine(b.RefusedReagent);
+                if (refused.Length > 0) s += NewLine + refused;
+                string free = VesselStatusMath.FreeVesselLine(b.IsPoolMember, b.RoleAmbiguous, _lp.IsEmpty);
+                if (free.Length > 0) s += NewLine + free;
+            }
         }
 
         if (s == _last) return;
@@ -92,6 +102,49 @@ public class VesselStatus : MonoBehaviour
     }
 
     const string NewLine = "\n";
+
+    /// How square-on the player has to be looking for a vessel to count as "the one I am
+    /// reading". Tight, because two tubes in a rack are only degrees apart.
+    private const float GazeDot = 0.985f;
+
+    /// Is this the glass the player is actually using? Held, being looked at from within
+    /// label range, or bound to the step being guided. Anything else keeps the short
+    /// contents line — the W5.52 lesson was that a bench of vessels all advertising numbers
+    /// is what sent the player to the wrong tube in the first place.
+    private bool DetailWanted()
+    {
+        if (TutorialHighlighter.IsHeld(transform)) return true;
+        var cam = Camera.main;
+        if (cam != null)
+        {
+            Vector3 to = transform.position - cam.transform.position;
+            float d = to.magnitude;
+            if (d > 0.01f && d <= _showDist
+                && Vector3.Dot(cam.transform.forward, to / d) >= GazeDot) return true;
+        }
+        return GuidedStepWantsThis();
+    }
+
+    /// True when this vessel advertises a step of the task currently being guided.
+    private bool GuidedStepWantsThis()
+    {
+        var binding = GetComponent<LiquidTaskBinding>();
+        if (binding == null || binding.ExpectedSteps == null) return false;
+        string guided = GuidedTask();
+        if (string.IsNullOrEmpty(guided)) return false;
+        foreach (var step in binding.ExpectedSteps)
+            if (step != null && step.taskId == guided) return true;
+        return false;
+    }
+
+    /// The FIRST available task — GuidePath's own convention for "the step being guided".
+    private static string GuidedTask()
+    {
+        var runner = FindAnyObjectByType<ExperimentRunner>();
+        if (runner == null || runner.Graph == null || !runner.IsRunning) return null;
+        foreach (var t in runner.Graph.AvailableTasks()) return t.taskId;
+        return null;
+    }
 
     /// The guided step's outstanding amount for THIS vessel, or "" when it is not the
     /// vessel currently being asked for. Only the guided step is shown: every bound vessel
@@ -110,8 +163,7 @@ public class VesselStatus : MonoBehaviour
         // is what sent the player to the wrong tube in the headset (2026-09-05). GuidePath
         // already treats the FIRST available task as the guided one; reuse that rather than
         // inventing a second notion of "the current step".
-        string guided = null;
-        foreach (var t in runner.Graph.AvailableTasks()) { guided = t.taskId; break; }
+        string guided = GuidedTask();
         if (string.IsNullOrEmpty(guided)) return "";
 
         foreach (var step in binding.ExpectedSteps)

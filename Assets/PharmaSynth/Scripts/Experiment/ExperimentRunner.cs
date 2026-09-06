@@ -166,6 +166,14 @@ public class ExperimentRunner : MonoBehaviour
     {
         // Armed-but-not-started (and Lab Tour, where nothing is built) never grades.
         if (!IsRunning || _mistakes == null) return;
+        // ⛔ PRACTICE IS NOT ASSESSED (W5.55, user: "scores are not important for tutorial or
+        // practice mode ... if I have a lot of errors making my score unrecoverable and is
+        // blocking me, stop that"). Tutorial Mode already refills starved reagents; it kept
+        // recording mistakes and pulling mastery down, so a practice run could still be
+        // spoiled by the very experimenting it exists for. The player still SEES every scold
+        // — those are raised at the call site — but nothing reaches the log or the mastery
+        // model. Gate on the session flag alone: a graded run must still count every mistake.
+        if (TutorialSession.Active) return;
         _mistakes.Record(type, message);
         LabSkill skill = MistakeLog.SkillFor(type);
         if (_mastery != null && _mastery.IsTracked(skill))

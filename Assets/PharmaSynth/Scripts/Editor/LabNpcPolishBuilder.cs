@@ -17,6 +17,43 @@ using UnityEngine.UI;
 /// Tools ▸ PharmaSynth ▸ Wire NPC Polish (SampleScene, edit mode, idempotent).
 public static class LabNpcPolishBuilder
 {
+    /// Anything still reading GREEN on Pharmee goes blue (W5.55): the antenna the user
+    /// pointed out, and any other tinted part, without having to guess mesh names. Only
+    /// materials on the robot's own hierarchy are touched, and only when they are actually
+    /// green — a run over an already-blue robot changes nothing, so the menu stays
+    /// re-runnable. sharedMaterial deliberately: renderer.material would leak an instance
+    /// in edit mode (house rule).
+    static bool Greenish(Color c)
+        => c.g > 0.35f && c.g > c.r * 1.35f && c.g > c.b * 1.2f;
+
+    static Color BlueFor(Color c)
+    {
+        float h = Mathf.Max(c.g, Mathf.Max(c.r, c.b));      // keep the part's brightness
+        return new Color(h * 0.3f, h * 0.72f, h, c.a);
+    }
+
+    static int GreenToBlue(GameObject robot)
+    {
+        int n = 0;
+        var seen = new HashSet<Material>();
+        foreach (var r in robot.GetComponentsInChildren<Renderer>(true))
+        {
+            foreach (var m in r.sharedMaterials)
+            {
+                if (m == null || !seen.Add(m)) continue;
+                bool changed = false;
+                if (m.HasProperty("_BaseColor") && Greenish(m.GetColor("_BaseColor")))
+                { m.SetColor("_BaseColor", BlueFor(m.GetColor("_BaseColor"))); changed = true; }
+                if (m.HasProperty("_Color") && Greenish(m.GetColor("_Color")))
+                { m.SetColor("_Color", BlueFor(m.GetColor("_Color"))); changed = true; }
+                if (m.HasProperty("_EmissionColor") && Greenish(m.GetColor("_EmissionColor")))
+                { m.SetColor("_EmissionColor", BlueFor(m.GetColor("_EmissionColor"))); changed = true; }
+                if (changed) { EditorUtility.SetDirty(m); n++; }
+            }
+        }
+        return n;
+    }
+
     /// Enforce a serialized float. A changed C# default never reaches an already-saved
     /// scene instance, so tuned values must be written, not merely defaulted.
     static void SetFloat(SerializedObject so, string prop, float value)
@@ -45,10 +82,17 @@ public static class LabNpcPolishBuilder
         if (faceParts.Count > 0) face.BindRenderers(faceParts.ToArray());
         // The face is the only thing that CHANGES when she speaks, so it is the only thing
         // that can flash. Cap every expression under the bloom threshold.
+        // BLUE, not green (W5.55, user: "can you make his eye and moth in his face blue
+        // instead of green? as well as his green antenna for consistency"). The happy
+        // expression was the only green thing on a robot whose every emissive material is
+        // called Blue_Light, so it read as a different character mid-sentence. Warning stays
+        // amber: that one has to contrast, and amber against blue is the clearest pair.
         face.SetPalette(
             PharmeeGlowMath.CapBrightness(new Color(0.2f, 0.9f, 1f), PharmeeGlowMath.FaceCeiling),
-            PharmeeGlowMath.CapBrightness(new Color(0.3f, 1f, 0.5f), PharmeeGlowMath.FaceCeiling),
+            PharmeeGlowMath.CapBrightness(new Color(0.3f, 0.72f, 1f), PharmeeGlowMath.FaceCeiling),
             PharmeeGlowMath.CapBrightness(new Color(1f, 0.6f, 0.15f), PharmeeGlowMath.FaceCeiling));
+        int retinted = GreenToBlue(robot);
+        if (retinted > 0) Debug.Log("[NpcPolish] retinted " + retinted + " green material(s) to blue");
         EditorUtility.SetDirty(face);
         Debug.Log("[NpcPolish] face renderers: " + faceParts.Count + " (" + string.Join(", ", faceParts.ConvertAll(r => r.name)) + ")");
 

@@ -76,6 +76,18 @@ public static class VesselStatusMath
         return chemName + "  " + have.ToString("0.#") + " / " + required.ToString("0.#") + unit;
     }
 
+    /// Why the last pour bounced (W5.55). The scold is spoken once and gone; the vessel
+    /// keeps saying it, because "nothing happened" is the single most confusing outcome in
+    /// the lab — a headset player poured four reagents into tubes that could not take them
+    /// and had no way to tell. Cleared by an accepted pour or by emptying the glass.
+    public static string RefusalLine(string reagent)
+        => string.IsNullOrEmpty(reagent) ? "" : "✗ " + reagent + " \u2014 not part of this vessel's step";
+
+    /// An unclaimed member of a pool has no role yet, and saying so is what makes "any tube
+    /// will do" legible: the glass tells the player it is free rather than staying blank.
+    public static string FreeVesselLine(bool poolMember, bool ambiguous, bool empty)
+        => poolMember && ambiguous && empty ? "Free \u2014 becomes whatever you pour in first" : "";
+
     public static string ProgressLine(string baseLabel, string verb, float frac01)
         => baseLabel + "\n" + verb + " " + Mathf.RoundToInt(Mathf.Clamp01(frac01) * 100f) + "%";
 }

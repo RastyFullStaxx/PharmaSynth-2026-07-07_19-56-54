@@ -55,7 +55,6 @@ public class TutorialHighlighter : MonoBehaviour
     /// the runner starts — so by here every task-bearing component exists to be swept.
     private void OnRunBegan(ExperimentModuleDefinition _)
     {
-        if (!TutorialSession.Active) return;
         TutorialTargets.Build();
         _lit.Clear();
         _droppedAt.Clear();
@@ -156,7 +155,9 @@ public class TutorialHighlighter : MonoBehaviour
 
     private void Update()
     {
-        if (!TutorialSession.Active) { ClearAll(); return; }
+        // The glow runs in every mode from W5.55 (user: "in every mode is best"), alongside
+        // the floor path and the beacon. The COACH stays Tutorial-only — a stuck ladder and a
+        // no-score summary belong to practice, the cue that says "this glass" does not.
         if (Time.time < _nextPoll) return;
         _nextPoll = Time.time + pollSeconds;
 

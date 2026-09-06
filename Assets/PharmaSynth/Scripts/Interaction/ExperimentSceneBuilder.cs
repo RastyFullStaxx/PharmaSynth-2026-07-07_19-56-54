@@ -620,27 +620,32 @@ public class ExperimentSceneBuilder : MonoBehaviour
     private readonly Dictionary<string, List<LiquidTaskBinding>> _rackBindings
         = new Dictionary<string, List<LiquidTaskBinding>>();
 
-    /// One RackTaskGroup per (rackGroup, shared task): the step completes only
-    /// once EVERY member tube that names the task has had its reagent. Members
-    /// that don't name the task — Exp 2's negative control — are not counted, so
-    /// leaving the control alone is correct play, and pouring into it is a
-    /// wrong-reagent mistake. (2026-07-16)
+    /// One family's interchangeable glassware: the module's roles for that kind, in role
+    /// order, and every bench object that may play one of them.
+    private class GlasswarePool
+    {
+        public readonly List<ExperimentLayout.Vessel> RoleVessels = new List<ExperimentLayout.Vessel>();
+        public readonly List<LiquidTaskBinding> Members = new List<LiquidTaskBinding>();
+    }
+
+    /// One RackTaskGroup per (rackGroup, shared task): the step completes only once as many
+    /// tubes are READY as the step has roles.
+    ///
+    /// ⭐ W5.55 — the members are now the whole family POOL, not the group's own tubes.
+    /// A rack group used to be a closed set: Exp 2's five alcohols could only go into
+    /// `Kit_TestTube_0-4`, and the four permanganate tubes only into 5-8. All 19 tubes sit
+    /// on the same shelf and look identical, so a headset player put Phenol in tube 5 and
+    /// Benzyl in tube 6, had every drop refused, and the step could never tick. Which TUBE
+    /// is not a decision the player can be asked to make. What still counts is how MANY
+    /// tubes the step names: a role the step does not name — Exp 2's negative control —
+    /// is not counted, so leaving the control alone stays correct play. (2026-07-16, pooled W5.55)
     private void WireRackGroups(Transform stage, ExperimentLayout layout)
     {
+        var pools = WireGlasswarePools(layout);
+
         foreach (var kv in _rackBindings)
         {
-            // DYNAMIC ROLES (W5.52): every member is handed the WHOLE group's roles, so a
-            // tube plays whichever one the player pours into it. Captured from each
-            // binding's authored steps before any of them is rewritten, and shared through
-            // one RackRoles ledger so two tubes can never claim the same role. Standalone
-            // vessels never reach here and keep the original fixed behaviour.
-            var roles = new List<List<LiquidTaskBinding.ReagentStep>>();
-            foreach (var member in kv.Value)
-                roles.Add(new List<LiquidTaskBinding.ReagentStep>(member.ExpectedSteps));
-            var shared = new RackRoles();
-            for (int r = 0; r < kv.Value.Count; r++) kv.Value[r].SetRoles(roles, r, shared);
-
-            // Tasks these tubes share, in authoring order.
+            // Tasks this group DEFERS (completesTask:false) — the ones a group owns.
             var tasks = new List<string>();
             foreach (var v in layout.vessels)
             {
@@ -648,49 +653,57 @@ public class ExperimentSceneBuilder : MonoBehaviour
                 foreach (var b in v.bindings)
                     if (!b.completesTask && !tasks.Contains(b.taskId)) tasks.Add(b.taskId);
             }
+
+            // Whichever pool adopted this group's tubes; a family with no spare on the bench
+            // is not pooled at all, and then the group's own members are still the truth.
+            var members = kv.Value;
+            foreach (var p in pools.Values)
+                if (kv.Value.Count > 0 && p.Members.Contains(kv.Value[0])) { members = p.Members; break; }
+
             foreach (var taskId in tasks)
             {
-                // Only the tubes that actually name this task are members.
-                var members = new List<LiquidTaskBinding>();
-                int i = 0;
+                // REQUIRED = how many of the group's roles name the task, derived exactly as
+                // the member list used to be. Three butyl alcohols beside one untouched
+                // control is "3 of 4 tubes", and it must stay 3.
+                int required = 0;
                 foreach (var v in layout.vessels)
                 {
                     if (v.rackGroup != kv.Key) continue;
-                    bool names = false;
-                    foreach (var b in v.bindings) if (b.taskId == taskId) names = true;
-                    if (names && i < kv.Value.Count) members.Add(kv.Value[i]);
-                    i++;
+                    foreach (var b in v.bindings)
+                        if (b.taskId == taskId) { required++; break; }
                 }
-                if (members.Count == 0) continue;
+                if (required == 0 || members.Count == 0) continue;
                 var go = new GameObject("Rack_" + kv.Key + "_" + taskId);
                 go.transform.SetParent(stage, false);
                 go.transform.position = members[0].transform.position;
-                go.AddComponent<RackTaskGroup>().Bind(runner, taskId, members);
+                go.AddComponent<RackTaskGroup>().Bind(runner, taskId, members, required);
             }
         }
-
-        WireTubePools(layout);
     }
 
-    /// ANY GLASSWARE WILL DO (W5.53 tubes, W5.54 every spared kind; user 2026-09-06: "these
-    /// misguided fixed text guides" / "what else dynamic guides or effects in all tools").
+    /// ANY GLASSWARE WILL DO (W5.53 tubes · W5.54 every spared kind · W5.55 rack groups too;
+    /// user 2026-09-06: "any racks there can hold the test tube while I perform experiment").
     ///
-    /// A module's standalone vessels used to be pinned one role each to one bench object, so
-    /// pouring the right reagent into the OTHER watch glass or the second 100 ml beaker was
-    /// graded a mistake. In VR the player grabs whichever one is nearest, so a role on a bench
-    /// object is guidance they cannot follow. Every free bench object of the same POOL
-    /// (VesselRoleMatch.PoolKey: tubes by name family because hard glass shares their itemId,
-    /// everything else by LabItem itemId) carries the module's roles as candidates — the W5.52
-    /// rack machinery, unchanged — and a role's non-pour anchors move to whichever object
-    /// claims it. A kind with a single instance on the bench is never pooled: there is only one
-    /// Florence flask, and a fixed role is correct there.
-    private void WireTubePools(ExperimentLayout layout)
+    /// A role authored onto a SPECIFIC bench object is guidance a VR player cannot follow:
+    /// they grab whichever glass is nearest, and every tube in the lab looks the same. Every
+    /// free bench object of a POOL (VesselRoleMatch.PoolKey: tubes by name family because
+    /// hard glass shares their itemId, everything else by LabItem itemId) carries the
+    /// module's whole role set as candidates, each pour narrows it, and a role's non-pour
+    /// anchors move to whichever object claims it. A kind with a single instance on the
+    /// bench is never pooled: there is only one Florence flask, and a fixed role is right
+    /// there. Hard glass stays its own family — Exp 6's naked flame is the reason it exists.
+    ///
+    /// Returns the pools so WireRackGroups can hand a shared step the whole pool as members.
+    private Dictionary<string, GlasswarePool> WireGlasswarePools(ExperimentLayout layout)
     {
-        // The roles: this layout's standalone bench-bound vessels, grouped by pool key.
+        var pools = new Dictionary<string, GlasswarePool>();
+
+        // The roles: EVERY bench-bound vessel of this layout, racked or standalone, grouped
+        // by pool key. Racked vessels used to be excluded here and wired as closed groups.
         var rolesByKey = new Dictionary<string, List<ExperimentLayout.Vessel>>();
         foreach (var v in layout.vessels)
         {
-            if (v == null || !string.IsNullOrEmpty(v.rackGroup) || string.IsNullOrEmpty(v.benchItem)) continue;
+            if (v == null || string.IsNullOrEmpty(v.benchItem)) continue;
             var go = FindBenchItem(v.benchItem);
             var li = go != null ? go.GetComponent<LabItem>() : null;
             string key = VesselRoleMatch.PoolKey(v.benchItem, li != null ? li.itemId : "");
@@ -736,7 +749,7 @@ public class ExperimentSceneBuilder : MonoBehaviour
             {
                 if (li == null || VesselRoleMatch.PoolKey(li.name, li.itemId) != kv.Key) continue;
                 var go = li.gameObject;
-                if (go.GetComponent<LiquidTaskBinding>() != null) continue;   // authored here, or a rack member
+                if (go.GetComponent<LiquidTaskBinding>() != null) continue;   // authored here, or already a member
                 var lp = go.GetComponent<LiquidPhysics>() ?? go.AddComponent<LiquidPhysics>();
                 lp.registry = registry;
                 lp.maxVolume = BenchMaxVolumeFor(prefabKind, lp.maxVolume);
@@ -775,7 +788,14 @@ public class ExperimentSceneBuilder : MonoBehaviour
                     if (Application.isPlaying) { TaskTargetRegistry.Clear(); TutorialTargets.Build(); }
                 };
             }
+
+            var pool = new GlasswarePool();
+            pool.RoleVessels.AddRange(roleVessels);
+            pool.Members.AddRange(members);
+            pools[kv.Key] = pool;
         }
+
+        return pools;
     }
 
     /// Remove the anchors `role` would have bolted onto `go` (the mirror of AttachAnchors),

@@ -35,6 +35,21 @@ public class RackRoles
             if (m != null && m != who) m.RefreshRoles();
     }
 
+    /// Give a role back (W5.55): the vessel was emptied, so whatever it had claimed is
+    /// available again and every other member's candidate set just widened.
+    public void Release(LiquidTaskBinding who)
+    {
+        if (who != null) _claims.Remove(who);
+    }
+
+    /// Recompute every OTHER member — the public half of what Claim does internally, for a
+    /// caller that changed the ledger by releasing rather than claiming.
+    public void RefreshOthers(LiquidTaskBinding who)
+    {
+        foreach (var m in _members.ToArray())
+            if (m != null && m != who) m.RefreshRoles();
+    }
+
     /// Roles claimed by every OTHER member — what this tube may no longer become.
     /// Excluding the caller matters: a tube must not be blocked by its own claim, or it
     /// would lose the role it just took and start oscillating.

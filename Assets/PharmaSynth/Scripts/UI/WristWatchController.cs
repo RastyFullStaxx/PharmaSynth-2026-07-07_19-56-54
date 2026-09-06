@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -188,11 +189,40 @@ public class WristWatchController : MonoBehaviour
         }
         bool tutorial = TutorialSession.Active;
         string s = "Step: " + StepText(current, hint, tutorial)
+                 + RackBreakdown(runner)
                  + "\nProgress " + ExperimentHudController.FormatPercent(runner.Progress01);
         // Mastery is a GRADED number. A practice run never computes or saves one, so
         // printing "Mastery 0%" all the way through would read as constant failure.
         if (!tutorial) s += "\nMastery " + Mathf.RoundToInt(runner.OverallMastery * 100f) + "%";
         return s;
+    }
+
+    /// Per-tube lines for a step a whole SET of tubes has to satisfy (W5.55, user: "it is
+    /// hard to track which one I haven't done yet or done already, like now I am stuck").
+    /// Empty for an ordinary step, so the panel only grows where the detail was missing.
+    private static string RackBreakdown(ExperimentRunner runner)
+    {
+        string guided = null;
+        foreach (var t in runner.Graph.AvailableTasks()) { guided = t.taskId; break; }
+        if (string.IsNullOrEmpty(guided)) return "";
+
+        foreach (var g in Object.FindObjectsByType<RackTaskGroup>(FindObjectsSortMode.None))
+        {
+            if (g == null || g.TaskId != guided || g.Members == null) continue;
+            var tags = new List<string>();
+            var served = new HashSet<string>();
+            foreach (var m in g.Members)
+            {
+                if (m == null) continue;
+                if (tags.Count == 0) tags = m.RoleTagsFor(guided);
+                if (!m.ReadyFor(guided)) continue;
+                string tag = m.ClaimedRoleTagFor(guided);
+                if (!string.IsNullOrEmpty(tag)) served.Add(tag);
+            }
+            return "\n" + RackMath.RolesLine(tags, served,
+                RackMath.CountReady(g.Members, guided), g.Required);
+        }
+        return "";
     }
 
     /// True when the head is looking roughly toward the wrist.

@@ -14,6 +14,26 @@ public class ProximityLabel : MonoBehaviour
 
     private Transform _cam;
     private GameObject _tag;
+
+    /// The tag object, so LabelDeclutter can measure where it landed on screen (W5.55).
+    public GameObject Tag => _tag;
+
+    /// Extra world-space lift handed down by LabelDeclutter so two tags stop sitting on
+    /// top of each other. Zero for a label with nothing near it, which is most of them.
+    private float _declutterLift;
+    public void SetDeclutterLift(float metres) => _declutterLift = metres;
+
+    /// Half the tag's height in SCREEN pixels — what the overlap test actually needs.
+    /// Measured from the rendered text bounds, so a two-line contents readout correctly
+    /// claims twice the room of a bare name.
+    public float ScreenHalfHeight(Camera cam)
+    {
+        if (_tag == null || cam == null) return 0f;
+        float worldHalf = _tmp != null ? _tmp.bounds.extents.y * _tag.transform.lossyScale.y : 0.02f;
+        Vector3 c = cam.WorldToScreenPoint(_tag.transform.position);
+        Vector3 t = cam.WorldToScreenPoint(_tag.transform.position + Vector3.up * Mathf.Max(worldHalf, 1e-4f));
+        return Mathf.Abs(t.y - c.y);
+    }
     private TextMeshPro _tmp;
     private Renderer[] _itemRends;   // the item's own renderers, cached (no per-frame alloc)
     private HoverHighlight _guide;   // cached once: GetComponent every frame is waste
@@ -122,7 +142,7 @@ public class ProximityLabel : MonoBehaviour
             }
             Vector3 toCam = (_cam.position - transform.position); toCam.y = 0f;
             Vector3 fwd = toCam.sqrMagnitude > 1e-4f ? toCam.normalized : Vector3.forward;
-            _tag.transform.position = new Vector3(transform.position.x, tagY, transform.position.z) + fwd * fwdDist;
+            _tag.transform.position = new Vector3(transform.position.x, tagY + _declutterLift, transform.position.z) + fwd * fwdDist;
             _tag.transform.rotation = Quaternion.LookRotation(_tag.transform.position - _cam.position, Vector3.up);
         }
     }

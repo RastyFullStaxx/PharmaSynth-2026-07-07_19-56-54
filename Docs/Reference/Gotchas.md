@@ -1182,3 +1182,51 @@ re-homing.
 > in the list, so with pool targets registered it mimed at whichever extra was listed first
 > while the glow lit the held-or-nearest one — the W5.44 "two cues must never disagree" rule,
 > broken by W5.53's own registration. One chooser for every cue now.
+
+## A static-batched renderer ignores its own transform
+
+> [!danger] The lab door "never opened" — and every line of the door code was correct
+> `DoorOpener` resolved its leaf, the gatekeeper's `doorOpener` was assigned, and
+> `SetOpen(true)` fired on DoorArmed. The leaf still never moved on screen, and the player
+> walked straight through what looked like a closed door.
+>
+> The leaf inherited the Environment prefab's `m_StaticEditorFlags = 87`, which includes
+> **Batching Static**. Unity merges a batching-static renderer into a combined mesh at load;
+> the transform still moves, and the COLLIDER moves with it, but the drawn geometry does
+> not. So the doorway physically opened while the picture stayed shut — which is exactly
+> what "it is not doing that open function, I'm just walking through it" describes.
+>
+> Anything that MOVES must not be batching-static, and must not contribute GI either (a
+> moving object carrying a lightmap baked in one pose is the next bug). `Fix Lab Door
+> (swing + blocker)` clears the flags and builds the blocker; re-bake probes, lighting and
+> navmesh afterwards. When a transform visibly does nothing, check the static flags before
+> reading another line of the script that sets it.
+
+## "Any tube will do" has to mean any tube for the step you are ON
+
+> [!warning] Pooling every role onto every tube made a future step's reagent legal today
+> W5.55 merged the closed rack groups into one family pool, which is what the player needs
+> — but acceptance asked only "does SOME surviving role want this reagent". Exp 2 wants
+> methanol much later, for the methyl-salicylate ester tube, so methanol poured into a tube
+> during step one was silently accepted, narrowed that tube to the ester role, and the
+> ethanol the player poured next stopped counting. No mistake was recorded and the step
+> could not be finished: the worst of both worlds.
+>
+> `LiquidTaskBinding.Blocked()` now rules out any role whose tasks are complete or not yet
+> available, and acceptance, the accepted-pour step lookup and the guidance list all use it.
+> The role a vessel has ALREADY claimed is never blocked, or a tube would lose its own role
+> the moment its prep task completed. Found by `Simulate Everything`'s imperfect-play probe,
+> not by a unit test — the pure rule was right in isolation and wrong in a run.
+
+## A per-tick penalty is a per-frame penalty
+
+> [!danger] 1025 mistakes from about a dozen misaimed pours
+> `LiquidTaskBinding.Handle` runs on every `LiquidAdded` event, and a tilt-pour raises one
+> per frame. Each refused tick recorded its own `WrongReagent` mistake, so a headset session
+> reached 1025 mistakes and an unrecoverable grade before the player worked out what was
+> wrong. Anything that grades inside a per-frame handler needs a latch: the FEEDBACK should
+> fire every time (the player has to see it), the RECORD once. Latched per reagent and
+> cleared when the vessel is emptied, so a repeat offence still counts.
+>
+> The same shape bit `VaporCollectController` in W5.54 and the wrong-reagent scold here; when
+> you add a new grading call, ask what raises it and how often.

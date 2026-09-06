@@ -42,6 +42,30 @@ public class PharmeeGatekeeper : MonoBehaviour
     [SerializeField] private NPCNarrationController narration;
     [SerializeField] private ChoicePanelController panel;
     [SerializeField] private PPEController ppe;
+
+    /// Where the player has to GO next while the gate is still running the show (W5.55,
+    /// user: "add arrow as well for when pharmee wants me to wear the lab gears before
+    /// entering. also for entering the door after wearing what is needed"). Null once a run
+    /// owns the guidance, so the step arrows take over cleanly. The door anchor is the
+    /// controller, not the leaf: the leaf swings aside when it opens, and an arrow that
+    /// suddenly points at the wall beside the doorway is worse than no arrow.
+    public Transform GateGuideTarget
+    {
+        get
+        {
+            switch (Model.State)
+            {
+                case GateState.CoatPrompt:
+                    return ppe != null ? ppe.transform : null;
+                case GateState.ReadyPrompt:
+                case GateState.ThresholdWarn:
+                case GateState.DoorArmed:
+                    return doorOpener != null ? doorOpener.transform : null;
+                default:
+                    return null;
+            }
+        }
+    }
     [SerializeField] private ExperimentLauncher launcher;
     [SerializeField] private ExperimentRunner runner;
     [SerializeField] private GameObject doorBlocker;      // legacy holo barrier (optional)

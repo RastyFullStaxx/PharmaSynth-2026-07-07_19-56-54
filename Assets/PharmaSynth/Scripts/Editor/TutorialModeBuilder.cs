@@ -326,6 +326,13 @@ public static class TutorialModeBuilder
 
         // Ground path (W5.44). Its own material: a floor chevron must read on top of the
         // floor it lies on, so ZTest Always, and NEVER a shared bench material.
+        // Name tags stop stacking on each other (W5.55). Scene-level, one instance, and it
+        // idles at 5 Hz over whatever labels happen to be visible — no per-label authoring.
+        var declutter = runner.GetComponent<LabelDeclutter>();
+        if (declutter == null) declutter = runner.gameObject.AddComponent<LabelDeclutter>();
+        declutter.Bind(0.2f, LabelDeclutterMath.MaxLift);
+        EditorUtility.SetDirty(declutter);
+
         var path = runner.GetComponent<GuidePath>();
         if (path == null) path = runner.gameObject.AddComponent<GuidePath>();
         path.Bind(runner, EnsureGuideMaterial("GuideChevron", new Color(0.35f, 0.95f, 1f, 0.75f),

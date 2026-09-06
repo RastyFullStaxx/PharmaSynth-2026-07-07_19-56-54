@@ -11,7 +11,9 @@ using XRSocket = UnityEngine.XR.Interaction.Toolkit.Interactors.XRSocketInteract
 /// so no per-object authoring is needed.
 public class HoverInspector : MonoBehaviour
 {
-    [SerializeField] private Transform aimSource;      // right controller / ray origin
+    [SerializeField] private Transform aimSource;      // primary controller / ray origin
+    [Tooltip("The other controller's ray origin — used when the primary hand is full.")]
+    [SerializeField] private Transform aimSourceAlt;
     [SerializeField] private Transform head;           // HMD camera (billboard + fallback ray)
     [SerializeField] private HoverInfoPanel panel;
     [SerializeField] private float maxDistance = 4.5f;
@@ -23,31 +25,45 @@ public class HoverInspector : MonoBehaviour
     public void Bind(Transform aim, Transform headT, HoverInfoPanel p, LayerMask m)
     { aimSource = aim; head = headT; panel = p; mask = m; }
 
+    /// Second hand seam, so a rig with two controllers can point with either.
+    public void BindAltAim(Transform alt) { aimSourceAlt = alt; }
+
+    /// ⭐ POINT WITH WHICHEVER HAND IS FREE (W5.55, user: "make it able to trigger
+    /// hover text appearance in the other hand pointer even if my other hand is already
+    /// holding something").
+    ///
+    /// The card used to be suppressed while EITHER hand held anything, which is the normal
+    /// working posture in this lab: a tube in one hand, pointing at a shelf with the other.
+    /// The original rule was aimed at a real problem — a card popping over the item you are
+    /// carrying — and that part is still enforced per-hit by IsHeld(hit.collider). Both hands
+    /// full still means no card: there is nothing the player could pick up next anyway.
     private Transform Source()
     {
-        if (aimSource != null && aimSource.gameObject.activeInHierarchy) return aimSource;
+        if (Usable(aimSource) && !HandBusy(aimSource)) return aimSource;
+        if (Usable(aimSourceAlt) && !HandBusy(aimSourceAlt)) return aimSourceAlt;
+        if (Usable(aimSource) || Usable(aimSourceAlt)) return null;   // hands full
         if (head != null) return head;
         var c = Camera.main; if (c != null) head = c.transform;
         return head;
     }
 
-    private SelectInteractor[] _handInteractors;
+    private static bool Usable(Transform t) => t != null && t.gameObject.activeInHierarchy;
 
-    /// True while EITHER hand is holding a grabbable — a hand interactor (not a
-    /// socket) has a selection. While you're carrying something, the pointer must
-    /// NOT pop info cards over whatever it grazes (user 2026-07-14).
-    private bool AnyHandHolding()
+    /// Is the hand that owns this ray holding something? Walks up to the nearest ancestor
+    /// that actually carries a select interactor — that object IS the hand — so the other
+    /// controller's selection can never be mistaken for this one's.
+    private static bool HandBusy(Transform aim)
     {
-        if (_handInteractors == null)
+        for (var t = aim; t != null; t = t.parent)
         {
-            Transform root = aimSource != null ? aimSource.root : (head != null ? head.root : null);
-            if (root != null) _handInteractors = root.GetComponentsInChildren<SelectInteractor>(true);
-        }
-        if (_handInteractors == null) return false;
-        foreach (var it in _handInteractors)
-        {
-            if (it == null || it is XRSocket) continue;   // sockets always "hold" — ignore
-            if (it.hasSelection) return true;
+            bool isHand = false;
+            foreach (var it in t.GetComponents<SelectInteractor>())
+            {
+                if (it == null || it is XRSocket) continue;   // sockets always "hold" — ignore
+                isHand = true;
+                if (it.hasSelection) return true;
+            }
+            if (isHand) return false;
         }
         return false;
     }
@@ -57,9 +73,6 @@ public class HoverInspector : MonoBehaviour
         if (panel == null) return;
         var src = Source();
         if (src == null) return;
-
-        // Holding something → no hover cards at all.
-        if (AnyHandHolding()) { panel.Hide(); return; }
 
         if (Physics.Raycast(src.position, src.forward, out var hit, maxDistance, mask, QueryTriggerInteraction.Ignore)
             && !IsHeld(hit.collider))   // don't card an item that's already in hand — it blocks using it

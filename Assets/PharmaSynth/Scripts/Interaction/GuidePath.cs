@@ -58,6 +58,7 @@ public class GuidePath : MonoBehaviour
     private NavMeshPath _path;
     private float _nextRepath;
     private Transform _cam;
+    private PharmeeGatekeeper _gate;
 
     /// Edit-mode / builder seam — AddComponent fires no Awake in edit mode (house rule).
     public void Bind(ExperimentRunner r, Material chevron) { runner = r; chevronMaterial = chevron; }
@@ -76,18 +77,32 @@ public class GuidePath : MonoBehaviour
 
     private void Update()
     {
-        if (!TutorialSession.Active || runner == null || runner.Graph == null || !runner.IsRunning
-            || TimeSkipController.IsSkipping || chevronMaterial == null)
-        { HideAll(); return; }
+        if (TimeSkipController.IsSkipping || chevronMaterial == null) { HideAll(); return; }
 
         if (_cam == null && Camera.main != null) _cam = Camera.main.transform;
         if (_cam == null) { HideAll(); return; }
 
-        string id = null;
-        foreach (var t in runner.Graph.AvailableTasks()) { id = t.taskId; break; }
-        // Position-aware (W5.53): a pool of interchangeable tubes resolves to the one in
-        // the player's hand, else the nearest — the arrow follows the tube they picked up.
-        var target = TaskTargetRegistry.PickTarget(id, _cam.position);
+        // ⭐ EVERY MODE (W5.55, user: "in every mode is best"). The path used to be a
+        // Tutorial-only affordance, on the theory that finding the apparatus is part of what
+        // a graded run assesses. In the headset that only meant a player who knew the
+        // chemistry perfectly still could not find the glassware. The target map is DERIVED,
+        // so build it on demand instead of relying on the tutorial highlighter's build.
+        Transform target = null;
+        if (runner != null && runner.Graph != null && runner.IsRunning)
+        {
+            string id = null;
+            foreach (var t in runner.Graph.AvailableTasks()) { id = t.taskId; break; }
+            if (TaskTargetRegistry.TaskCount == 0) TutorialTargets.Build();
+            // Position-aware (W5.53): a pool of interchangeable tubes resolves to the one in
+            // the player's hand, else the nearest — the arrow follows the tube they picked up.
+            target = TaskTargetRegistry.PickTarget(id, _cam.position);
+        }
+        // Before the run starts the GATE owns the guidance: the locker, then the door.
+        if (target == null)
+        {
+            if (_gate == null) _gate = FindAnyObjectByType<PharmeeGatekeeper>();
+            if (_gate != null) target = _gate.GateGuideTarget;
+        }
         if (target == null) { HideAll(); return; }
 
         // Bounds CENTRE, never transform.position: a shelf bottle's origin sits at its base,

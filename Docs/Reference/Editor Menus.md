@@ -237,6 +237,11 @@ W5.12 (user: "instruction step is one continuous row — wrap the texts and make
 
 lab coat moves with it, which it is not supposed to"). ⛔ There is nothing to unparent. He is a Tripo auto-rig: ONE SkinnedMeshRenderer over 41 bones, with the coat baked into the body mesh. The coat follows the arm because coat VERTICES carry weight on the arm bones — an auto-rigger assigns weight by proximity, so a coat panel hanging near the elbow picks up elbow weight even though a real coat hangs from the shoulders. This finds that bleed geometrically (a vertex carrying arm weight while sitt
 
+### `Tools/PharmaSynth/Fix Lab Door (swing + blocker)`
+<sub>`Assets/PharmaSynth/Scripts/Editor/LabDoorFixBuilder.cs`</sub>
+
+1. The leaf inherits the Environment prefab's `m_StaticEditorFlags = 87`, which includes **Batching Static**. A static-batched renderer is merged into a combined mesh at load and then IGNORES its transform, so the leaf's collider swung open while the drawn door stayed shut. The player walks through what looks like a closed door, and no amount of reading DoorOpener explains it. Contribute GI goes with it: a door that moves must not carry a lightmap baked in the closed position. 2. `doorBlocker` w
+
 ### `Tools/PharmaSynth/Fix Methane Apparatus Grab`
 <sub>`Assets/PharmaSynth/Scripts/Editor/MethaneApparatusGrab.cs`</sub>
 
@@ -526,6 +531,11 @@ Proves Pharmee's animation set actually MOVES HIM, in edit mode. The suite pins 
 <sub>`Assets/PharmaSynth/Scripts/Editor/TutorialModeBuilder.cs`</sub>
 
 Walks every module's REAL task graph step by step with Tutorial Mode on, and checks the guidance actually keeps up: at every point along the progression the currently-available step must still resolve to a live object, and the clock must never tick. This is the dynamic counterpart to Audit Tutorial Targets. The audit asks "does every task have a target?" once, in aggregate; this asks "as steps complete, does the target set MOVE with them?" — a stale or empty set mid-run would leave the player st
+
+### `Tools/PharmaSynth/Stand Tipped Glassware Up`
+<sub>`Assets/PharmaSynth/Scripts/Editor/UprightPourables.cs`</sub>
+
+Stands tipped glassware back up, and re-bakes its respawn home (W5.55). ⛔ A vessel whose RESTING pose reads as tipped pours itself forever: `LiquidPourer.Update` fires on `Vector3.Angle(Vector3.up, transform.up) > pourThreshold`, so it empties every drop put into it and runs its looping pour audio under everything else. W5.45 found both distilling flasks at 90 degrees; the suite has pinned it since, and it came back the moment a `Re-Home Scene Items (Adopt Current)` pass ran while a flask happen
 
 ### `Tools/PharmaSynth/Stock End-Product Shelf`
 <sub>`Assets/PharmaSynth/Scripts/Editor/EndProductShelfStocker.cs`</sub>

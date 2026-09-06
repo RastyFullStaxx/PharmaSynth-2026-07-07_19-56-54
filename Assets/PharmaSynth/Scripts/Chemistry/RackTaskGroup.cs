@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 
 /// Pure rules for a rack of tubes that share one step (2026-07-16).
@@ -16,19 +17,49 @@ using UnityEngine;
 /// accumulate, but completion is not theirs) and the group calls it in.
 public static class RackMath
 {
-    /// The step is done only when EVERY member tube is ready. A rack with no
-    /// members is never ready — an empty group must not auto-complete a step.
-    public static bool AllReady(int readyTubes, int memberTubes)
-        => memberTubes > 0 && readyTubes >= memberTubes;
+    /// The step is done once as many tubes are ready as the step has ROLES (W5.55).
+    ///
+    /// It used to compare against the MEMBER count, which was the same number while a
+    /// rack group was a closed set of five authored tubes. Now that every bench tube of
+    /// the family is a member of one pool (so the player may use any tube), the member
+    /// count is 19 and the required count is the number of roles the step names — five
+    /// alcohols, four permanganate tubes, two Tollens tubes. Zero required is never ready:
+    /// an empty group must not auto-complete a step.
+    public static bool AllReady(int readyTubes, int requiredTubes)
+        => requiredTubes > 0 && readyTubes >= requiredTubes;
 
     /// Progress copy while the set fills in — the count is the point, so show it.
-    public static string ProgressLabel(int readyTubes, int memberTubes)
-        => "tube " + readyTubes + " of " + memberTubes;
+    public static string ProgressLabel(int readyTubes, int requiredTubes)
+        => "tube " + readyTubes + " of " + requiredTubes;
 
     /// A tube left DELIBERATELY empty (Exp 2's negative control) is simply not a
     /// member of that step's group: it declares no binding for the task, so it is
     /// never counted, and pouring into it is a genuine wrong-reagent mistake —
     /// which is exactly how the control teaches experimental design.
+    /// The wrist checklist's per-tube breakdown (W5.55, user: "it is hard to track which one
+    /// I haven't done yet or done already, like now I am stuck").
+    ///
+    /// A collective step used to print one line, so five alcohols looked like one thing to do
+    /// and the player could not see which tube was outstanding. Named roles tick off one at a
+    /// time; roles that cannot be told apart (four identical permanganate tubes) honestly get
+    /// the count alone. Pure so the suite pins the text without a scene.
+    public static string RolesLine(IReadOnlyList<string> tags, ICollection<string> served,
+                                   int ready, int required)
+    {
+        string head = "Tubes " + ready + " of " + required;
+        if (tags == null) return head;
+        var sb = new StringBuilder(head);
+        int named = 0;
+        for (int i = 0; i < tags.Count; i++)
+        {
+            if (string.IsNullOrEmpty(tags[i])) continue;
+            named++;
+            bool done = served != null && served.Contains(tags[i]);
+            sb.Append("\n  ").Append(done ? "\u2713 " : "-  ").Append(tags[i]);
+        }
+        return named > 0 ? sb.ToString() : head;
+    }
+
     public static int CountReady(IReadOnlyList<LiquidTaskBinding> members, string taskId)
     {
         if (members == null) return 0;
@@ -47,18 +78,27 @@ public class RackTaskGroup : MonoBehaviour
     [SerializeField] private ExperimentRunner runner;
     [SerializeField] private string taskId;
     [SerializeField] private List<LiquidTaskBinding> members = new List<LiquidTaskBinding>();
+    [Tooltip("How many tubes the step needs — its ROLE count. -1 falls back to every member.")]
+    [SerializeField] private int required = -1;
 
     private bool _fired;
     private int _lastReady = -1;
 
     public int MemberCount => members.Count;
+    /// Tubes this step needs served. The pool's members are every tube on the bench, so
+    /// this is the number that decides completion and the number the player is shown.
+    public int Required => required > 0 ? required : members.Count;
     public string TaskId => taskId;
 
+    /// Every role of this step, ready or not — what the wrist checklist lists (W5.55).
+    public IReadOnlyList<LiquidTaskBinding> Members => members;
+
     /// Edit-mode / builder seam (AddComponent fires no Awake in edit mode).
-    public void Bind(ExperimentRunner r, string task, List<LiquidTaskBinding> tubes)
+    public void Bind(ExperimentRunner r, string task, List<LiquidTaskBinding> tubes, int requiredCount = -1)
     {
         runner = r; taskId = task;
         members = tubes ?? new List<LiquidTaskBinding>();
+        required = requiredCount;
         _fired = false; _lastReady = -1;
     }
 
@@ -66,7 +106,7 @@ public class RackTaskGroup : MonoBehaviour
     public bool ShouldFire()
         => !_fired && runner != null && !string.IsNullOrEmpty(taskId)
            && runner.Graph != null && !runner.Graph.IsComplete(taskId)
-           && RackMath.AllReady(RackMath.CountReady(members, taskId), members.Count);
+           && RackMath.AllReady(RackMath.CountReady(members, taskId), Required);
 
     void Update()
     {
@@ -74,11 +114,11 @@ public class RackTaskGroup : MonoBehaviour
         if (runner == null || runner.Graph == null || string.IsNullOrEmpty(taskId)) return;
 
         int ready = RackMath.CountReady(members, taskId);
-        if (ready != _lastReady && ready > 0 && ready < members.Count)
+        if (ready != _lastReady && ready > 0 && ready < Required)
         {
             // Tell the player the SET is the step, so a finished tube doesn't read
             // as a finished step ("why didn't it tick?").
-            FloatingText.Show(RackMath.ProgressLabel(ready, members.Count),
+            FloatingText.Show(RackMath.ProgressLabel(ready, Required),
                               transform.position + Vector3.up * 0.25f,
                               new Color(0.6f, 0.85f, 1f), 0.9f);
         }
