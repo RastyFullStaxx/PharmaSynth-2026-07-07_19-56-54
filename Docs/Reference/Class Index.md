@@ -4021,6 +4021,17 @@ W5.12 (user 2026-07-13): experiments spawn their stations/vessels/labels/ waypoi
 static void Run()
 ```
 
+### `AnchorFurniture` <sub>class</sub>
+<sub>`Assets/PharmaSynth/Scripts/Editor/AnchorFurniture.cs`</sub>
+
+Furniture is scenery, not equipment (W5.56, user: "make the stools not grabbable"). The six lab stools shipped inside the Environment prefab with an `XRGrabInteractable` each, so a player could pick a stool up and carry it around the lab, or fling it across the bench mid-experiment. Nothing in the game asks them to move a stool, and every real interaction the lab needs is with glassware and tools. ⛔ The GRAB goes, the COLLIDER stays. The stool still stops the player walking through it and still holds anything resting on it — the same rule `Anchor Tube Racks` follows. The Rigidbody is left kinematic rather than destroyed so nothing doing `GetComponent&lt;Rigidbody&gt;()` starts null-referencing. Idempotent: a second run finds nothing to strip. Pinned by `bench: lab furniture is not grabbable`.
+
+```csharp
+static readonly string[] Fragments
+static bool IsFurniture(string objectName)
+static void Run()
+```
+
 ### `AtmosphereBuilder` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Editor/AtmosphereBuilder.cs`</sub>
 
@@ -4641,9 +4652,10 @@ static void Generate()
 ### `ReHomeSceneItems` <sub>class</sub>
 <sub>`Assets/PharmaSynth/Scripts/Editor/ReHomeSceneItems.cs`</sub>
 
-Adopts every scene item's CURRENT transform as its DropRespawn home (user 2026-07-10: "I have manually relocated some equipment, please make those their default spawn point"). Without this, manually moved props teleport back to their old serialized homes after ~25 s idle / a kill-Z fall / a reset. Tools ▸ PharmaSynth ▸ Re-Home Scene Items (Adopt Current) — run in SampleScene edit mode after ANY manual re-arrangement, then save the scene.
+Adopts every scene item's CURRENT transform as its DropRespawn home (user 2026-07-10: "I have manually relocated some equipment, please make those their default spawn point"). Without this, manually moved props teleport back to their old serialized homes after ~25 s idle / a kill-Z fall / a reset. Tools ▸ PharmaSynth ▸ Re-Home Scene Items (Adopt Current) — run in SampleScene edit mode after ANY manual re-arrangement, then save the scene. ⛔ NEVER run the ALL-items version straight after a simulator (W5.56). Every simulator calls `DropRespawn.ResetAllHome()`, which teleports all 120 items back to their BAKED homes — so "adopt current" then re-bakes the pose the reset just restored and writes it to disk, silently destroying whatever the user had placed by hand. That is exactly how two distilling flasks lost their placement twice, with nothing logged to say so: the result is self-consistent,
 
 ```csharp
+static void AdoptMoved()
 static void Adopt()
 ```
 
@@ -4921,6 +4933,8 @@ static void BuildSceneWiring()
 Stands tipped glassware back up, and re-bakes its respawn home (W5.55). ⛔ A vessel whose RESTING pose reads as tipped pours itself forever: `LiquidPourer.Update` fires on `Vector3.Angle(Vector3.up, transform.up) > pourThreshold`, so it empties every drop put into it and runs its looping pour audio under everything else. W5.45 found both distilling flasks at 90 degrees; the suite has pinned it since, and it came back the moment a `Re-Home Scene Items (Adopt Current)` pass ran while a flask happened to be lying down — adoption bakes whatever pose it finds, tipped or not. Straightening the transform alone never sticks: `DropRespawn.ResetAllHome` puts the baked rotation back at the start of every run, so the HOME has to be rewritten too. Both pins live in the suite (`pour: no vessel rests beyond its own pour threshold` and `pour: no pourable vessel's baked HOME is tipped`). Idempotent: an al
 
 ```csharp
+const float Tolerance
+const float MeshOffsetLimit
 static void Run()
 ```
 

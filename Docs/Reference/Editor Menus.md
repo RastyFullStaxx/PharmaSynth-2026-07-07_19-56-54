@@ -32,6 +32,11 @@ W5.12: the user hand-placed the whole workspace (kits, duplicates, reagent shelf
 
 W5.12 (user 2026-07-13): experiments spawn their stations/vessels/labels/ waypoints as children of DynamicStage (and Methane uses MethaneStage), both authored at the ORIGINAL center-table spot. When the user moved the whole workspace table into the room, the stages stayed put — so experiment content (incl. the coloured test watch-glasses the user saw as "pads", the stale name tags, and the waypoint) appeared where the table USED to be. This shifts both stages by the table's horizontal delta so a
 
+### `Tools/PharmaSynth/Anchor Furniture (stools not grabbable)`
+<sub>`Assets/PharmaSynth/Scripts/Editor/AnchorFurniture.cs`</sub>
+
+Furniture is scenery, not equipment (W5.56, user: "make the stools not grabbable"). The six lab stools shipped inside the Environment prefab with an `XRGrabInteractable` each, so a player could pick a stool up and carry it around the lab, or fling it across the bench mid-experiment. Nothing in the game asks them to move a stool, and every real interaction the lab needs is with glassware and tools. ⛔ The GRAB goes, the COLLIDER stays. The stool still stops the player walking through it and still 
+
 ### `Tools/PharmaSynth/Apply W5.8 Verb Data`
 <sub>`Assets/PharmaSynth/Scripts/Editor/W58VerbDataApplier.cs`</sub>
 
@@ -357,10 +362,15 @@ is the whole reason it is the right tool on a Quest. The three steps that have t
 
 Removes the stale Methane-tutorial text labels that float over the center workspace (user 2026-07-12: "delete the texts still floating around the main workspace"). They were authored directly under WorldLabels (NOT under MethaneStage), so toggling the Methane stage never hid them, and the table-merge left them orphaned at the old x≈1.15 position. Pure scene leftovers — no script references them. Landmark labels (PPE locker, fume hood) and runtime DynLabel_* are kept. Idempotent + re-runnable.
 
+### `Tools/PharmaSynth/Re-Home MOVED Items Only`
+<sub>`Assets/PharmaSynth/Scripts/Editor/ReHomeSceneItems.cs`</sub>
+
+Adopt the current transform ONLY where it actually differs from the baked home. An item a simulator has just restored to its home is by definition NOT different from it, so this can never re-bake a revert — it can only pick up a real move. It also names every item it claims, so a run that grabs more than expected is visible instead of silent.
+
 ### `Tools/PharmaSynth/Re-Home Scene Items (Adopt Current)`
 <sub>`Assets/PharmaSynth/Scripts/Editor/ReHomeSceneItems.cs`</sub>
 
-Adopts every scene item's CURRENT transform as its DropRespawn home (user 2026-07-10: "I have manually relocated some equipment, please make those their default spawn point"). Without this, manually moved props teleport back to their old serialized homes after ~25 s idle / a kill-Z fall / a reset. Tools ▸ PharmaSynth ▸ Re-Home Scene Items (Adopt Current) — run in SampleScene edit mode after ANY manual re-arrangement, then save the scene.
+Adopts every scene item's CURRENT transform as its DropRespawn home (user 2026-07-10: "I have manually relocated some equipment, please make those their default spawn point"). Without this, manually moved props teleport back to their old serialized homes after ~25 s idle / a kill-Z fall / a reset. Tools ▸ PharmaSynth ▸ Re-Home Scene Items (Adopt Current) — run in SampleScene edit mode after ANY manual re-arrangement, then save the scene. ⛔ NEVER run the ALL-items version straight after a simulat
 
 ### `Tools/PharmaSynth/Rebuild Compact HUD`
 <sub>`Assets/PharmaSynth/Scripts/Editor/CompactHudBuilder.cs`</sub>

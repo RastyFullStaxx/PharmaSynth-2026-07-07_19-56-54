@@ -27,8 +27,8 @@ Up: [[Home]] - [[The Lab Scene]] - [[Gotchas]]
 | `BeginButton` | 0.990 |
 | `BenchApparatus` | 0.000 |
 | `Directional Light` | 3.000 |
-| `DistillingFlask` | 1.310 |
-| `DistillingFlask_2` | 1.298 |
+| `DistillingFlask` | 0.673 |
+| `DistillingFlask_2` | 0.667 |
 | `DoorApproachTrigger` | 1.200 |
 | `DrJimenez` | 0.000 |
 | `DressingMirror` | 1.350 |

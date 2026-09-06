@@ -1230,3 +1230,43 @@ re-homing.
 >
 > The same shape bit `VaporCollectController` in W5.54 and the wrong-reagent scold here; when
 > you add a new grading call, ask what raises it and how often.
+
+## A simulator resets every item to its baked home, so re-homing afterwards bakes the revert
+
+> [!danger] Two distilling flasks lost a hand placement twice, silently
+> Every simulator (`Simulate Everything`, the VISUAL sweep) calls
+> `DropRespawn.ResetAllHome()`, which teleports all 120 items back to their BAKED homes.
+> Run `Re-Home Scene Items (Adopt Current)` or `Lock My Layout` after that and it adopts the
+> pose the reset just restored, writes it to disk, and the user's placement is gone from both
+> the transform and the home. Nothing is logged, and nothing in the suite could see it: the
+> result is perfectly self-consistent, just not what anyone chose.
+>
+> Safe order is **reopen the scene (discarding), then re-home, then save**. Prefer
+> `Re-Home MOVED Items Only`, which adopts a transform only where it actually differs from
+> the baked home — an item a reset has just restored is by definition not different, so it
+> cannot re-bake a revert.
+
+## A mesh that is not on its own pivot cannot be placed by anyone
+
+> [!danger] The flask you drag is not the flask you see
+> Both distilling flasks are USD imports whose visible glass, liquid and spout sat **71 cm**
+> from the object's pivot and grab collider (49 cm sideways, 51 cm up). Dragging the object
+> in the Scene view moves the pivot; the glass keeps its offset and hangs in the air wherever
+> you put it. The user re-placed them by hand twice and watched them float both times, which
+> is not a placement mistake — it was unplaceable. It also means the player reaches for the
+> glass in VR and grabs nothing, because the collider is half a metre away.
+>
+> ⛔ **Move the COLLIDER onto the glass — never the glass onto the pivot.** Two repairs failed
+> before that: dragging the visual assembly onto the pivot "aligned" it and teleported both
+> flasks off the worktop the user had just chosen, and re-pivoting (root to the glass,
+> children compensated) was correct but did not survive — it rewrites FOUR child transforms
+> on a prefab instance, and a single Ctrl+Z in the Scene view puts the offset straight back.
+> Wrapping the BoxCollider around the glass is ONE serialized value on the root: the glass
+> never moves, grabbing works because the collider is finally where the glass is, and the
+> pivot stays wherever the import put it, which nothing else cares about because every
+> system that matters already measures with `SolidWorldBounds`.
+>
+> Measure it with `ExperimentSceneBuilder.SolidWorldBounds` against the collider bounds. Every
+> other vessel in the lab measures under 3.5 cm; `Stand Tipped Glassware Up` repairs anything
+> past 5 cm, then seats the base on the surface below and re-bakes the home. Pinned by
+> `pour: no pourable vessel floats above the surface under it`.

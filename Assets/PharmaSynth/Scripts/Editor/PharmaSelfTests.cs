@@ -7240,6 +7240,68 @@ public static class PharmaSelfTests
               + (worstHome.Length > 0 ? ", e.g. " + worstHome : "") + ")", tiltedHome == 0);
         }
 
+        // ⛔ A vessel hanging in mid-air reads as a bug to the player and pours onto
+        // nothing. Both distilling flasks lost their hand placement TWICE the same way: a
+        // simulator restored every item to its baked home, a re-home pass then adopted that
+        // revert, and the flasks ended up 26 cm above the shelf they belonged on. The pose
+        // was self-consistent, so nothing in the suite could see it — until this.
+        // SolidWorldBounds, never a raw renderer sweep: LiquidPourer's world-space stream
+        // children outlive a pour pointing at the floor (→ Gotchas).
+        {
+            int floating = 0; string worstFloat = "";
+            foreach (var pr in UnityEngine.Object.FindObjectsByType<LiquidPourer>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (pr == null || !pr.gameObject.activeInHierarchy) continue;
+                Bounds b = ExperimentSceneBuilder.SolidWorldBounds(pr.gameObject);
+                if (b.size == Vector3.zero) continue;
+                // Start just INSIDE the vessel so its own collider is behind the ray origin.
+                // Probe the centre and four corners and take the HIGHEST hit: one ray can
+                // slip through a gap in a table's mesh collider and report the floor.
+                float surfaceY = 0f; bool found = false;
+                float ddx = b.extents.x * 0.4f, ddz = b.extents.z * 0.4f;
+                foreach (var o in new[] { Vector2.zero, new Vector2(ddx, 0f), new Vector2(-ddx, 0f),
+                                          new Vector2(0f, ddz), new Vector2(0f, -ddz) })
+                {
+                    var from = new Vector3(b.center.x + o.x, b.min.y + 0.02f, b.center.z + o.y);
+                    if (!Physics.Raycast(from, Vector3.down, out var floorHit, 1.5f, ~0, QueryTriggerInteraction.Ignore)) continue;
+                    if (!found || floorHit.point.y > surfaceY) { surfaceY = floorHit.point.y; found = true; }
+                }
+                float gap = found ? b.min.y - surfaceY : 99f;   // 99 = nothing under it at all
+                // UprightPourables.Tolerance, so the pin and the repair agree on what
+                // "resting" means. The 14 cabinet bottles sit a uniform 2 cm proud by design.
+                if (gap > UprightPourables.Tolerance)
+                {
+                    floating++;
+                    if (worstFloat.Length == 0)
+                        worstFloat = pr.name + (gap > 90f ? " over nothing"
+                                                          : " by " + (gap * 100f).ToString("0") + " cm");
+                }
+            }
+        // Furniture is scenery: a stool the player can pick up and carry off is a toy, and
+        // nothing in any experiment asks them to move one. The Environment prefab shipped all
+        // six with a grab, so a re-import would put them back — hence a scene pin, not just
+        // a menu. The COLLIDER must survive: the stool still has to block and still has to
+        // hold whatever rests on it.
+        {
+            int grabbable = 0, noCollider = 0; string worstFurn = "";
+            foreach (var tr in UnityEngine.Object.FindObjectsByType<Transform>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (tr == null || !AnchorFurniture.IsFurniture(tr.name)) continue;
+                if (tr.GetComponents<UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable>().Length > 0)
+                { grabbable++; if (worstFurn.Length == 0) worstFurn = tr.name; }
+                if (tr.GetComponents<Collider>().Length == 0) noCollider++;
+            }
+            A("bench: lab furniture is not grabbable (" + grabbable
+              + (worstFurn.Length > 0 ? ", e.g. " + worstFurn : "") + ")", grabbable == 0);
+            A("bench: anchoring furniture KEEPS its collider (" + noCollider + " without)", noCollider == 0);
+        }
+
+            A("pour: no pourable vessel floats above the surface under it (" + floating
+              + (worstFloat.Length > 0 ? ", e.g. " + worstFloat : "") + ")", floating == 0);
+        }
+
         // The visual sweep buffers a handler's "not complete yet" complaint until the step
         // lands on real frames; a chemistry bug is never buffered away.
         A("noise: a completion complaint is noise once the step lands",
