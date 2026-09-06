@@ -3528,9 +3528,18 @@ public static class PharmaSelfTests
                     && cvA.Dirtiness <= 0f && !cvA.EverDirty                 // residue gone
                     && bindA.ClaimedRole == -1                               // role released through Emptied
                     && Near(lpJ.currentLiquidVolume, 150f));                 // the reagent refilled
-                A("reset: apparatus and reagents are told apart by name",
-                    LabReset.IsReagent("Raw_Ethanol") && LabReset.IsReagent("Reagent_Acetone")
-                    && !LabReset.IsReagent("Eq_Beaker_100mL") && !LabReset.IsReagent("Kit_TestTube_3") && !LabReset.IsReagent(null));
+                // The RULE, on the real scene: a used vessel carries CleanableVessel; a SOURCE never
+                // does. A name rule ("not Raw_") swept the wash bottle and the methane charge jar
+                // into the reset and starved the tutorial's setup step (Simulate Everything, W5.59).
+                var flor = GameObject.Find("FlorenceFlask");
+                var wash = GameObject.Find("Eq_WashBottle");
+                var charge = GameObject.Find("Prop_reagent-jar");
+                A("reset: a used vessel is one the builders gave a CleanableVessel; sources are never emptied",
+                    flor != null && LabReset.IsUsedVessel(flor.GetComponent<LiquidPhysics>())
+                    && wash != null && !LabReset.IsUsedVessel(wash.GetComponent<LiquidPhysics>())
+                    && charge != null && !LabReset.IsUsedVessel(charge.GetComponent<LiquidPhysics>())
+                    && !LabReset.IsUsedVessel(null)
+                    && LabReset.IsReagent("Raw_Ethanol") && !LabReset.IsReagent("Eq_Beaker_100mL"));
             }
             finally
             {

@@ -118,10 +118,12 @@ public class ReagentSupplyMonitor : MonoBehaviour
             var stock = lp.currentChemical != null ? lp.currentChemical : lp.LastChemical;
             if (stock == null) continue;
             if (lp.GetComponent<LiquidTaskBinding>() != null) continue;
-            // ⛔ Reagent BOTTLES only (W5.59). Outside a run no vessel carries a binding, so this
-            // used to "restock" a freshly emptied beaker with whatever it last held — the lab
-            // reset would have refilled the glassware it had just emptied.
-            if (!LabReset.IsReagent(lp.name)) continue;
+            // ⛔ SOURCES only (W5.59). Outside a run no vessel carries a binding, so this used to
+            // "restock" a freshly emptied beaker with whatever it last held — the lab reset would
+            // have refilled the glassware it had just emptied. A used vessel is one the builders
+            // gave a CleanableVessel; a source (bottle, wash bottle, the methane charge jar) never
+            // has one — a NAME rule here starved the methane tutorial's charge jar.
+            if (LabReset.IsUsedVessel(lp)) continue;
             if (lp.currentLiquidVolume < 150f) { lp.SetContents(stock, 150f); refilled++; }
             // A solid jar shows its heap, not a liquid column, and a full jar shows a full heap.
             if (stock.state == PhysicalState.Solid || stock.state == PhysicalState.Powder)

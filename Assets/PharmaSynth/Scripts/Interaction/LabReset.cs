@@ -9,8 +9,13 @@ using UnityEngine;
 /// label all carried into the next run. A player who restarted mid-experiment inherited a
 /// bench that looked used, because it was.
 ///
-/// Apparatus is every vessel that is not a reagent bottle (`Raw_*` / `Reagent_*`, the vault's
-/// naming rule). Each is taken back to empty, cool, unlabelled and unclaimed;
+/// ⛔ Apparatus is a vessel the builders marked as USED — one carrying a `CleanableVessel`,
+/// which every stage, kit and adopter builder adds to glassware the player fills and never to
+/// a source. The first cut used the naming rule instead ("not `Raw_`/`Reagent_`") and swept up
+/// nine sources with it: the wash bottles and the methane tutorial's charge jar and glass
+/// tube, so the tutorial's setup step starved. Simulate Everything caught it; the suite's
+/// fixture could not, because a fixture vessel is whatever the pin says it is. Each used
+/// vessel is taken back to empty, cool, unlabelled and unclaimed;
 /// `LiquidPhysics.ClearContents` raises `Emptied`, so a pooled vessel gives its role back
 /// through the same seam a rinse uses. The bottles then refill through the supply monitor,
 /// and a solid jar gets its mound back at full. Positions, flames and consumables stay with
@@ -20,7 +25,13 @@ using UnityEngine;
 /// Restart) — and by `ResetLabForReturn`, which rebuilds the stage without passing Loading.
 public static class LabReset
 {
-    /// Pure, suite-pinned: is this the name of a reagent bottle rather than apparatus?
+    /// A vessel the player USES, as the builders define it. Sources (bottles, the wash
+    /// bottle, the methane charge jar) never carry this component.
+    public static bool IsUsedVessel(LiquidPhysics lp)
+        => lp != null && lp.GetComponent<CleanableVessel>() != null;
+
+    /// Pure, suite-pinned: is this the name of a SHELF reagent jar? (The solid-jar fitter and
+    /// its pin use it; the reset itself goes by IsUsedVessel.)
     public static bool IsReagent(string objectName)
         => !string.IsNullOrEmpty(objectName)
            && (objectName.StartsWith("Raw_") || objectName.StartsWith("Reagent_"));
@@ -31,7 +42,7 @@ public static class LabReset
         int n = 0;
         foreach (var lp in Object.FindObjectsByType<LiquidPhysics>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
-            if (lp == null || IsReagent(lp.name)) continue;
+            if (!IsUsedVessel(lp)) continue;
             n++;
             var last = lp.currentChemical != null ? lp.currentChemical : lp.LastChemical;
             lp.ClearContents();                                  // → Emptied → ResetRole on the binding
@@ -47,7 +58,7 @@ public static class LabReset
             var status = lp.GetComponent<VesselStatus>();
             if (status != null) { status.SetRoleSuffix(""); status.Refresh(); }
         }
-        ReagentSupplyMonitor.RefillSourceBottles();               // bottles to 150, solid jars re-mounded
+        ReagentSupplyMonitor.RefillSourceBottles();               // every SOURCE to 150, solid jars re-mounded
         return n;
     }
 }
